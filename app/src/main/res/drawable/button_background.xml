@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+
+
+    <!-- Set the corner radius for rounded edges -->
+    <corners android:radius="16dp" />
+
+    <!-- Optionally, you can add a border -->
+    <stroke
+        android:color="#1D1E1D"
+        android:width="2dp" />
+
+    <!-- Add padding inside the button -->
+    <padding
+        android:left="24dp"
+        android:top="16dp"
+        android:right="24dp"
+        android:bottom="16dp" />
+</shape>
