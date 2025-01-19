@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Notes Group -->
+    <group android:id="@+id/group_notes" android:checkableBehavior="none">
+        <item
+            android:id="@+id/menu_all_notes"
+            android:icon="@drawable/ic_all_notes"
+            android:title="All Notes" />
+
+        <item
+            android:id="@+id/menu_important"
+            android:icon="@drawable/ic_important"
+            android:title="Important" />
+
+        <item
+            android:id="@+id/menu_reminders"
+            android:icon="@drawable/ic_reminders"
+            android:title="Reminders" />
+
+        <item
+            android:id="@+id/menu_todo"
+            android:icon="@drawable/ic_todo"
+            android:title="To-Do" />
+
+        <item
+            android:id="@+id/menu_wishes"
+            android:icon="@drawable/ic_wishes"
+            android:title="Wishes" />
+    </group>
+    <group android:id="@+id/group_settings" android:checkableBehavior="none">
+        <item
+            android:id="@+id/menu_logout"
+            android:icon="@drawable/ic_logout"
+            android:title="Logout" />
+
+        <item
+            android:id="@+id/menu_support"
+            android:icon="@drawable/ic_support"
+            android:title="Support" />
+    </group>
+
+</menu>
