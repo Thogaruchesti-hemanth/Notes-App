@@ -1,10 +1,26 @@
-plugins {
-    alias(libs.plugins.android.application)
+
+apply plugin: 'com.android.application'
+
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+
+// Check if key.properties exists, then load it
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
 android {
     namespace 'com.example.notes'
     compileSdk 34
+
+    signingConfigs {
+        release {
+            storeFile file(keystoreProperties['storeFile'] ?: 'key.properties')
+            storePassword keystoreProperties['storePassword']
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+        }
+    }
 
     defaultConfig {
         applicationId "com.example.notes"
@@ -18,10 +34,15 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+            manifestPlaceholders = [usesCleartextTraffic: "false"]
+        }
+        debug {
+            signingConfig signingConfigs.debug
+            manifestPlaceholders = [usesCleartextTraffic: "true"]
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
@@ -29,12 +50,18 @@ android {
 }
 
 dependencies {
+    implementation 'com.google.firebase:firebase-core:9.6.1'
 
     implementation libs.appcompat
     implementation libs.material
     implementation libs.activity
     implementation libs.constraintlayout
+    implementation 'com.google.firebase:firebase-storage:20.0.1'
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
+    implementation 'com.squareup.picasso:picasso:2.8'
+    implementation 'com.google.firebase:firebase-database:20.0.5'
 }
+
+apply plugin: 'com.google.gms.google-services'

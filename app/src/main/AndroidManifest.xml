@@ -2,10 +2,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Required Permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CAMERA" />
 
-    <uses-permission android:name="android.permission.CAMERA"/>
+    <!-- For scoped storage on Android 11 and above -->
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" android:targetSdkVersion="30" />
 
     <application
+        android:exported="true"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -15,18 +21,32 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Notes"
         tools:targetApi="31">
+
+        <!-- Firebase Install Referrer Receiver (optional) -->
+        <receiver
+            android:name="com.google.android.gms.measurement.AppMeasurementInstallReferrerReceiver"
+            android:exported="true" />
+
+        <!-- Login Activity (Launcher) -->
         <activity
-            android:name=".AddEditItemLayout"
-            android:exported="false" />
-        <activity
-            android:name=".MainActivity"
+            android:name=".LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Main Activity -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true" />
+
+        <!-- Other Activities (e.g., Signup) -->
+        <activity
+            android:name=".SignupActivity"
+            android:exported="true" />
+
     </application>
 
 </manifest>

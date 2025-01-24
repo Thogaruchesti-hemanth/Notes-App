@@ -85,7 +85,7 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.google.android.material.imageview.ShapeableImageView
-        android:id="@+id/Imageview"
+        android:id="@+id/profile_image_edit"
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:background="@mipmap/profile_pic"
@@ -102,8 +102,9 @@
         android:layout_height="wrap_content"
         android:background="@null"
         android:layout_margin="2dp"
-        app:layout_constraintBottom_toBottomOf="@id/Imageview"
-        app:layout_constraintRight_toRightOf="@id/Imageview"/>
+        android:src="@drawable/ic_camera"
+        app:layout_constraintBottom_toBottomOf="@id/profile_image_edit"
+        app:layout_constraintRight_toRightOf="@id/profile_image_edit"/>
 
 
 
