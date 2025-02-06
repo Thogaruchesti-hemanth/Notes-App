@@ -67,6 +67,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Email"
+                android:enabled="false"
+                android:editable="false"
                 android:inputType="textEmailAddress"
                 android:textSize="20dp" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -88,8 +90,9 @@
         android:id="@+id/profile_image_edit"
         android:layout_width="100dp"
         android:layout_height="100dp"
-        android:background="@mipmap/profile_pic"
         android:onClick="dialogOpen"
+        android:background="@color/tabSelectedTextColor"
+        android:src="@drawable/profile_pic"
         android:layout_marginTop="50dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintLeft_toLeftOf="@id/constraintLayout"

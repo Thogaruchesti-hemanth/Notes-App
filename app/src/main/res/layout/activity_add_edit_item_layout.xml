@@ -1,39 +1,118 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".AddEditItemLayout"
-    android:layout_marginTop="30dp"
-    android:orientation="vertical">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".AddEditItemLayout">
 
-
-    <EditText
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/editTextTitle"
-        android:textSize="20sp"
-        android:layout_margin="5dp"
-        android:padding="10dp"
-        android:hint="Titile"/>
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/editTextContext"
-        android:textSize="20sp"
-        android:layout_margin="5dp"
-        android:padding="10dp"
-        android:hint="Context"/>
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:scrollbars="horizontal"
+        android:layout_marginTop="30dp">
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/buttonSave"
-        android:text="Save"
-        android:textSize="20sp"
-        android:layout_gravity="center"
-        android:layout_marginTop="50dp"/>
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:src="@drawable/profile_pic"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toTopOf="parent"/>
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:src="@drawable/ic_menu"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent"/>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
-</LinearLayout>
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tabLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- Bold Tab -->
+            <com.google.android.material.tabs.TabItem
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/tabBold"
+                android:text="B" />
+
+            <!-- Italic Tab -->
+            <com.google.android.material.tabs.TabItem
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/tabItalic"
+                android:text="I" />
+
+            <!-- Bullet Tab -->
+            <com.google.android.material.tabs.TabItem
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/tabBullet"
+                android:text="•" />
+
+            <!-- Numbered List Tab -->
+            <com.google.android.material.tabs.TabItem
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/tabNumbered"
+                android:text="1." />
+
+            <!-- Increase Text Size Tab -->
+            <com.google.android.material.tabs.TabItem
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/tabIncreaseSize"
+                android:text="A+" />
+
+            <!-- Decrease Text Size Tab -->
+            <com.google.android.material.tabs.TabItem
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/tabDecreaseSize"
+                android:text="A-" />
+        </com.google.android.material.tabs.TabLayout>
+
+        <!-- Title EditText -->
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/editTextTitle"
+            android:textSize="20sp"
+            android:layout_margin="5dp"
+            android:padding="10dp"
+            android:hint="Title"
+            android:inputType="text" />
+
+        <!-- Content EditText -->
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/editTextContext"
+            android:textSize="20sp"
+            android:layout_margin="5dp"
+            android:padding="10dp"
+            android:hint="Context"
+            android:inputType="textMultiLine" />
+
+        <!-- Save Button -->
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/buttonSave"
+            android:text="Save"
+            android:textSize="20sp"
+            android:layout_gravity="center"
+            android:layout_marginTop="50dp"
+            android:padding="15dp"
+            android:background="@color/colorAccent" />
+
+    </LinearLayout>
+</ScrollView>

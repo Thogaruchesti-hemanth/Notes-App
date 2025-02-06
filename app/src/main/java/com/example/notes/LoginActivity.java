@@ -2,41 +2,85 @@ package com.example.notes;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.InputType;
+import android.view.View;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+import com.google.android.material.textfield.TextInputLayout;
 
 public class LoginActivity extends AppCompatActivity {
 
-    private EditText emailEditText, passwordEditText;
+    private TextView headerTitleTextView;
+    private TextView goToSignupTextView;
+    private TextView oldUserTextView;
+    private EditText userNameEditText;
+    private EditText emailEditText;
+    private EditText passwordEditText;
+    private EditText confirmPasswordEditView;
     private Button loginButton;
-    private TextView goToSignup;
-    private DatabaseReference databaseReference;
+    private FirebaseHelper firebaseHelper;
+
+    private TextInputLayout editTextUserNameLayout,confirmPasswordLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login_activity);
 
-        databaseReference = FirebaseDatabase.getInstance().getReference("Users");
+        firebaseHelper = new FirebaseHelper();
 
+        oldUserTextView = findViewById(R.id.old_user_text_view);
+        goToSignupTextView = findViewById(R.id.go_to_signup);
+        headerTitleTextView = findViewById(R.id.header_title_text_view);
+        userNameEditText = findViewById(R.id.user_name_edit_text);
         emailEditText = findViewById(R.id.login_email);
         passwordEditText = findViewById(R.id.login_password);
+        confirmPasswordEditView = findViewById(R.id.confirm_password);
         loginButton = findViewById(R.id.login_button);
-        goToSignup = findViewById(R.id.go_to_signup);
+        editTextUserNameLayout = findViewById(R.id.edit_text_user_name_layout);
+        confirmPasswordLayout = findViewById(R.id.confirm_password_layout);
 
-        loginButton.setOnClickListener(v -> loginUser());
-        goToSignup.setOnClickListener(v -> startActivity(new Intent(LoginActivity.this, SignupActivity.class)));
+        passwordEditText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        confirmPasswordEditView.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+
+
+        Window window = getWindow();
+        window.setStatusBarColor(getResources().getColor(R.color.layout_background));
+
+        oldUserTextView.setOnClickListener(view -> olderUser());
+        goToSignupTextView.setOnClickListener(view -> createAccount());
+        loginButton.setOnClickListener(v -> {
+            String loginType = loginButton.getText().toString();
+            if (loginType.equals("Login")) {
+                loginUser();
+            } else {
+                signupUser();
+            }
+        });
+    }
+
+    private void createAccount() {
+        editTextUserNameLayout.setVisibility(View.VISIBLE);
+        confirmPasswordLayout.setVisibility(View.VISIBLE);
+        oldUserTextView.setTextColor(getResources().getColor(R.color.tabUnselectedTextColor));
+        goToSignupTextView.setTextColor(getResources().getColor(R.color.black));
+        headerTitleTextView.setText("Sign Up Now!");
+        loginButton.setText("Create An Account");
+    }
+
+    private void olderUser() {
+        editTextUserNameLayout.setVisibility(View.GONE);
+        confirmPasswordLayout.setVisibility(View.GONE);
+        oldUserTextView.setTextColor(getResources().getColor(R.color.black));
+        goToSignupTextView.setTextColor(getResources().getColor(R.color.tabUnselectedTextColor));
+        headerTitleTextView.setText("Hey,\nLogin Now!");
+        loginButton.setText("Login");
     }
 
     private void loginUser() {
@@ -48,33 +92,37 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        // Check if the user exists in the database
-        databaseReference.child(encodeEmail(email)).addListenerForSingleValueEvent(new ValueEventListener() {
+        firebaseHelper.loginUser(email, password, this, new FirebaseHelper.LoginCallback() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    // User exists, validate password
-                    String storedPassword = snapshot.child("password").getValue(String.class);
-                    if (storedPassword != null && storedPassword.equals(password)) {
-                        Toast.makeText(LoginActivity.this, "Login successful!", Toast.LENGTH_SHORT).show();
-                        startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                        finish();
-                    } else {
-                        Toast.makeText(LoginActivity.this, "Incorrect password", Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    Toast.makeText(LoginActivity.this, "User does not exist. Please sign up.", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(LoginActivity.this, "Database error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+            public void onLoginSuccess() {
+                Toast.makeText(LoginActivity.this, "Login successful!", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                finish();
             }
         });
     }
 
-    private String encodeEmail(String email) {
-        return email.replace(".", ",");
+    private void signupUser() {
+        String userName = userNameEditText.getText().toString();
+        String email = emailEditText.getText().toString().trim();
+        String password = passwordEditText.getText().toString().trim();
+        String confirmPassword = confirmPasswordEditView.getText().toString();
+
+        if (userName.isEmpty() || email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
+            Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
+            return;
+        } else if (!confirmPassword.equals(password)) {
+            Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        firebaseHelper.signupUser(userName, email, password, confirmPassword, this, new FirebaseHelper.SignupCallback() {
+            @Override
+            public void onSignupSuccess(String userName, String email) {
+                Toast.makeText(LoginActivity.this, "Signup successful!", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                finish();
+            }
+        });
     }
 }

@@ -1,10 +1,8 @@
 package com.example.notes;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
@@ -21,7 +19,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.RecyclerView;
@@ -31,11 +28,17 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.FirebaseApp;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -45,11 +48,13 @@ public class MainActivity extends AppCompatActivity {
     private NoteAdapter noteAdapter;
     private ArrayList<Note> notesList;
     private TabLayout tabLayout;
-    private ImageView profileImageView;
-    private TextView userNameTextView;
+    private ImageView profileImageView, imageView, profileImage;
+    private TextView userNameTextView, nameTextView;
     private TextView emailTextView;
     private DrawerLayout drawerLayout;
     private static final int REQUEST_GALLERY = 2;
+    private FirebaseHelper firebaseHelper;
+    private String imageUrl = "";
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -58,25 +63,34 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         FirebaseApp.initializeApp(this);
+        firebaseHelper = new FirebaseHelper();
 
         dbHelper = new DatabaseHelper(this);
         recyclerView = findViewById(R.id.recyclerView);
         fabButton = findViewById(R.id.floatingActionButton);
         tabLayout = findViewById(R.id.tabLayout);
         drawerLayout = findViewById(R.id.main);
+        nameTextView = findViewById(R.id.name_text_view);
+
         NavigationView navigationView = findViewById(R.id.nav_view);
         userNameTextView = navigationView.getHeaderView(0).findViewById(R.id.header_user_name);
         emailTextView = navigationView.getHeaderView(0).findViewById(R.id.header_user_email);
         profileImageView = navigationView.getHeaderView(0).findViewById(R.id.header_profile_image);
+        int width = (int) (getResources().getDisplayMetrics().widthPixels * 0.7);
+        navigationView.setMinimumWidth(width);
+
+        imageUrl = new SharedPreferenceUtil(this).getImageUrl();
 
         navigationView.getHeaderView(0).findViewById(R.id.edit_header_button).setOnClickListener(view -> openEditDialog());
 
+        initialize();
+        loadProfileImage();
         setupTabs();
         setupRecyclerView();
 
         fabButton.setOnClickListener(view -> {
             Intent intent = new Intent(MainActivity.this, AddEditItemLayout.class);
-            startActivityForResult(intent, 1);
+            startActivity(intent);
         });
 
         findViewById(R.id.menubutton).setOnClickListener(v -> {
@@ -88,10 +102,23 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void initialize() {
+        String[] greetings = {"Hi", "Hello", "Hey", "Howdy", "Welcome", "Yo", "Good day", "What's up"};
+        Random random = new Random();
+        String randomGreeting = greetings[random.nextInt(greetings.length)];
+        String name = new SharedPreferenceUtil(this).getUserName();
+        String email = new SharedPreferenceUtil(this).getUserEmail();
+
+        nameTextView.setText(randomGreeting +", "+name);
+        userNameTextView.setText(name);
+        emailTextView.setText(email);
+    }
+
     @SuppressLint("NotifyDataSetChanged")
     @Override
     protected void onResume() {
         super.onResume();
+        initialize();
         notesList.clear();
         notesList.addAll(dbHelper.getAllNotes());
         noteAdapter.notifyDataSetChanged();
@@ -148,7 +175,8 @@ public class MainActivity extends AppCompatActivity {
 
         EditText userName = customDialogView.findViewById(R.id.user_name_edit_text);
         EditText email = customDialogView.findViewById(R.id.email_edit_text);
-        ImageView profileImage = customDialogView.findViewById(R.id.profile_image_edit);
+        email.setText(emailTextView.getText().toString());
+        profileImage = customDialogView.findViewById(R.id.profile_image_edit);
         Button saveButton = customDialogView.findViewById(R.id.save_button);
         customDialogView.findViewById(R.id.cancel_view).setOnClickListener(v -> customDialog.dismiss());
 
@@ -159,9 +187,17 @@ public class MainActivity extends AppCompatActivity {
             String emailText = email.getText().toString();
 
             if (!name.isEmpty() && !emailText.isEmpty()) {
-                new SharedPreferenceUtil(this).setValues(name, emailText, "");
+                firebaseHelper.updateUserData(emailText, name, this, new FirebaseHelper.UpdateCallback() {
+                    @Override
+                    public void onUpdateSuccess() {
+                        Toast.makeText(MainActivity.this, "details Updated", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                new SharedPreferenceUtil(getApplicationContext()).setUserName(name);
+                new SharedPreferenceUtil(getApplicationContext()).setUserEmail(emailText);
                 userNameTextView.setText(name);
                 emailTextView.setText(emailText);
+
                 customDialog.dismiss();
             } else {
                 Toast.makeText(this, "Please fill in all fields.", Toast.LENGTH_SHORT).show();
@@ -187,14 +223,45 @@ public class MainActivity extends AppCompatActivity {
 
                 fileRef.putFile(imageUri)
                         .addOnSuccessListener(taskSnapshot -> fileRef.getDownloadUrl()
-                                .addOnSuccessListener(uri -> Picasso.get()
-                                        .load(uri)
-                                        .placeholder(R.mipmap.profile_pic)
-                                        .error(R.mipmap.profile_pic)
-                                        .into(profileImageView))
+                                .addOnSuccessListener(uri -> {
+                                    imageUrl = uri.toString();
+                                    loadProfileImage();
+                                    new SharedPreferenceUtil(this).setUserImage(uri.toString());
+                                })
                         )
                         .addOnFailureListener(e -> Log.e("Firebase", "Upload failed: " + e.getMessage()));
             }
+
+        }
+    }
+
+    private void loadProfileImage() {
+        if (imageUrl != null) {
+            if (profileImageView != null) {
+                Picasso.get()
+                        .load(imageUrl)
+                        .placeholder(R.drawable.profile_pic)
+                        .error(R.drawable.profile_pic)
+                        .into(profileImageView);
+            }
+
+            if (imageView != null) {
+                Picasso.get()
+                        .load(imageUrl)
+                        .placeholder(R.drawable.profile_pic)
+                        .error(R.drawable.profile_pic)
+                        .into(imageView);
+            }
+
+            if (profileImage != null) {
+                Picasso.get()
+                        .load(imageUrl)
+                        .placeholder(R.drawable.profile_pic)
+                        .error(R.drawable.profile_pic)
+                        .into(profileImage);
+            }
+        } else {
+            Log.e("ProfileImage", "Image URL is null");
         }
     }
 }
