@@ -1,30 +1,23 @@
 package com.example.notes;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.RecyclerView;
@@ -33,24 +26,29 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.tabs.TabLayout;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
-    RecyclerView recyclerView;
-    FloatingActionButton flabButton;
+    private RecyclerView recyclerView;
+    private FloatingActionButton fabButton;
     private DatabaseHelper dbHelper;
-    NoteAdapter noteAdapter;
-    ArrayList<Note> notesList;
+    private NoteAdapter noteAdapter;
+    private ArrayList<Note> notesList;
     private TabLayout tabLayout;
-    private ImageView profileImageView;
-    private TextView userNameTextView;
-    private TextView emailTextview;
-    private ImageButton editHeaderButton;
-    private static final int REQUEST_CAMERA = 1;
+    private ImageView profileImageView, imageView, profileImage;
+    private TextView userNameTextView, nameTextView;
+    private TextView emailTextView;
+    private DrawerLayout drawerLayout;
     private static final int REQUEST_GALLERY = 2;
-    private static final int PERMISSION_REQUEST_CODE = 100;
+    private FirebaseHelper firebaseHelper;
+    private String imageUrl = "";
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -58,43 +56,70 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        FirebaseApp.initializeApp(this);
+        firebaseHelper = new FirebaseHelper();
+
         dbHelper = new DatabaseHelper(this);
         recyclerView = findViewById(R.id.recyclerView);
-        flabButton = findViewById(R.id.floatingActionButton);
+        fabButton = findViewById(R.id.floatingActionButton);
         tabLayout = findViewById(R.id.tabLayout);
+        drawerLayout = findViewById(R.id.main);
+        nameTextView = findViewById(R.id.name_text_view);
+
         NavigationView navigationView = findViewById(R.id.nav_view);
-        editHeaderButton = navigationView.getHeaderView(0).findViewById(R.id.edit_header_button);
         userNameTextView = navigationView.getHeaderView(0).findViewById(R.id.header_user_name);
-        emailTextview = navigationView.getHeaderView(0).findViewById(R.id.header_user_email);
+        emailTextView = navigationView.getHeaderView(0).findViewById(R.id.header_user_email);
+        profileImageView = navigationView.getHeaderView(0).findViewById(R.id.header_profile_image);
+        int width = (int) (getResources().getDisplayMetrics().widthPixels * 0.7);
+        navigationView.setMinimumWidth(width);
 
-        editHeaderButton.setOnClickListener(view -> {
-            View customDialogView = LayoutInflater.from(this).inflate(R.layout.edit_dialog, null);
-            AlertDialog customDialog = new AlertDialog.Builder(this).setView(customDialogView).create();
-            customDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            customDialog.show();
-            EditText userName = customDialogView.findViewById(R.id.user_name_edit_text);
-            EditText mailId = customDialogView.findViewById(R.id.email_edit_text);
-            Button saveButton = customDialogView.findViewById(R.id.save_button);
-            ImageView cancelView = customDialogView.findViewById(R.id.cancel_view);
-            saveButton.setOnClickListener(v -> {
-                String name = userName.getText().toString();
-                String email = mailId.getText().toString();
-                if (!name.isEmpty() && !email.isEmpty()) {
-                    userNameTextView.setText(name);
-                    emailTextview.setText(email);
-                    customDialog.dismiss();
-                } else {
-                    Toast.makeText(this, "Looks like you missed the field. Can you fill it in?", Toast.LENGTH_SHORT).show();
-                }
+        imageUrl = new SharedPreferenceUtil(this).getImageUrl();
 
-            });
-            cancelView.setOnClickListener(v -> {
-                customDialog.dismiss();
-            });
+        navigationView.getHeaderView(0).findViewById(R.id.edit_header_button).setOnClickListener(view -> openEditDialog());
 
+        initialize();
+        loadProfileImage();
+        setupTabs();
+        setupRecyclerView();
+
+        fabButton.setOnClickListener(view -> {
+            Intent intent = new Intent(MainActivity.this, AddEditItemLayout.class);
+            startActivity(intent);
         });
 
-        String[] tabTitles = {"All", "Important", "Bookmarked", "Another", "heee", "eedfdf", "efefdfd0", "fdaew"};
+        findViewById(R.id.menubutton).setOnClickListener(v -> {
+            if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                drawerLayout.closeDrawer(GravityCompat.START);
+            } else {
+                drawerLayout.openDrawer(GravityCompat.START);
+            }
+        });
+    }
+
+    private void initialize() {
+        String[] greetings = {"Hi", "Hello", "Hey", "Howdy", "Welcome", "Yo", "Good day", "What's up"};
+        Random random = new Random();
+        String randomGreeting = greetings[random.nextInt(greetings.length)];
+        String name = new SharedPreferenceUtil(this).getUserName();
+        String email = new SharedPreferenceUtil(this).getUserEmail();
+
+        nameTextView.setText(randomGreeting + ", " + name);
+        userNameTextView.setText(name);
+        emailTextView.setText(email);
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    @Override
+    protected void onResume() {
+        super.onResume();
+        initialize();
+        notesList.clear();
+        notesList.addAll(dbHelper.getAllNotes());
+        noteAdapter.notifyDataSetChanged();
+    }
+
+    private void setupTabs() {
+        String[] tabTitles = {"All", "Important", "Bookmarked"};
 
         for (String title : tabTitles) {
             TabLayout.Tab tab = tabLayout.newTab();
@@ -125,107 +150,111 @@ public class MainActivity extends AppCompatActivity {
             public void onTabReselected(TabLayout.Tab tab) {
             }
         });
+    }
 
-        DrawerLayout drawerLayout = findViewById(R.id.main);
-        ImageView menuButton = findViewById(R.id.menubutton);
-
-        menuButton.setOnClickListener(v -> {
-            if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-                drawerLayout.closeDrawer(GravityCompat.START);
-            } else {
-                drawerLayout.openDrawer(GravityCompat.START);
-            }
-        });
-
+    private void setupRecyclerView() {
         notesList = dbHelper.getAllNotes();
         noteAdapter = new NoteAdapter(notesList, this);
-
         StaggeredGridLayoutManager gridLayoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(gridLayoutManager);
         recyclerView.setAdapter(noteAdapter);
+    }
 
-        flabButton.setOnClickListener(view -> {
-            Intent intent = new Intent(MainActivity.this, AddEditItemLayout.class);
-            startActivityForResult(intent, 1);
+    private void openEditDialog() {
+        View customDialogView = LayoutInflater.from(this).inflate(R.layout.edit_dialog, null);
+        AlertDialog customDialog = new AlertDialog.Builder(this).setView(customDialogView).create();
+        customDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        customDialog.show();
+
+        EditText userName = customDialogView.findViewById(R.id.user_name_edit_text);
+        EditText email = customDialogView.findViewById(R.id.email_edit_text);
+        email.setText(emailTextView.getText().toString());
+        profileImage = customDialogView.findViewById(R.id.profile_image_edit);
+        Button saveButton = customDialogView.findViewById(R.id.save_button);
+        customDialogView.findViewById(R.id.cancel_view).setOnClickListener(v -> customDialog.dismiss());
+
+        profileImage.setOnClickListener(v -> openGallery());
+
+        saveButton.setOnClickListener(v -> {
+            String name = userName.getText().toString();
+            String emailText = email.getText().toString();
+
+            if (!name.isEmpty() && !emailText.isEmpty()) {
+                firebaseHelper.updateUserData(emailText, name, this, new FirebaseHelper.UpdateCallback() {
+                    @Override
+                    public void onUpdateSuccess() {
+                        Toast.makeText(MainActivity.this, "details Updated", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                new SharedPreferenceUtil(getApplicationContext()).setUserName(name);
+                new SharedPreferenceUtil(getApplicationContext()).setUserEmail(emailText);
+                userNameTextView.setText(name);
+                emailTextView.setText(emailText);
+
+                customDialog.dismiss();
+            } else {
+                Toast.makeText(this, "Please fill in all fields.", Toast.LENGTH_SHORT).show();
+            }
         });
     }
 
-    @SuppressLint("NotifyDataSetChanged")
-    @Override
-    protected void onResume() {
-        super.onResume();
-        notesList.clear();
-        notesList.addAll(dbHelper.getAllNotes());
-        noteAdapter.notifyDataSetChanged();
-    }
-
-    public void dialogOpen(View v) {
-        requestPermissions();
-    }
-
-    private void showImagePickerDialog() {
-        String[] options = {"Take Photo", "Choose from Gallery", "Cancel"};
-        new AlertDialog.Builder(this)
-                .setTitle("Choose Profile Picture")
-                .setItems(options, (dialog, which) -> {
-                    switch (options[which]) {
-                        case "Take Photo":
-                            openCamera();
-                            break;
-                        case "Choose from Gallery":
-                            openGallery();
-                            break;
-                        case "Cancel":
-                            dialog.dismiss();
-                            break;
-                    }
-                })
-                .show();
-    }
-
-    private void openCamera() {
-        Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        startActivityForResult(cameraIntent, REQUEST_CAMERA);
-    }
-
     private void openGallery() {
-        Intent galleryIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        Intent galleryIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(galleryIntent, REQUEST_GALLERY);
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == Activity.RESULT_OK) {
-            if (requestCode == REQUEST_CAMERA) {
-                Bitmap photo = (Bitmap) data.getExtras().get("data");
-                profileImageView.setImageBitmap(photo);
-            } else if (requestCode == REQUEST_GALLERY) {
-                Uri imageUri = data.getData();
-                profileImageView.setImageURI(imageUri);
+
+        if (resultCode == RESULT_OK && requestCode == REQUEST_GALLERY && data != null) {
+            Uri imageUri = data.getData();
+
+            if (imageUri != null) {
+                StorageReference storageRef = FirebaseStorage.getInstance().getReference("NotesAppDetails");
+                StorageReference fileRef = storageRef.child("profile_image/" + userNameTextView.getText() + System.currentTimeMillis() + ".jpg");
+
+                fileRef.putFile(imageUri)
+                        .addOnSuccessListener(taskSnapshot -> fileRef.getDownloadUrl()
+                                .addOnSuccessListener(uri -> {
+                                    imageUrl = uri.toString();
+                                    loadProfileImage();
+                                    new SharedPreferenceUtil(this).setUserImage(uri.toString());
+                                })
+                        )
+                        .addOnFailureListener(e -> Log.e("Firebase", "Upload failed: " + e.getMessage()));
             }
+
         }
     }
 
-    private void requestPermissions() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            showImagePickerDialog();
+    private void loadProfileImage() {
+        if (imageUrl != null) {
+            if (profileImageView != null) {
+                Picasso.get()
+                        .load(imageUrl)
+                        .placeholder(R.drawable.profile_pic)
+                        .error(R.drawable.profile_pic)
+                        .into(profileImageView);
+            }
+
+            if (imageView != null) {
+                Picasso.get()
+                        .load(imageUrl)
+                        .placeholder(R.drawable.profile_pic)
+                        .error(R.drawable.profile_pic)
+                        .into(imageView);
+            }
+
+            if (profileImage != null) {
+                Picasso.get()
+                        .load(imageUrl)
+                        .placeholder(R.drawable.profile_pic)
+                        .error(R.drawable.profile_pic)
+                        .into(profileImage);
+            }
         } else {
-            showImagePickerDialog();
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED &&
-                    grantResults[1] == PackageManager.PERMISSION_GRANTED &&
-                    grantResults[2] == PackageManager.PERMISSION_GRANTED) {
-                showImagePickerDialog();
-            } else {
-                Toast.makeText(this, "Permissions are required to take and select photos.", Toast.LENGTH_SHORT).show();
-            }
+            Log.e("ProfileImage", "Image URL is null");
         }
     }
 }
