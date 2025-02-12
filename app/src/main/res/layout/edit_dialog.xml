@@ -64,6 +64,8 @@
                 android:id="@+id/email_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:editable="false"
+                android:enabled="false"
                 android:hint="Email"
                 android:inputType="textEmailAddress"
                 android:textSize="20dp" />
@@ -83,12 +85,13 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.google.android.material.imageview.ShapeableImageView
-        android:id="@+id/Imageview"
+        android:id="@+id/profile_image_edit"
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:layout_marginTop="50dp"
-        android:background="@mipmap/profile_pic"
+        android:background="@color/tabSelectedTextColor"
         android:onClick="dialogOpen"
+        android:src="@drawable/profile_pic"
         app:layout_constraintLeft_toLeftOf="@id/constraintLayout"
         app:layout_constraintRight_toRightOf="@id/constraintLayout"
         app:layout_constraintTop_toTopOf="parent"
@@ -100,7 +103,8 @@
         android:layout_height="wrap_content"
         android:layout_margin="2dp"
         android:background="@null"
-        app:layout_constraintBottom_toBottomOf="@id/Imageview"
-        app:layout_constraintRight_toRightOf="@id/Imageview" />
+        android:src="@drawable/ic_camera"
+        app:layout_constraintBottom_toBottomOf="@id/profile_image_edit"
+        app:layout_constraintRight_toRightOf="@id/profile_image_edit" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

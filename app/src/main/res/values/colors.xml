@@ -3,4 +3,24 @@
     <color name="black">#0d0d0d</color>
     <color name="white">#FFFFFF</color>
     <color name="grey">#1D1E1D</color>
+    <!-- Primary Colors -->
+    <color name="colorPrimary">#6200EE</color>
+    <color name="colorPrimaryDark">#3700B3</color>
+    <color name="colorAccent">#03DAC5</color>
+
+    <!-- Text Colors -->
+    <color name="textColorPrimary">#000000</color>
+    <color name="textColorSecondary">#757575</color>
+
+    <!-- Background Colors -->
+    <color name="backgroundLight">#FFFFFF</color>
+    <color name="backgroundDark">#121212</color>
+
+    <!-- Additional Colors -->
+    <color name="tabIndicatorColor">#FF5722</color>
+    <color name="tabSelectedTextColor">#F0BE0C</color>
+    <color name="tabUnselectedTextColor">#9E9E9E</color>
+
+    <color name="layout_background">#EADFCD</color>
+
 </resources>

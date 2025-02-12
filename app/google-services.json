@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "480579412051",
+    "firebase_url": "https://hotel-management-system-902ff-default-rtdb.firebaseio.com",
+    "project_id": "hotel-management-system-902ff",
+    "storage_bucket": "hotel-management-system-902ff.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:480579412051:android:a00d7589fff375b4f626a6",
+        "android_client_info": {
+          "package_name": "com.example.notes"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCxl3Sbt8kXwVxRmSJG51CWKH3pnpU-ZXo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
