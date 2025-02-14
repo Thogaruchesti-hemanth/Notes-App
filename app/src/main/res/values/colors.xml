@@ -23,4 +23,12 @@
 
     <color name="layout_background">#EADFCD</color>
 
+    <color name="lightBlue">#87CEFA</color>  <!-- Soft Light Blue -->
+    <color name="lightPurple">#D8BFD8</color>  <!-- Light Lavender Purple -->
+    <color name="primaryColor">#6200EE</color>  <!-- Deep Purple for buttons/icons -->
+    <color name="errorColor">#D32F2F</color>  <!-- Red for delete button -->
+    <color name="outlineColor">#E0E0E0</color>  <!-- Light Gray border -->
+    <color name="onPrimary">#FFFFFF</color>  <!-- White text/icons on dark backgrounds -->
+    <color name="lightGray">#F5F5F5</color>  <!-- Soft Gray for date chip -->
+
 </resources>

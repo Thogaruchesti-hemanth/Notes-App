@@ -3,12 +3,17 @@ package com.example.notes;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -20,12 +25,27 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
+import com.example.notes.adapter.ImportantAdapter;
+import com.example.notes.adapter.NoteAdapter;
+import com.example.notes.adapter.ReminderAdapter;
+import com.example.notes.adapter.ToDoAdapter;
+import com.example.notes.adapter.WishAdapter;
+import com.example.notes.database.DatabaseHelper;
+import com.example.notes.database.ImportantDatabaseHandler;
+import com.example.notes.database.NoteDatabaseHandler;
+import com.example.notes.database.ReminderDatabaseHandler;
+import com.example.notes.database.ToDoDatabaseHandler;
+import com.example.notes.database.WishDatabaseHandler;
+import com.example.notes.models.Important;
+import com.example.notes.models.Note;
+import com.example.notes.models.Reminder;
+import com.example.notes.models.ToDo;
+import com.example.notes.models.Wish;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
-import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -36,19 +56,21 @@ import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final int REQUEST_GALLERY = 2;
+    private static final int REQUEST_CODE_ADD_EDIT = 1001;
+    NoteAdapter noteAdapter;
     private RecyclerView recyclerView;
     private FloatingActionButton fabButton;
     private DatabaseHelper dbHelper;
-    private NoteAdapter noteAdapter;
     private ArrayList<Note> notesList;
-    private TabLayout tabLayout;
-    private ImageView profileImageView, imageView, profileImage;
+    private ImageView profileImageView, profileImage;
     private TextView userNameTextView, nameTextView;
     private TextView emailTextView;
     private DrawerLayout drawerLayout;
-    private static final int REQUEST_GALLERY = 2;
     private FirebaseHelper firebaseHelper;
     private String imageUrl = "";
+    private NavigationView navigationView;
+    private TextView titleTextView;
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -62,11 +84,11 @@ public class MainActivity extends AppCompatActivity {
         dbHelper = new DatabaseHelper(this);
         recyclerView = findViewById(R.id.recyclerView);
         fabButton = findViewById(R.id.floatingActionButton);
-        tabLayout = findViewById(R.id.tabLayout);
         drawerLayout = findViewById(R.id.main);
         nameTextView = findViewById(R.id.name_text_view);
+        titleTextView = findViewById(R.id.title_text_view);
 
-        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView = findViewById(R.id.nav_view);
         userNameTextView = navigationView.getHeaderView(0).findViewById(R.id.header_user_name);
         emailTextView = navigationView.getHeaderView(0).findViewById(R.id.header_user_email);
         profileImageView = navigationView.getHeaderView(0).findViewById(R.id.header_profile_image);
@@ -79,12 +101,11 @@ public class MainActivity extends AppCompatActivity {
 
         initialize();
         loadProfileImage();
-        setupTabs();
-        setupRecyclerView();
 
         fabButton.setOnClickListener(view -> {
             Intent intent = new Intent(MainActivity.this, AddEditItemLayout.class);
-            startActivity(intent);
+            intent.putExtra("dataType", titleTextView.getText().toString());
+            startActivityForResult(intent, REQUEST_CODE_ADD_EDIT);
         });
 
         findViewById(R.id.menubutton).setOnClickListener(v -> {
@@ -94,6 +115,25 @@ public class MainActivity extends AppCompatActivity {
                 drawerLayout.openDrawer(GravityCompat.START);
             }
         });
+
+        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(MenuItem item) {
+                String title = item.getTitle().toString();
+                if (title.equals("Logout")) {
+                    new SharedPreferenceUtil(MainActivity.this).setKeyLogin(false);
+                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                    startActivity(intent);
+                    return true;
+                } else {
+                    titleTextView.setText(title);
+                    new LoadDataTask(title).execute();
+                    drawerLayout.closeDrawers();
+                    return true;
+                }
+            }
+        });
+
     }
 
     private void initialize() {
@@ -108,56 +148,14 @@ public class MainActivity extends AppCompatActivity {
         emailTextView.setText(email);
     }
 
-    @SuppressLint("NotifyDataSetChanged")
+
     @Override
     protected void onResume() {
         super.onResume();
         initialize();
-        notesList.clear();
-        notesList.addAll(dbHelper.getAllNotes());
-        noteAdapter.notifyDataSetChanged();
-    }
-
-    private void setupTabs() {
-        String[] tabTitles = {"All", "Important", "Bookmarked"};
-
-        for (String title : tabTitles) {
-            TabLayout.Tab tab = tabLayout.newTab();
-            tab.setCustomView(R.layout.tab_item);
-            TextView tabText = tab.getCustomView().findViewById(R.id.tabText);
-            tabText.setText(title);
-            tabLayout.addTab(tab);
-        }
-
-        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                View customView = tab.getCustomView();
-                if (customView != null) {
-                    customView.setBackgroundResource(R.drawable.button_background);
-                }
-            }
-
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-                View customView = tab.getCustomView();
-                if (customView != null) {
-                    customView.setBackgroundResource(R.drawable.button_background);
-                }
-            }
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {
-            }
-        });
-    }
-
-    private void setupRecyclerView() {
-        notesList = dbHelper.getAllNotes();
-        noteAdapter = new NoteAdapter(notesList, this);
-        StaggeredGridLayoutManager gridLayoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
-        recyclerView.setLayoutManager(gridLayoutManager);
-        recyclerView.setAdapter(noteAdapter);
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            new LoadDataTask(titleTextView.getText().toString()).execute();
+        }, 2000);
     }
 
     private void openEditDialog() {
@@ -238,14 +236,6 @@ public class MainActivity extends AppCompatActivity {
                         .into(profileImageView);
             }
 
-            if (imageView != null) {
-                Picasso.get()
-                        .load(imageUrl)
-                        .placeholder(R.drawable.profile_pic)
-                        .error(R.drawable.profile_pic)
-                        .into(imageView);
-            }
-
             if (profileImage != null) {
                 Picasso.get()
                         .load(imageUrl)
@@ -255,6 +245,72 @@ public class MainActivity extends AppCompatActivity {
             }
         } else {
             Log.e("ProfileImage", "Image URL is null");
+        }
+    }
+
+
+    private class LoadDataTask extends AsyncTask<Void, Void, Object> {
+        private final String title;
+
+        public LoadDataTask(String title) {
+            this.title = title;
+        }
+
+        @Override
+        protected Object doInBackground(Void... voids) {
+            DatabaseHelper dbHelper = new DatabaseHelper(MainActivity.this);
+            SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+            switch (title) {
+                case "All Notes":
+                    return new NoteDatabaseHandler(db).getAll();
+                case "Important":
+                    return new ImportantDatabaseHandler(db).getAll();
+                case "Reminder":
+                    return new ReminderDatabaseHandler(db).getAll();
+                case "To-Do":
+                    return new ToDoDatabaseHandler(db).getAll();
+                case "Wishes":
+                    return new WishDatabaseHandler(db).getAll();
+                default:
+                    return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Object result) {
+            if (result != null) {
+                RecyclerView.LayoutManager layoutManager;
+                RecyclerView.Adapter adapter = null;
+
+                switch (title) {
+                    case "All Notes":
+                        adapter = new NoteAdapter((ArrayList<Note>) result, MainActivity.this);
+                        layoutManager = new LinearLayoutManager(MainActivity.this);
+                        break;
+                    case "Important":
+                        adapter = new ImportantAdapter((ArrayList<Important>) result, MainActivity.this);
+                        layoutManager = new LinearLayoutManager(MainActivity.this);
+                        break;
+                    case "Reminder":
+                        adapter = new ReminderAdapter((ArrayList<Reminder>) result, MainActivity.this);
+                        layoutManager = new LinearLayoutManager(MainActivity.this);
+                        break;
+                    case "To-Do":
+                        adapter = new ToDoAdapter((ArrayList<ToDo>) result, MainActivity.this);
+                        layoutManager = new LinearLayoutManager(MainActivity.this);
+                        break;
+                    case "Wishes":
+                        adapter = new WishAdapter((ArrayList<Wish>) result, MainActivity.this);
+                        layoutManager = new LinearLayoutManager(MainActivity.this);
+                        break;
+                    default:
+                        return;
+                }
+
+                recyclerView.setLayoutManager(layoutManager);
+                recyclerView.setAdapter(adapter);
+            }
         }
     }
 }
