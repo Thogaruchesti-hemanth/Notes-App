@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="200dp"
-    android:background="@color/grey"
+    android:background="?attr/colorSecondary"
     android:padding="20dp">
 
     <ImageButton
@@ -45,7 +45,7 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:text="User Name"
-            android:textColor="@color/white"
+            android:textColor="?attr/colorPrimary"
             android:textSize="20sp"
             android:textStyle="bold" />
 
@@ -56,7 +56,7 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:text="user@example.com"
-            android:textColor="@color/white"
+            android:textColor="?attr/colorPrimary"
             android:textSize="16sp" />
 
     </LinearLayout>

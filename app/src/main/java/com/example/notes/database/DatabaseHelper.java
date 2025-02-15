@@ -18,8 +18,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("CREATE TABLE IF NOT EXISTS notes (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "title TEXT, " +
-                "content TEXT, " +
-                "created_at TEXT);");
+                "message TEXT, " +
+                "datetime TEXT, " +
+                "background_color TEXT);");
 
         db.execSQL("CREATE TABLE IF NOT EXISTS important (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +

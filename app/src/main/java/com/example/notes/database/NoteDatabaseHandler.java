@@ -14,9 +14,6 @@ public class NoteDatabaseHandler {
 
     private final SQLiteDatabase db;
 
-    public NoteDatabaseHandler(SQLiteDatabase db) {
-        this.db = db;
-    }
 
     public NoteDatabaseHandler(Context context) {
         DatabaseHelper dbHelper = new DatabaseHelper(context);
@@ -24,13 +21,15 @@ public class NoteDatabaseHandler {
     }
 
 
-    public long insertNote(String title, String content, String createdAt) {
+    public long insertNote(String title, String message, String datetime, String backgroundColor) {
         ContentValues values = new ContentValues();
         values.put("title", title);
-        values.put("content", content);
-        values.put("created_at", createdAt);
+        values.put("message", message);
+        values.put("datetime", datetime);
+        values.put("background_color", backgroundColor);
         return db.insert("notes", null, values);
     }
+
 
     public Note getNoteById(int id) {
         Note note = null;
@@ -42,17 +41,20 @@ public class NoteDatabaseHandler {
             if (cursor != null && cursor.moveToFirst()) {
                 int noteIdColumnIndex = cursor.getColumnIndex("id");
                 int titleColumnIndex = cursor.getColumnIndex("title");
-                int contentColumnIndex = cursor.getColumnIndex("content");
-                int createdAtColumnIndex = cursor.getColumnIndex("created_at");
+                int messageColumnIndex = cursor.getColumnIndex("message");
+                int datetimeColumnIndex = cursor.getColumnIndex("datetime");
+                int backgroundColorColumnIndex = cursor.getColumnIndex("background_color");
 
-                if (noteIdColumnIndex >= 0 && titleColumnIndex >= 0 && contentColumnIndex >= 0 && createdAtColumnIndex >= 0) {
+                if (noteIdColumnIndex >= 0 && titleColumnIndex >= 0 && messageColumnIndex >= 0 &&
+                        datetimeColumnIndex >= 0 && backgroundColorColumnIndex >= 0) {
+
                     int noteId = cursor.getInt(noteIdColumnIndex);
                     String title = cursor.getString(titleColumnIndex);
-                    String content = cursor.getString(contentColumnIndex);
-                    String createdAt = cursor.getString(createdAtColumnIndex);
+                    String message = cursor.getString(messageColumnIndex);
+                    String datetime = cursor.getString(datetimeColumnIndex);
+                    String backgroundColor = cursor.getString(backgroundColorColumnIndex);
 
-                    note = new Note(noteId, title, content, createdAt);
-                } else {
+                    note = new Note(noteId, title, message, datetime, backgroundColor);
                 }
             }
         } catch (Exception e) {
@@ -66,6 +68,7 @@ public class NoteDatabaseHandler {
         return note;
     }
 
+
     public ArrayList<Note> getAll() {
         ArrayList<Note> notes = new ArrayList<>();
         Cursor cursor = db.rawQuery("SELECT * FROM notes", null);
@@ -74,20 +77,24 @@ public class NoteDatabaseHandler {
             do {
                 @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex("id"));
                 @SuppressLint("Range") String title = cursor.getString(cursor.getColumnIndex("title"));
-                @SuppressLint("Range") String content = cursor.getString(cursor.getColumnIndex("content"));
-//                @SuppressLint("Range") String createdAt = cursor.getString(cursor.getColumnIndex("createdAt"));
-                notes.add(new Note(id, title, content, ""));
+                @SuppressLint("Range") String message = cursor.getString(cursor.getColumnIndex("message"));
+                @SuppressLint("Range") String datetime = cursor.getString(cursor.getColumnIndex("datetime"));
+                @SuppressLint("Range") String backgroundColor = cursor.getString(cursor.getColumnIndex("background_color"));
+
+                notes.add(new Note(id, title, message, datetime, backgroundColor));
             } while (cursor.moveToNext());
         }
         cursor.close();
         return notes;
     }
 
-    public int updateNote(int id, String title, String content, String createdAt) {
+
+    public int updateNote(int id, String title, String message, String datetime, String backgroundColor) {
         ContentValues values = new ContentValues();
         values.put("title", title);
-        values.put("content", content);
-        values.put("created_at", createdAt);
+        values.put("message", message);
+        values.put("datetime", datetime);
+        values.put("background_color", backgroundColor);
         return db.update("notes", values, "id = ?", new String[]{String.valueOf(id)});
     }
 

@@ -23,10 +23,12 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.example.notes.adapter.ImportantAdapter;
 import com.example.notes.adapter.NoteAdapter;
@@ -44,7 +46,6 @@ import com.example.notes.models.Note;
 import com.example.notes.models.Reminder;
 import com.example.notes.models.ToDo;
 import com.example.notes.models.Wish;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.storage.FirebaseStorage;
@@ -58,12 +59,10 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_GALLERY = 2;
     private static final int REQUEST_CODE_ADD_EDIT = 1001;
-    NoteAdapter noteAdapter;
     private RecyclerView recyclerView;
-    private FloatingActionButton fabButton;
+    private Button createButton;
     private DatabaseHelper dbHelper;
-    private ArrayList<Note> notesList;
-    private ImageView profileImageView, profileImage;
+    private ImageView profileImageView, profileImage,themeView;
     private TextView userNameTextView, nameTextView;
     private TextView emailTextView;
     private DrawerLayout drawerLayout;
@@ -83,10 +82,11 @@ public class MainActivity extends AppCompatActivity {
 
         dbHelper = new DatabaseHelper(this);
         recyclerView = findViewById(R.id.recyclerView);
-        fabButton = findViewById(R.id.floatingActionButton);
+        createButton = findViewById(R.id.createButton);
         drawerLayout = findViewById(R.id.main);
         nameTextView = findViewById(R.id.name_text_view);
         titleTextView = findViewById(R.id.title_text_view);
+        themeView = findViewById(R.id.theme_button);
 
         navigationView = findViewById(R.id.nav_view);
         userNameTextView = navigationView.getHeaderView(0).findViewById(R.id.header_user_name);
@@ -95,6 +95,20 @@ public class MainActivity extends AppCompatActivity {
         int width = (int) (getResources().getDisplayMetrics().widthPixels * 0.7);
         navigationView.setMinimumWidth(width);
 
+        themeView.setOnClickListener(view -> {
+            boolean isNightMode = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES;
+
+            if (isNightMode) {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                themeView.setImageDrawable(getResources().getDrawable(R.drawable.ic_day));
+            } else {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                themeView.setImageDrawable(getResources().getDrawable(R.drawable.ic_night));
+            }
+        });
+
+
+
         imageUrl = new SharedPreferenceUtil(this).getImageUrl();
 
         navigationView.getHeaderView(0).findViewById(R.id.edit_header_button).setOnClickListener(view -> openEditDialog());
@@ -102,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
         initialize();
         loadProfileImage();
 
-        fabButton.setOnClickListener(view -> {
+        createButton.setOnClickListener(view -> {
             Intent intent = new Intent(MainActivity.this, AddEditItemLayout.class);
             intent.putExtra("dataType", titleTextView.getText().toString());
             startActivityForResult(intent, REQUEST_CODE_ADD_EDIT);
@@ -263,7 +277,7 @@ public class MainActivity extends AppCompatActivity {
 
             switch (title) {
                 case "All Notes":
-                    return new NoteDatabaseHandler(db).getAll();
+                    return new NoteDatabaseHandler(MainActivity.this).getAll();
                 case "Important":
                     return new ImportantDatabaseHandler(db).getAll();
                 case "Reminder":
@@ -286,7 +300,7 @@ public class MainActivity extends AppCompatActivity {
                 switch (title) {
                     case "All Notes":
                         adapter = new NoteAdapter((ArrayList<Note>) result, MainActivity.this);
-                        layoutManager = new LinearLayoutManager(MainActivity.this);
+                        layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
                         break;
                     case "Important":
                         adapter = new ImportantAdapter((ArrayList<Important>) result, MainActivity.this);

@@ -6,23 +6,26 @@ import android.database.sqlite.SQLiteDatabase;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.notes.AddEditItemLayout;
 import com.example.notes.R;
 import com.example.notes.database.NoteDatabaseHandler;
 import com.example.notes.models.Note;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder> {
 
     private ArrayList<Note> noteList;
-    private Context context;
+    private final Context context;
     private SQLiteDatabase db;
 
     public NoteAdapter(ArrayList<Note> noteList, Context context) {
@@ -31,8 +34,8 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
     }
 
     public void updateData(ArrayList<Note> noteList) {
-        this.noteList=noteList;
-       notifyDataSetChanged();
+        this.noteList = noteList;
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -46,25 +49,51 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
     public void onBindViewHolder(@NonNull NoteViewHolder holder, int position) {
         Note note = noteList.get(position);
         holder.textViewTitle.setText(note.getTitle());
-        holder.textViewContent.setText(note.getContent());
+        holder.textViewContent.setText(note.getMessage());
+        holder.mainLayout.setCardBackgroundColor(android.graphics.Color.parseColor(note.getBackgroundColor()));
+        extractTimeAndDate(note.getCreatedAt(), holder.textDate, holder.textTime);
 
-        holder.buttonDelete.setOnClickListener(view -> {
-            deleteNote(note.getId());
-            noteList.remove(position);
-            notifyItemRemoved(position);
-        });
+        holder.mainLayout.setOnLongClickListener(view -> {
+            MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context);
+            builder.setTitle("Select Action");
 
-        holder.textViewTitle.setOnClickListener(view -> {
-            Intent intent = new Intent(context, AddEditItemLayout.class);
-            intent.putExtra("itemId", note.getId());
-            intent.putExtra("dataType", "Note");
-            context.startActivity(intent);
+            builder.setPositiveButton("Edit", (dialog, which) -> {
+                Intent intent = new Intent(context, AddEditItemLayout.class);
+                intent.putExtra("itemId", note.getId());
+                intent.putExtra("dataType", "All Notes");
+                context.startActivity(intent);
+            });
+
+            builder.setNegativeButton("Delete", (dialog, which) -> {
+                deleteNote(note.getId());
+                noteList.remove(position);
+                notifyItemRemoved(position);
+            });
+
+            builder.show();
+
+            return true;
         });
     }
 
     public void deleteNote(int itemId) {
-        new NoteDatabaseHandler(db).deleteNote(itemId);
+        new NoteDatabaseHandler(context).deleteNote(itemId);
     }
+
+    private void extractTimeAndDate(String dateTimeString, TextView dateView, TextView timeView) {
+        try {
+            SimpleDateFormat inputFormat = new SimpleDateFormat("MMM dd, yyyy hh:mm a");
+            Date date = inputFormat.parse(dateTimeString);
+            SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy");
+            SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a");
+
+            dateView.setText(dateFormat.format(date));
+            timeView.setText(timeFormat.format(date));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
     @Override
     public int getItemCount() {
@@ -73,15 +102,16 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
 
     public static class NoteViewHolder extends RecyclerView.ViewHolder {
 
-        TextView textViewTitle;
-        TextView textViewContent;
-        ImageButton buttonDelete;
+        TextView textViewTitle, textViewContent, textDate, textTime;
+        CardView mainLayout;
 
         public NoteViewHolder(@NonNull View itemView) {
             super(itemView);
             textViewTitle = itemView.findViewById(R.id.note_title);
             textViewContent = itemView.findViewById(R.id.note_text);
-            buttonDelete = itemView.findViewById(R.id.note_edit);
+            textDate = itemView.findViewById(R.id.note_date);
+            textTime = itemView.findViewById(R.id.note_time);
+            mainLayout = itemView.findViewById(R.id.main_layout);
         }
     }
 }
