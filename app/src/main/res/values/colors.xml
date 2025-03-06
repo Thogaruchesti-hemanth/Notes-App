@@ -30,5 +30,9 @@
     <color name="outlineColor">#E0E0E0</color>  <!-- Light Gray border -->
     <color name="onPrimary">#FFFFFF</color>  <!-- White text/icons on dark backgrounds -->
     <color name="lightGray">#F5F5F5</color>  <!-- Soft Gray for date chip -->
+    <color name="priority_high">#D32F2F</color>  <!-- Red -->
+    <color name="priority_medium">#FFA000</color>  <!-- Orange -->
+    <color name="priority_low">#388E3C</color>  <!-- Green -->
+    <color name="priority_default">#BDBDBD</color>  <!-- Gray -->
 
 </resources>

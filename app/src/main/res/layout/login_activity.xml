@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/layout_background"
+    android:background="?attr/colorSecondary"
     android:fillViewport="true">
 
     <LinearLayout
@@ -64,7 +64,7 @@
             android:visibility="gone"
             app:boxBackgroundMode="outline"
             app:boxStrokeColor="@color/black"
-            app:hintTextColor="@color/tabSelectedTextColor">
+            app:hintTextColor="?attr/colorPrimary">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/user_name_edit_text"
@@ -83,7 +83,7 @@
             android:layout_margin="5dp"
             app:boxBackgroundMode="outline"
             app:boxStrokeColor="@color/black"
-            app:hintTextColor="@color/tabSelectedTextColor">
+            app:hintTextColor="?attr/colorPrimary">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/login_email"
@@ -104,7 +104,7 @@
             app:boxBackgroundMode="outline"
             app:boxStrokeColor="@color/black"
             app:endIconMode="password_toggle"
-            app:hintTextColor="@color/tabSelectedTextColor">
+            app:hintTextColor="?attr/colorPrimary">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/login_password"
@@ -125,7 +125,7 @@
             android:visibility="gone"
             app:boxBackgroundMode="outline"
             app:boxStrokeColor="@color/black"
-            app:hintTextColor="@color/tabSelectedTextColor">
+            app:hintTextColor="?attr/colorPrimary">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/confirm_password"

@@ -1,34 +1,28 @@
 package com.example.notes.models;
 
 public class ToDo {
-
-    // Table name
-    public static final String TABLE_NAME = "todos";
-
-    // Column names
-    public static final String COLUMN_ID = "id";
-    public static final String COLUMN_TASK = "task";
-    public static final String COLUMN_DUE_DATE = "due_date";
-
-    // Variables for the model
-    private int id;
+    private final int id;
     private String task;
+    private String description;
     private String dueDate;
+    private int priority;
+    private int isCompleted;
+    private int progress;
+    private String backgroundColor;
 
-    // Constructor
-    public ToDo(int id, String task, String dueDate) {
+    public ToDo(int id, String task, String description, String dueDate, int priority, int isCompleted, int progress, String backgroundColor) {
         this.id = id;
         this.task = task;
+        this.description = description;
         this.dueDate = dueDate;
+        this.priority = priority;
+        this.isCompleted = isCompleted;
+        this.progress = progress;
+        this.backgroundColor = backgroundColor;
     }
 
-    // Getters and setters
     public int getId() {
         return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     public String getTask() {
@@ -39,6 +33,14 @@ public class ToDo {
         this.task = task;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     public String getDueDate() {
         return dueDate;
     }
@@ -47,10 +49,35 @@ public class ToDo {
         this.dueDate = dueDate;
     }
 
-    // SQL to create the table
-    public static final String CREATE_TABLE =
-            "CREATE TABLE " + TABLE_NAME + " (" +
-                    COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    COLUMN_TASK + " TEXT, " +
-                    COLUMN_DUE_DATE + " TEXT)";
+    public int getPriority() {
+        return priority;
+    }
+
+    public void setPriority(int priority) {
+        this.priority = priority;
+    }
+
+    public int getIsCompleted() {
+        return isCompleted;
+    }
+
+    public void setIsCompleted(int isCompleted) {
+        this.isCompleted = isCompleted;
+    }
+
+    public int getProgress() {
+        return progress;
+    }
+
+    public void setProgress(int progress) {
+        this.progress = progress;
+    }
+
+    public String getBackgroundColor() {
+        return backgroundColor;
+    }
+
+    public void setBackgroundColor(String backgroundColor) {
+        this.backgroundColor = backgroundColor;
+    }
 }

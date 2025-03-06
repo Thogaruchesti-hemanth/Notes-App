@@ -1,30 +1,28 @@
 package com.example.notes.adapter;
 
-        import android.content.Context;
-        import android.content.Intent;
-        import android.database.sqlite.SQLiteDatabase;
-        import android.view.LayoutInflater;
-        import android.view.View;
-        import android.view.ViewGroup;
-        import android.widget.ImageButton;
-        import android.widget.TextView;
+import android.content.Context;
+import android.content.Intent;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
 
-        import androidx.annotation.NonNull;
-        import androidx.recyclerview.widget.RecyclerView;
+import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
+import androidx.recyclerview.widget.RecyclerView;
 
-        import com.example.notes.AddEditItemLayout;
-        import com.example.notes.R;
-        import com.example.notes.database.ReminderDatabaseHandler;
-        import com.example.notes.models.Reminder;
-        import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.example.notes.AddEditItemLayout;
+import com.example.notes.R;
+import com.example.notes.database.ReminderDatabaseHandler;
+import com.example.notes.models.Reminder;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
-        import java.util.ArrayList;
+import java.util.ArrayList;
 
 public class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.ReminderViewHolder> {
 
-    private ArrayList<Reminder> reminderList;
-    private Context context;
-    private SQLiteDatabase db;
+    private final ArrayList<Reminder> reminderList;
+    private final Context context;
 
     public ReminderAdapter(ArrayList<Reminder> reminderList, Context context) {
         this.reminderList = reminderList;
@@ -41,25 +39,29 @@ public class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.Remind
     @Override
     public void onBindViewHolder(@NonNull ReminderViewHolder holder, int position) {
         Reminder reminder = reminderList.get(position);
-        holder.textViewTitle.setText(reminder.getMessage());
-        holder.textViewContent.setText(reminder.getReminderDate());
+        holder.reminderTextViewTitle.setText(reminder.getTitle());
+        holder.reminderTextViewContent.setText(reminder.getMessage());
+        holder.reminderDataAndTime.setText(reminder.getReminderTime());
+        holder.reminderCardView.setCardBackgroundColor(android.graphics.Color.parseColor(reminder.getBackgroundColor()));
 
-        holder.buttonDelete.setOnClickListener(view -> {
-            deleteReminder(reminder.getId());
-            reminderList.remove(position);
-            notifyItemRemoved(position);
+        holder.reminderCardView.setOnLongClickListener(view -> {
+            MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context);
+            builder.setTitle("Select Action")
+                    .setPositiveButton("Edit", (dialog, which) -> {
+                        Intent intent = new Intent(context, AddEditItemLayout.class);
+                        intent.putExtra("itemId", reminder.getId());
+                        intent.putExtra("dataType", "Reminder");
+                        context.startActivity(intent);
+                    })
+                    .setNegativeButton("Delete", (dialog, which) -> {
+                        ReminderDatabaseHandler dbHandler = new ReminderDatabaseHandler(context);
+                        dbHandler.deleteReminder(reminder.getId());
+                        reminderList.remove(position);
+                        notifyItemRemoved(position);
+                    })
+                    .show();
+            return true;
         });
-
-        holder.textViewTitle.setOnClickListener(view -> {
-            Intent intent = new Intent(context, AddEditItemLayout.class);
-            intent.putExtra("itemId", reminder.getId());
-            intent.putExtra("dataType", "Reminder");
-            context.startActivity(intent);
-        });
-    }
-
-    public void deleteReminder(int itemId) {
-        new ReminderDatabaseHandler(db).deleteReminder(itemId);
     }
 
     @Override
@@ -68,16 +70,15 @@ public class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.Remind
     }
 
     public static class ReminderViewHolder extends RecyclerView.ViewHolder {
-
-        TextView textViewTitle;
-        TextView textViewContent;
-        ImageButton buttonDelete;
+        TextView reminderTextViewTitle, reminderTextViewContent, reminderDataAndTime;
+        CardView reminderCardView;
 
         public ReminderViewHolder(@NonNull View itemView) {
             super(itemView);
-            textViewTitle = itemView.findViewById(R.id.reminder_title);
-            textViewContent = itemView.findViewById(R.id.reminder_due_date);
-            buttonDelete = itemView.findViewById(R.id.reminder_edit);
+            reminderTextViewTitle = itemView.findViewById(R.id.reminder_title_text);
+            reminderTextViewContent = itemView.findViewById(R.id.reminder_description_text);
+            reminderDataAndTime = itemView.findViewById(R.id.reminder_date_and_time);
+            reminderCardView = itemView.findViewById(R.id.reminder_layout);
         }
     }
 }

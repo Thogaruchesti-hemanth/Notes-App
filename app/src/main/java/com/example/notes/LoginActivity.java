@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.View;
-import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -48,10 +47,6 @@ public class LoginActivity extends AppCompatActivity {
 
         passwordEditText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
         confirmPasswordEditView.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-
-
-        Window window = getWindow();
-        window.setStatusBarColor(getResources().getColor(R.color.layout_background));
 
         oldUserTextView.setOnClickListener(view -> olderUser());
         goToSignupTextView.setOnClickListener(view -> createAccount());
