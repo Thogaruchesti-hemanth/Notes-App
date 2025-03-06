@@ -2,20 +2,18 @@ package com.example.notes.models;
 
 public class Important {
 
-    public static final String TABLE_NAME = "important";
-
-    public static final String COLUMN_ID = "id";
-    public static final String COLUMN_MESSAGE = "message";
-    public static final String COLUMN_DATE = "date";
-
     private int id;
+    private String title;
     private String message;
-    private String date;
+    private String dateTime;
+    private String backgroundColor;
 
-    public Important(int id, String message, String date) {
+    public Important(int id, String title, String message, String dateTime, String backgroundColor) {
         this.id = id;
+        this.title = title;
         this.message = message;
-        this.date = date;
+        this.dateTime = dateTime;
+        this.backgroundColor = backgroundColor;
     }
 
     public int getId() {
@@ -26,6 +24,14 @@ public class Important {
         this.id = id;
     }
 
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
     public String getMessage() {
         return message;
     }
@@ -34,17 +40,19 @@ public class Important {
         this.message = message;
     }
 
-    public String getDate() {
-        return date;
+    public String getDateTime() {
+        return dateTime;
     }
 
-    public void setDate(String date) {
-        this.date = date;
+    public void setDateTime(String dateTime) {
+        this.dateTime = dateTime;
     }
 
-    public static final String CREATE_TABLE =
-            "CREATE TABLE " + TABLE_NAME + " (" +
-                    COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    COLUMN_MESSAGE + " TEXT, " +
-                    COLUMN_DATE + " TEXT)";
+    public String getBackgroundColor() {
+        return backgroundColor;
+    }
+
+    public void setBackgroundColor(String backgroundColor) {
+        this.backgroundColor = backgroundColor;
+    }
 }

@@ -2,27 +2,24 @@ package com.example.notes.models;
 
 public class Wish {
 
-    // Table name
-    public static final String TABLE_NAME = "wishes";
-
-    // Column names
-    public static final String COLUMN_ID = "id";
-    public static final String COLUMN_WISH = "wish";
-    public static final String COLUMN_DATE = "date";
-
-    // Variables for the model
     private int id;
     private String wish;
+    private String description;
     private String date;
+    private boolean isFulfilled;
+    private int priority;
+    private String backgroundColor;
 
-    // Constructor
-    public Wish(int id, String wish, String date) {
+    public Wish(int id, String wish, String description, String date, boolean isFulfilled, int priority, String backgroundColor) {
         this.id = id;
         this.wish = wish;
+        this.description = description;
         this.date = date;
+        this.isFulfilled = isFulfilled;
+        this.priority = priority;
+        this.backgroundColor = backgroundColor;
     }
 
-    // Getters and setters
     public int getId() {
         return id;
     }
@@ -39,6 +36,14 @@ public class Wish {
         this.wish = wish;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     public String getDate() {
         return date;
     }
@@ -47,10 +52,27 @@ public class Wish {
         this.date = date;
     }
 
-    // SQL to create the table
-    public static final String CREATE_TABLE =
-            "CREATE TABLE " + TABLE_NAME + " (" +
-                    COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    COLUMN_WISH + " TEXT, " +
-                    COLUMN_DATE + " TEXT)";
+    public boolean isFulfilled() {
+        return isFulfilled;
+    }
+
+    public void setFulfilled(boolean fulfilled) {
+        isFulfilled = fulfilled;
+    }
+
+    public int getPriority() {
+        return priority;
+    }
+
+    public void setPriority(int priority) {
+        this.priority = priority;
+    }
+
+    public String getBackgroundColor() {
+        return backgroundColor;
+    }
+
+    public void setBackgroundColor(String backgroundColor) {
+        this.backgroundColor = backgroundColor;
+    }
 }

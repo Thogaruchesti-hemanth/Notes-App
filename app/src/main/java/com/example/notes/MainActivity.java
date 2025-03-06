@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -26,6 +27,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
@@ -62,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private Button createButton;
     private DatabaseHelper dbHelper;
-    private ImageView profileImageView, profileImage,themeView;
+    private ImageView profileImageView, profileImage, themeView;
     private TextView userNameTextView, nameTextView;
     private TextView emailTextView;
     private DrawerLayout drawerLayout;
@@ -92,8 +94,14 @@ public class MainActivity extends AppCompatActivity {
         userNameTextView = navigationView.getHeaderView(0).findViewById(R.id.header_user_name);
         emailTextView = navigationView.getHeaderView(0).findViewById(R.id.header_user_email);
         profileImageView = navigationView.getHeaderView(0).findViewById(R.id.header_profile_image);
-        int width = (int) (getResources().getDisplayMetrics().widthPixels * 0.7);
-        navigationView.setMinimumWidth(width);
+        ViewGroup.LayoutParams params = navigationView.getLayoutParams();
+        params.width = (int) (getResources().getDisplayMetrics().widthPixels * 0.7);
+        navigationView.setLayoutParams(params);
+
+        View headerView = navigationView.getHeaderView(0);
+        ViewGroup.LayoutParams headerParams = headerView.getLayoutParams();
+        headerParams.height = (int) (getResources().getDisplayMetrics().heightPixels * 0.3);
+        headerView.setLayoutParams(headerParams);
 
         themeView.setOnClickListener(view -> {
             boolean isNightMode = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES;
@@ -108,8 +116,10 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-
         imageUrl = new SharedPreferenceUtil(this).getImageUrl();
+        if (imageUrl == null || imageUrl.trim().isEmpty()) {
+            imageUrl = "";
+        }
 
         navigationView.getHeaderView(0).findViewById(R.id.edit_header_button).setOnClickListener(view -> openEditDialog());
 
@@ -137,6 +147,10 @@ public class MainActivity extends AppCompatActivity {
                 if (title.equals("Logout")) {
                     new SharedPreferenceUtil(MainActivity.this).setKeyLogin(false);
                     Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                    startActivity(intent);
+                    return true;
+                } else if (title.equals("Support")) {
+                    Intent intent = new Intent(MainActivity.this, HelpAndSupportActivity.class);
                     startActivity(intent);
                     return true;
                 } else {
@@ -180,8 +194,29 @@ public class MainActivity extends AppCompatActivity {
 
         EditText userName = customDialogView.findViewById(R.id.user_name_edit_text);
         EditText email = customDialogView.findViewById(R.id.email_edit_text);
-        email.setText(emailTextView.getText().toString());
         profileImage = customDialogView.findViewById(R.id.profile_image_edit);
+
+        userName.setText(userNameTextView.getText().toString());
+        email.setText(emailTextView.getText().toString());
+
+        if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+            Picasso.get()
+                    .load(imageUrl)
+                    .placeholder(R.drawable.profile_pic) // Show placeholder while loading
+                    .error(R.drawable.profile_pic) // If error, show default image
+                    .into(profileImage, new com.squareup.picasso.Callback() {
+                        @Override
+                        public void onSuccess() {
+                        }
+
+                        @Override
+                        public void onError(Exception e) {
+                        }
+                    });
+        } else {
+            profileImage.setImageResource(R.drawable.profile_pic);
+        }
+
         Button saveButton = customDialogView.findViewById(R.id.save_button);
         customDialogView.findViewById(R.id.cancel_view).setOnClickListener(v -> customDialog.dismiss());
 
@@ -192,12 +227,9 @@ public class MainActivity extends AppCompatActivity {
             String emailText = email.getText().toString();
 
             if (!name.isEmpty() && !emailText.isEmpty()) {
-                firebaseHelper.updateUserData(emailText, name, this, new FirebaseHelper.UpdateCallback() {
-                    @Override
-                    public void onUpdateSuccess() {
-                        Toast.makeText(MainActivity.this, "details Updated", Toast.LENGTH_SHORT).show();
-                    }
-                });
+                firebaseHelper.updateUserData(emailText, name, this, () ->
+                        Toast.makeText(MainActivity.this, "Details Updated", Toast.LENGTH_SHORT).show());
+
                 new SharedPreferenceUtil(getApplicationContext()).setUserName(name);
                 new SharedPreferenceUtil(getApplicationContext()).setUserEmail(emailText);
                 userNameTextView.setText(name);
@@ -224,31 +256,39 @@ public class MainActivity extends AppCompatActivity {
 
             if (imageUri != null) {
                 StorageReference storageRef = FirebaseStorage.getInstance().getReference("NotesAppDetails");
-                StorageReference fileRef = storageRef.child("profile_image/" + userNameTextView.getText() + System.currentTimeMillis() + ".jpg");
+
+                String fileExtension = getContentResolver().getType(imageUri).split("/")[1];
+
+                StorageReference fileRef = storageRef.child("profile_image/" + userNameTextView.getText() + System.currentTimeMillis() + "." + fileExtension);
 
                 fileRef.putFile(imageUri)
-                        .addOnSuccessListener(taskSnapshot -> fileRef.getDownloadUrl()
-                                .addOnSuccessListener(uri -> {
-                                    imageUrl = uri.toString();
-                                    loadProfileImage();
-                                    new SharedPreferenceUtil(this).setUserImage(uri.toString());
-                                })
-                        )
-                        .addOnFailureListener(e -> Log.e("Firebase", "Upload failed: " + e.getMessage()));
+                        .addOnSuccessListener(taskSnapshot -> {
+                            fileRef.getDownloadUrl()
+                                    .addOnSuccessListener(uri -> {
+                                        imageUrl = uri.toString();
+                                        new SharedPreferenceUtil(this).setUserImage(imageUrl);
+                                        loadProfileImage();
+                                    })
+                                    .addOnFailureListener(e -> Log.e("Firebase", "Failed to get image URL: " + e.getMessage()));
+                        })
+                        .addOnFailureListener(e -> Log.e("Firebase", "Image upload failed: " + e.getMessage()));
             }
-
         }
     }
 
     private void loadProfileImage() {
-        if (imageUrl != null) {
-            if (profileImageView != null) {
-                Picasso.get()
-                        .load(imageUrl)
-                        .placeholder(R.drawable.profile_pic)
-                        .error(R.drawable.profile_pic)
-                        .into(profileImageView);
+        if (imageUrl == null || imageUrl.trim().isEmpty()) {
+            Log.e("ProfileImage", "Image URL is empty or null, loading default image.");
+            profileImageView.setImageResource(R.drawable.profile_pic); // Set default image
+            if (profileImage != null) {
+                profileImage.setImageResource(R.drawable.profile_pic);
             }
+        } else {
+            Picasso.get()
+                    .load(imageUrl)
+                    .placeholder(R.drawable.profile_pic)
+                    .error(R.drawable.profile_pic)
+                    .into(profileImageView);
 
             if (profileImage != null) {
                 Picasso.get()
@@ -257,8 +297,6 @@ public class MainActivity extends AppCompatActivity {
                         .error(R.drawable.profile_pic)
                         .into(profileImage);
             }
-        } else {
-            Log.e("ProfileImage", "Image URL is null");
         }
     }
 
@@ -279,13 +317,13 @@ public class MainActivity extends AppCompatActivity {
                 case "All Notes":
                     return new NoteDatabaseHandler(MainActivity.this).getAll();
                 case "Important":
-                    return new ImportantDatabaseHandler(db).getAll();
+                    return new ImportantDatabaseHandler(MainActivity.this).getAll();
                 case "Reminder":
-                    return new ReminderDatabaseHandler(db).getAll();
+                    return new ReminderDatabaseHandler(MainActivity.this).getAll();
                 case "To-Do":
-                    return new ToDoDatabaseHandler(db).getAll();
+                    return new ToDoDatabaseHandler(MainActivity.this).getAll();
                 case "Wishes":
-                    return new WishDatabaseHandler(db).getAll();
+                    return new WishDatabaseHandler(MainActivity.this).getAll();
                 default:
                     return null;
             }
@@ -304,7 +342,7 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case "Important":
                         adapter = new ImportantAdapter((ArrayList<Important>) result, MainActivity.this);
-                        layoutManager = new LinearLayoutManager(MainActivity.this);
+                        layoutManager = new GridLayoutManager(MainActivity.this, 2);
                         break;
                     case "Reminder":
                         adapter = new ReminderAdapter((ArrayList<Reminder>) result, MainActivity.this);

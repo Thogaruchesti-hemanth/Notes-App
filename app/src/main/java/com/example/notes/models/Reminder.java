@@ -1,21 +1,20 @@
 package com.example.notes.models;
 
 public class Reminder {
-
-    public static final String TABLE_NAME = "reminders";
-
-    public static final String COLUMN_ID = "id";
-    public static final String COLUMN_MESSAGE = "message";
-    public static final String COLUMN_REMINDER_DATE = "reminder_date";
-
     private int id;
+    private String title;
     private String message;
-    private String reminderDate;
+    private String reminderTime;
+    private String backgroundColor;
+    private int remindBefore;
 
-    public Reminder(int id, String message, String reminderDate) {
+    public Reminder(int id, String title, String message, String reminderTime, String backgroundColor, int remindBefore) {
         this.id = id;
+        this.title = title;
         this.message = message;
-        this.reminderDate = reminderDate;
+        this.reminderTime = reminderTime;
+        this.backgroundColor = backgroundColor;
+        this.remindBefore = remindBefore;
     }
 
     public int getId() {
@@ -26,6 +25,14 @@ public class Reminder {
         this.id = id;
     }
 
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
     public String getMessage() {
         return message;
     }
@@ -34,17 +41,27 @@ public class Reminder {
         this.message = message;
     }
 
-    public String getReminderDate() {
-        return reminderDate;
+    public String getReminderTime() {
+        return reminderTime;
     }
 
-    public void setReminderDate(String reminderDate) {
-        this.reminderDate = reminderDate;
+    public void setReminderTime(String reminderTime) {
+        this.reminderTime = reminderTime;
     }
 
-    public static final String CREATE_TABLE =
-            "CREATE TABLE " + TABLE_NAME + " (" +
-                    COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    COLUMN_MESSAGE + " TEXT, " +
-                    COLUMN_REMINDER_DATE + " TEXT)";
+    public String getBackgroundColor() {
+        return backgroundColor;
+    }
+
+    public void setBackgroundColor(String backgroundColor) {
+        this.backgroundColor = backgroundColor;
+    }
+
+    public int getRemindBefore() {
+        return remindBefore;
+    }
+
+    public void setRemindBefore(int remindBefore) {
+        this.remindBefore = remindBefore;
+    }
 }

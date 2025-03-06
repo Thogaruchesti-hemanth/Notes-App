@@ -2,12 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Required Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.CALL_PHONE" />
 
-    <!-- For scoped storage on Android 11 and above -->
     <uses-permission
         android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
         android:targetSdkVersion="30" />
@@ -23,36 +24,35 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Notes"
         tools:targetApi="31">
+        <activity
+            android:name=".HelpAndSupportActivity"
+            android:exported="false" />
 
-        <!-- Firebase Install Referrer Receiver (optional) -->
         <receiver
             android:name="com.google.android.gms.measurement.AppMeasurementInstallReferrerReceiver"
             android:exported="true" />
+        <receiver
+            android:name=".ReminderReceiver"
+            android:exported="true" />
 
-        <!-- Splash Screen Activity (Launcher) -->
         <activity
             android:name=".SplashScreenActivity"
-            android:exported="true"
-            android:theme="@style/Theme.MyApp.Splash">
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <!-- Login Activity -->
         <activity
             android:name=".LoginActivity"
             android:exported="true" />
-
-        <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
             android:exported="true" />
         <activity
             android:name=".AddEditItemLayout"
             android:exported="true" />
-
     </application>
 
 </manifest>

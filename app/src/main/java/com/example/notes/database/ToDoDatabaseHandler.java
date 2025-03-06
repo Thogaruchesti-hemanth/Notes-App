@@ -1,113 +1,121 @@
 package com.example.notes.database;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import com.example.notes.models.ToDo;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class ToDoDatabaseHandler {
 
-    private SQLiteDatabase db;
+    private final SQLiteDatabase db;
 
-    public ToDoDatabaseHandler(SQLiteDatabase db) {
-        this.db = db;
+    public ToDoDatabaseHandler(Context context) {
+        DatabaseHelper dbHelper = new DatabaseHelper(context);
+        this.db = dbHelper.getWritableDatabase();
     }
 
-    public long insertToDo(String title, String description, String dueDate) {
+    public long insertToDo(String task, String description, String dueDate, int priority, int isCompleted, int progress, String backgroundColor) {
         ContentValues values = new ContentValues();
-        values.put("task", title);
-//        values.put("description", description);
+        values.put("task", task);
+        values.put("description", description);
         values.put("due_date", dueDate);
+        values.put("priority", priority);
+        values.put("is_completed", isCompleted);
+        values.put("progress", progress);
+        values.put("background_color", backgroundColor);
+
         return db.insert("todo", null, values);
     }
 
     public ToDo getToDoById(int id) {
         ToDo toDo = null;
-        Cursor cursor = null;
-
-        try {
-            cursor = db.query("todo", null, "id = ?", new String[]{String.valueOf(id)}, null, null, null);
-
-            if (cursor != null && cursor.moveToFirst()) {
-                int todoIdColumnIndex = cursor.getColumnIndex("id");
-                int titleColumnIndex = cursor.getColumnIndex("task");
-//                int descriptionColumnIndex = cursor.getColumnIndex("description");
-                int dueDateColumnIndex = cursor.getColumnIndex("due_date");
-
-                if (todoIdColumnIndex >= 0 && titleColumnIndex >= 0 && /*descriptionColumnIndex >= 0 &&*/ dueDateColumnIndex >= 0) {
-                    int todoId = cursor.getInt(todoIdColumnIndex);
-                    String title = cursor.getString(titleColumnIndex);
-//                    String description = cursor.getString(descriptionColumnIndex);
-                    String dueDate = cursor.getString(dueDateColumnIndex);
-
-                    toDo = new ToDo(todoId,"", dueDate);
-                } else {
-                }
+        try (Cursor cursor = db.query("todo", null, "id = ?", new String[]{String.valueOf(id)}, null, null, null)) {
+            if (cursor.moveToFirst()) {
+                toDo = extractToDoFromCursor(cursor);
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
         }
-
         return toDo;
     }
 
-
-    public int updateToDo(int id, String title, String description, String dueDate) {
+    public int markTaskCompleted(int id) {
         ContentValues values = new ContentValues();
-        values.put("title", title);
-        values.put("description", description);
-        values.put("due_date", dueDate);
+        values.put("is_completed", 1);
         return db.update("todo", values, "id = ?", new String[]{String.valueOf(id)});
     }
 
     public int deleteToDo(int id) {
         return db.delete("todo", "id = ?", new String[]{String.valueOf(id)});
     }
+
     public ArrayList<ToDo> getAll() {
         ArrayList<ToDo> toDoList = new ArrayList<>();
-        Cursor cursor = null;
+        Cursor cursor = db.query("todo", null, null, null, null, null, "due_date ASC");
 
-        try {
-            // Query all records from the 'todo' table
-            cursor = db.query("todo", null, null, null, null, null, null);
-
-            if (cursor != null && cursor.moveToFirst()) {
-                do {
-                    int todoIdColumnIndex = cursor.getColumnIndex("id");
-                    int titleColumnIndex = cursor.getColumnIndex("task");
-//                    int descriptionColumnIndex = cursor.getColumnIndex("description");
-                    int dueDateColumnIndex = cursor.getColumnIndex("due_date");
-
-                    if (todoIdColumnIndex >= 0 && titleColumnIndex >= 0 &&
-                           /* descriptionColumnIndex >= 0 && */dueDateColumnIndex >= 0) {
-
-                        int todoId = cursor.getInt(todoIdColumnIndex);
-                        String title = cursor.getString(titleColumnIndex);
-//                        String description = cursor.getString(descriptionColumnIndex);
-                        String dueDate = cursor.getString(dueDateColumnIndex);
-
-                        toDoList.add(new ToDo(todoId, title, dueDate));
-                    }
-                } while (cursor.moveToNext());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                toDoList.add(extractToDoFromCursor(cursor));
+            } while (cursor.moveToNext());
+            cursor.close();
         }
 
+        Log.d("ToDoDatabase", "Fetched Items: " + toDoList.size()); // 🔍 Debugging Log
         return toDoList;
     }
 
-}
 
+    public ArrayList<ToDo> getFilteredToDos(boolean showCompleted) {
+        ArrayList<ToDo> toDoList = new ArrayList<>();
+        String selection = "is_completed = ?";
+        String[] selectionArgs = {showCompleted ? "1" : "0"};
+
+        try (Cursor cursor = db.query("todo", null, selection, selectionArgs, null, null, "due_date ASC")) {
+            while (cursor.moveToNext()) {
+                toDoList.add(extractToDoFromCursor(cursor));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return toDoList;
+    }
+
+    private ToDo extractToDoFromCursor(Cursor cursor) {
+        int todoId = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
+        String task = cursor.getString(cursor.getColumnIndexOrThrow("task"));
+        String description = cursor.getString(cursor.getColumnIndexOrThrow("description"));
+        String dueDate = cursor.getString(cursor.getColumnIndexOrThrow("due_date"));
+        int priority = cursor.getInt(cursor.getColumnIndexOrThrow("priority"));
+        int isCompleted = cursor.getInt(cursor.getColumnIndexOrThrow("is_completed"));
+        int progress = cursor.getInt(cursor.getColumnIndexOrThrow("progress"));
+        String backgroundColor = cursor.getString(cursor.getColumnIndexOrThrow("background_color")); // Added
+
+        return new ToDo(todoId, task, description, dueDate, priority, isCompleted, progress, backgroundColor);
+    }
+
+    public int updateToDo(int id, String task, String description, String dueDate, int priority, int isCompleted, int progress, String backgroundColor) {
+        ContentValues values = new ContentValues();
+        values.put("task", task);
+        values.put("description", description);
+        values.put("due_date", dueDate);
+        values.put("priority", priority);
+        values.put("is_completed", isCompleted);
+        values.put("progress", progress);
+        values.put("background_color", backgroundColor);
+
+        return db.update("todo", values, "id = ?", new String[]{String.valueOf(id)});
+    }
+
+    public int markTaskIncomplete(int id) {
+        ContentValues values = new ContentValues();
+        values.put("is_completed", 0);
+        return db.update("todo", values, "id = ?", new String[]{String.valueOf(id)});
+    }
+
+}

@@ -1,26 +1,29 @@
 package com.example.notes.database;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.example.notes.models.Important;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class ImportantDatabaseHandler {
 
-    private SQLiteDatabase db;
+    private final SQLiteDatabase db;
 
-    public ImportantDatabaseHandler(SQLiteDatabase db) {
-        this.db = db;
+    public ImportantDatabaseHandler(Context context) {
+        DatabaseHelper dbHelper = new DatabaseHelper(context);
+        this.db = dbHelper.getWritableDatabase();
     }
 
-    public long insertImportant(String title, String description) {
+    public long insertImportant(String title, String message, String dateTime, String backgroundColor) {
         ContentValues values = new ContentValues();
-        values.put("message", title);
-        values.put("date", description);
+        values.put("title", title);
+        values.put("message", message);
+        values.put("dateTime", dateTime);
+        values.put("background_color", backgroundColor);
         return db.insert("important", null, values);
     }
 
@@ -32,18 +35,13 @@ public class ImportantDatabaseHandler {
             cursor = db.query("important", null, "id = ?", new String[]{String.valueOf(id)}, null, null, null);
 
             if (cursor != null && cursor.moveToFirst()) {
-                int importantIdColumnIndex = cursor.getColumnIndex("id");
-                int titleColumnIndex = cursor.getColumnIndex("title");
-                int descriptionColumnIndex = cursor.getColumnIndex("description");
+                int importantId = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
+                String title = cursor.getString(cursor.getColumnIndexOrThrow("title"));
+                String message = cursor.getString(cursor.getColumnIndexOrThrow("message"));
+                String dateTime = cursor.getString(cursor.getColumnIndexOrThrow("dateTime"));
+                String backgroundColor = cursor.getString(cursor.getColumnIndexOrThrow("background_color"));
 
-                if (importantIdColumnIndex >= 0 && titleColumnIndex >= 0 && descriptionColumnIndex >= 0) {
-                    int importantId = cursor.getInt(importantIdColumnIndex);
-                    String title = cursor.getString(titleColumnIndex);
-                    String description = cursor.getString(descriptionColumnIndex);
-
-                    important = new Important(importantId, title, description);
-                } else {
-                }
+                important = new Important(importantId, title, message, dateTime, backgroundColor);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -56,11 +54,12 @@ public class ImportantDatabaseHandler {
         return important;
     }
 
-
-    public int updateImportant(int id, String title, String description) {
+    public int updateImportant(int id, String title, String message, String dateTime, String backgroundColor) {
         ContentValues values = new ContentValues();
         values.put("title", title);
-        values.put("description", description);
+        values.put("message", message);
+        values.put("dateTime", dateTime);
+        values.put("background_color", backgroundColor);
         return db.update("important", values, "id = ?", new String[]{String.valueOf(id)});
     }
 
@@ -77,17 +76,13 @@ public class ImportantDatabaseHandler {
 
             if (cursor != null && cursor.moveToFirst()) {
                 do {
-                    int importantIdColumnIndex = cursor.getColumnIndex("id");
-                    int titleColumnIndex = cursor.getColumnIndex("message");
-                    int descriptionColumnIndex = cursor.getColumnIndex("date");
+                    int importantId = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
+                    String title = cursor.getString(cursor.getColumnIndexOrThrow("title"));
+                    String message = cursor.getString(cursor.getColumnIndexOrThrow("message"));
+                    String dateTime = cursor.getString(cursor.getColumnIndexOrThrow("dateTime"));
+                    String backgroundColor = cursor.getString(cursor.getColumnIndexOrThrow("background_color"));
 
-                    if (importantIdColumnIndex >= 0 && titleColumnIndex >= 0 && descriptionColumnIndex >= 0) {
-                        int importantId = cursor.getInt(importantIdColumnIndex);
-                        String title = cursor.getString(titleColumnIndex);
-                        String description = cursor.getString(descriptionColumnIndex);
-
-                        importantList.add(new Important(importantId, title, description));
-                    }
+                    importantList.add(new Important(importantId, title, message, dateTime, backgroundColor));
                 } while (cursor.moveToNext());
             }
         } catch (Exception e) {
@@ -101,5 +96,3 @@ public class ImportantDatabaseHandler {
         return importantList;
     }
 }
-
-
