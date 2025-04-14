@@ -1,6 +1,5 @@
 # Notes App
-
-![App Logo](https://github.com/Thogaruchesti-hemanth/Notes-App/blob/master/app/src/main/res/mipmap-xhdpi/splash_logo.png)
+![App Logo ](https://github.com/user-attachments/assets/7ad2fbd7-3ef6-46e4-b2af-458c40cb38e1)
 
 ## Overview
 The **Notes App** is a feature-rich Android application developed in **Android Studio using Java**. It enables users to manage their **notes, important notes, reminders, to-do lists, and wish lists** with an intuitive and user-friendly interface. The app ensures secure authentication using **Firebase** and stores data efficiently using **SQLite**.
@@ -30,10 +29,13 @@ The **Notes App** is a feature-rich Android application developed in **Android S
 
 ## 📸 Results
 
-| 🖼️ Container Preview  | 🖼️ Text Preview  |🖼️ Types of Button| 
-|--------------|----------------|----------------|
-| <img src="https://github.com/Thogaruchesti-hemanth/Flutter-Widget-Explorer/blob/main/assets/outputs/container_widget_output.png" alt="Container Widget" height="300"> | <img src="https://github.com/Thogaruchesti-hemanth/Flutter-Widget-Explorer/blob/main/assets/outputs/text_widget_output.png" alt="Stack Demo" height="300"> |<img src="https://github.com/Thogaruchesti-hemanth/Flutter-Widget-Explorer/blob/main/assets/outputs/types_of_buttons_output.png" alt="Stack Demo" height="300">
-| <img src="" alt="GridView Demo" height="300"> |  |
+| Splash Screen  | Login Screen  | SignUp Screen | Drawer Screen  | Notes Screen  | Important Screen | 
+|--------------|----------------|----------------| --------------|----------------|----------------|
+| <img src="https://github.com/user-attachments/assets/183f505e-73d6-41be-9fd6-fa89ea4dc438" alt="Splash Screen" height="300"> | <img src="https://github.com/user-attachments/assets/1ae6881b-2e21-4c6d-877d-c3d331dbc333" alt="Login Screen" height="300"> |<img src="https://github.com/user-attachments/assets/b5d76bcf-bfcf-4ebc-9f04-64a2fd09929b" alt="SignUp Screen" height="300"> | <img src="https://github.com/user-attachments/assets/39a93134-2c8e-42e0-8ac8-6e306ba4ee42" alt="Drawer layout" height="300"> | <img src="https://github.com/user-attachments/assets/ee9a217a-ce91-4d23-8167-aeb6a3b5b4c8" alt="Notes Screen" height="300"> | <img src="https://github.com/user-attachments/assets/89171260-0fe7-4f8a-ad8a-e1b7c4811fac" alt="Important Notes Screen" height="300"> |
+| Reminder Screen  | To-DO Screen  | Wishes Screen | Edit Screen  | Logout Dialog  | Support Screen | 
+<img src="https://github.com/user-attachments/assets/e66a59e2-518d-4e24-817f-e3538a4c470f" alt="Reminders Screen" height="300"> | <img src="https://github.com/user-attachments/assets/1ab5a051-7409-4c3c-b301-a4199987274a" alt="To-DO Screen" height="300"> | <img src="https://github.com/user-attachments/assets/3090b821-ca85-49d1-b418-fe4f541c52bc" alt="wishes Screen" height="300"> | <img src="https://github.com/user-attachments/assets/d3471a0e-559d-4b34-8482-8eb8f0fe47de" alt="Edit Screen" height="300"> | <img src="https://github.com/user-attachments/assets/06e93911-47ad-408c-83f5-9498ddd09f12" alt="Logout Dialog" height="300"> | <img src="https://github.com/user-attachments/assets/cac84722-e934-4827-b8a6-c7651dbc7289" alt="Logout Dialog" height="300">
+
+
 
 ## 🛠 Installation & Setup
 1. **Clone the Repository:**
