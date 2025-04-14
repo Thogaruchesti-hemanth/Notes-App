@@ -28,20 +28,12 @@ The **Notes App** is a feature-rich Android application developed in **Android S
 
 ---
 
-## 📷 Screenshots
-### Home Screen
-![Home Screen](path/to/home_screen.png)
+## 📸 Results
 
-### Notes Section
-![Notes](path/to/notes_section.png)
-
-### Reminders
-![Reminders](path/to/reminders.png)
-
-### To-Do List
-![To-Do List](path/to/todo_list.png)
-
----
+| 🖼️ Container Preview  | 🖼️ Text Preview  |🖼️ Types of Button| 
+|--------------|----------------|----------------|
+| <img src="https://github.com/Thogaruchesti-hemanth/Flutter-Widget-Explorer/blob/main/assets/outputs/container_widget_output.png" alt="Container Widget" height="300"> | <img src="https://github.com/Thogaruchesti-hemanth/Flutter-Widget-Explorer/blob/main/assets/outputs/text_widget_output.png" alt="Stack Demo" height="300"> |<img src="https://github.com/Thogaruchesti-hemanth/Flutter-Widget-Explorer/blob/main/assets/outputs/types_of_buttons_output.png" alt="Stack Demo" height="300">
+| <img src="" alt="GridView Demo" height="300"> |  |
 
 ## 🛠 Installation & Setup
 1. **Clone the Repository:**
