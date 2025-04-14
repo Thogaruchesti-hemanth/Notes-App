@@ -2,6 +2,7 @@ package com.example.notes;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
@@ -48,6 +49,7 @@ import com.example.notes.models.Note;
 import com.example.notes.models.Reminder;
 import com.example.notes.models.ToDo;
 import com.example.notes.models.Wish;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.storage.FirebaseStorage;
@@ -144,10 +146,25 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onNavigationItemSelected(MenuItem item) {
                 String title = item.getTitle().toString();
+
                 if (title.equals("Logout")) {
-                    new SharedPreferenceUtil(MainActivity.this).setKeyLogin(false);
-                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-                    startActivity(intent);
+                    new MaterialAlertDialogBuilder(MainActivity.this)
+                            .setTitle("Logout")
+                            .setMessage("Are you sure you want to logout?")
+                            .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    new SharedPreferenceUtil(MainActivity.this).setKeyLogin(false);
+                                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                    startActivity(intent);
+                                    finish(); // Optional: to close current activity
+                                }
+                            })
+                            .setNegativeButton("Cancel", null)
+                            .setCancelable(true)
+                            .show();
+
                     return true;
                 } else if (title.equals("Support")) {
                     Intent intent = new Intent(MainActivity.this, HelpAndSupportActivity.class);

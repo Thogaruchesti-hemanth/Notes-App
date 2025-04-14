@@ -57,7 +57,7 @@
                 android:ellipsize="end"
                 android:maxLines="2"
                 android:text="Task description goes here..."
-                android:textColor="?attr/colorSecondary"
+                android:textColor="@color/black"
                 android:textSize="14sp" />
 
             <LinearLayout
@@ -78,7 +78,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
                     android:text="Due: Feb 20, 2025"
-                    android:textColor="?attr/colorPrimary"
+                    android:textColor="@color/black"
                     android:textSize="14sp" />
 
                 <ProgressBar

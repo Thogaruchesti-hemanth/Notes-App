@@ -61,7 +61,7 @@ public class AddEditItemLayout extends AppCompatActivity {
     private ImageView tick4;
     private int itemId = -1;
     private String dataType = "note";
-    private String selectedColor = "#CDDC39";
+    private String selectedColor = "#FCE7C8";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

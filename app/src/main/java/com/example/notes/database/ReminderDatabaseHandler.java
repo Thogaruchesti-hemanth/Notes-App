@@ -11,6 +11,7 @@ import com.example.notes.models.Reminder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Locale;
 
 public class ReminderDatabaseHandler {
 
@@ -127,15 +128,18 @@ public class ReminderDatabaseHandler {
 
     private void scheduleReminder(long id, String message, String reminderTime, int remindBefore) {
         try {
-            SimpleDateFormat inputFormat = new SimpleDateFormat("MMM dd, yyyy hh:mm a");
+            SimpleDateFormat inputFormat = new SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.getDefault());
             Date reminderDate = inputFormat.parse(reminderTime);
 
             if (reminderDate != null) {
                 long reminderTimeMillis = reminderDate.getTime();
-                ReminderScheduler.scheduleReminder(context, id, message, reminderTimeMillis, remindBefore);
+                long adjustedReminderTimeMillis = reminderTimeMillis - (remindBefore * 60 * 1000);
+
+                ReminderScheduler.scheduleReminder(context, id, message, adjustedReminderTimeMillis, remindBefore);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
 }
