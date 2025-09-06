@@ -1,4 +1,4 @@
-package com.example.notes;
+package com.example.notes.activity;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
@@ -26,6 +26,7 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -33,6 +34,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
+import com.example.notes.AddEditItemLayout;
+import com.example.notes.FirebaseHelper;
+import com.example.notes.R;
+import com.example.notes.SharedPreferenceUtil;
 import com.example.notes.adapter.ImportantAdapter;
 import com.example.notes.adapter.NoteAdapter;
 import com.example.notes.adapter.ReminderAdapter;
@@ -105,18 +110,29 @@ public class MainActivity extends AppCompatActivity {
         headerParams.height = (int) (getResources().getDisplayMetrics().heightPixels * 0.3);
         headerView.setLayoutParams(headerParams);
 
+        SharedPreferenceUtil prefUtil = new SharedPreferenceUtil(this);
+
+        if ("dark".equals(prefUtil.getTheme())) {
+            themeView.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_night));
+        } else {
+            themeView.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_day));
+        }
+
         themeView.setOnClickListener(view -> {
             boolean isNightMode = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES;
 
             if (isNightMode) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-                themeView.setImageDrawable(getResources().getDrawable(R.drawable.ic_day));
+                themeView.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_day));
+
+                prefUtil.setTheme("light");
             } else {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-                themeView.setImageDrawable(getResources().getDrawable(R.drawable.ic_night));
+                themeView.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_night));
+
+                prefUtil.setTheme("dark");
             }
         });
-
 
         imageUrl = new SharedPreferenceUtil(this).getImageUrl();
         if (imageUrl == null || imageUrl.trim().isEmpty()) {
@@ -148,22 +164,16 @@ public class MainActivity extends AppCompatActivity {
                 String title = item.getTitle().toString();
 
                 if (title.equals("Logout")) {
-                    new MaterialAlertDialogBuilder(MainActivity.this)
-                            .setTitle("Logout")
-                            .setMessage("Are you sure you want to logout?")
-                            .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    new SharedPreferenceUtil(MainActivity.this).setKeyLogin(false);
-                                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                    startActivity(intent);
-                                    finish(); // Optional: to close current activity
-                                }
-                            })
-                            .setNegativeButton("Cancel", null)
-                            .setCancelable(true)
-                            .show();
+                    new MaterialAlertDialogBuilder(MainActivity.this).setTitle("Logout").setMessage("Are you sure you want to logout?").setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            new SharedPreferenceUtil(MainActivity.this).setKeyLogin(false);
+                            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            startActivity(intent);
+                            finish(); // Optional: to close current activity
+                        }
+                    }).setNegativeButton("Cancel", null).setCancelable(true).show();
 
                     return true;
                 } else if (title.equals("Support")) {
@@ -217,9 +227,7 @@ public class MainActivity extends AppCompatActivity {
         email.setText(emailTextView.getText().toString());
 
         if (imageUrl != null && !imageUrl.trim().isEmpty()) {
-            Picasso.get()
-                    .load(imageUrl)
-                    .placeholder(R.drawable.profile_pic) // Show placeholder while loading
+            Picasso.get().load(imageUrl).placeholder(R.drawable.profile_pic) // Show placeholder while loading
                     .error(R.drawable.profile_pic) // If error, show default image
                     .into(profileImage, new com.squareup.picasso.Callback() {
                         @Override
@@ -244,8 +252,7 @@ public class MainActivity extends AppCompatActivity {
             String emailText = email.getText().toString();
 
             if (!name.isEmpty() && !emailText.isEmpty()) {
-                firebaseHelper.updateUserData(emailText, name, this, () ->
-                        Toast.makeText(MainActivity.this, "Details Updated", Toast.LENGTH_SHORT).show());
+                firebaseHelper.updateUserData(emailText, name, null, this, () -> Toast.makeText(MainActivity.this, "Details Updated", Toast.LENGTH_SHORT).show());
 
                 new SharedPreferenceUtil(getApplicationContext()).setUserName(name);
                 new SharedPreferenceUtil(getApplicationContext()).setUserEmail(emailText);
@@ -278,17 +285,13 @@ public class MainActivity extends AppCompatActivity {
 
                 StorageReference fileRef = storageRef.child("profile_image/" + userNameTextView.getText() + System.currentTimeMillis() + "." + fileExtension);
 
-                fileRef.putFile(imageUri)
-                        .addOnSuccessListener(taskSnapshot -> {
-                            fileRef.getDownloadUrl()
-                                    .addOnSuccessListener(uri -> {
-                                        imageUrl = uri.toString();
-                                        new SharedPreferenceUtil(this).setUserImage(imageUrl);
-                                        loadProfileImage();
-                                    })
-                                    .addOnFailureListener(e -> Log.e("Firebase", "Failed to get image URL: " + e.getMessage()));
-                        })
-                        .addOnFailureListener(e -> Log.e("Firebase", "Image upload failed: " + e.getMessage()));
+                fileRef.putFile(imageUri).addOnSuccessListener(taskSnapshot -> {
+                    fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                        imageUrl = uri.toString();
+                        new SharedPreferenceUtil(this).setUserImage(imageUrl);
+                        loadProfileImage();
+                    }).addOnFailureListener(e -> Log.e("Firebase", "Failed to get image URL: " + e.getMessage()));
+                }).addOnFailureListener(e -> Log.e("Firebase", "Image upload failed: " + e.getMessage()));
             }
         }
     }
@@ -301,18 +304,10 @@ public class MainActivity extends AppCompatActivity {
                 profileImage.setImageResource(R.drawable.profile_pic);
             }
         } else {
-            Picasso.get()
-                    .load(imageUrl)
-                    .placeholder(R.drawable.profile_pic)
-                    .error(R.drawable.profile_pic)
-                    .into(profileImageView);
+            Picasso.get().load(imageUrl).placeholder(R.drawable.profile_pic).error(R.drawable.profile_pic).into(profileImageView);
 
             if (profileImage != null) {
-                Picasso.get()
-                        .load(imageUrl)
-                        .placeholder(R.drawable.profile_pic)
-                        .error(R.drawable.profile_pic)
-                        .into(profileImage);
+                Picasso.get().load(imageUrl).placeholder(R.drawable.profile_pic).error(R.drawable.profile_pic).into(profileImage);
             }
         }
     }

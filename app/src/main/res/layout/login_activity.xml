@@ -13,6 +13,37 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <!-- Profile Image Layout -->
+        <FrameLayout
+            android:id="@+id/profile_layout"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_gravity="center"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/profile_image_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="Profile Image"
+                android:scaleType="centerCrop"
+                android:src="@drawable/profile_pic" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/upload_image_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="4dp"
+                android:contentDescription="Upload Image"
+                app:backgroundTint="?attr/colorPrimary"
+                app:fabCustomSize="40dp"
+                app:maxImageSize="20dp"
+                app:srcCompat="@drawable/ic_camera" />
+        </FrameLayout>
+
+        <!-- Header -->
         <TextView
             android:id="@+id/header_title_text_view"
             android:layout_width="match_parent"
@@ -23,6 +54,7 @@
             android:textSize="48sp"
             android:textStyle="bold" />
 
+        <!-- Switch between old user / signup -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -33,7 +65,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="I Am An Old User"
-                android:textColor="@color/black"
+                android:textColor="@drawable/textview_selector"
                 android:textSize="16sp"
                 android:textStyle="bold|normal" />
 
@@ -42,7 +74,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="5dp"
                 android:text="/"
-                android:textColor="@color/tabUnselectedTextColor"
+                android:textColor="@drawable/textview_selector"
                 android:textSize="16sp" />
 
             <TextView
@@ -50,11 +82,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Create New "
-                android:textColor="@color/tabUnselectedTextColor"
+                android:textColor="?attr/tabTextColor"
                 android:textSize="16sp"
                 android:textStyle="bold|normal" />
         </LinearLayout>
 
+        <!-- Username (signup only) -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/edit_text_user_name_layout"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -62,28 +95,25 @@
             android:layout_height="wrap_content"
             android:layout_margin="5dp"
             android:visibility="gone"
-            app:boxBackgroundMode="outline"
-            app:boxStrokeColor="@color/black"
-            app:hintTextColor="?attr/colorPrimary">
+            app:boxBackgroundMode="outline">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/user_name_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="User Name"
-                android:inputType="textEmailAddress"
-                android:textColor="@color/black"
+                android:inputType="text"
+                android:textColor="?attr/colorPrimary"
                 android:textSize="18sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- Email -->
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="5dp"
-            app:boxBackgroundMode="outline"
-            app:boxStrokeColor="@color/black"
-            app:hintTextColor="?attr/colorPrimary">
+            app:boxBackgroundMode="outline">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/login_email"
@@ -91,10 +121,11 @@
                 android:layout_height="wrap_content"
                 android:hint="Email"
                 android:inputType="textEmailAddress"
-                android:textColor="@color/black"
+                android:textColor="?attr/colorPrimary"
                 android:textSize="18sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- Password -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/password_text_layout"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -102,20 +133,31 @@
             android:layout_height="wrap_content"
             android:layout_margin="5dp"
             app:boxBackgroundMode="outline"
-            app:boxStrokeColor="@color/black"
-            app:endIconMode="password_toggle"
-            app:hintTextColor="?attr/colorPrimary">
+            app:endIconMode="password_toggle">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/login_password"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Password"
-                android:inputType="textEmailAddress"
-                android:textColor="@color/black"
+                android:inputType="textPassword"
+                android:textColor="?attr/colorPrimary"
                 android:textSize="18sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- Forgot Password -->
+        <TextView
+            android:id="@+id/forgot_password_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="5dp"
+            android:gravity="end"
+            android:padding="4dp"
+            android:text="Forgot Password?"
+            android:textColor="?attr/tabTextColor"
+            android:textSize="14sp" />
+
+        <!-- Confirm Password (signup only) -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/confirm_password_layout"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -124,26 +166,47 @@
             android:layout_margin="5dp"
             android:visibility="gone"
             app:boxBackgroundMode="outline"
-            app:boxStrokeColor="@color/black"
-            app:hintTextColor="?attr/colorPrimary">
+            app:endIconMode="password_toggle">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/confirm_password"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Confirm Password"
-                android:inputType="textEmailAddress"
-                android:textColor="@color/black"
+                android:inputType="textPassword"
+                android:textColor="?attr/colorPrimary"
                 android:textSize="18sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- Login Button -->
         <Button
             android:id="@+id/login_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="5dp"
-            android:backgroundTint="@color/grey"
             android:text="Login"
-            android:textColor="@color/white" />
+            android:textColor="?attr/colorSecondary" />
+
+        <!-- Google Sign-In Button with Spinner -->
+        <FrameLayout
+            android:id="@+id/google_sign_in_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="5dp"
+            android:layout_marginBottom="20dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/google_sign_in_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Continue with Google"
+                android:textAllCaps="false"
+                app:cornerRadius="24dp"
+                app:icon="@drawable/ic_google"
+                app:iconGravity="textStart"
+                app:iconTint="@null" />
+
+        </FrameLayout>
+
     </LinearLayout>
 </ScrollView>

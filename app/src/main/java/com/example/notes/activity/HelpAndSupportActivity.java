@@ -1,4 +1,4 @@
-package com.example.notes;
+package com.example.notes.activity;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -7,6 +7,8 @@ import android.widget.Button;
 import android.widget.ImageView;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.notes.R;
 
 public class HelpAndSupportActivity extends AppCompatActivity {
     @Override
