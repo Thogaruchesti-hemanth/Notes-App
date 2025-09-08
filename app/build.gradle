@@ -9,7 +9,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace 'com.example.notes'
+    namespace 'com.example.NotesNest'
     compileSdk 34
 
     signingConfigs {
@@ -22,7 +22,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.example.notes"
+        applicationId "com.example.NotesNest"
         minSdk 24
         targetSdk 34
         versionCode 1
