@@ -40,7 +40,8 @@
                 app:backgroundTint="?attr/colorPrimary"
                 app:fabCustomSize="40dp"
                 app:maxImageSize="20dp"
-                app:srcCompat="@drawable/ic_camera" />
+                app:srcCompat="@drawable/ic_camera"
+                app:tint="?attr/colorOnPrimary"/>
         </FrameLayout>
 
         <!-- Header -->
