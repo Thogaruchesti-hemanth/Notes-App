@@ -24,6 +24,7 @@ import androidx.core.content.ContextCompat;
 import androidx.security.crypto.EncryptedSharedPreferences;
 import androidx.security.crypto.MasterKeys;
 
+import com.example.NotesNest.AnimatedRunningBorderLayout;
 import com.example.NotesNest.FirebaseHelper;
 import com.example.NotesNest.R;
 import com.google.android.material.button.MaterialButton;
@@ -54,10 +55,13 @@ public class LoginActivity extends AppCompatActivity {
     // Loader
     private ProgressDialog progressDialog;
 
+    private AnimatedRunningBorderLayout loginBorder;
+    private AnimatedRunningBorderLayout googleBorder;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.login_activity);
+        setContentView(R.layout.activity_login);
 
         firebaseHelper = new FirebaseHelper();
 
@@ -65,6 +69,10 @@ public class LoginActivity extends AppCompatActivity {
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage("Please wait...");
         progressDialog.setCancelable(false);
+
+        //animate border
+        loginBorder = findViewById(R.id.login_border_layout);
+        googleBorder = findViewById(R.id.google_border_layout);
 
         // Views
         oldUserTextView = findViewById(R.id.old_user_text_view);
@@ -103,9 +111,9 @@ public class LoginActivity extends AppCompatActivity {
 
         googleSingInLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
             if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                showLoader();
+                googleBorder.startLoading();
                 firebaseHelper.handleGoogleSignInResult(result.getData(), this, (userName, email) -> {
-                    hideLoader();
+                    googleBorder.stopLoading();
                     saveLoginSession(email);
                     Toast.makeText(LoginActivity.this, "Google Sign-in Success!", Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(LoginActivity.this, MainActivity.class));
@@ -180,9 +188,9 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        showLoader();
+        loginBorder.startLoading();
         firebaseHelper.loginUser(email, password, this, () -> {
-            hideLoader();
+            loginBorder.stopLoading();
             saveLoginSession(email);
             Toast.makeText(LoginActivity.this, "Login successful!", Toast.LENGTH_SHORT).show();
             startActivity(new Intent(LoginActivity.this, MainActivity.class));
