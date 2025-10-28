@@ -35,10 +35,13 @@
     <color name="priority_low">#388E3C</color>  <!-- Green -->
     <color name="priority_default">#BDBDBD</color>  <!-- Gray -->
 
-    <color name ="textselectedColor">#121212</color>
-    <color name ="textColor">#757575</color>
+    <color name="textselectedColor">#121212</color>
+    <color name="textColor">#757575</color>
     <color name="google_blue">#4285F4</color>
     <color name="google_red">#DB4437</color>
     <color name="google_yellow">#F4B400</color>
     <color name="google_green">#0F9D58</color>
+
+    <color name="dark_gray">#444444</color>
+
 </resources>
