@@ -25,6 +25,9 @@
         android:theme="@style/Theme.Notes"
         tools:targetApi="31">
         <activity
+            android:name=".activity.EditNoteActivity"
+            android:exported="false" />
+        <activity
             android:name=".activity.ProfileActivity"
             android:exported="false" />
         <activity

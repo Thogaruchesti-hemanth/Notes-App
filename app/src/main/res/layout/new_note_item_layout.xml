@@ -60,5 +60,15 @@
             android:maxLines="8"
             android:textColor="@color/black"
             android:textSize="16sp" />
+        <TextView
+            android:id="@+id/note_category"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Category"
+            android:textSize="12sp"
+            android:textStyle="italic"
+            android:paddingTop="2dp"
+            android:visibility="gone"
+            android:textColor="@color/grey" />
     </LinearLayout>
 </androidx.cardview.widget.CardView>

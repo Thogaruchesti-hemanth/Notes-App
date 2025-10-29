@@ -46,12 +46,14 @@ import com.example.NotesNest.adapter.NoteAdapter;
 import com.example.NotesNest.adapter.ReminderAdapter;
 import com.example.NotesNest.adapter.ToDoAdapter;
 import com.example.NotesNest.adapter.WishAdapter;
-import com.example.NotesNest.database.DatabaseHelper;
-import com.example.NotesNest.database.ImportantDatabaseHandler;
-import com.example.NotesNest.database.NoteDatabaseHandler;
-import com.example.NotesNest.database.ReminderDatabaseHandler;
-import com.example.NotesNest.database.ToDoDatabaseHandler;
-import com.example.NotesNest.database.WishDatabaseHandler;
+import com.example.NotesNest.databases.AppDatabase;
+import com.example.NotesNest.databases.DatabaseHelper;
+import com.example.NotesNest.databases.ImportantDatabaseHandler;
+import com.example.NotesNest.databases.NoteDatabaseHandler;
+import com.example.NotesNest.databases.ReminderDatabaseHandler;
+import com.example.NotesNest.databases.ToDoDatabaseHandler;
+import com.example.NotesNest.databases.WishDatabaseHandler;
+import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.models.Important;
 import com.example.NotesNest.models.Note;
 import com.example.NotesNest.models.Reminder;
@@ -151,9 +153,15 @@ public class MainActivity extends AppCompatActivity {
         loadProfileImage();
 
         createButton.setOnClickListener(view -> {
-            Intent intent = new Intent(MainActivity.this, AddEditItemLayout.class);
-            intent.putExtra("dataType", titleTextView.getText().toString());
-            startActivityForResult(intent, REQUEST_CODE_ADD_EDIT);
+            if(titleTextView.getText().toString().equalsIgnoreCase("All Notes")){
+                Intent intent = new Intent(this, EditNoteActivity.class);
+                intent.putExtra("itemId", titleTextView.getText().toString());
+                startActivity(intent);
+            }else {
+                Intent intent = new Intent(MainActivity.this, AddEditItemLayout.class);
+                intent.putExtra("dataType", titleTextView.getText().toString());
+                startActivityForResult(intent, REQUEST_CODE_ADD_EDIT);
+            }
         });
 
         findViewById(R.id.menubutton).setOnClickListener(v -> {
@@ -395,12 +403,11 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected Object doInBackground(Void... voids) {
-            DatabaseHelper dbHelper = new DatabaseHelper(MainActivity.this);
-            SQLiteDatabase db = dbHelper.getWritableDatabase();
+            AppDatabase appDatabase  = AppDatabase.getInstance(MainActivity.this);
 
             switch (title) {
                 case "All Notes":
-                    return new NoteDatabaseHandler(MainActivity.this).getAll();
+                    return appDatabase.noteDao().getAllNotes();
                 case "Important":
                     return new ImportantDatabaseHandler(MainActivity.this).getAll();
                 case "Reminder":
@@ -422,7 +429,7 @@ public class MainActivity extends AppCompatActivity {
 
                 switch (title) {
                     case "All Notes":
-                        adapter = new NoteAdapter((ArrayList<Note>) result, MainActivity.this);
+                        adapter = new NoteAdapter((ArrayList<NoteEntity>) result, MainActivity.this);
                         layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
                         break;
                     case "Important":

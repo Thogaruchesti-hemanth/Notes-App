@@ -1,4 +1,4 @@
-package com.example.NotesNest.database;
+package com.example.NotesNest.databases;
 
 import android.annotation.SuppressLint;
 import android.content.ContentValues;

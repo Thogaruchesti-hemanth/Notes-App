@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.NotesNest.AddEditItemLayout;
 import com.example.NotesNest.R;
-import com.example.NotesNest.database.ImportantDatabaseHandler;
+import com.example.NotesNest.databases.ImportantDatabaseHandler;
 import com.example.NotesNest.models.Important;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 

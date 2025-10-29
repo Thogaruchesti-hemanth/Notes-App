@@ -19,12 +19,12 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.NotesNest.database.DatabaseHelper;
-import com.example.NotesNest.database.ImportantDatabaseHandler;
-import com.example.NotesNest.database.NoteDatabaseHandler;
-import com.example.NotesNest.database.ReminderDatabaseHandler;
-import com.example.NotesNest.database.ToDoDatabaseHandler;
-import com.example.NotesNest.database.WishDatabaseHandler;
+import com.example.NotesNest.databases.DatabaseHelper;
+import com.example.NotesNest.databases.ImportantDatabaseHandler;
+import com.example.NotesNest.databases.NoteDatabaseHandler;
+import com.example.NotesNest.databases.ReminderDatabaseHandler;
+import com.example.NotesNest.databases.ToDoDatabaseHandler;
+import com.example.NotesNest.databases.WishDatabaseHandler;
 import com.example.NotesNest.models.Important;
 import com.example.NotesNest.models.Note;
 import com.example.NotesNest.models.Reminder;
