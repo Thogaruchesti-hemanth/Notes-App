@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -19,10 +20,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -56,6 +59,7 @@ import com.example.NotesNest.models.ToDo;
 import com.example.NotesNest.models.Wish;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -88,6 +92,8 @@ public class MainActivity extends AppCompatActivity {
 
         FirebaseApp.initializeApp(this);
         firebaseHelper = new FirebaseHelper();
+
+        setTabLayout();
 
         dbHelper = new DatabaseHelper(this);
         recyclerView = findViewById(R.id.recyclerView);
@@ -312,6 +318,73 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void setTabLayout() {
+        final String[] tabs = {"All", "Work", "Personal", "Ideas"};
+        TabLayout tabLayout;
+        ImageButton btnAdd;
+
+        tabLayout = findViewById(R.id.tabLayout);
+        btnAdd = findViewById(R.id.btnAdd);
+
+        for (String title : tabs) {
+            TabLayout.Tab tab = tabLayout.newTab();
+            tab.setCustomView(createCustomTab(title, false));
+            tabLayout.addTab(tab);
+        }
+
+        setTabSelected(tabLayout.getTabAt(0));
+
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(@NonNull TabLayout.Tab tab) {
+                setTabSelected(tab);
+            }
+
+            @Override
+            public void onTabUnselected(@NonNull TabLayout.Tab tab) {
+                setTabUnselected(tab);
+            }
+
+            @Override
+            public void onTabReselected(@NonNull TabLayout.Tab tab) {
+            }
+        });
+
+        btnAdd.setOnClickListener(v -> {
+            // Example: Add new tab dynamically
+            TabLayout.Tab newTab = tabLayout.newTab();
+            newTab.setCustomView(createCustomTab("New", false));
+            tabLayout.addTab(newTab);
+            tabLayout.selectTab(newTab);
+        });
+    }
+
+    private View createCustomTab(String title, boolean isSelected) {
+        View view = LayoutInflater.from(this).inflate(R.layout.custom_tab, null);
+        TextView textView = view.findViewById(R.id.tabText);
+        textView.setText(title);
+        textView.setTypeface(null, isSelected ? Typeface.BOLD : Typeface.NORMAL);
+        textView.setTextColor(getColor(isSelected ? R.color.tabSelectedTextColor : R.color.dark_gray));
+        return view;
+    }
+
+    private void setTabSelected(TabLayout.Tab tab) {
+        View view = tab.getCustomView();
+        if (view != null) {
+            TextView textView = view.findViewById(R.id.tabText);
+            textView.setTypeface(null, Typeface.BOLD);
+            textView.setTextColor(getColor(R.color.tabSelectedTextColor));
+        }
+    }
+
+    private void setTabUnselected(TabLayout.Tab tab) {
+        View view = tab.getCustomView();
+        if (view != null) {
+            TextView textView = view.findViewById(R.id.tabText);
+            textView.setTypeface(null, Typeface.NORMAL);
+            textView.setTextColor(getColor(R.color.dark_gray));
+        }
+    }
 
     private class LoadDataTask extends AsyncTask<Void, Void, Object> {
         private final String title;
