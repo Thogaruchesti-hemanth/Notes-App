@@ -1,14 +1,22 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
+
     <!-- Base application theme. -->
     <style name="Base.Theme.Notes" parent="Theme.Material3.Light.NoActionBar">
         <item name="colorPrimary">@color/black</item>
         <item name="colorSecondary">@color/white</item>
+        <item name="tabSelectedTextColor">@color/black</item>
+        <item name="tabTextColor">@color/darkGrey</item>
         <item name="android:statusBarColor">@color/white</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:colorBackground">@color/white</item>
         <item name="android:textColor">@color/black</item>
         <item name="android:windowBackground">@color/black</item>
         <item name="android:fillColor">@color/black</item>
+
+        <!-- 🔴 Disable default splash here -->
+        <item name="android:windowSplashScreenAnimatedIcon">@null</item>
+        <item name="android:windowSplashScreenBackground">@android:color/transparent</item>
     </style>
+
     <style name="Theme.Notes" parent="Base.Theme.Notes" />
 </resources>
