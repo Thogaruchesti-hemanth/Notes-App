@@ -17,7 +17,20 @@
         app:layout_constraintTop_toTopOf="parent"
         app:navigationIcon="@drawable/ic_back_arrow"
         app:title="Edit Note"
-        app:titleTextColor="?attr/colorPrimary" />
+        app:titleTextColor="?attr/colorPrimary"/>
+
+    <Button
+        android:id="@+id/btnSave"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Save"
+        android:layout_marginEnd="12dp"
+        android:textColor="?attr/colorPrimary"
+        android:backgroundTint="@color/tabSelectedTextColorLight"
+        app:layout_constraintTop_toTopOf="@id/toolbar"
+        app:layout_constraintBottom_toBottomOf="@id/toolbar"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <!-- Title Input -->
     <EditText
         android:id="@+id/etTitle"
@@ -223,7 +236,6 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_number_list" />
         </LinearLayout>
-
 
     </LinearLayout>
 

@@ -19,6 +19,7 @@
     <!-- Additional Colors -->
     <color name="tabIndicatorColor">#FF5722</color>
     <color name="tabSelectedTextColor">#F0BE0C</color>
+    <color name="tabSelectedTextColorLight">#FFF3B64D</color>
     <color name="darkGrey">#9E9E9E</color>
 
     <color name="layout_background">#EADFCD</color>
