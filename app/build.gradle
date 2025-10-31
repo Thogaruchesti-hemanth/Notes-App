@@ -9,7 +9,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace 'com.example.NotesNest'
+    namespace 'com.example.notes'
     compileSdk 34
 
     signingConfigs {
@@ -22,7 +22,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.example.NotesNest"
+        applicationId "com.example.notes"
         minSdk 24
         targetSdk 34
         versionCode 1
@@ -49,33 +49,18 @@ android {
 }
 
 dependencies {
-    def room_version = "2.8.3"
-
-    implementation "androidx.room:room-runtime:$room_version"
-    annotationProcessor "androidx.room:room-compiler:$room_version"
-
-    implementation "androidx.room:room-ktx:$room_version"
-
-    implementation "androidx.webkit:webkit:1.14.0"
-
     implementation 'com.google.firebase:firebase-core:9.6.1'
 
     implementation libs.appcompat
     implementation libs.material
     implementation libs.activity
     implementation libs.constraintlayout
-    implementation 'com.google.firebase:firebase-storage:22.0.0'
+    implementation 'com.google.firebase:firebase-storage:20.0.1'
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
     implementation 'com.squareup.picasso:picasso:2.8'
-    implementation 'com.google.firebase:firebase-database:22.0.0'
-    implementation 'androidx.security:security-crypto:1.1.0-alpha03'
-    implementation 'com.google.android.gms:play-services-auth:20.4.0'
-    implementation 'com.google.firebase:firebase-auth:22.3.1'
-    implementation 'com.google.android.gms:play-services-auth:21.2.0'
-    implementation 'com.google.android.material:material:1.12.0'
-
+    implementation 'com.google.firebase:firebase-database:20.0.5'
 }
 
 apply plugin: 'com.google.gms.google-services'

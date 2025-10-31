@@ -25,13 +25,7 @@
         android:theme="@style/Theme.Notes"
         tools:targetApi="31">
         <activity
-            android:name=".activity.EditNoteActivity"
-            android:exported="false" />
-        <activity
-            android:name=".activity.ProfileActivity"
-            android:exported="false" />
-        <activity
-            android:name=".activity.HelpAndSupportActivity"
+            android:name=".HelpAndSupportActivity"
             android:exported="false" />
 
         <receiver
@@ -42,9 +36,8 @@
             android:exported="true" />
 
         <activity
-            android:name=".activity.SplashScreenActivity"
-            android:exported="true"
-            android:theme="@style/Theme.Notes">
+            android:name=".SplashScreenActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -52,10 +45,10 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activity.LoginActivity"
+            android:name=".LoginActivity"
             android:exported="true" />
         <activity
-            android:name=".activity.MainActivity"
+            android:name=".MainActivity"
             android:exported="true" />
         <activity
             android:name=".AddEditItemLayout"
