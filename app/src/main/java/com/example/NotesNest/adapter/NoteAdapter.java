@@ -2,16 +2,19 @@ package com.example.NotesNest.adapter;
 
 import android.content.Context;
 import android.content.Intent;
+import android.text.Html;
+import android.text.Spanned;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.NotesNest.AddEditItemLayout;
 import com.example.NotesNest.R;
 import com.example.NotesNest.activity.EditNoteActivity;
 import com.example.NotesNest.databases.AppDatabase;
@@ -48,16 +51,31 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         NoteEntity note = noteList.get(position);
 
         holder.textViewTitle.setText(note.title);
-        holder.textViewContent.setText(note.message);
+
+        holder.textViewContent.getSettings().setJavaScriptEnabled(false);
+        holder.textViewContent.loadDataWithBaseURL(
+                null,
+                note.message,
+                "text/html",
+                "UTF-8",
+                null
+        );
+
+        holder.textViewContent.setBackgroundColor(android.graphics.Color.parseColor(note.background_color));
         holder.mainLayout.setCardBackgroundColor(android.graphics.Color.parseColor(note.background_color));
 
-        //set Date and Time
+        // Set Date and Time
         DateTimeUtils.setDateTime(note.date, note.time, holder.textDate, holder.textTime);
 
-        //Set category asynchronously
+        // Set category asynchronously
         setCategoryName(note.category_id, holder.textCategory);
 
-        //long click for edit/delete
+        // Click listener to show full content in dialog
+        holder.mainLayout.setOnClickListener(view -> {
+            showFullContentDialog(note);
+        });
+
+        // Long click for edit/delete
         holder.mainLayout.setOnLongClickListener(view -> {
             CommonAlertDialogs.showOptionsDialog(context, note, position, new CommonAlertDialogs.NoteOptionsListener() {
                 @Override
@@ -75,10 +93,101 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
             });
             return true;
         });
+    }
 
+    /**
+     * Convert HTML to plain text with formatting preserved as much as possible
+     */
+    private String htmlToPlainText(String html) {
+        if (html == null || html.trim().isEmpty()) {
+            return "No content";
+        }
+
+        try {
+            // Remove HTML tags but preserve basic formatting
+            Spanned spanned = Html.fromHtml(html, Html.FROM_HTML_MODE_COMPACT);
+            String plainText = spanned.toString().trim();
+
+            // Remove extra whitespace
+            plainText = plainText.replaceAll("\\s+", " ");
+
+            return plainText;
+        } catch (Exception e) {
+            // Fallback: remove HTML tags manually
+            return html.replaceAll("<[^>]*>", "").trim();
+        }
+    }
+
+    /**
+     * Show full content in a dialog
+     */
+    private void showFullContentDialog(NoteEntity note) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+
+        // Inflate custom layout
+        View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_note_full_content, null);
+        builder.setView(dialogView);
+
+        TextView dialogTitle = dialogView.findViewById(R.id.dialog_title);
+        TextView dialogContent = dialogView.findViewById(R.id.dialog_content);
+        TextView dialogDate = dialogView.findViewById(R.id.dialog_date);
+        TextView dialogTime = dialogView.findViewById(R.id.dialog_time);
+        TextView dialogCategory = dialogView.findViewById(R.id.dialog_category);
+        CardView dialogCard = dialogView.findViewById(R.id.dialog_card);
+
+        // Set data
+        dialogTitle.setText(note.title);
+
+        // Show formatted HTML content in dialog
+        Spanned formattedContent = Html.fromHtml(note.message, Html.FROM_HTML_MODE_COMPACT);
+        dialogContent.setText(formattedContent);
+
+        DateTimeUtils.setDateTime(note.date, note.time, dialogDate, dialogTime);
+
+        // Set background color
+        dialogCard.setCardBackgroundColor(android.graphics.Color.parseColor(note.background_color));
+
+        // Set category
+        setCategoryForDialog(note.category_id, dialogCategory);
+
+        AlertDialog dialog = builder.create();
+
+        // Set dialog window size (80% of screen)
+        if (dialog.getWindow() != null) {
+            android.view.WindowManager.LayoutParams layoutParams = new android.view.WindowManager.LayoutParams();
+            layoutParams.copyFrom(dialog.getWindow().getAttributes());
+            layoutParams.width = (int) (context.getResources().getDisplayMetrics().widthPixels * 0.8);
+            layoutParams.height = android.view.WindowManager.LayoutParams.WRAP_CONTENT;
+            dialog.getWindow().setAttributes(layoutParams);
+        }
+
+        dialog.show();
+
+        // Close button
+        dialogView.findViewById(R.id.dialog_close).setOnClickListener(v -> dialog.dismiss());
     }
 
     private void setCategoryName(Integer categoryId, TextView categoryView) {
+        if (categoryId == null) {
+            categoryView.setVisibility(View.GONE);
+            return;
+        }
+
+        executorService.execute(() -> {
+            CategoryEntity category = AppDatabase.getInstance(context).categoryDao().getAllCategories().get(categoryId);
+
+            ((android.app.Activity) context).runOnUiThread(() -> {
+                if (category != null) {
+                    categoryView.setText(category.name);
+                    categoryView.setVisibility(View.VISIBLE);
+                } else {
+                    categoryView.setVisibility(View.GONE);
+                }
+            });
+        });
+    }
+
+    private void setCategoryForDialog(Integer categoryId, TextView categoryView) {
         if (categoryId == null) {
             categoryView.setVisibility(View.GONE);
             return;
@@ -113,8 +222,10 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
 
     public static class NoteViewHolder extends RecyclerView.ViewHolder {
 
-        TextView textViewTitle, textViewContent, textDate, textTime, textCategory;
+        TextView textViewTitle, textDate, textTime, textCategory;
         CardView mainLayout;
+
+        WebView textViewContent;
 
         public NoteViewHolder(@NonNull View itemView) {
             super(itemView);

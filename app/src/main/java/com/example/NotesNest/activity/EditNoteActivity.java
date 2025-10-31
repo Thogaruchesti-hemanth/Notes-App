@@ -8,11 +8,10 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
+import android.webkit.WebView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -24,8 +23,7 @@ import com.example.NotesNest.R;
 import com.example.NotesNest.databases.AppDatabase;
 import com.example.NotesNest.databases.entities.CategoryEntity;
 import com.example.NotesNest.databases.entities.NoteEntity;
-import com.example.NotesNest.utils.DateTimeUtils;
-import com.google.android.material.textfield.TextInputLayout;
+import com.example.NotesNest.editor.CKEditorHelper;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -33,33 +31,27 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class EditNoteActivity extends AppCompatActivity {
 
-    private EditText etTitle, etNote;
+    // Date and time
+    private final Calendar selectedDateTime = Calendar.getInstance();
+    private EditText etTitle;
     private TextView tvTime, tvDate;
     private AutoCompleteTextView categoryDropdown;
-    private TextInputLayout categoryInputLayout;
-    private Button btnSave;
     private LinearLayout timeLayout, dateLayout;
-
-    // Formatting buttons
-    private ImageButton btnBold, btnItalic, btnUnderline, btnBulletList, btnNumberedList, btnColorSelection;
-
     private ExecutorService executorService;
     private AppDatabase database;
-
     private int noteId = -1; // -1 indicates new note
     private boolean isEditing = false;
     private String selectedColor = "#FFFFFF"; // Default white
-
     private List<CategoryEntity> categories = new ArrayList<>();
     private ArrayAdapter<String> categoryAdapter;
-
-    // Date and time
-    private final Calendar selectedDateTime = Calendar.getInstance();
+    private WebView etNote;
+    private CKEditorHelper editorHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,11 +59,11 @@ public class EditNoteActivity extends AppCompatActivity {
         setContentView(R.layout.activity_edit_note); // Your XML layout
 
         initializeViews();
+        setupHeader();
         setupToolbar();
         setupDatabase();
         loadCategories();
         setupClickListeners();
-        setupFormattingButtons();
         loadNoteData();
         setupTextWatchers();
     }
@@ -88,33 +80,30 @@ public class EditNoteActivity extends AppCompatActivity {
         tvDate = findViewById(R.id.tvDate);
 
         // Category dropdown
-        categoryInputLayout = findViewById(R.id.category_input_layout);
+        findViewById(R.id.category_input_layout);
         categoryDropdown = findViewById(R.id.category_dropdown);
 
         // Layouts
         timeLayout = findViewById(R.id.timeLayout);
         dateLayout = findViewById(R.id.dateLayout);
 
-        // Buttons
-        btnSave = findViewById(R.id.btnSave);
-
-        // Formatting buttons
-        btnBold = findViewById(R.id.btn_bold);
-        btnItalic = findViewById(R.id.btn_italic);
-        btnUnderline = findViewById(R.id.btn_underline);
-        btnBulletList = findViewById(R.id.btn_bullet_list);
-        btnNumberedList = findViewById(R.id.btn_numbered_list);
-        btnColorSelection = findViewById(R.id.color_selection);
-
         executorService = Executors.newSingleThreadExecutor();
+
+        editorHelper = new CKEditorHelper(EditNoteActivity.this, etNote);
+        editorHelper.setContentChangeListener(content -> {
+            // Optional: auto-save or live preview
+        });
 
         // Set current date and time
         updateDateTimeDisplay();
     }
 
-    private void setupToolbar() {
+    private void setupHeader() {
         Toolbar toolbar = findViewById(R.id.toolbar);
-        toolbar.setNavigationOnClickListener(v -> onBackPressed());
+        toolbar.setNavigationOnClickListener(v -> {
+            saveNote();
+            finish();
+        });
     }
 
     private void setupDatabase() {
@@ -147,73 +136,6 @@ public class EditNoteActivity extends AppCompatActivity {
         // Date selection
         dateLayout.setOnClickListener(v -> showDatePicker());
 
-        // Save button
-        btnSave.setOnClickListener(v -> saveNote());
-    }
-
-    private void setupFormattingButtons() {
-        // Bold
-        btnBold.setOnClickListener(v -> applyFormatting("**", "**"));
-
-        // Italic
-        btnItalic.setOnClickListener(v -> applyFormatting("*", "*"));
-
-        // Underline
-        btnUnderline.setOnClickListener(v -> applyFormatting("__", "__"));
-
-        // Bullet list
-        btnBulletList.setOnClickListener(v -> {
-            int start = Math.max(etNote.getSelectionStart(), 0);
-            int end = Math.max(etNote.getSelectionEnd(), 0);
-            String selectedText = etNote.getText().subSequence(start, end).toString();
-
-            if (!selectedText.isEmpty()) {
-                String[] lines = selectedText.split("\n");
-                StringBuilder formattedText = new StringBuilder();
-                for (String line : lines) {
-                    formattedText.append("• ").append(line).append("\n");
-                }
-                etNote.getText().replace(start, end, formattedText.toString());
-            } else {
-                // Insert at cursor position
-                int cursorPos = etNote.getSelectionStart();
-                etNote.getText().insert(cursorPos, "• ");
-            }
-        });
-
-        // Numbered list
-        btnNumberedList.setOnClickListener(v -> {
-            int start = Math.max(etNote.getSelectionStart(), 0);
-            int end = Math.max(etNote.getSelectionEnd(), 0);
-            String selectedText = etNote.getText().subSequence(start, end).toString();
-
-            if (!selectedText.isEmpty()) {
-                String[] lines = selectedText.split("\n");
-                StringBuilder formattedText = new StringBuilder();
-                for (int i = 0; i < lines.length; i++) {
-                    formattedText.append(i + 1).append(". ").append(lines[i]).append("\n");
-                }
-                etNote.getText().replace(start, end, formattedText.toString());
-            } else {
-                // Insert at cursor position
-                int cursorPos = etNote.getSelectionStart();
-                etNote.getText().insert(cursorPos, "1. ");
-            }
-        });
-
-        // Color selection (simplified - you can enhance this with color picker dialog)
-        btnColorSelection.setOnClickListener(v -> showColorPicker());
-    }
-
-    private void applyFormatting(String prefix, String suffix) {
-        int start = Math.max(etNote.getSelectionStart(), 0);
-        int end = Math.max(etNote.getSelectionEnd(), 0);
-
-        String selectedText = etNote.getText().subSequence(start, end).toString();
-        String formattedText = prefix + selectedText + suffix;
-
-        etNote.getText().replace(start, end, formattedText);
-        etNote.setSelection(start + prefix.length(), end + prefix.length());
     }
 
     private void showColorPicker() {
@@ -258,6 +180,7 @@ public class EditNoteActivity extends AppCompatActivity {
     private void updateBackgroundColor() {
         // You can apply the background color to the note content area
         etNote.setBackgroundColor(Color.parseColor(selectedColor));
+        editorHelper.setBackgroundColor(selectedColor);
     }
 
     private void loadNoteData() {
@@ -279,7 +202,7 @@ public class EditNoteActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     // Populate UI with note data
                     etTitle.setText(note.title);
-                    etNote.setText(note.message);
+                    editorHelper.setContent(note.message);
                     selectedColor = note.background_color;
 
                     // Set date and time
@@ -312,9 +235,7 @@ public class EditNoteActivity extends AppCompatActivity {
                         executorService.execute(() -> {
                             CategoryEntity category = database.categoryDao().getCategoryById(note.category_id);
                             if (category != null) {
-                                runOnUiThread(() -> {
-                                    categoryDropdown.setText(category.name, false);
-                                });
+                                runOnUiThread(() -> categoryDropdown.setText(category.name, false));
                             }
                         });
                     }
@@ -379,78 +300,71 @@ public class EditNoteActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
-                validateInputs();
             }
         });
     }
 
-    private void validateInputs() {
-        boolean isValid = !etTitle.getText().toString().trim().isEmpty();
-        btnSave.setEnabled(isValid);
-        btnSave.setAlpha(isValid ? 1.0f : 0.5f);
-    }
-
     private void saveNote() {
-        String title = etTitle.getText().toString().trim();
-        String content = etNote.getText().toString().trim();
+        editorHelper.getContent(htmlContent -> {
+            String title = etTitle.getText().toString().trim();
 
-        if (title.isEmpty()) {
-            Toast.makeText(this, "Please enter a title", Toast.LENGTH_SHORT).show();
-            return;
-        }
+            // Skip saving if both title and content are empty
+            if (title.isEmpty()) {
+                return;
+            }
 
-        // Get selected category ID
-        Integer categoryId = getSelectedCategoryId();
+            // Get selected category ID
+            Integer categoryId = getSelectedCategoryId();
 
-        // Format date and time for storage
-        String date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(selectedDateTime.getTime());
-        String time = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(selectedDateTime.getTime());
+            // Format date and time for storage
+            String date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(selectedDateTime.getTime());
+            String time = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(selectedDateTime.getTime());
 
-        executorService.execute(() -> {
-            try {
-                if (isEditing && noteId != -1) {
-                    // Update existing note
-                    NoteEntity existingNote = database.noteDao().getNoteById(noteId);
-                    if (existingNote != null) {
-                        existingNote.title = title;
-                        existingNote.message = content;
-                        existingNote.date = date;
-                        existingNote.time = time;
-                        existingNote.category_id = categoryId;
-                        existingNote.background_color = selectedColor;
+            executorService.execute(() -> {
+                try {
+                    if (isEditing && noteId != -1) {
+                        NoteEntity existingNote = database.noteDao().getNoteById(noteId);
+                        if (existingNote != null) {
+                            // Only update if something actually changed
+                            if (!existingNote.title.equals(title) ||
+                                    !existingNote.message.equals(htmlContent) ||
+                                    !existingNote.background_color.equals(selectedColor) ||
+                                    !Objects.equals(existingNote.category_id, categoryId)) {
 
-                        database.noteDao().update(existingNote);
+                                existingNote.title = title;
+                                existingNote.message = htmlContent;
+                                existingNote.date = date;
+                                existingNote.time = time;
+                                existingNote.category_id = categoryId;
+                                existingNote.background_color = selectedColor;
+                                database.noteDao().update(existingNote);
+                            }
+                        }
+                    } else {
+                        // Only create a new note if there's some content
+                        NoteEntity newNote = new NoteEntity();
+                        newNote.title = title;
+                        newNote.message = htmlContent;
+                        newNote.date = date;
+                        newNote.time = time;
+                        newNote.category_id = categoryId;
+                        newNote.background_color = selectedColor;
+
+                        database.noteDao().insert(newNote);
 
                         runOnUiThread(() -> {
-                            Toast.makeText(EditNoteActivity.this, "Note updated successfully", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(EditNoteActivity.this, "Note saved successfully", Toast.LENGTH_SHORT).show();
                             setResult(RESULT_OK);
                             finish();
                         });
                     }
-                } else {
-                    // Create new note
-                    NoteEntity newNote = new NoteEntity();
-                    newNote.title = title;
-                    newNote.message = content;
-                    newNote.date = date;
-                    newNote.time = time;
-                    newNote.category_id = categoryId;
-                    newNote.background_color = selectedColor;
-
-                    database.noteDao().insert(newNote);
-
-                    runOnUiThread(() -> {
-                        Toast.makeText(EditNoteActivity.this, "Note saved successfully", Toast.LENGTH_SHORT).show();
-                        setResult(RESULT_OK);
-                        finish();
-                    });
+                } catch (Exception e) {
+                    runOnUiThread(() ->
+                            Toast.makeText(EditNoteActivity.this, "Error saving note", Toast.LENGTH_SHORT).show()
+                    );
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-                runOnUiThread(() ->
-                        Toast.makeText(EditNoteActivity.this, "Error saving note", Toast.LENGTH_SHORT).show()
-                );
-            }
+            });
+
         });
     }
 
@@ -466,6 +380,22 @@ public class EditNoteActivity extends AppCompatActivity {
         return null;
     }
 
+    private void setupToolbar() {
+        // Formatting buttons
+        findViewById(R.id.btn_bold).setOnClickListener(v -> etNote.evaluateJavascript("javascript:execCommand('bold')", null));
+
+        findViewById(R.id.btn_italic).setOnClickListener(v -> etNote.evaluateJavascript("javascript:execCommand('italic')", null));
+
+        findViewById(R.id.btn_underline).setOnClickListener(v -> etNote.evaluateJavascript("javascript:execCommand('underline')", null));
+
+        findViewById(R.id.btn_bullet_list).setOnClickListener(v -> etNote.evaluateJavascript("javascript:execCommand('insertUnorderedList')", null));
+
+        findViewById(R.id.btn_numbered_list).setOnClickListener(v -> etNote.evaluateJavascript("javascript:execCommand('insertOrderedList')", null));
+
+        // Color selection button - show bottom sheet
+        findViewById(R.id.color_selection).setOnClickListener(v -> showColorPicker());
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -473,4 +403,11 @@ public class EditNoteActivity extends AppCompatActivity {
             executorService.shutdown();
         }
     }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        saveNote();
+    }
+
 }

@@ -51,24 +51,26 @@
                 android:textSize="10sp" />
         </LinearLayout>
 
-        <TextView
+        <WebView
             android:id="@+id/note_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
             android:ellipsize="end"
             android:maxLines="8"
+            android:scrollbars="none"
             android:textColor="@color/black"
             android:textSize="16sp" />
+
         <TextView
             android:id="@+id/note_category"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:paddingTop="2dp"
             android:text="Category"
+            android:textColor="@color/grey"
             android:textSize="12sp"
             android:textStyle="italic"
-            android:paddingTop="2dp"
-            android:visibility="gone"
-            android:textColor="@color/grey" />
+            android:visibility="gone" />
     </LinearLayout>
 </androidx.cardview.widget.CardView>

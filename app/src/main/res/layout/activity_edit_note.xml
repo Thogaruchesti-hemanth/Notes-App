@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="?attr/colorSecondary"
     android:padding="16dp">
 
     <!-- Toolbar -->
@@ -17,8 +17,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:navigationIcon="@drawable/ic_back_arrow"
         app:title="Edit Note"
-        app:titleTextColor="@color/black" />
-
+        app:titleTextColor="?attr/colorPrimary" />
     <!-- Title Input -->
     <EditText
         android:id="@+id/etTitle"
@@ -26,9 +25,10 @@
         android:layout_height="wrap_content"
         android:background="@android:color/transparent"
         android:hint="Enter the title"
+        android:paddingHorizontal="6dp"
         android:paddingVertical="12dp"
-        android:textColor="@color/black"
-        android:textSize="18sp"
+        android:textColor="?attr/colorPrimary"
+        android:textSize="22sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -39,6 +39,7 @@
         android:id="@+id/timeLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginHorizontal="8dp"
         android:background="@drawable/bg_note_field"
         android:gravity="center_vertical"
         android:orientation="horizontal"
@@ -59,7 +60,7 @@
             android:layout_marginStart="12dp"
             android:layout_weight="1"
             android:text="Time"
-            android:textColor="@color/black" />
+            android:textColor="?attr/colorPrimary" />
 
         <TextView
             android:id="@+id/tvTime"
@@ -75,6 +76,7 @@
         android:id="@+id/dateLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginHorizontal="8dp"
         android:layout_marginTop="8dp"
         android:background="@drawable/bg_note_field"
         android:gravity="center_vertical"
@@ -96,7 +98,7 @@
             android:layout_marginStart="12dp"
             android:layout_weight="1"
             android:text="Date"
-            android:textColor="@color/black" />
+            android:textColor="?attr/colorPrimary" />
 
         <TextView
             android:id="@+id/tvDate"
@@ -113,6 +115,7 @@
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginHorizontal="8dp"
         android:layout_marginBottom="16dp"
         android:hint="Category"
         app:layout_constraintEnd_toEndOf="parent"
@@ -128,7 +131,7 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Note Input -->
-    <EditText
+    <WebView
         android:id="@+id/etNote"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -174,6 +177,12 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_color_picker" />
 
+            <View
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="4dp"
+                android:background="?attr/colorSecondary" />
+
             <ImageButton
                 android:id="@+id/btn_bold"
                 android:layout_width="36dp"
@@ -215,17 +224,7 @@
                 android:src="@drawable/ic_number_list" />
         </LinearLayout>
 
-        <!-- Save Note Button -->
-        <Button
-            android:id="@+id/btnSave"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:backgroundTint="?attr/colorPrimary"
-            android:text="Save Note"
-            android:textAllCaps="false"
-            android:textColor="@color/white" />
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
