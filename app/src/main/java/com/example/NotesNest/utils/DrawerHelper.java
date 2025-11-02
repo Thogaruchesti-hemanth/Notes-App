@@ -4,9 +4,13 @@ package com.example.NotesNest.utils;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
+import android.provider.MediaStore;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -32,6 +36,8 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Objects;
 
 public class DrawerHelper {
@@ -45,6 +51,8 @@ public class DrawerHelper {
     private String imageUrl = "";
     private FirebaseHelper firebaseHelper;
     private ActivityResultLauncher<Intent> galleryLauncher;
+
+    private ImageView currentDialogImageView = null;
 
 
     public DrawerHelper(AppCompatActivity activity) {
@@ -155,12 +163,19 @@ public class DrawerHelper {
         userName.setText(userNameTextView.getText());
         email.setText(emailTextView.getText());
 
-        if (imageUrl != null && !imageUrl.isEmpty())
-            Picasso.get().load(imageUrl).placeholder(R.drawable.profile_pic).into(profileImage);
-        else
+        // Load Base64 image preview if available
+        String storedBase64 = pref.getImageUrl();
+        if (storedBase64 != null && !storedBase64.isEmpty()) {
+            Bitmap bitmap = decodeBase64ToBitmap(storedBase64);
+            if (bitmap != null) profileImage.setImageBitmap(bitmap);
+            else profileImage.setImageResource(R.drawable.profile_pic);
+        } else {
             profileImage.setImageResource(R.drawable.profile_pic);
+        }
 
-        profileImage.setOnClickListener(v -> openGallery());
+        // Let user choose a new image
+        profileImage.setOnClickListener(v -> openGalleryForDialog(profileImage));
+
         dialogView.findViewById(R.id.cancel_view).setOnClickListener(v -> dialog.dismiss());
 
         dialogView.findViewById(R.id.save_button).setOnClickListener(v -> {
@@ -173,6 +188,12 @@ public class DrawerHelper {
                 SharedPreferenceUtil pref = new SharedPreferenceUtil(activity);
                 pref.setUserName(name);
                 pref.setUserEmail(mail);
+
+                // Reflect updates on header
+                userNameTextView.setText(name);
+                emailTextView.setText(mail);
+
+                Toast.makeText(activity, "Details Updated", Toast.LENGTH_SHORT).show();
                 dialog.dismiss();
             } else {
                 Toast.makeText(activity, "Please fill in all fields.", Toast.LENGTH_SHORT).show();
@@ -180,38 +201,78 @@ public class DrawerHelper {
         });
     }
 
-    private void openGallery() {
-        Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        galleryLauncher.launch(intent);
-    }
-
     private void loadProfileImage() {
-        if (imageUrl == null || imageUrl.trim().isEmpty()) {
+        String base64Image = pref.getImageUrl(); // stored Base64 string
+
+        if (base64Image == null || base64Image.trim().isEmpty()) {
             profileImageView.setImageResource(R.drawable.profile_pic);
         } else {
-            Picasso.get()
-                    .load(imageUrl)
-                    .placeholder(R.drawable.profile_pic)
-                    .error(R.drawable.profile_pic)
-                    .into(profileImageView);
+            Bitmap bitmap = decodeBase64ToBitmap(base64Image);
+            if (bitmap != null) {
+                profileImageView.setImageBitmap(bitmap);
+            } else {
+                profileImageView.setImageResource(R.drawable.profile_pic);
+            }
         }
     }
 
     private void uploadProfileImage(Uri uri) {
-        StorageReference ref = FirebaseStorage.getInstance()
-                .getReference("NotesAppDetails/profile_image/"
-                        + System.currentTimeMillis() + ".jpg");
+        String base64Image = compressAndEncodeImage(uri);
 
-        ref.putFile(uri).addOnSuccessListener(task -> ref.getDownloadUrl().addOnSuccessListener(downloadUri -> {
-            imageUrl = downloadUri.toString();
-            pref.setUserImage(imageUrl);
+        if (base64Image != null) {
+            pref.setUserImage(base64Image); // Save Base64 in SharedPreferences
             loadProfileImage();
-            Toast.makeText(activity, "Profile updated", Toast.LENGTH_SHORT).show();
-        })).addOnFailureListener(e ->
-                Toast.makeText(activity, "Upload failed: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+            Toast.makeText(activity, "Profile image updated", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(activity, "Failed to process image", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // 🔹 Compress image to ≤ 100 KB and convert to Base64
+    private String compressAndEncodeImage(Uri uri) {
+        try {
+            Bitmap bitmap = MediaStore.Images.Media.getBitmap(activity.getContentResolver(), uri);
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+            int quality = 90;
+            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream);
+
+            // Reduce quality until under 100 KB
+            while (outputStream.toByteArray().length > 100 * 1024 && quality > 10) {
+                outputStream.reset();
+                quality -= 5;
+                bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream);
+            }
+
+            byte[] compressedBytes = outputStream.toByteArray();
+            return Base64.encodeToString(compressedBytes, Base64.DEFAULT);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(activity, "Failed to compress image", Toast.LENGTH_SHORT).show();
+            return null;
+        }
+    }
+
+    // 🔹 Decode Base64 to Bitmap
+    private Bitmap decodeBase64ToBitmap(String base64String) {
+        try {
+            byte[] decodedBytes = Base64.decode(base64String, Base64.DEFAULT);
+            return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private void openGalleryForDialog(ImageView dialogProfileImage) {
+        currentDialogImageView = dialogProfileImage;
+        Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        galleryLauncher.launch(intent);
     }
 
     public interface OnDrawerItemSelectedListener {
         void onItemSelected(String title);
     }
+
 }
