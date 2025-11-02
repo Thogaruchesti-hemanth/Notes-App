@@ -5,7 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.example.NotesNest.ReminderScheduler;
+import com.example.services.ReminderScheduler;
 import com.example.NotesNest.models.Reminder;
 
 import java.text.SimpleDateFormat;

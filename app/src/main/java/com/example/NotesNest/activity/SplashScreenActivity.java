@@ -10,8 +10,7 @@ import android.os.Handler;
 import android.widget.ImageView;
 
 import com.example.NotesNest.R;
-import com.example.NotesNest.SharedPreferenceUtil;
-import com.example.NotesNest.databases.DatabaseHelper;
+import com.example.NotesNest.utils.SharedPreferenceUtil;
 
 public class SplashScreenActivity extends AppCompatActivity {
 

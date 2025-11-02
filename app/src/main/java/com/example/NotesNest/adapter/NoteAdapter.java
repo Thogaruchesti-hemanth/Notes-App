@@ -24,6 +24,7 @@ import com.example.NotesNest.utils.CommonAlertDialogs;
 import com.example.NotesNest.utils.DateTimeUtils;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -31,7 +32,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
 
     private final Context context;
     private final ExecutorService executorService;
-    private final ArrayList<NoteEntity> noteList;
+    private ArrayList<NoteEntity> noteList;
 
     public NoteAdapter(ArrayList<NoteEntity> noteList, Context context) {
         this.noteList = noteList;
@@ -71,9 +72,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         setCategoryName(note.category_id, holder.textCategory);
 
         // Click listener to show full content in dialog
-        holder.mainLayout.setOnClickListener(view -> {
-            showFullContentDialog(note);
-        });
+        holder.mainLayout.setOnClickListener(view -> showFullContentDialog(note));
 
         // Long click for edit/delete
         holder.mainLayout.setOnLongClickListener(view -> {
@@ -93,29 +92,6 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
             });
             return true;
         });
-    }
-
-    /**
-     * Convert HTML to plain text with formatting preserved as much as possible
-     */
-    private String htmlToPlainText(String html) {
-        if (html == null || html.trim().isEmpty()) {
-            return "No content";
-        }
-
-        try {
-            // Remove HTML tags but preserve basic formatting
-            Spanned spanned = Html.fromHtml(html, Html.FROM_HTML_MODE_COMPACT);
-            String plainText = spanned.toString().trim();
-
-            // Remove extra whitespace
-            plainText = plainText.replaceAll("\\s+", " ");
-
-            return plainText;
-        } catch (Exception e) {
-            // Fallback: remove HTML tags manually
-            return html.replaceAll("<[^>]*>", "").trim();
-        }
     }
 
     /**
@@ -174,7 +150,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         }
 
         executorService.execute(() -> {
-            CategoryEntity category = AppDatabase.getInstance(context).categoryDao().getAllCategories().get(categoryId);
+            CategoryEntity category = AppDatabase.getInstance(context).categoryDao().getCategoryById(categoryId);
 
             ((android.app.Activity) context).runOnUiThread(() -> {
                 if (category != null) {
@@ -194,7 +170,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         }
 
         executorService.execute(() -> {
-            CategoryEntity category = AppDatabase.getInstance(context).categoryDao().getAllCategories().get(categoryId);
+            CategoryEntity category = AppDatabase.getInstance(context).categoryDao().getCategoryById(categoryId);
 
             ((android.app.Activity) context).runOnUiThread(() -> {
                 if (category != null) {
@@ -218,6 +194,13 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
     @Override
     public int getItemCount() {
         return noteList.size();
+    }
+
+    public void updateData(List<NoteEntity> notes) {
+        if (notes == null) return;
+        noteList.clear();
+        noteList.addAll(notes);
+        notifyDataSetChanged();
     }
 
     public static class NoteViewHolder extends RecyclerView.ViewHolder {

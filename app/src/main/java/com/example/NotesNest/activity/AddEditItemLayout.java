@@ -1,4 +1,4 @@
-package com.example.NotesNest;
+package com.example.NotesNest.activity;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
@@ -19,6 +19,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.NotesNest.R;
 import com.example.NotesNest.databases.DatabaseHelper;
 import com.example.NotesNest.databases.ImportantDatabaseHandler;
 import com.example.NotesNest.databases.NoteDatabaseHandler;

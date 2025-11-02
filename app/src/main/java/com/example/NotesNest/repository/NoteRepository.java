@@ -34,4 +34,5 @@ public class NoteRepository {
     public NoteEntity getById(int id) {
         return db.noteDao().getNoteById(id);
     }
+
 }

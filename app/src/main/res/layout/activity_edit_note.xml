@@ -17,19 +17,19 @@
         app:layout_constraintTop_toTopOf="parent"
         app:navigationIcon="@drawable/ic_back_arrow"
         app:title="Edit Note"
-        app:titleTextColor="?attr/colorPrimary"/>
+        app:titleTextColor="?attr/colorPrimary" />
 
     <Button
         android:id="@+id/btnSave"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Save"
         android:layout_marginEnd="12dp"
-        android:textColor="?attr/colorPrimary"
         android:backgroundTint="@color/tabSelectedTextColorLight"
-        app:layout_constraintTop_toTopOf="@id/toolbar"
+        android:text="Save"
+        android:textColor="?attr/colorPrimary"
         app:layout_constraintBottom_toBottomOf="@id/toolbar"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/toolbar" />
 
     <!-- Title Input -->
     <EditText
@@ -202,7 +202,8 @@
                 android:layout_height="36dp"
                 android:layout_marginEnd="4dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_bold" />
+                android:src="@drawable/ic_bold"
+                app:tint="@color/toolbar_icon_tint" />
 
             <ImageButton
                 android:id="@+id/btn_italic"
@@ -210,15 +211,8 @@
                 android:layout_height="36dp"
                 android:layout_marginEnd="4dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_italic" />
-
-            <ImageButton
-                android:id="@+id/btn_underline"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_marginEnd="4dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_underline" />
+                android:src="@drawable/ic_italic"
+                app:tint="@color/toolbar_icon_tint" />
 
             <ImageButton
                 android:id="@+id/btn_bullet_list"
@@ -226,7 +220,8 @@
                 android:layout_height="36dp"
                 android:layout_marginEnd="4dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_bullet_points" />
+                android:src="@drawable/ic_bullet_points"
+                app:tint="@color/toolbar_icon_tint" />
 
             <ImageButton
                 android:id="@+id/btn_numbered_list"
@@ -234,7 +229,8 @@
                 android:layout_height="36dp"
                 android:layout_marginEnd="4dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_number_list" />
+                android:src="@drawable/ic_number_list"
+                app:tint="@color/toolbar_icon_tint" />
         </LinearLayout>
 
     </LinearLayout>

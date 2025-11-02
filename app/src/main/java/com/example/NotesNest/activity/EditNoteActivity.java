@@ -1,5 +1,13 @@
 package com.example.NotesNest.activity;
 
+import static com.example.NotesNest.utils.SharedPreferenceUtil.KEY_DRAFT_CATEGORY;
+import static com.example.NotesNest.utils.SharedPreferenceUtil.KEY_DRAFT_COLOR;
+import static com.example.NotesNest.utils.SharedPreferenceUtil.KEY_DRAFT_CONTENT;
+import static com.example.NotesNest.utils.SharedPreferenceUtil.KEY_DRAFT_DATE;
+import static com.example.NotesNest.utils.SharedPreferenceUtil.KEY_DRAFT_TIME;
+import static com.example.NotesNest.utils.SharedPreferenceUtil.KEY_DRAFT_TITLE;
+import static com.example.NotesNest.utils.SharedPreferenceUtil.PREFS_NAME;
+
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
@@ -7,18 +15,16 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.webkit.WebView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
@@ -55,11 +61,16 @@ public class EditNoteActivity extends AppCompatActivity {
     private ArrayAdapter<String> categoryAdapter;
     private WebView etNote;
     private CKEditorHelper editorHelper;
+    private Button saveBtn;
+
+    private static void toggleSelection(View v) {
+        v.setSelected(!v.isSelected()); // toggles tint automatically
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_edit_note); // Your XML layout
+        setContentView(R.layout.activity_edit_note);
 
         initializeViews();
         setupHeader();
@@ -69,12 +80,17 @@ public class EditNoteActivity extends AppCompatActivity {
         setupClickListeners();
         loadNoteData();
         setupTextWatchers();
+        restoreDraft();
+
     }
 
     private void initializeViews() {
         // Toolbar
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        //save note
+        saveBtn = findViewById(R.id.btnSave);
 
         // Input fields
         etTitle = findViewById(R.id.etTitle);
@@ -103,10 +119,7 @@ public class EditNoteActivity extends AppCompatActivity {
 
     private void setupHeader() {
         Toolbar toolbar = findViewById(R.id.toolbar);
-        toolbar.setNavigationOnClickListener(v -> {
-            saveNote();
-            finish();
-        });
+        toolbar.setNavigationOnClickListener(v -> finish());
     }
 
     private void setupDatabase() {
@@ -138,6 +151,12 @@ public class EditNoteActivity extends AppCompatActivity {
 
         // Date selection
         dateLayout.setOnClickListener(v -> showDatePicker());
+
+        //save Note
+        saveBtn.setOnClickListener(v -> {
+            saveNote();
+            finish();
+        });
 
     }
 
@@ -356,6 +375,7 @@ public class EditNoteActivity extends AppCompatActivity {
                         database.noteDao().insert(newNote);
 
                         runOnUiThread(() -> {
+                            clearDraft();
                             Toast.makeText(EditNoteActivity.this, "Note saved successfully", Toast.LENGTH_SHORT).show();
                             setResult(RESULT_OK);
                             finish();
@@ -385,15 +405,25 @@ public class EditNoteActivity extends AppCompatActivity {
 
     private void setupToolbar() {
         // Formatting buttons
-        findViewById(R.id.btn_bold).setOnClickListener(v -> etNote.evaluateJavascript("javascript:execCommand('bold')", null));
+        findViewById(R.id.btn_bold).setOnClickListener(v -> {
+            toggleSelection(v);
+            etNote.evaluateJavascript("javascript:execCommand('bold')", null);
+        });
 
-        findViewById(R.id.btn_italic).setOnClickListener(v -> etNote.evaluateJavascript("javascript:execCommand('italic')", null));
+        findViewById(R.id.btn_italic).setOnClickListener(v -> {
+            toggleSelection(v);
+            etNote.evaluateJavascript("javascript:execCommand('italic')", null);
+        });
 
-        findViewById(R.id.btn_underline).setOnClickListener(v -> etNote.evaluateJavascript("javascript:execCommand('underline')", null));
+        findViewById(R.id.btn_bullet_list).setOnClickListener(v -> {
+            toggleSelection(v);
+            etNote.evaluateJavascript("javascript:execCommand('insertUnorderedList')", null);
+        });
 
-        findViewById(R.id.btn_bullet_list).setOnClickListener(v -> etNote.evaluateJavascript("javascript:execCommand('insertUnorderedList')", null));
-
-        findViewById(R.id.btn_numbered_list).setOnClickListener(v -> etNote.evaluateJavascript("javascript:execCommand('insertOrderedList')", null));
+        findViewById(R.id.btn_numbered_list).setOnClickListener(v -> {
+            toggleSelection(v);
+            etNote.evaluateJavascript("javascript:execCommand('insertOrderedList')", null);
+        });
 
         // Color selection button - show bottom sheet
         findViewById(R.id.color_selection).setOnClickListener(v -> showColorPicker());
@@ -410,26 +440,46 @@ public class EditNoteActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        saveNote();
+        saveDraft();
     }
 
+    private void saveDraft() {
+        editorHelper.getContent(htmlContent -> {
+            String title = etTitle.getText().toString();
+            String category = categoryDropdown.getText().toString();
+            String date = tvDate.getText().toString();
+            String time = tvTime.getText().toString();
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_edit_note, menu);
-        return true;
+            getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                    .edit()
+                    .putString(KEY_DRAFT_TITLE, title)
+                    .putString(KEY_DRAFT_CONTENT, htmlContent)
+                    .putString(KEY_DRAFT_DATE, date)
+                    .putString(KEY_DRAFT_TIME, time)
+                    .putString(KEY_DRAFT_CATEGORY, category)
+                    .putString(KEY_DRAFT_COLOR, selectedColor)
+                    .apply();
+        });
     }
 
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.action_save) {
-            // ✅ Handle Save button click
-            saveNote(); // You can replace this with your own save logic
-            return true;
-        } else if (item.getItemId() == android.R.id.home) {
-            onBackPressed();
-            return true;
+    private void restoreDraft() {
+        var prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        String draftTitle = prefs.getString(KEY_DRAFT_TITLE, null);
+        String draftContent = prefs.getString(KEY_DRAFT_CONTENT, null);
+
+        if (draftTitle != null || draftContent != null) {
+            etTitle.setText(draftTitle);
+            editorHelper.setContent(draftContent);
+
+            tvDate.setText(prefs.getString(KEY_DRAFT_DATE, ""));
+            tvTime.setText(prefs.getString(KEY_DRAFT_TIME, ""));
+            categoryDropdown.setText(prefs.getString(KEY_DRAFT_CATEGORY, ""), false);
+            selectedColor = prefs.getString(KEY_DRAFT_COLOR, "#FFFFFF");
+            updateBackgroundColor();
         }
-        return super.onOptionsItemSelected(item);
+    }
+
+    private void clearDraft() {
+        getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().clear().apply();
     }
 }
