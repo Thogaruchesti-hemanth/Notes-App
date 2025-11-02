@@ -14,7 +14,7 @@ import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.NotesNest.AddEditItemLayout;
+import com.example.NotesNest.activity.AddEditItemLayout;
 import com.example.NotesNest.R;
 import com.example.NotesNest.databases.ReminderDatabaseHandler;
 import com.example.NotesNest.databases.WishDatabaseHandler;

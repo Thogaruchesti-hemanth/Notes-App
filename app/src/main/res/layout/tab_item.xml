@@ -12,7 +12,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Tab"
-        android:textColor="@color/grey"
+        android:textColor="?attr/colorSecondary"
         android:textSize="14sp"
         android:gravity="center" />
 </LinearLayout>

@@ -1,4 +1,4 @@
-package com.example.NotesNest;
+package com.example.NotesNest.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -11,6 +11,15 @@ public class SharedPreferenceUtil {
     private static final String KEY_PHOTO = "user_image";
     private static final String KEY_LOGIN = "is_login";
     private static final String KEY_THEME = "theme";
+
+    public static final String PREFS_NAME = "NoteDraftPrefs";
+    public static final String KEY_DRAFT_TITLE = "draft_title";
+    public static final String KEY_DRAFT_CONTENT = "draft_content";
+    public static final String KEY_DRAFT_DATE = "draft_date";
+    public static final String KEY_DRAFT_TIME = "draft_time";
+    public static final String KEY_DRAFT_CATEGORY = "draft_category";
+    public static final String KEY_DRAFT_COLOR = "draft_color";
+
     private static SharedPreferences sharedPreferences;
 
     public SharedPreferenceUtil(Context context) {

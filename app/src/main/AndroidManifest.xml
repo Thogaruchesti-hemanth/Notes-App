@@ -38,7 +38,7 @@
             android:name="com.google.android.gms.measurement.AppMeasurementInstallReferrerReceiver"
             android:exported="true" />
         <receiver
-            android:name=".ReminderReceiver"
+            android:name="com.example.services.ReminderReceiver"
             android:exported="true" />
 
         <activity
@@ -58,7 +58,7 @@
             android:name=".activity.MainActivity"
             android:exported="true" />
         <activity
-            android:name=".AddEditItemLayout"
+            android:name=".activity.AddEditItemLayout"
             android:exported="true" />
     </application>
 
