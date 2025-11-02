@@ -14,10 +14,10 @@ import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.NotesNest.AddEditItemLayout;
+import com.example.NotesNest.activity.AddEditItemLayout;
 import com.example.NotesNest.R;
-import com.example.NotesNest.database.ReminderDatabaseHandler;
-import com.example.NotesNest.database.WishDatabaseHandler;
+import com.example.NotesNest.databases.ReminderDatabaseHandler;
+import com.example.NotesNest.databases.WishDatabaseHandler;
 import com.example.NotesNest.models.Wish;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 

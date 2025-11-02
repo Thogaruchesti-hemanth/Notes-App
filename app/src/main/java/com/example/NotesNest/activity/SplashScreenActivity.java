@@ -10,8 +10,7 @@ import android.os.Handler;
 import android.widget.ImageView;
 
 import com.example.NotesNest.R;
-import com.example.NotesNest.SharedPreferenceUtil;
-import com.example.NotesNest.database.DatabaseHelper;
+import com.example.NotesNest.utils.SharedPreferenceUtil;
 
 public class SplashScreenActivity extends AppCompatActivity {
 
@@ -22,9 +21,6 @@ public class SplashScreenActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_splash_screen);
-
-        DatabaseHelper dbHelper = new DatabaseHelper(this);
-        dbHelper.getWritableDatabase();
 
         SharedPreferenceUtil sharedPreferenceUtil = new SharedPreferenceUtil(this);
         boolean login = sharedPreferenceUtil.getLogin();
