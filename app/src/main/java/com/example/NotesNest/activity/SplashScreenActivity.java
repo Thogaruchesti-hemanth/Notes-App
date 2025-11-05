@@ -1,17 +1,21 @@
 package com.example.NotesNest.activity;
 
+import android.annotation.SuppressLint;
+import android.content.Intent;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.widget.ImageView;
+
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.os.Handler;
-import android.widget.ImageView;
-
 import com.example.NotesNest.R;
+import com.example.NotesNest.utils.DBSeedUtil;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
 
+@SuppressLint("CustomSplashScreen")
 public class SplashScreenActivity extends AppCompatActivity {
 
     private static final int SPLASH_DELAY = 1500;
@@ -22,28 +26,59 @@ public class SplashScreenActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_splash_screen);
 
-        SharedPreferenceUtil sharedPreferenceUtil = new SharedPreferenceUtil(this);
-        boolean login = sharedPreferenceUtil.getLogin();
-        String themeValue = sharedPreferenceUtil.getTheme();
+        SharedPreferenceUtil sp = new SharedPreferenceUtil(this);
 
-        if ("dark".equals(themeValue)) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-        } else {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-        }
+        // ✅ Set theme early (dark/light)
+        setAppTheme(sp.getTheme());
 
-        ImageView splashLogo = findViewById(R.id.splash_logo);
-        if ("dark".equals(themeValue)) {
-            splashLogo.setImageResource(R.drawable.splash_logo_dark);
-        } else {
-            splashLogo.setImageResource(R.drawable.splash_logo_light);
-        }
+        // ✅ Update logo based on theme
+        updateSplashLogo(sp.getTheme());
 
-        new Handler().postDelayed(() -> {
-            Intent intent = login ? new Intent(SplashScreenActivity.this, MainActivity.class) : new Intent(SplashScreenActivity.this, LoginActivity.class);
-            startActivity(intent);
-            overridePendingTransition(R.anim.zoom_in, R.anim.zoom_out);
-            finish(); // Prevents user from returning to splash screen
-        }, SPLASH_DELAY);
+        // ✅ Make sure categories are added FIRST
+        DBSeedUtil.seedDefaultCategories(this);
+
+        // ✅ After delay → go next screen
+        new Handler(Looper.getMainLooper()).postDelayed(
+                this::navigateNext,
+                SPLASH_DELAY
+        );
+    }
+
+
+    /**
+     * ✅ Apply theme
+     */
+    private void setAppTheme(String theme) {
+        boolean dark = "dark".equalsIgnoreCase(theme);
+        AppCompatDelegate.setDefaultNightMode(
+                dark ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
+        );
+    }
+
+    /**
+     * ✅ Update logo based on theme
+     */
+    private void updateSplashLogo(String theme) {
+        ImageView logo = findViewById(R.id.splash_logo);
+        boolean dark = "dark".equalsIgnoreCase(theme);
+
+        logo.setImageResource(dark
+                ? R.drawable.splash_logo_dark
+                : R.drawable.splash_logo_light
+        );
+    }
+
+    /**
+     * ✅ Decide next screen
+     */
+    private void navigateNext() {
+        SharedPreferenceUtil sp = new SharedPreferenceUtil(this);
+        Intent intent = sp.getLogin()
+                ? new Intent(this, MainActivity.class)
+                : new Intent(this, LoginActivity.class);
+
+        startActivity(intent);
+        overridePendingTransition(R.anim.zoom_in, R.anim.zoom_out);
+        finish();
     }
 }

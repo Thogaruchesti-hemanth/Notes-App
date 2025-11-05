@@ -32,6 +32,7 @@ import com.example.NotesNest.adapter.NoteAdapter;
 import com.example.NotesNest.databases.AppDatabase;
 import com.example.NotesNest.databases.entities.CategoryEntity;
 import com.example.NotesNest.databases.entities.NoteEntity;
+import com.example.NotesNest.utils.CommonAlertDialogs;
 import com.google.android.material.tabs.TabLayout;
 
 import java.util.ArrayList;
@@ -65,9 +66,7 @@ public class AllNotesFragment extends Fragment {
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                             @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_all_notes, container, false);
 
         tabLayout = view.findViewById(R.id.tabLayout);
@@ -79,10 +78,7 @@ public class AllNotesFragment extends Fragment {
         clearSearchBtn = view.findViewById(R.id.clearSearchBtn);
 
 
-        unselectedTabColor = getThemeColor(
-                requireContext(),
-                com.google.android.material.R.attr.colorPrimary
-        );
+        unselectedTabColor = getThemeColor(requireContext(), com.google.android.material.R.attr.colorPrimary);
         appDatabase = AppDatabase.getInstance(requireContext());
         setupRecycler();
         setupSearch();
@@ -136,8 +132,8 @@ public class AllNotesFragment extends Fragment {
             }
 
             mainHandler.post(() -> {
-                    setupTabs();
-                    loadNotesByCategory(selectedCategory);
+                setupTabs();
+                loadNotesByCategory(selectedCategory);
             });
         });
     }
@@ -225,7 +221,7 @@ public class AllNotesFragment extends Fragment {
                     if (tx != null) {
                         titleTextView.setText(tx.getText().toString());
                         filterNotes(tx.getText().toString());
-                    };
+                    }
                 }
             }
         });
@@ -261,9 +257,7 @@ public class AllNotesFragment extends Fragment {
         text.setTypeface(null, selected ? Typeface.BOLD : Typeface.NORMAL);
 
         // ✅ FIX: Use resolved color value directly for unselected state
-        text.setTextColor(selected
-                ? ContextCompat.getColor(requireContext(), R.color.tabSelectedTextColor)
-                : unselectedTabColor);
+        text.setTextColor(selected ? ContextCompat.getColor(requireContext(), R.color.tabSelectedTextColor) : unselectedTabColor);
 
         return view;
     }
@@ -287,54 +281,39 @@ public class AllNotesFragment extends Fragment {
     }
 
     private void showAddCategoryDialog() {
-        EditText input = new EditText(requireContext());
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Add Category")
-                .setMessage("Enter category name:")
-                .setView(input)
-                .setPositiveButton("Add", (dialog, which) -> {
-                    String name = input.getText().toString().trim();
-                    if (name.isEmpty()) {
-                        Toast.makeText(requireContext(), "Name cannot be empty.", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
 
-                    // insert into DB and refresh tabs
-                    executor.execute(() -> {
-                        AppDatabase db = AppDatabase.getInstance(requireContext());
-                        CategoryEntity entity = new CategoryEntity();
-                        entity.name = name;
-                        entity.color = null;
-                        entity.icon = null;
-                        db.categoryDao().insert(entity);
-                        loadCategories();
-                    });
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+        CommonAlertDialogs.showInputDialog(requireContext(), "Add Category", "Enter category name", "Add", "Cancel", name -> {
+            executor.execute(() -> {
+                AppDatabase db = AppDatabase.getInstance(requireContext());
+                CategoryEntity entity = new CategoryEntity();
+                entity.name = name;
+                entity.color = null;
+                entity.icon = null;
+                db.categoryDao().insert(entity);
+
+                requireActivity().runOnUiThread(this::loadCategories);
+            });
+        });
     }
 
     private void showDeleteCategoryDialog(String name) {
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Delete Category")
-                .setMessage("Delete category '" + name + "'?\nNotes under it will move to 'All'.")
-                .setPositiveButton("Delete", (dialog, which) -> executor.execute(() -> {
-                    AppDatabase db = AppDatabase.getInstance(requireContext());
-                    int catId = getCategoryIdByName(name);
-                    if (catId != -1) {
-                        db.noteDao().resetCategoryNotes(catId); // move notes to null
-                        db.categoryDao().deleteByName(name);
-                    }
-                    // refresh categories & notes on main thread
-                    mainHandler.post(() -> {
-                        loadCategories();
-                        selectedCategory = "All";
-                        filterNotes("All");
-                        Toast.makeText(requireContext(), "Category deleted.", Toast.LENGTH_SHORT).show();
-                    });
-                }))
-                .setNegativeButton("Cancel", null)
-                .show();
+        String message = "Are you sure you want to delete the category '" + name + "'? " +
+                "All notes under this category will be moved to 'All'.";
+
+        CommonAlertDialogs.showConfirmDialog(requireContext(), "Delete Category", message, "Delete", "Cancel", () -> executor.execute(() -> {
+            AppDatabase db = AppDatabase.getInstance(requireContext());
+            int catId = getCategoryIdByName(name);
+            if (catId != -1) {
+                db.noteDao().resetCategoryNotes(catId); // move notes to null
+                db.categoryDao().deleteByName(name);
+            }
+            mainHandler.post(() -> {
+                loadCategories();
+                selectedCategory = "All";
+                filterNotes("All");
+                Toast.makeText(requireContext(), "Category deleted.", Toast.LENGTH_SHORT).show();
+            });
+        }));
     }
 
     private void setupSearch() {
@@ -360,7 +339,7 @@ public class AllNotesFragment extends Fragment {
 
         clearSearchBtn.setOnClickListener(v -> {
             searchEditText.setText("");
-            performSearch(""); // restore category's full list
+            performSearch("");
         });
     }
 
