@@ -1,5 +1,7 @@
 package com.example.NotesNest.fragments;
 
+import static com.example.NotesNest.editor.CKEditorHelper.getThemeColor;
+
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Typeface;
@@ -54,6 +56,8 @@ public class AllNotesFragment extends Fragment {
     private Runnable searchRunnable;
     private String selectedCategory = "All";
     private List<CategoryEntity> categoryList = new ArrayList<>();
+    private AppDatabase appDatabase;
+    private int unselectedTabColor = -1;
 
     public AllNotesFragment() {
         // Required empty constructor
@@ -74,12 +78,16 @@ public class AllNotesFragment extends Fragment {
         searchEditText = view.findViewById(R.id.searchEditText);
         clearSearchBtn = view.findViewById(R.id.clearSearchBtn);
 
+
+        unselectedTabColor = getThemeColor(
+                requireContext(),
+                com.google.android.material.R.attr.colorPrimary
+        );
+        appDatabase = AppDatabase.getInstance(requireContext());
         setupRecycler();
         setupSearch();
         setupCreateButton();
-
         loadCategories();
-
         return view;
     }
 
@@ -91,10 +99,6 @@ public class AllNotesFragment extends Fragment {
         Intent intent = new Intent(requireContext(), EditNoteActivity.class);
         startActivityForResult(intent, REQUEST_CODE_ADD_EDIT);
     }
-
-    /**
-     * ------------------- TABS & CATEGORIES -------------------
-     **/
 
     private void loadCategories() {
         executor.execute(() -> {
@@ -132,10 +136,8 @@ public class AllNotesFragment extends Fragment {
             }
 
             mainHandler.post(() -> {
-                if (isAdded()) {
                     setupTabs();
                     loadNotesByCategory(selectedCategory);
-                }
             });
         });
     }
@@ -181,6 +183,7 @@ public class AllNotesFragment extends Fragment {
                 }
             }
         }
+        titleTextView.setText(selectedCategory);
 
         // If nothing matched, select first tab
         if (!matched && tabLayout.getTabCount() > 0) {
@@ -204,6 +207,7 @@ public class AllNotesFragment extends Fragment {
                         String name = tx.getText().toString();
                         selectedCategory = name;
                         filterNotes(name);
+                        titleTextView.setText(name);
                     }
                 }
             }
@@ -218,7 +222,10 @@ public class AllNotesFragment extends Fragment {
                 // Optional: refresh when reselected
                 if (tab != null && tab.getCustomView() != null) {
                     TextView tx = tab.getCustomView().findViewById(R.id.tabText);
-                    if (tx != null) filterNotes(tx.getText().toString());
+                    if (tx != null) {
+                        titleTextView.setText(tx.getText().toString());
+                        filterNotes(tx.getText().toString());
+                    };
                 }
             }
         });
@@ -252,8 +259,12 @@ public class AllNotesFragment extends Fragment {
         TextView text = view.findViewById(R.id.tabText);
         text.setText(title);
         text.setTypeface(null, selected ? Typeface.BOLD : Typeface.NORMAL);
-        text.setTextColor(ContextCompat.getColor(requireContext(),
-                selected ? R.color.tabSelectedTextColor : R.color.dark_gray));
+
+        // ✅ FIX: Use resolved color value directly for unselected state
+        text.setTextColor(selected
+                ? ContextCompat.getColor(requireContext(), R.color.tabSelectedTextColor)
+                : unselectedTabColor);
+
         return view;
     }
 
@@ -270,7 +281,9 @@ public class AllNotesFragment extends Fragment {
         TextView text = tab.getCustomView().findViewById(R.id.tabText);
         if (text == null) return;
         text.setTypeface(null, Typeface.NORMAL);
-        text.setTextColor(ContextCompat.getColor(requireContext(), R.color.dark_gray));
+
+        // ✅ FIX: Use resolved color value directly.
+        text.setTextColor(unselectedTabColor);
     }
 
     private void showAddCategoryDialog() {
