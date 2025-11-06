@@ -59,4 +59,12 @@ public class SharedPreferenceUtil {
         sharedPreferences.edit().putString(KEY_THEME, theme).apply();
     }
 
+    public boolean isCategorySeedDone() {
+        return sharedPreferences.getBoolean("CATEGORY_SEED_DONE", false);
+    }
+
+    public void setCategorySeedDone(boolean done) {
+        sharedPreferences.edit().putBoolean("CATEGORY_SEED_DONE", done).apply();
+    }
+
 }

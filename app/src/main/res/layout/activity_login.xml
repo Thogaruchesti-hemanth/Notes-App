@@ -13,7 +13,6 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Profile Image Layout -->
         <FrameLayout
             android:id="@+id/profile_layout"
             android:layout_width="120dp"
@@ -26,7 +25,7 @@
                 android:id="@+id/profile_image_view"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:contentDescription="Profile Image"
+                android:contentDescription="@string/text_profile_image"
                 android:scaleType="centerCrop"
                 android:src="@drawable/profile_pic" />
 
@@ -36,7 +35,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom|end"
                 android:layout_margin="4dp"
-                android:contentDescription="Upload Image"
+                android:contentDescription="@string/text_upload_image"
                 app:backgroundTint="?attr/colorPrimary"
                 app:fabCustomSize="40dp"
                 app:maxImageSize="20dp"
@@ -50,12 +49,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="5dp"
-            android:text="Hey,\nLogin Now!"
+            android:text="@string/text_hey_login_now"
             android:textColor="@color/tabSelectedTextColor"
             android:textSize="48sp"
             android:textStyle="bold" />
 
-        <!-- Switch between old user / signup -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -65,7 +63,7 @@
                 android:id="@+id/old_user_text_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="I Am An Old User"
+                android:text="@string/text_i_am_an_old_user"
                 android:textColor="@drawable/textview_selector"
                 android:textSize="16sp"
                 android:textStyle="bold|normal" />
@@ -74,7 +72,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="5dp"
-                android:text="/"
+                android:text="@string/text_slash"
                 android:textColor="@drawable/textview_selector"
                 android:textSize="16sp" />
 
@@ -82,7 +80,7 @@
                 android:id="@+id/go_to_signup"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Create New "
+                android:text="@string/text_create_new"
                 android:textColor="?attr/tabTextColor"
                 android:textSize="16sp"
                 android:textStyle="bold|normal" />
@@ -102,7 +100,7 @@
                 android:id="@+id/user_name_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="User Name"
+                android:hint="@string/text_user_name"
                 android:inputType="text"
                 android:textColor="?attr/colorPrimary"
                 android:textSize="18sp" />
@@ -120,7 +118,8 @@
                 android:id="@+id/login_email"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Email"
+                android:hint="@string/text_email"
+                android:text="admin@gmail.com"
                 android:inputType="textEmailAddress"
                 android:textColor="?attr/colorPrimary"
                 android:textSize="18sp" />
@@ -140,7 +139,8 @@
                 android:id="@+id/login_password"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Password"
+                android:hint="@string/text_password"
+                android:text="Sai@143#"
                 android:inputType="textPassword"
                 android:textColor="?attr/colorPrimary"
                 android:textSize="18sp" />
@@ -154,7 +154,7 @@
             android:layout_marginEnd="5dp"
             android:gravity="end"
             android:padding="4dp"
-            android:text="Forgot Password?"
+            android:text="@string/text_forgot_password"
             android:textColor="?attr/tabTextColor"
             android:textSize="14sp" />
 
@@ -173,7 +173,7 @@
                 android:id="@+id/confirm_password"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Confirm Password"
+                android:hint="@string/text_confirm_password"
                 android:inputType="textPassword"
                 android:textColor="?attr/colorPrimary"
                 android:textSize="18sp" />
@@ -191,7 +191,7 @@
                 android:id="@+id/login_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Login"
+                android:text="@string/text_login"
                 android:textAllCaps="false"
                 android:textColor="?attr/colorSecondary" />
         </com.example.NotesNest.AnimatedRunningBorderLayout>
@@ -208,7 +208,7 @@
                 android:id="@+id/google_sign_in_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Continue with Google"
+                android:text="@string/text_continue_with_google"
                 android:textAllCaps="false"
                 app:icon="@drawable/ic_google"
                 app:iconGravity="textStart"

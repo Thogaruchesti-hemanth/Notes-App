@@ -25,8 +25,8 @@ import androidx.security.crypto.EncryptedSharedPreferences;
 import androidx.security.crypto.MasterKeys;
 
 import com.example.NotesNest.AnimatedRunningBorderLayout;
-import com.example.NotesNest.FirebaseHelper;
 import com.example.NotesNest.R;
+import com.example.services.FirebaseHelper;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputLayout;
