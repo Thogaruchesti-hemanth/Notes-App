@@ -1,20 +1,21 @@
 package com.example.NotesNest.databases;
 
+import android.content.Context;
+
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
-
-import android.content.Context;
 
 import com.example.NotesNest.databases.daos.CategoryDao;
 import com.example.NotesNest.databases.daos.NoteDao;
 import com.example.NotesNest.databases.entities.CategoryEntity;
 import com.example.NotesNest.databases.entities.NoteEntity;
-
+import com.example.NotesNest.databases.entities.NoteFTSEntity;
 
 @Database(
         entities = {
                 NoteEntity.class,
+                NoteFTSEntity.class,
                 CategoryEntity.class
         },
         version = 2,
@@ -32,7 +33,7 @@ public abstract class AppDatabase extends RoomDatabase {
                                     context.getApplicationContext(),
                                     AppDatabase.class,
                                     "notesDatabase.db"
-                            ).fallbackToDestructiveMigration()
+                            )
                             .build();
                 }
             }

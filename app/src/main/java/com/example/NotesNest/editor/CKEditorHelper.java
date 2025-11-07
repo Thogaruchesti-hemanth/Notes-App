@@ -9,8 +9,8 @@ import android.webkit.WebView;
 public class CKEditorHelper {
 
     private final WebView webView;
-    private ContentChangeListener listener;
     private final Context context;
+    private ContentChangeListener listener;
     private String currentBackgroundColor; // Default white
 
     public CKEditorHelper(Context context, WebView webView) {
@@ -37,13 +37,11 @@ public class CKEditorHelper {
 
         // ✅ Get theme colors
         int bgColor = getColorFromAttr(com.google.android.material.R.attr.colorSecondary);
-        int textColor = getColorFromAttr(com.google.android.material.R.attr.colorPrimary);
 
         // Convert to CSS hex format
         String bgHex = String.format("#%06X", (0xFFFFFF & bgColor));
-        String textHex = String.format("#%06X", (0xFFFFFF & textColor));
 
-        String html = getEditorHtml(bgHex, textHex);
+        String html = getEditorHtml(bgHex);
         webView.loadDataWithBaseURL(
                 "file:///android_asset/",
                 html,
@@ -53,43 +51,112 @@ public class CKEditorHelper {
         );
     }
 
-    private String getEditorHtml(String bgColor, String textColor) {
+    private String getEditorHtml(String bgColor) {
+
         return "<!DOCTYPE html><html><head><meta charset=\"utf-8\">" +
-                "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">" +
+                "<meta name='viewport' content='width=device-width, initial-scale=1'>" +
+
                 "<style>" +
                 "html, body {margin:0; padding:0; height:100%; background:" + bgColor + ";}" +
-                "#editorContainer {" +
-                "display:flex; flex-direction:column; height:100%; " +
-                "padding:8px; box-sizing:border-box;" +
-                "}" +
-                "#editor {" +
-                "flex:1; border:1px solid #1D1E1D; padding:8px;" +
-                "font-family:Arial,sans-serif; color:" + textColor + ";" +
-                "background:" + bgColor + "; overflow-y:auto;" +
-                "border-radius:6px;" +
-                "}" +
+                "#editorContainer { display:flex; flex-direction:column; height:100%; padding:8px; box-sizing:border-box; }" +
+                "#editor { flex:1; border:1px solid #1D1E1D; padding:8px; font-family:Arial,sans-serif; " +
+                "color:#000000;" + "; background:" + bgColor + "; overflow-y:auto; border-radius:6px; }" +
                 "#editor:focus{outline:none;}" +
                 "#editor[placeholder]:empty:before {content: attr(placeholder); color:#999;}" +
                 "#editor[placeholder]:empty:focus:before {content:'';}" +
                 "</style></head><body>" +
+
                 "<div id='editorContainer'>" +
                 "<div id='editor' contenteditable='true' placeholder='Start writing your note...'></div>" +
                 "</div>" +
+
                 "<script>" +
-                "var editor=document.getElementById('editor');" +
-                "function execCommand(command){document.execCommand(command,false,null);editor.focus();}" +
-                "function insertCheckbox(){var html='<input type=\"checkbox\" style=\"margin-right:8px;\">';" +
-                "document.execCommand('insertHTML',false,html);editor.focus();}" +
-                "function getContent(){return editor.innerHTML;}" +
-                "function setContent(content){editor.innerHTML=content;}" +
-                "function setBackgroundColor(color){" +
-                "editor.style.backgroundColor=color;" +
+                "var editor = document.getElementById('editor');" +
+
+                // Generic command
+                "function execCommand(cmd) { document.execCommand(cmd, false, null); editor.focus(); }" +
+
+                // Restore caret to end of LI
+                "function restoreCaret() {" +
+                "  let sel = window.getSelection();" +
+                "  let node = sel.anchorNode;" +
+                "  while (node && node.tagName !== 'LI') node = node.parentNode;" +
+                "  if (node) {" +
+                "     let range = document.createRange();" +
+                "     range.selectNodeContents(node);" +
+                "     range.collapse(false);" +
+                "     sel.removeAllRanges();" +
+                "     sel.addRange(range);" +
+                "  }" +
                 "}" +
-                "editor.addEventListener('input',function(){" +
-                "Android.onContentChanged(editor.innerHTML);" +
+
+                // UL Toggle
+                "function toggleList() {" +
+                " document.execCommand('insertUnorderedList', false, null);" +
+                " setTimeout(() => {" +
+                "   restoreCaret();" +
+                "   notifyListChange();" +
+                "   editor.focus();" +
+                " }, 10);" +
+                "}" +
+
+                // OL Toggle
+                "function toggleNumberList() {" +
+                " document.execCommand('insertOrderedList', false, null);" +
+                " setTimeout(() => {" +
+                "   restoreCaret();" +
+                "   notifyListChange();" +
+                "   editor.focus();" +
+                " }, 10);" +
+                "}" +
+
+                // Detect OL / UL
+                "function getListType() {" +
+                " let sel = window.getSelection();" +
+                " if (!sel.rangeCount) return '';" +
+                " let node = sel.anchorNode;" +
+                " while (node && node !== editor) {" +
+                "   if (node.tagName === 'UL') return 'ul';" +
+                "   if (node.tagName === 'OL') return 'ol';" +
+                "   node = node.parentNode;" +
+                " }" +
+                " return '';" +
+                "}" +
+
+                // Notify Android
+                "function notifyListChange() {" +
+                " if (Android && Android.onListTypeChanged) {" +
+                "   Android.onListTypeChanged(getListType());" +
+                " }" +
+                "}" +
+
+                // Selection listeners
+                "editor.addEventListener('keyup', notifyListChange);" +
+                "editor.addEventListener('mouseup', notifyListChange);" +
+
+                // Input → Android
+                "editor.addEventListener('input', function() {" +
+                " if (Android && Android.onContentChanged) {" +
+                "    Android.onContentChanged(editor.innerHTML);" +
+                " }" +
                 "});" +
+
+                // Insert checkbox
+                "function insertCheckbox() {" +
+                " var html = '<input type=\"checkbox\" style=\"margin-right:8px;\">';" +
+                " document.execCommand('insertHTML', false, html);" +
+                " editor.focus();" +
+                "}" +
+
+                // Set / Get content
+                "function getContent() { return editor.innerHTML; }" +
+                "function setContent(content) { editor.innerHTML = content; notifyListChange(); }" +
+
+                "function setBackgroundColor(color) { editor.style.backgroundColor = color; }" +
+
                 "</script></body></html>";
     }
+
 
     /**
      * Set HTML content safely into editor

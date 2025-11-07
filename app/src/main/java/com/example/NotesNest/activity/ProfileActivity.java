@@ -13,9 +13,9 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.NotesNest.FirebaseHelper;
+import com.example.services.FirebaseHelper;
 import com.example.NotesNest.R;
-import com.example.NotesNest.SharedPreferenceUtil;
+import com.example.NotesNest.utils.SharedPreferenceUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

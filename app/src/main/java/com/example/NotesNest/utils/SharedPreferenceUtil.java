@@ -1,4 +1,4 @@
-package com.example.NotesNest;
+package com.example.NotesNest.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -43,10 +43,6 @@ public class SharedPreferenceUtil {
         sharedPreferences.edit().putString(KEY_EMAIL, userEmail).apply();
     }
 
-    public void deleteSharedPreferences() {
-        sharedPreferences.edit().clear().apply();
-    }
-
     public void setKeyLogin(boolean value) {
         sharedPreferences.edit().putBoolean(KEY_LOGIN, value).apply();
     }
@@ -61,6 +57,14 @@ public class SharedPreferenceUtil {
 
     public void setTheme(String theme) {
         sharedPreferences.edit().putString(KEY_THEME, theme).apply();
+    }
+
+    public boolean isCategorySeedDone() {
+        return sharedPreferences.getBoolean("CATEGORY_SEED_DONE", false);
+    }
+
+    public void setCategorySeedDone(boolean done) {
+        sharedPreferences.edit().putBoolean("CATEGORY_SEED_DONE", done).apply();
     }
 
 }

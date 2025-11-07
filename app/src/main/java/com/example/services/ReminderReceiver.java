@@ -1,4 +1,4 @@
-package com.example.NotesNest;
+package com.example.services;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -10,6 +10,8 @@ import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+
+import com.example.NotesNest.R;
 
 public class ReminderReceiver extends BroadcastReceiver {
 

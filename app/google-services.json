@@ -8,20 +8,12 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:787609574642:android:859dcc9b3f00911d57046b",
+        "mobilesdk_app_id": "1:787609574642:android:73327f916092783857046b",
         "android_client_info": {
-          "package_name": "com.example.NotesNest"
+          "package_name": "com.hemanth.NotesNest"
         }
       },
       "oauth_client": [
-        {
-          "client_id": "787609574642-62vl9jnjlt0dr1dglj0fp5uuc4jcfood.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.NotesNest",
-            "certificate_hash": "db4e0bc788b0128cb28d096d31c723f401ab6b53"
-          }
-        },
         {
           "client_id": "787609574642-ri3pfeqei3mcoboka870jfms2e97grn3.apps.googleusercontent.com",
           "client_type": 3

@@ -13,7 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.NotesNest.AddEditItemLayout;
+import com.example.NotesNest.activity.AddEditItemLayout;
 import com.example.NotesNest.R;
 import com.example.NotesNest.databases.ImportantDatabaseHandler;
 import com.example.NotesNest.models.Important;
