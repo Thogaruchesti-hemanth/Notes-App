@@ -29,6 +29,7 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 import com.example.NotesNest.R;
 import com.example.NotesNest.activity.EditNoteActivity;
 import com.example.NotesNest.adapter.NoteAdapter;
+import com.example.NotesNest.adapter.NoteShimmerAdapter;
 import com.example.NotesNest.databases.AppDatabase;
 import com.example.NotesNest.databases.entities.CategoryEntity;
 import com.example.NotesNest.databases.entities.NoteEntity;
@@ -363,16 +364,19 @@ public class AllNotesFragment extends Fragment {
 
 
     private void setupRecycler() {
-        adapter = new NoteAdapter(new ArrayList<>(), requireContext());
+        // 1️⃣ Show shimmer placeholders first
+        NoteShimmerAdapter shimmerAdapter = new NoteShimmerAdapter(6); // 6 placeholder items
         recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
-        recyclerView.setAdapter(adapter);
+        recyclerView.setAdapter(shimmerAdapter);
+
+        adapter = new NoteAdapter(new ArrayList<>(), requireContext());
     }
 
     private void loadNotesByCategory(String categoryName) {
         executor.execute(() -> {
             AppDatabase db = AppDatabase.getInstance(requireContext());
             List<NoteEntity> notes = getNotesForCategory(db, categoryName);
-            mainHandler.post(() -> updateRecycler(notes));
+            mainHandler.postDelayed(() -> updateRecycler(notes), 3000);
         });
     }
 
@@ -397,6 +401,9 @@ public class AllNotesFragment extends Fragment {
     }
 
     private void updateRecycler(List<NoteEntity> notes) {
+        if (!(recyclerView.getAdapter() instanceof NoteAdapter)) {
+            recyclerView.setAdapter(adapter);
+        }
         adapter.updateData(notes);
     }
 

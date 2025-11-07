@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
                 case "Important":
                     viewPager.setCurrentItem(1, false);
                     break;
-                case "Reminders":
+                case "Reminder":
                     viewPager.setCurrentItem(2, false);
                     break;
                 case "To-Do":

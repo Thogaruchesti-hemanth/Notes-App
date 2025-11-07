@@ -28,26 +28,18 @@ public class SplashScreenActivity extends AppCompatActivity {
 
         SharedPreferenceUtil sp = new SharedPreferenceUtil(this);
 
-        // ✅ Set theme early (dark/light)
         setAppTheme(sp.getTheme());
 
-        // ✅ Update logo based on theme
         updateSplashLogo(sp.getTheme());
 
-        // ✅ Make sure categories are added FIRST
         DBSeedUtil.seedDefaultCategories(this);
 
-        // ✅ After delay → go next screen
         new Handler(Looper.getMainLooper()).postDelayed(
                 this::navigateNext,
                 SPLASH_DELAY
         );
     }
 
-
-    /**
-     * ✅ Apply theme
-     */
     private void setAppTheme(String theme) {
         boolean dark = "dark".equalsIgnoreCase(theme);
         AppCompatDelegate.setDefaultNightMode(
@@ -55,9 +47,6 @@ public class SplashScreenActivity extends AppCompatActivity {
         );
     }
 
-    /**
-     * ✅ Update logo based on theme
-     */
     private void updateSplashLogo(String theme) {
         ImageView logo = findViewById(R.id.splash_logo);
         boolean dark = "dark".equalsIgnoreCase(theme);
@@ -68,9 +57,6 @@ public class SplashScreenActivity extends AppCompatActivity {
         );
     }
 
-    /**
-     * ✅ Decide next screen
-     */
     private void navigateNext() {
         SharedPreferenceUtil sp = new SharedPreferenceUtil(this);
         Intent intent = sp.getLogin()
