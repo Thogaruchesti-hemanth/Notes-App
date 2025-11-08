@@ -169,7 +169,7 @@ public class DrawerHelper {
 
         String base64Image = pref.getImageUrl();
         if (base64Image != null && !base64Image.isEmpty()) updateDialogImageView(base64Image);
-        else profileImage.setImageResource(R.drawable.profile_pic);
+        else profileImage.setImageResource(R.drawable.ic_profile);
 
         profileImage.setOnClickListener(v -> openGalleryForDialog(profileImage));
 
@@ -225,14 +225,14 @@ public class DrawerHelper {
     private void updateDrawerHeaderImage(String base64Image) {
         Bitmap bitmap = decodeBase64ToBitmap(base64Image);
         if (bitmap != null) profileImageView.setImageBitmap(bitmap);
-        else profileImageView.setImageResource(R.drawable.profile_pic);
+        else profileImageView.setImageResource(R.drawable.ic_profile);
     }
 
     private void updateDialogImageView(String base64Image) {
         if (currentDialogImageView != null) {
             Bitmap bitmap = decodeBase64ToBitmap(base64Image);
             if (bitmap != null) currentDialogImageView.setImageBitmap(bitmap);
-            else currentDialogImageView.setImageResource(R.drawable.profile_pic);
+            else currentDialogImageView.setImageResource(R.drawable.ic_profile);
         }
     }
 
@@ -307,8 +307,8 @@ public class DrawerHelper {
     private void applyCustomSwitchColors(SwitchCompat themeSwitch) {
         try {
             // Apply custom drawables
-            Drawable thumbDrawable = ContextCompat.getDrawable(activity, R.drawable.custom_thumb);
-            Drawable trackDrawable = ContextCompat.getDrawable(activity, R.drawable.custom_track);
+            Drawable thumbDrawable = ContextCompat.getDrawable(activity, R.drawable.selector_switch_thumb);
+            Drawable trackDrawable = ContextCompat.getDrawable(activity, R.drawable.selector_switch_track);
 
             if (thumbDrawable != null) {
                 themeSwitch.setThumbDrawable(thumbDrawable);

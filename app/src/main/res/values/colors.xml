@@ -61,4 +61,16 @@
     <color name="switch_thumb_color">#FFFFFF</color>
     <color name="switch_track_checked">#2196F3</color>
     <color name="switch_track_unchecked">#BDBDBD</color>
+
+    <color name="grey_200">#DBD8D8</color>
+    <color name="grey_400">#9F9C9C</color>
+    <color name="grey_900">#1D1E1D</color>
+
+    <color name="coral_red">#FF6B6B</color>
+    <color name="soft_pink">#FF8E8E</color>
+
+    <color name="white_alpha_12">#20FFFFFF</color>
+
+
+
 </resources>

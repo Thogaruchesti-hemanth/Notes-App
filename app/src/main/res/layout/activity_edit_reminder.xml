@@ -28,7 +28,7 @@
                 android:id="@+id/ivBack"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/ic_back_arrow" />
+                android:src="@drawable/ic_arrow_right" />
 
             <TextView
                 android:id="@+id/tvTitle"
@@ -114,7 +114,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="8dp"
             android:layout_marginTop="10dp"
-            android:background="@drawable/bg_note_field"
+            android:background="@drawable/bg_secondary_rounded_stroke_4"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center_vertical"
@@ -154,7 +154,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="8dp"
             android:layout_marginTop="10dp"
-            android:background="@drawable/bg_note_field"
+            android:background="@drawable/bg_secondary_rounded_stroke_4"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center_vertical"
@@ -194,7 +194,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="8dp"
             android:layout_marginTop="10dp"
-            android:background="@drawable/bg_note_field"
+            android:background="@drawable/bg_secondary_rounded_stroke_4"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center_vertical"
@@ -230,7 +230,7 @@
                 android:layout_width="16dp"
                 android:layout_height="16dp"
                 android:layout_marginStart="8dp"
-                android:src="@drawable/ic_down_arrow" />
+                android:src="@drawable/ic_chevron_down" />
         </LinearLayout>
 
         <!-- Notify Layout -->
@@ -240,7 +240,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="8dp"
             android:layout_marginTop="10dp"
-            android:background="@drawable/bg_note_field"
+            android:background="@drawable/bg_secondary_rounded_stroke_4"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center_vertical"
@@ -276,7 +276,7 @@
                 android:layout_width="16dp"
                 android:layout_height="16dp"
                 android:layout_marginStart="8dp"
-                android:src="@drawable/ic_down_arrow" />
+                android:src="@drawable/ic_chevron_down" />
         </LinearLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -316,7 +316,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="8dp"
             android:layout_marginTop="10dp"
-            android:background="@drawable/bg_note_field"
+            android:background="@drawable/bg_secondary_rounded_stroke_4"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center_vertical"
@@ -344,7 +344,7 @@
                 android:id="@+id/colorPreview"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:background="@drawable/circle_background" />
+                android:background="@drawable/bg_circle_outline_80" />
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

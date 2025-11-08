@@ -70,7 +70,7 @@
                     android:paddingHorizontal="8dp"
                     android:paddingVertical="4dp"
                     android:text="Category"
-                    android:background="@drawable/bg_card_selected"
+                    android:background="@drawable/bg_rounded_stroke_12"
                     android:textColor="@color/black"
                     android:textSize="12sp"
                     android:visibility="visible" />
