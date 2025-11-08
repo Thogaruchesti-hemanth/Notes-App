@@ -1,6 +1,5 @@
 package com.example.NotesNest.adapter;
 
-import static com.example.NotesNest.editor.CKEditorHelper.getThemeColor;
 
 import android.content.Context;
 import android.graphics.Typeface;
@@ -13,6 +12,7 @@ import android.widget.TextView;
 import androidx.core.content.ContextCompat;
 
 import com.example.NotesNest.R;
+import com.example.NotesNest.utils.ThemeManager;
 
 import java.util.List;
 
@@ -62,7 +62,7 @@ public class CategoryAdapter extends BaseAdapter {
             textView.setTextColor(ContextCompat.getColor(context, R.color.tabSelectedTextColorLight));
         } else {
             textView.setTypeface(Typeface.DEFAULT);
-            textView.setTextColor(getThemeColor(context, com.google.android.material.R.attr.colorPrimary));
+            textView.setTextColor(ThemeManager.getThemeColor(context,ContextCompat.getColor(context,R.color.white),ContextCompat.getColor(context,R.color.black)));
         }
 
         return convertView;

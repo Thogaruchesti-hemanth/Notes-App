@@ -1,310 +1,513 @@
 package com.example.NotesNest.activity;
 
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.InputType;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
 import android.util.Base64;
+import android.util.Log;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.TextView;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.security.crypto.EncryptedSharedPreferences;
-import androidx.security.crypto.MasterKeys;
+import androidx.security.crypto.MasterKey;
 
 import com.example.NotesNest.AnimatedRunningBorderLayout;
+import com.example.NotesNest.FirebaseHelper;
 import com.example.NotesNest.R;
-import com.example.services.FirebaseHelper;
-import com.google.android.material.button.MaterialButton;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.textfield.TextInputLayout;
+import com.example.NotesNest.databinding.ActivityLoginBinding;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * LoginActivity - Cleaned (Option A)
+ * <p>
+ * Key characteristics:
+ * - Uses ViewBinding for safer view access
+ * - ActivityResultLauncher for both Google sign-in and image picking
+ * - Clear separation between UI state toggles (login/signup)
+ * - Consolidated validation helpers
+ * - Secure session storage with EncryptedSharedPreferences
+ * - Minimal, well-named helper methods for readability and long-term maintenance
+ */
 public class LoginActivity extends AppCompatActivity {
+    private static final String TAG = LoginActivity.class.getSimpleName();
 
-    private TextView headerTitleTextView, goToSignupTextView, oldUserTextView, forgotPasswordTextView;
-    private EditText userNameEditText, emailEditText, passwordEditText, confirmPasswordEditView;
-    private Button loginButton;
+    private ActivityLoginBinding binding;
     private FirebaseHelper firebaseHelper;
-    private TextInputLayout editTextUserNameLayout, confirmPasswordLayout;
-    private MaterialButton googleSignInButton;
-    private FrameLayout profileImageLayout;
-    private FloatingActionButton uploadProfileImageButton;
-    private ImageView profileImageView;
 
-    private ActivityResultLauncher<Intent> googleSingInLauncher;
-    private static final int RC_SIGN_IN = 100;
-    private static final int PICK_IMAGE_REQUEST = 101;
+    // Launchers
+    private ActivityResultLauncher<Intent> googleLauncher;
+    private ActivityResultLauncher<Intent> imagePickerLauncher;
+
+    // In-memory selection
     private String selectedImageBase64 = "";
 
-    // Loader
-    private ProgressDialog progressDialog;
-
+    // Animated borders (small UI flourish in your original app)
     private AnimatedRunningBorderLayout loginBorder;
     private AnimatedRunningBorderLayout googleBorder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
+        binding = ActivityLoginBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         firebaseHelper = new FirebaseHelper();
 
-        // Loader init
-        progressDialog = new ProgressDialog(this);
-        progressDialog.setMessage("Please wait...");
-        progressDialog.setCancelable(false);
+        initUi();
+        registerLaunchers();
+        bindListeners();
+    }
 
-        //animate border
-        loginBorder = findViewById(R.id.login_border_layout);
-        googleBorder = findViewById(R.id.google_border_layout);
+    private void initUi() {
+        loginBorder = binding.loginBorderLayout;
+        googleBorder = binding.googleBorderLayout;
 
-        // Views
-        oldUserTextView = findViewById(R.id.old_user_text_view);
-        goToSignupTextView = findViewById(R.id.go_to_signup);
-        headerTitleTextView = findViewById(R.id.header_title_text_view);
-        userNameEditText = findViewById(R.id.user_name_edit_text);
-        emailEditText = findViewById(R.id.login_email);
-        passwordEditText = findViewById(R.id.login_password);
-        confirmPasswordEditView = findViewById(R.id.confirm_password);
-        loginButton = findViewById(R.id.login_button);
-        editTextUserNameLayout = findViewById(R.id.edit_text_user_name_layout);
-        confirmPasswordLayout = findViewById(R.id.confirm_password_layout);
-        forgotPasswordTextView = findViewById(R.id.forgot_password_text_view);
-        googleSignInButton = findViewById(R.id.google_sign_in_button);
-        profileImageLayout = findViewById(R.id.profile_layout);
-        uploadProfileImageButton = findViewById(R.id.upload_image_button);
-        profileImageView = findViewById(R.id.profile_image_view);
+        // Ensure password fields hide text by default
+        binding.loginPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        binding.confirmPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
 
-        passwordEditText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        confirmPasswordEditView.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        oldUserTextView.setTextColor(ContextCompat.getColor(this, R.color.textselectedColor));
+        // Setup terms and conditions clickable text
+        setupTermsAndConditionsText();
 
-        // Listeners
-        oldUserTextView.setOnClickListener(view -> olderUser());
-        goToSignupTextView.setOnClickListener(view -> createAccount());
-        loginButton.setOnClickListener(v -> {
-            String loginType = loginButton.getText().toString();
-            if (loginType.equals("Login")) {
-                loginUser();
-            } else {
-                signupUser();
-            }
-        });
-        forgotPasswordTextView.setOnClickListener(v -> forgotPassword());
-        uploadProfileImageButton.setOnClickListener(v -> openImageSelector());
+        // Default to "existing user" view
+        binding.oldUserTextView.setTextColor(ContextCompat.getColor(this, R.color.textselectedColor));
+        showLoginMode();
+    }
 
-        googleSingInLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+    private void registerLaunchers() {
+        // Google Sign-In launcher already used in your original code -- keep same callback shape
+        googleLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
             if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                 googleBorder.startLoading();
                 firebaseHelper.handleGoogleSignInResult(result.getData(), this, (userName, email) -> {
                     googleBorder.stopLoading();
-                    saveLoginSession(email);
-                    Toast.makeText(LoginActivity.this, "Google Sign-in Success!", Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                    finish();
+                    saveSession(email);
+                    navigateToMain();
                 });
             } else {
-                Toast.makeText(LoginActivity.this, "Google Sign-In canceled", Toast.LENGTH_SHORT).show();
+                showError("Google sign-in cancelled");
             }
         });
 
-        googleSignInButton.setOnClickListener(v -> firebaseHelper.signInWithGoogle(googleSingInLauncher, this));
-    }
-
-    private void openImageSelector() {
-        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        startActivityForResult(intent, PICK_IMAGE_REQUEST);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
-            Uri imageUri = data.getData();
-            try {
-                InputStream inputStream = getContentResolver().openInputStream(imageUri);
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
-                byte[] buffer = new byte[1024];
-                int bytesRead;
-                while ((bytesRead = inputStream.read(buffer)) != -1) {
-                    byteArrayOutputStream.write(buffer, 0, bytesRead);
-                }
-
-                byte[] imageBytes = byteArrayOutputStream.toByteArray();
-                selectedImageBase64 = Base64.encodeToString(imageBytes, Base64.DEFAULT);
-
-                profileImageView.setImageURI(imageUri);
-
-                inputStream.close();
-                byteArrayOutputStream.close();
-            } catch (IOException e) {
-                Toast.makeText(this, "Failed to load image", Toast.LENGTH_SHORT).show();
+        // Image picker using ActivityResult API (replaces startActivityForResult)
+        imagePickerLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            if (result.getResultCode() == RESULT_OK && result.getData() != null && result.getData().getData() != null) {
+                handleImageResult(result.getData().getData());
             }
-        }
+        });
     }
 
-    // ---------------- VALIDATION HELPERS ----------------
-    private boolean isValidEmail(String email) {
-        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches();
+    private void bindListeners() {
+        binding.oldUserTextView.setOnClickListener(v -> {
+            clearError();
+            showLoginMode();
+        });
+        binding.goToSignup.setOnClickListener(v -> {
+            clearError();
+            showSignupMode();
+        });
+
+        binding.loginButton.setOnClickListener(v -> {
+            if (isLoginMode()) loginUser();
+            else signupUser();
+        });
+
+        binding.forgotPasswordTextView.setOnClickListener(v -> forgotPassword());
+
+        binding.uploadImageButton.setOnClickListener(v -> openImageSelector());
+
+        binding.googleSignInButton.setOnClickListener(v -> firebaseHelper.signInWithGoogle(googleLauncher, this));
+
+        // Clear error when user starts typing
+        setupErrorClearingListeners();
     }
 
-    private boolean isValidPassword(String password) {
-        return password.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}$");
+    private void setupErrorClearingListeners() {
+        binding.loginEmail.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) clearError();
+        });
+
+        binding.loginPassword.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) clearError();
+        });
+
+        binding.userNameEditText.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) clearError();
+        });
+
+        binding.confirmPassword.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) clearError();
+        });
+
+        binding.termsCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> clearError());
     }
 
-    private boolean isValidUsername(String username) {
-        return username.matches("^[a-zA-Z0-9_]{3,}$");
+    // ----------------- UI Mode Helpers -----------------
+
+    private boolean isLoginMode() {
+        return "Login".contentEquals(binding.loginButton.getText());
     }
 
-    // ---------------- LOGIN/SIGNUP ----------------
+    private void showSignupMode() {
+        clearAllInputs(); // clear fields when switching
+        binding.editTextUserNameLayout.setVisibility(View.VISIBLE);
+        binding.confirmPasswordLayout.setVisibility(View.VISIBLE);
+        binding.forgotPasswordTextView.setVisibility(View.GONE);
+        binding.googleSignInButton.setVisibility(View.GONE);
+        binding.profileLayout.setVisibility(View.VISIBLE);
+
+        binding.oldUserTextView.setTextColor(ContextCompat.getColor(this, R.color.textColor));
+        binding.goToSignup.setTextColor(ContextCompat.getColor(this, R.color.textselectedColor));
+        binding.headerTitleTextView.setText(R.string.sign_up_now);
+        binding.loginButton.setText(R.string.create_an_account);
+
+    }
+
+    private void showLoginMode() {
+        clearAllInputs(); // clear fields when switching
+        binding.forgotPasswordTextView.setVisibility(View.VISIBLE);
+        binding.googleSignInButton.setVisibility(View.VISIBLE);
+        binding.editTextUserNameLayout.setVisibility(View.GONE);
+        binding.confirmPasswordLayout.setVisibility(View.GONE);
+        binding.profileLayout.setVisibility(View.GONE);
+        binding.termsLayout.setVisibility(View.VISIBLE); // Show terms in login
+
+        binding.oldUserTextView.setTextColor(ContextCompat.getColor(this, R.color.textselectedColor));
+        binding.goToSignup.setTextColor(ContextCompat.getColor(this, R.color.textColor));
+        binding.headerTitleTextView.setText(R.string.hey_login_now);
+        binding.loginButton.setText(R.string.login);
+
+    }
+
+    // ----------------- Login / Signup -----------------
+
     private void loginUser() {
-        String email = emailEditText.getText().toString().trim();
-        String password = passwordEditText.getText().toString().trim();
+        final String email = binding.loginEmail.getText() == null ? "" : binding.loginEmail.getText().toString().trim();
+        final String password = binding.loginPassword.getText() == null ? "" : binding.loginPassword.getText().toString().trim();
 
-        if (!isValidEmail(email)) {
-            Toast.makeText(this, "Invalid email format", Toast.LENGTH_SHORT).show();
+        // Clear previous errors
+        clearError();
+
+        // Start the loading animation
+        loginBorder.startLoading();
+
+        if (isValidEmail(email)) {
+            showError("Invalid email");
+            loginBorder.stopLoading(); // stop animation on failure
             return;
         }
+
         if (password.isEmpty()) {
-            Toast.makeText(this, "Enter your password", Toast.LENGTH_SHORT).show();
+            showError("Enter your password");
+            loginBorder.stopLoading(); // stop animation on failure
+            return;
+        }
+
+        // Check terms acceptance for login
+        if (!binding.termsCheckbox.isChecked()) {
+            showError(getString(R.string.error_terms_required));
+            loginBorder.stopLoading(); // stop animation on failure
             return;
         }
 
         loginBorder.startLoading();
-        firebaseHelper.loginUser(email, password, this, () -> {
-            loginBorder.stopLoading();
-            saveLoginSession(email);
-            Toast.makeText(LoginActivity.this, "Login successful!", Toast.LENGTH_SHORT).show();
-            startActivity(new Intent(LoginActivity.this, MainActivity.class));
-            finish();
+        // Firebase login
+        firebaseHelper.loginUser(email, password, this, new FirebaseHelper.LoginCallback() {
+            @Override
+            public void onLoginSuccess() {
+                loginBorder.stopLoading();
+                saveSession(email);
+                navigateToMain();
+            }
+
+            @Override
+            public void onLoginFailure(@NonNull String message) {
+                loginBorder.stopLoading();
+                showError(message);
+            }
         });
     }
 
     private void signupUser() {
-        String userName = userNameEditText.getText().toString();
-        String email = emailEditText.getText().toString().trim();
-        String password = passwordEditText.getText().toString().trim();
-        String confirmPassword = confirmPasswordEditView.getText().toString();
+        final String username = binding.userNameEditText.getText() == null ? "" : binding.userNameEditText.getText().toString().trim();
+        final String email = binding.loginEmail.getText() == null ? "" : binding.loginEmail.getText().toString().trim();
+        final String password = binding.loginPassword.getText() == null ? "" : binding.loginPassword.getText().toString().trim();
+        final String confirm = binding.confirmPassword.getText() == null ? "" : binding.confirmPassword.getText().toString().trim();
 
-        if (!isValidUsername(userName)) {
-            Toast.makeText(this, "Username must be at least 3 chars, no symbols", Toast.LENGTH_SHORT).show();
+        // Clear previous errors
+        clearError();
+
+        if (!isValidUsername(username)) {
+            showError("Username must be at least 3 characters");
             return;
         }
-        if (!isValidEmail(email)) {
-            Toast.makeText(this, "Invalid email format", Toast.LENGTH_SHORT).show();
+
+        if (isValidEmail(email)) {
+            showError("Invalid email");
             return;
         }
+
         if (!isValidPassword(password)) {
-            Toast.makeText(this, "Password must be 8+ chars, contain uppercase, lowercase, and number", Toast.LENGTH_LONG).show();
-            return;
-        }
-        if (!confirmPassword.equals(password)) {
-            Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show();
+            showError("Password must be 8+ chars, contain upper & lower case letters and a number");
             return;
         }
 
-        showLoader();
-        firebaseHelper.signupUser(userName, email, password, confirmPassword, selectedImageBase64, this, (userName1, email1) -> {
-            hideLoader();
-            saveLoginSession(email1);
-            Toast.makeText(LoginActivity.this, "Signup successful!", Toast.LENGTH_SHORT).show();
-            startActivity(new Intent(LoginActivity.this, MainActivity.class));
-            finish();
+        if (!password.equals(confirm)) {
+            showError("Passwords do not match");
+            return;
+        }
+
+        // disable button to prevent duplicate taps
+        binding.loginButton.setEnabled(false);
+        firebaseHelper.signupUser(username, email, password, confirm, selectedImageBase64, this, (name, savedEmail) -> {
+            binding.loginButton.setEnabled(true);
+            saveSession(savedEmail);
+            navigateToMain();
         });
     }
 
+    // ----------------- Image Picker -----------------
+
+    private void openImageSelector() {
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        imagePickerLauncher.launch(intent);
+    }
+
+    private void handleImageResult(@NonNull Uri uri) {
+        try (InputStream is = getContentResolver().openInputStream(uri);
+             ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+
+            if (is == null) {
+                Log.e("Profile", "❌ InputStream is null for URI: " + uri);
+                showError("Unable to open image");
+                return;
+            }
+
+            byte[] buffer = new byte[1024];
+            int read;
+            while ((read = is.read(buffer)) != -1) {
+                bos.write(buffer, 0, read);
+            }
+
+            selectedImageBase64 = Base64.encodeToString(bos.toByteArray(), Base64.DEFAULT);
+
+            binding.profileImageView.setImageURI(uri);
+
+            Log.i("Profile", "✅ Image successfully loaded & converted.");
+
+        } catch (IOException e) {
+            Log.e("Profile", "❌ Error loading image: " + e.getMessage(), e);
+            showError("Failed to load image");
+        }
+    }
+
+    // ----------------- Password Reset -----------------
+
     private void forgotPassword() {
-        String email = emailEditText.getText().toString().trim();
-        if (!isValidEmail(email)) {
-            Toast.makeText(this, "Enter a valid email to reset password", Toast.LENGTH_SHORT).show();
+        final String email = binding.loginEmail.getText() == null ? "" : binding.loginEmail.getText().toString().trim();
+        if (isValidEmail(email)) {
+            showError("Enter a valid email to reset password");
             return;
         }
 
-        showLoader();
+        binding.forgotPasswordTextView.setEnabled(false);
         firebaseHelper.resetPassword(email, new FirebaseHelper.ResetPasswordCallback() {
             @Override
             public void onResetSuccess() {
-                hideLoader();
-                Toast.makeText(LoginActivity.this, "Password reset link sent!", Toast.LENGTH_SHORT).show();
+                binding.forgotPasswordTextView.setEnabled(true);
+                Toast.makeText(LoginActivity.this, "Password reset link sent", Toast.LENGTH_SHORT).show();
+
             }
 
             @Override
             public void onResetFailure(String error) {
-                hideLoader();
-                Toast.makeText(LoginActivity.this, "Error: " + error, Toast.LENGTH_SHORT).show();
+                binding.forgotPasswordTextView.setEnabled(true);
+                showError("Error: " + error);
             }
         });
     }
 
-    private void saveLoginSession(String email) {
+    // ----------------- Error Message Helpers -----------------
+
+    private void showError(@NonNull String message) {
+        binding.errorTextView.setText(message);
+        binding.errorTextView.setVisibility(View.VISIBLE);
+    }
+
+    private void clearError() {
+        binding.errorTextView.setVisibility(View.GONE);
+        binding.errorTextView.setText("");
+    }
+
+    // ----------------- Validation helpers -----------------
+
+    private boolean isValidEmail(@NonNull String email) {
+        return !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches();
+    }
+
+    private boolean isValidPassword(@NonNull String password) {
+        return password.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}$");
+    }
+
+    private boolean isValidUsername(@NonNull String username) {
+        return username.matches("^[a-zA-Z0-9_]{3,}$");
+    }
+
+    // ----------------- Session helpers -----------------
+
+    private void saveSession(@NonNull String email) {
         try {
-            String masterKey = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC);
+            // 1️⃣ Create or retrieve the MasterKey (AES256_GCM)
+            MasterKey masterKey = new MasterKey.Builder(this)
+                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                    .build();
+
+            // 2️⃣ Create EncryptedSharedPreferences
+            //    It will automatically generate a keyset if it doesn't exist
             SharedPreferences securePrefs = EncryptedSharedPreferences.create(
-                    "secure_prefs",
-                    masterKey,
                     this,
+                    "secure_prefs", // file name
+                    masterKey,
                     EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                     EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
             );
+
+            // 3️⃣ Save the email securely
             securePrefs.edit().putString("user_email", email).apply();
+
+            Log.i(TAG, "✅ Session saved successfully. Email: " + email);
+
         } catch (Exception e) {
-            e.printStackTrace();
+            // Catch all exceptions safely
+            Log.e(TAG, "❌ Failed to save user session securely", e);
         }
     }
 
-    private void createAccount() {
-        editTextUserNameLayout.setVisibility(View.VISIBLE);
-        confirmPasswordLayout.setVisibility(View.VISIBLE);
-        forgotPasswordTextView.setVisibility(View.GONE);
-        googleSignInButton.setVisibility(View.GONE);
-        profileImageLayout.setVisibility(View.VISIBLE);
-        oldUserTextView.setTextColor(ContextCompat.getColor(this, R.color.textColor));
-        goToSignupTextView.setTextColor(ContextCompat.getColor(this, R.color.textselectedColor));
-        headerTitleTextView.setText("Sign Up Now!");
-        loginButton.setText("Create An Account");
+
+    private void navigateToMain() {
+        startActivity(new Intent(this, MainActivity.class));
+        finish();
     }
 
-    private void olderUser() {
-        forgotPasswordTextView.setVisibility(View.VISIBLE);
-        googleSignInButton.setVisibility(View.VISIBLE);
-        editTextUserNameLayout.setVisibility(View.GONE);
-        confirmPasswordLayout.setVisibility(View.GONE);
-        profileImageLayout.setVisibility(View.GONE);
-
-        oldUserTextView.setTextColor(ContextCompat.getColor(this, R.color.textselectedColor));
-        goToSignupTextView.setTextColor(ContextCompat.getColor(this, R.color.textColor));
-        headerTitleTextView.setText("Hey,\nLogin Now!");
-        loginButton.setText("Login");
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        binding = null; // allow GC
     }
 
-    // ---------------- LOADER HELPERS ----------------
-    private void showLoader() {
-        if (!progressDialog.isShowing()) {
-            progressDialog.show();
+
+    // terms and conditions setup
+    private void setupTermsAndConditionsText() {
+        String fullText = getString(R.string.terms_agreement);
+        SpannableString spannableString = new SpannableString(fullText);
+
+        // Find positions of the links
+        int termsStart = fullText.indexOf("Terms & Conditions");
+        int privacyStart = fullText.indexOf("Privacy Policy");
+        int termsEnd = termsStart + "Terms & Conditions".length();
+        int privacyEnd = privacyStart + "Privacy Policy".length();
+
+        // Terms & Conditions clickable span
+        ClickableSpan termsClickableSpan = new ClickableSpan() {
+            @Override
+            public void onClick(@NonNull View widget) {
+                openTermsAndConditions();
+            }
+
+            @Override
+            public void updateDrawState(@NonNull TextPaint ds) {
+                super.updateDrawState(ds);
+                ds.setColor(ContextCompat.getColor(LoginActivity.this, R.color.textselectedColor));
+                ds.setUnderlineText(true);
+            }
+        };
+
+        // Privacy Policy clickable span
+        ClickableSpan privacyClickableSpan = new ClickableSpan() {
+            @Override
+            public void onClick(@NonNull View widget) {
+                openPrivacyPolicy();
+            }
+
+            @Override
+            public void updateDrawState(@NonNull TextPaint ds) {
+                super.updateDrawState(ds);
+                ds.setColor(ContextCompat.getColor(LoginActivity.this, R.color.textselectedColor));
+                ds.setUnderlineText(true);
+            }
+        };
+
+        // Apply clickable spans
+        spannableString.setSpan(termsClickableSpan, termsStart, termsEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        spannableString.setSpan(privacyClickableSpan, privacyStart, privacyEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        // Set the text and make links clickable
+        binding.termsTextView.setText(spannableString);
+        binding.termsTextView.setMovementMethod(LinkMovementMethod.getInstance());
+        binding.termsTextView.setHighlightColor(Color.TRANSPARENT);
+    }
+
+    private void openTermsAndConditions() {
+        // Open your Terms & Conditions (could be a WebView or browser)
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://notesnest-app.web.app/"));
+        startActivity(intent);
+    }
+
+    private void openPrivacyPolicy() {
+        // Open your Privacy Policy (could be a WebView or browser)
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://notesnest-app.web.app/"));
+        startActivity(intent);
+    }
+
+    private void clearAllInputs() {
+        binding.loginEmail.setText("");
+        binding.loginPassword.setText("");
+        binding.userNameEditText.setText("");
+        binding.confirmPassword.setText("");
+
+        // Clear focus
+        binding.loginEmail.clearFocus();
+        binding.loginPassword.clearFocus();
+        binding.userNameEditText.clearFocus();
+        binding.confirmPassword.clearFocus();
+
+
+        binding.termsCheckbox.setChecked(false);
+        binding.profileImageView.setImageResource(R.drawable.profile_pic); // optional: reset profile image
+        clearError(); // also clear error message
+
+        // Stop any loading animations
+        loginBorder.stopLoading();
+        googleBorder.stopLoading();
+
+
+        // Hide keyboard
+        View currentFocus = getCurrentFocus();
+        if (currentFocus != null) {
+            InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.hideSoftInputFromWindow(currentFocus.getWindowToken(), 0);
+            }
         }
     }
 
-    private void hideLoader() {
-        if (progressDialog.isShowing()) {
-            progressDialog.dismiss();
-        }
-    }
+
 }

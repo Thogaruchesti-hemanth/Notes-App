@@ -18,7 +18,8 @@ import com.example.NotesNest.utils.SharedPreferenceUtil;
 @SuppressLint("CustomSplashScreen")
 public class SplashScreenActivity extends AppCompatActivity {
 
-    private static final int SPLASH_DELAY = 1500;
+    private static final int SPLASH_DELAY_MS = 1500;
+    private SharedPreferenceUtil prefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,43 +27,43 @@ public class SplashScreenActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_splash_screen);
 
-        SharedPreferenceUtil sp = new SharedPreferenceUtil(this);
+        prefs = new SharedPreferenceUtil(this);
 
-        setAppTheme(sp.getTheme());
-
-        updateSplashLogo(sp.getTheme());
-
+        applyTheme();
+        updateLogo();
         DBSeedUtil.seedDefaultCategories(this);
 
-        new Handler(Looper.getMainLooper()).postDelayed(
-                this::navigateNext,
-                SPLASH_DELAY
-        );
+        new Handler(Looper.getMainLooper())
+                .postDelayed(this::goToNextScreen, SPLASH_DELAY_MS);
     }
 
-    private void setAppTheme(String theme) {
-        boolean dark = "dark".equalsIgnoreCase(theme);
+    /** Apply app theme based on stored preference */
+    private void applyTheme() {
+        boolean isDark = "dark".equalsIgnoreCase(prefs.getTheme());
+
         AppCompatDelegate.setDefaultNightMode(
-                dark ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
+                isDark ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
         );
     }
 
-    private void updateSplashLogo(String theme) {
+    /** Updates the splash logo based on theme */
+    private void updateLogo() {
         ImageView logo = findViewById(R.id.splash_logo);
-        boolean dark = "dark".equalsIgnoreCase(theme);
+        boolean isDark = "dark".equalsIgnoreCase(prefs.getTheme());
 
-        logo.setImageResource(dark
+        logo.setImageResource(isDark
                 ? R.drawable.splash_logo_dark
                 : R.drawable.splash_logo_light
         );
     }
 
-    private void navigateNext() {
-        SharedPreferenceUtil sp = new SharedPreferenceUtil(this);
-        Intent intent = sp.getLogin()
-                ? new Intent(this, MainActivity.class)
-                : new Intent(this, LoginActivity.class);
+    /** Navigate to login or main screen */
+    private void goToNextScreen() {
+        Class<?> nextActivity = prefs.getLogin()
+                ? MainActivity.class
+                : LoginActivity.class;
 
+        Intent intent = new Intent(this, nextActivity);
         startActivity(intent);
         overridePendingTransition(R.anim.zoom_in, R.anim.zoom_out);
         finish();

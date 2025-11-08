@@ -7,7 +7,6 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission
         android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
         android:targetSdkVersion="33" />
@@ -32,15 +31,12 @@
         <activity
             android:name=".activity.ProfileActivity"
             android:exported="false" />
-        <activity
-            android:name=".activity.HelpAndSupportActivity"
-            android:exported="false" />
 
         <receiver
             android:name="com.google.android.gms.measurement.AppMeasurementInstallReferrerReceiver"
             android:exported="true" />
         <receiver
-            android:name="com.example.services.ReminderReceiver"
+            android:name=".notifications.receivers.ReminderReceiver"
             android:exported="true" />
 
         <activity
@@ -58,9 +54,6 @@
             android:exported="true" />
         <activity
             android:name=".activity.MainActivity"
-            android:exported="true" />
-        <activity
-            android:name=".activity.AddEditItemLayout"
             android:exported="true" />
     </application>
 

@@ -8,15 +8,18 @@ import androidx.room.RoomDatabase;
 
 import com.example.NotesNest.databases.daos.CategoryDao;
 import com.example.NotesNest.databases.daos.NoteDao;
+import com.example.NotesNest.databases.daos.ReminderDao;
 import com.example.NotesNest.databases.entities.CategoryEntity;
 import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.databases.entities.NoteFTSEntity;
+import com.example.NotesNest.databases.entities.ReminderEntity;
 
 @Database(
         entities = {
                 NoteEntity.class,
                 NoteFTSEntity.class,
-                CategoryEntity.class
+                CategoryEntity.class,
+                ReminderEntity.class
         },
         version = 2,
         exportSchema = false
@@ -44,4 +47,6 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract NoteDao noteDao();
 
     public abstract CategoryDao categoryDao();
+
+    public abstract ReminderDao reminderDao();
 }

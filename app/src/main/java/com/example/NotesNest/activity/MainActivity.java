@@ -1,12 +1,14 @@
 package com.example.NotesNest.activity;
 
+import static com.example.NotesNest.utils.ThemeManager.applyTheme;
+
 import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.ContextCompat;
 import androidx.viewpager2.widget.ViewPager2;
 
@@ -15,131 +17,146 @@ import com.example.NotesNest.adapter.MainPagerAdapter;
 import com.example.NotesNest.databases.AppDatabase;
 import com.example.NotesNest.utils.DrawerHelper;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
+import com.example.NotesNest.utils.ThemeManager;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.FirebaseApp;
 
-import java.util.HashMap;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
-    private ImageView themeView;
-    private TextView nameTextView;
+    private ImageView themeButton;
+    private TextView greetingText;
     private ViewPager2 viewPager;
-    private HashMap<Integer, Integer> menuToPageMap;
-    private DrawerHelper drawerHelper;
+    private SharedPreferenceUtil pref;
 
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Apply theme before layout inflation
+        applyTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         FirebaseApp.initializeApp(this);
+        AppDatabase.getInstance(this);     // Ensure DB init
 
-        // ✅ Ensure DB exists + seeds default categories **BEFORE UI**
-        AppDatabase.getInstance(this);
+        pref = new SharedPreferenceUtil(this);
 
         initViews();
-        setupThemeButton();
-        initializeGreeting();
-
+        initGreeting();
         setupViewPager();
-        setupDrawerNavigation();
+        setupDrawer();
 
-        drawerHelper = new DrawerHelper(this);
+        refreshThemeUI();
+    }
 
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        navigationView.setCheckedItem(R.id.menu_all_notes);
+    /* ----------------------------------------------------------
+     *  Initialization
+     * -------------------------------------------------------- */
 
-        setupDrawerListener();
+    private void initViews() {
+        greetingText = findViewById(R.id.name_text_view);
+        themeButton = findViewById(R.id.theme_button);
+
+        themeButton.setOnClickListener(v -> toggleTheme());
+    }
+
+    private void initGreeting() {
+        String[] words = {"Hi", "Hello", "Hey", "Welcome"};
+        String greeting = words[new Random().nextInt(words.length)];
+        greetingText.setText(String.format("%s, %s", greeting, pref.getUserName()));
     }
 
     private void setupViewPager() {
         viewPager = findViewById(R.id.viewPager);
         viewPager.setAdapter(new MainPagerAdapter(this));
+
         viewPager.setUserInputEnabled(false);
         viewPager.setCurrentItem(0, false);
     }
 
-    private void setupDrawerNavigation() {
-        menuToPageMap = new HashMap<>();
-        menuToPageMap.put(R.id.menu_all_notes, 0);
-        menuToPageMap.put(R.id.menu_important, 1);
-        menuToPageMap.put(R.id.menu_reminders, 2);
-        menuToPageMap.put(R.id.menu_todo, 3);
-        menuToPageMap.put(R.id.menu_wishes, 4);
-    }
+    /* ----------------------------------------------------------
+     *  Drawer + navigation
+     * -------------------------------------------------------- */
 
-    private void setupDrawerListener() {
+    private void setupDrawer() {
+        DrawerHelper drawerHelper = new DrawerHelper(this);
+
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setCheckedItem(R.id.menu_all_notes);
+
         drawerHelper.listener = title -> {
             switch (title) {
                 case "All Notes":
-                    viewPager.setCurrentItem(0, false);
-                    break;
-                case "Important":
-                    viewPager.setCurrentItem(1, false);
+                    changePage(0);
                     break;
                 case "Reminder":
-                    viewPager.setCurrentItem(2, false);
+                    changePage(1);
                     break;
-                case "To-Do":
-                    viewPager.setCurrentItem(3, false);
-                    break;
-                case "Wishes":
-                    viewPager.setCurrentItem(4, false);
+                case "Use Custom Theme":
+                    pref.setSystemTheme(false);
+                    recreateWithTheme();
                     break;
             }
         };
     }
 
-    private void initViews() {
-        nameTextView = findViewById(R.id.name_text_view);
-        themeView = findViewById(R.id.theme_button);
+    private void changePage(int index) {
+        viewPager.setCurrentItem(index, false);
     }
 
-    /**
-     * ✅ Theme Toggle button
-     */
-    private void setupThemeButton() {
-        SharedPreferenceUtil pref = new SharedPreferenceUtil(this);
+    /* ----------------------------------------------------------
+     *  Theme Logic
+     * -------------------------------------------------------- */
 
-        updateThemeIcon(pref.getTheme());
+    private void toggleTheme() {
+        pref.setSystemTheme(false);
 
-        themeView.setOnClickListener(v -> {
-            boolean isNight = AppCompatDelegate.getDefaultNightMode()
-                    == AppCompatDelegate.MODE_NIGHT_YES;
+        String nextTheme = pref.getTheme().equals("dark") ? "light" : "dark";
+        pref.setTheme(nextTheme);
+        pref.setCustomTheme(true);
 
-            AppCompatDelegate.setDefaultNightMode(
-                    isNight ? AppCompatDelegate.MODE_NIGHT_NO : AppCompatDelegate.MODE_NIGHT_YES
+        recreateWithTheme();
+    }
+
+    private void recreateWithTheme() {
+        ThemeManager.applyTheme(this);
+        recreate();
+    }
+
+    private void refreshThemeUI() {
+        updateThemeButtonVisibility();
+        updateThemeButtonIcon();
+    }
+
+    private void updateThemeButtonVisibility() {
+        themeButton.setVisibility(pref.isSystemTheme() ? View.GONE : View.VISIBLE);
+    }
+
+    private void updateThemeButtonIcon() {
+        if (pref.isSystemTheme()) {
+            themeButton.setImageDrawable(
+                    ContextCompat.getDrawable(this, R.drawable.ic_system_theme)
             );
+            return;
+        }
 
-            pref.setTheme(isNight ? "light" : "dark");
+        int drawable = pref.getTheme().equals("dark")
+                ? R.drawable.ic_night
+                : R.drawable.ic_day;
 
-            updateThemeIcon(pref.getTheme());
-        });
+        themeButton.setImageDrawable(ContextCompat.getDrawable(this, drawable));
     }
 
-    /**
-     * ✅ Update theme button icon
-     */
-    private void updateThemeIcon(String theme) {
-        themeView.setImageDrawable(
-                ContextCompat.getDrawable(
-                        this,
-                        "dark".equals(theme) ? R.drawable.ic_night : R.drawable.ic_day
-                )
-        );
-    }
+    /* ----------------------------------------------------------
+     *  Lifecycle
+     * -------------------------------------------------------- */
 
-    /**
-     * ✅ Name greeting
-     */
-    private void initializeGreeting() {
-        String[] greetings = {"Hi", "Hello", "Hey", "Welcome"};
-        String userName = new SharedPreferenceUtil(this).getUserName();
-        String greeting = greetings[new Random().nextInt(greetings.length)];
-
-        nameTextView.setText(greeting + ", " + userName);
+    @Override
+    protected void onResume() {
+        super.onResume();
+        applyTheme(this);
+        refreshThemeUI();
     }
 }

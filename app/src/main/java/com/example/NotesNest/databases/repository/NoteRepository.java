@@ -1,5 +1,5 @@
 // NoteRepository.java
-package com.example.NotesNest.repository;
+package com.example.NotesNest.databases.repository;
 
 import android.content.Context;
 

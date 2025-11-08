@@ -1,9 +1,11 @@
-package com.example.services;
+package com.example.NotesNest.notifications.schedulers;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+
+import com.example.NotesNest.notifications.receivers.ReminderReceiver;
 
 public class ReminderScheduler {
 

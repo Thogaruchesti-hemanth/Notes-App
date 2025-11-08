@@ -1,4 +1,4 @@
-package com.example.services;
+package com.example.NotesNest.notifications.receivers;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;

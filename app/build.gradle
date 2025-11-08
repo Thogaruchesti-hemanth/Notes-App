@@ -10,7 +10,11 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace 'com.example.NotesNest'
-    compileSdk 34
+    compileSdk 35
+
+    buildFeatures {
+        viewBinding true
+    }
 
     signingConfigs {
         release {
@@ -25,8 +29,8 @@ android {
         applicationId "com.hemanth.NotesNest"
         minSdk 24
         targetSdk 35
-        versionCode 2
-        versionName "1.1.0"
+        versionCode 3
+        versionName "1.1.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -49,6 +53,7 @@ android {
 }
 
 dependencies {
+    implementation libs.work.runtime
     def room_version = "2.8.3"
 
     implementation "androidx.room:room-runtime:$room_version"
@@ -60,7 +65,7 @@ dependencies {
 
     implementation 'androidx.viewpager2:viewpager2:1.1.0'
 
-    
+
     implementation 'com.google.firebase:firebase-core:9.6.1'
 
     implementation libs.appcompat

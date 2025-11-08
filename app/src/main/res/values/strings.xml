@@ -19,5 +19,13 @@
     <string name="text_profile_image">Profile Image</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="edit_reminder_title_placeholder">Reminder Title\n</string>
+    <string name="text_edit_reminder">Edit Reminder</string>
+    <string name="create_an_account">Create an Account</string>
+    <string name="sign_up_now">Sign Up Now!</string>
+    <string name="hey_login_now">Hey,\nLogin Now!</string>
+    <string name="login">Login</string>
+    <string name="terms_agreement">I agree to the <u>Terms &amp; Conditions</u> and <u>Privacy Policy</u></string>
+    <string name="error_terms_required">Please accept Terms &amp; Conditions to continue</string>
 
 </resources>
