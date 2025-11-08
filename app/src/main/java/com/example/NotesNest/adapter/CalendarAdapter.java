@@ -22,6 +22,7 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.ViewHo
     private final List<CalendarItem> list;
     private int selectedPosition = -1;
     private OnDateClickListener listener;
+
     public CalendarAdapter(List<CalendarItem> list) {
         this.list = list;
     }

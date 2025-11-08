@@ -10,7 +10,10 @@ public class SharedPreferenceUtil {
     private static final String KEY_EMAIL = "user_email";
     private static final String KEY_PHOTO = "user_image";
     private static final String KEY_LOGIN = "is_login";
-    private static final String KEY_THEME = "theme";
+    private static final String KEY_SYSTEM_THEME = "system_theme";
+
+    private static final String KEY_CUSTOM_THEME = "custom_theme";
+    private static final String KEY_THEME = "theme"; // light / dark
     private static SharedPreferences sharedPreferences;
 
     public SharedPreferenceUtil(Context context) {
@@ -51,6 +54,33 @@ public class SharedPreferenceUtil {
         return sharedPreferences.getBoolean(KEY_LOGIN, false);
     }
 
+    public boolean isCategorySeedDone() {
+        return sharedPreferences.getBoolean("CATEGORY_SEED_DONE", false);
+    }
+
+    public void setCategorySeedDone(boolean done) {
+        sharedPreferences.edit().putBoolean("CATEGORY_SEED_DONE", done).apply();
+    }
+
+    /**
+     * Check if system theme is enabled
+     */
+    public boolean isSystemTheme() {
+        return sharedPreferences.getBoolean(KEY_SYSTEM_THEME, false);
+    }
+
+    public void setSystemTheme(boolean enabled) {
+        sharedPreferences.edit().putBoolean("system_theme", enabled).apply();
+    }
+
+    public boolean isCustomTheme() {
+        return sharedPreferences.getBoolean(KEY_CUSTOM_THEME, false);
+    }
+
+    public void setCustomTheme(boolean enabled) {
+        sharedPreferences.edit().putBoolean(KEY_CUSTOM_THEME, enabled).apply();
+    }
+
     public String getTheme() {
         return sharedPreferences.getString(KEY_THEME, "light");
     }
@@ -59,12 +89,5 @@ public class SharedPreferenceUtil {
         sharedPreferences.edit().putString(KEY_THEME, theme).apply();
     }
 
-    public boolean isCategorySeedDone() {
-        return sharedPreferences.getBoolean("CATEGORY_SEED_DONE", false);
-    }
-
-    public void setCategorySeedDone(boolean done) {
-        sharedPreferences.edit().putBoolean("CATEGORY_SEED_DONE", done).apply();
-    }
 
 }

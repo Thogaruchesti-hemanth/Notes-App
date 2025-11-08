@@ -65,10 +65,10 @@ public class HourAdapter extends RecyclerView.Adapter<HourAdapter.HourViewHolder
 
         for (Task t : tasks) {
             Calendar c1 = Calendar.getInstance();
-            c1.setTimeInMillis(t.startTime);
+            c1.setTimeInMillis(t.getStartTime());
 
             Calendar c2 = Calendar.getInstance();
-            c2.setTimeInMillis(t.endTime);
+            c2.setTimeInMillis(t.getEndTime());
 
             int startHour = c1.get(Calendar.HOUR_OF_DAY);
             int startMin = c1.get(Calendar.MINUTE);

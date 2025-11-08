@@ -10,10 +10,12 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.services.FirebaseHelper;
+import com.example.NotesNest.FirebaseHelper;
 import com.example.NotesNest.R;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
 
@@ -23,89 +25,103 @@ import java.io.InputStream;
 
 public class ProfileActivity extends AppCompatActivity {
 
-    private ImageView profileImageView;
-    private EditText userNameEditText, emailEditText;
-    private Button updateProfileButton;
+    private ImageView profileImage;
+    private EditText nameEditText, emailEditText;
+    private Button updateButton;
+
+    private String base64Image = "";
     private FirebaseHelper firebaseHelper;
-    private String selectedImageBase64 = "";
-    private static final int PICK_IMAGE_REQUEST = 102;
+    private SharedPreferenceUtil prefs;
+
+    private final ActivityResultLauncher<Intent> selectImageLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    Uri imageUri = result.getData().getData();
+                    handleSelectedImage(imageUri);
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
+        init();
+        loadUserData();
+        setListeners();
+    }
+
+    private void init() {
         firebaseHelper = new FirebaseHelper();
+        prefs = new SharedPreferenceUtil(this);
 
-        profileImageView = findViewById(R.id.profile_image);
-        userNameEditText = findViewById(R.id.user_name);
+        profileImage = findViewById(R.id.profile_image);
+        nameEditText = findViewById(R.id.user_name);
         emailEditText = findViewById(R.id.email);
-        updateProfileButton = findViewById(R.id.update_profile_button);
+        updateButton = findViewById(R.id.update_profile_button);
+    }
 
-        // Load user data
-        SharedPreferenceUtil prefs = new SharedPreferenceUtil(this);
-        userNameEditText.setText(prefs.getUserName());
+    private void loadUserData() {
+        nameEditText.setText(prefs.getUserName());
         emailEditText.setText(prefs.getUserEmail());
-
-        // Set click listeners
-        profileImageView.setOnClickListener(v -> openImageSelector());
-        updateProfileButton.setOnClickListener(v -> updateProfile());
     }
 
-    private void openImageSelector() {
+    private void setListeners() {
+        profileImage.setOnClickListener(v -> openImagePicker());
+        updateButton.setOnClickListener(v -> updateProfile());
+    }
+
+    private void openImagePicker() {
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        startActivityForResult(intent, PICK_IMAGE_REQUEST);
+        selectImageLauncher.launch(intent);
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+    private void handleSelectedImage(@Nullable Uri imageUri) {
+        if (imageUri == null) {
+            showToast("Invalid Image");
+            return;
+        }
 
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
-            Uri imageUri = data.getData();
-            try {
-                // Convert image to Base64
-                InputStream inputStream = getContentResolver().openInputStream(imageUri);
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        try (InputStream input = getContentResolver().openInputStream(imageUri);
+             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
 
-                byte[] buffer = new byte[1024];
-                int bytesRead;
-                while ((bytesRead = inputStream.read(buffer)) != -1) {
-                    byteArrayOutputStream.write(buffer, 0, bytesRead);
-                }
-
-                byte[] imageBytes = byteArrayOutputStream.toByteArray();
-                selectedImageBase64 = Base64.encodeToString(imageBytes, Base64.DEFAULT);
-
-                // Set the image to ImageView
-                profileImageView.setImageURI(imageUri);
-
-                inputStream.close();
-                byteArrayOutputStream.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-                Toast.makeText(this, "Failed to load image", Toast.LENGTH_SHORT).show();
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = (input != null ? input.read(buffer) : -1)) != -1) {
+                output.write(buffer, 0, length);
             }
+
+            base64Image = Base64.encodeToString(output.toByteArray(), Base64.DEFAULT);
+            profileImage.setImageURI(imageUri);
+
+        } catch (IOException e) {
+            showToast("Failed to load image");
         }
     }
 
     private void updateProfile() {
-        String userName = userNameEditText.getText().toString();
-        String email = emailEditText.getText().toString();
+        String name = nameEditText.getText().toString().trim();
+        String email = emailEditText.getText().toString().trim();
 
-        firebaseHelper.updateUserData(email, userName, selectedImageBase64, this, new FirebaseHelper.UpdateCallback() {
-            @Override
-            public void onUpdateSuccess() {
-                // Update shared preferences
-                SharedPreferenceUtil prefs = new SharedPreferenceUtil(ProfileActivity.this);
-                prefs.setUserName(userName);
-                if (!selectedImageBase64.isEmpty()) {
-                    prefs.setUserImage(selectedImageBase64);
-                }
+        if (name.isEmpty()) {
+            showToast("Please enter your name");
+            return;
+        }
 
-                Toast.makeText(ProfileActivity.this, "Profile updated successfully", Toast.LENGTH_SHORT).show();
-                finish();
+        firebaseHelper.updateUserData(email, name, base64Image, this, () -> {
+
+            // ✅ Update shared pref
+            prefs.setUserName(name);
+            if (!base64Image.isEmpty()) {
+                prefs.setUserImage(base64Image);
             }
+
+            showToast("Profile updated successfully");
+            finish();
         });
+    }
+
+    private void showToast(String msg) {
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
 }

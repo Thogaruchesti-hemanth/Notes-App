@@ -1,9 +1,12 @@
 package com.example.NotesNest.adapter;
 
+import android.os.Build;
+
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
+
 import com.example.NotesNest.fragments.AllNotesFragment;
 import com.example.NotesNest.fragments.RemindersFragment;
 
@@ -17,14 +20,19 @@ public class MainPagerAdapter extends FragmentStateAdapter {
     @Override
     public Fragment createFragment(int position) {
         switch (position) {
-            case 0: return new AllNotesFragment();
-            case 2: return new RemindersFragment();
-            default: return new AllNotesFragment();
+            case 0:
+                return new AllNotesFragment();
+            case 1:
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    return new RemindersFragment();
+                }
+            default:
+                return new AllNotesFragment();
         }
     }
 
     @Override
     public int getItemCount() {
-        return 5; // total fragments
+        return 2; // total fragments
     }
 }

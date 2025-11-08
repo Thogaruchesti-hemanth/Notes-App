@@ -1,16 +1,19 @@
 package com.example.NotesNest.utils;
 
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -23,64 +26,62 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.example.NotesNest.R;
-import com.example.NotesNest.activity.HelpAndSupportActivity;
 import com.example.NotesNest.activity.LoginActivity;
-import com.example.services.FirebaseHelper;
+import com.example.NotesNest.FirebaseHelper;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.navigation.NavigationView;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-import com.squareup.picasso.Picasso;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Objects;
 
 public class DrawerHelper {
-    private final AppCompatActivity activity; // change type
+    private final AppCompatActivity activity;
     private final DrawerLayout drawerLayout;
     private final NavigationView navigationView;
     private final SharedPreferenceUtil pref;
+    private final FirebaseHelper firebaseHelper;
     public OnDrawerItemSelectedListener listener;
     private ImageView profileImageView, profileImage;
     private TextView userNameTextView, emailTextView;
-    private String imageUrl = "";
-    private FirebaseHelper firebaseHelper;
     private ActivityResultLauncher<Intent> galleryLauncher;
-
     private ImageView currentDialogImageView = null;
-
+    private ImageView themeImageView;
 
     public DrawerHelper(AppCompatActivity activity) {
         this.activity = activity;
         this.drawerLayout = activity.findViewById(R.id.main);
         this.navigationView = activity.findViewById(R.id.nav_view);
-        this.firebaseHelper = new FirebaseHelper();
         this.pref = new SharedPreferenceUtil(activity);
+        this.firebaseHelper = new FirebaseHelper();
 
         setupHeaderViews();
         setupMenuButton();
         setupGalleryLauncher();
         loadUserData();
 
-        navigationView.getHeaderView(0).findViewById(R.id.edit_header_button).setOnClickListener(v -> openEditDialog());
-        imageUrl = new SharedPreferenceUtil(activity).getImageUrl();
-
-        firebaseHelper = new FirebaseHelper();
+        navigationView.getHeaderView(0).findViewById(R.id.edit_header_button)
+                .setOnClickListener(v -> openEditDialog());
 
         navigationView.setNavigationItemSelectedListener(item -> {
             handleNavigationSelection(activity, drawerLayout, item, listener);
             return true;
         });
+
+        // Setup theme switch - NEW APPROACH
+        setupThemeSwitch();
     }
 
-    private static void handleNavigationSelection(Activity activity, DrawerLayout drawerLayout, @NonNull MenuItem item, OnDrawerItemSelectedListener listener) {
+    private static void handleNavigationSelection(Activity activity, DrawerLayout drawerLayout,
+                                                  @NonNull MenuItem item,
+                                                  OnDrawerItemSelectedListener listener) {
         String title = item.getTitle().toString();
-
         switch (title) {
             case "Logout":
                 new MaterialAlertDialogBuilder(activity)
@@ -96,13 +97,11 @@ public class DrawerHelper {
                         .setNegativeButton("Cancel", null)
                         .show();
                 break;
-
-            case "Support":
-                activity.startActivity(new Intent(activity, HelpAndSupportActivity.class));
+            case "Use Custom Theme":
+                if (listener != null) listener.onItemSelected("Use Custom Theme");
                 break;
-
             default:
-                listener.onItemSelected(title);
+                if (listener != null) listener.onItemSelected(title);
                 drawerLayout.closeDrawer(GravityCompat.START);
                 break;
         }
@@ -114,7 +113,11 @@ public class DrawerHelper {
         emailTextView = headerView.findViewById(R.id.header_user_email);
         profileImageView = headerView.findViewById(R.id.header_profile_image);
 
-        headerView.findViewById(R.id.edit_header_button).setOnClickListener(v -> openEditDialog());
+        themeImageView = activity.findViewById(R.id.theme_button);
+        updateThemeIconVisibility();
+
+        headerView.findViewById(R.id.edit_header_button)
+                .setOnClickListener(v -> openEditDialog());
     }
 
     private void setupMenuButton() {
@@ -136,18 +139,17 @@ public class DrawerHelper {
     private void loadUserData() {
         String name = pref.getUserName();
         String email = pref.getUserEmail();
-        imageUrl = pref.getImageUrl();
+        String base64Image = pref.getImageUrl();
 
         userNameTextView.setText(name != null ? name : "User Name");
         emailTextView.setText(email != null ? email : "user@email.com");
-        loadProfileImage();
+        updateDrawerHeaderImage(base64Image);
     }
 
     private void toggleDrawer() {
         if (drawerLayout.isDrawerOpen(GravityCompat.START))
             drawerLayout.closeDrawer(GravityCompat.START);
-        else
-            drawerLayout.openDrawer(GravityCompat.START);
+        else drawerLayout.openDrawer(GravityCompat.START);
     }
 
     private void openEditDialog() {
@@ -156,44 +158,27 @@ public class DrawerHelper {
         Objects.requireNonNull(dialog.getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog.show();
 
-        EditText userName = dialogView.findViewById(R.id.user_name_edit_text);
-        EditText email = dialogView.findViewById(R.id.email_edit_text);
+        EditText userNameEdit = dialogView.findViewById(R.id.user_name_edit_text);
+        EditText emailEdit = dialogView.findViewById(R.id.email_edit_text);
         profileImage = dialogView.findViewById(R.id.profile_image_edit);
 
-        userName.setText(userNameTextView.getText());
-        email.setText(emailTextView.getText());
+        userNameEdit.setText(userNameTextView.getText());
+        emailEdit.setText(emailTextView.getText());
 
-        // Load Base64 image preview if available
-        String storedBase64 = pref.getImageUrl();
-        if (storedBase64 != null && !storedBase64.isEmpty()) {
-            Bitmap bitmap = decodeBase64ToBitmap(storedBase64);
-            if (bitmap != null) profileImage.setImageBitmap(bitmap);
-            else profileImage.setImageResource(R.drawable.profile_pic);
-        } else {
-            profileImage.setImageResource(R.drawable.profile_pic);
-        }
+        currentDialogImageView = profileImage;
 
-        // Let user choose a new image
+        String base64Image = pref.getImageUrl();
+        if (base64Image != null && !base64Image.isEmpty()) updateDialogImageView(base64Image);
+        else profileImage.setImageResource(R.drawable.profile_pic);
+
         profileImage.setOnClickListener(v -> openGalleryForDialog(profileImage));
 
         dialogView.findViewById(R.id.cancel_view).setOnClickListener(v -> dialog.dismiss());
-
         dialogView.findViewById(R.id.save_button).setOnClickListener(v -> {
-            String name = userName.getText().toString();
-            String mail = email.getText().toString();
-
+            String name = userNameEdit.getText().toString().trim();
+            String mail = emailEdit.getText().toString().trim();
             if (!name.isEmpty() && !mail.isEmpty()) {
-                firebaseHelper.updateUserData(mail, name, null, activity, () ->
-                        Toast.makeText(activity, "Details Updated", Toast.LENGTH_SHORT).show());
-                SharedPreferenceUtil pref = new SharedPreferenceUtil(activity);
-                pref.setUserName(name);
-                pref.setUserEmail(mail);
-
-                // Reflect updates on header
-                userNameTextView.setText(name);
-                emailTextView.setText(mail);
-
-                Toast.makeText(activity, "Details Updated", Toast.LENGTH_SHORT).show();
+                updateUserIfChanged(name, mail, pref.getImageUrl());
                 dialog.dismiss();
             } else {
                 Toast.makeText(activity, "Please fill in all fields.", Toast.LENGTH_SHORT).show();
@@ -201,34 +186,56 @@ public class DrawerHelper {
         });
     }
 
-    private void loadProfileImage() {
-        String base64Image = pref.getImageUrl(); // stored Base64 string
+    private void updateUserIfChanged(String name, String email, String base64Image) {
+        boolean isNameChanged = !name.equals(pref.getUserName());
+        boolean isEmailChanged = !email.equals(pref.getUserEmail());
+        boolean isImageChanged = base64Image != null && !base64Image.isEmpty();
 
-        if (base64Image == null || base64Image.trim().isEmpty()) {
-            profileImageView.setImageResource(R.drawable.profile_pic);
-        } else {
-            Bitmap bitmap = decodeBase64ToBitmap(base64Image);
-            if (bitmap != null) {
-                profileImageView.setImageBitmap(bitmap);
-            } else {
-                profileImageView.setImageResource(R.drawable.profile_pic);
-            }
+        if (isNameChanged || isEmailChanged || isImageChanged) {
+            firebaseHelper.updateUserData(email, name, base64Image, activity,
+                    () -> Toast.makeText(activity, "Details Updated in Firebase", Toast.LENGTH_SHORT).show());
         }
+
+        pref.setUserName(name);
+        pref.setUserEmail(email);
+
+        userNameTextView.setText(name);
+        emailTextView.setText(email);
     }
 
     private void uploadProfileImage(Uri uri) {
         String base64Image = compressAndEncodeImage(uri);
-
         if (base64Image != null) {
-            pref.setUserImage(base64Image); // Save Base64 in SharedPreferences
-            loadProfileImage();
+            pref.setUserImage(base64Image);
+            updateDrawerHeaderImage(base64Image);
+
+            String email = pref.getUserEmail();
+            if (email != null && !email.isEmpty()) {
+                firebaseHelper.updateUserData(email, pref.getUserName(), base64Image, activity,
+                        () -> Toast.makeText(activity, "Profile image updated in Firebase", Toast.LENGTH_SHORT).show());
+            }
+
+            if (currentDialogImageView != null) updateDialogImageView(base64Image);
             Toast.makeText(activity, "Profile image updated", Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(activity, "Failed to process image", Toast.LENGTH_SHORT).show();
         }
     }
 
-    // 🔹 Compress image to ≤ 100 KB and convert to Base64
+    private void updateDrawerHeaderImage(String base64Image) {
+        Bitmap bitmap = decodeBase64ToBitmap(base64Image);
+        if (bitmap != null) profileImageView.setImageBitmap(bitmap);
+        else profileImageView.setImageResource(R.drawable.profile_pic);
+    }
+
+    private void updateDialogImageView(String base64Image) {
+        if (currentDialogImageView != null) {
+            Bitmap bitmap = decodeBase64ToBitmap(base64Image);
+            if (bitmap != null) currentDialogImageView.setImageBitmap(bitmap);
+            else currentDialogImageView.setImageResource(R.drawable.profile_pic);
+        }
+    }
+
     private String compressAndEncodeImage(Uri uri) {
         try {
             Bitmap bitmap = MediaStore.Images.Media.getBitmap(activity.getContentResolver(), uri);
@@ -237,16 +244,13 @@ public class DrawerHelper {
             int quality = 90;
             bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream);
 
-            // Reduce quality until under 100 KB
             while (outputStream.toByteArray().length > 100 * 1024 && quality > 10) {
                 outputStream.reset();
                 quality -= 5;
                 bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream);
             }
 
-            byte[] compressedBytes = outputStream.toByteArray();
-            return Base64.encodeToString(compressedBytes, Base64.DEFAULT);
-
+            return Base64.encodeToString(outputStream.toByteArray(), Base64.DEFAULT);
         } catch (IOException e) {
             e.printStackTrace();
             Toast.makeText(activity, "Failed to compress image", Toast.LENGTH_SHORT).show();
@@ -254,7 +258,6 @@ public class DrawerHelper {
         }
     }
 
-    // 🔹 Decode Base64 to Bitmap
     private Bitmap decodeBase64ToBitmap(String base64String) {
         try {
             byte[] decodedBytes = Base64.decode(base64String, Base64.DEFAULT);
@@ -267,12 +270,92 @@ public class DrawerHelper {
 
     private void openGalleryForDialog(ImageView dialogProfileImage) {
         currentDialogImageView = dialogProfileImage;
-        Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         galleryLauncher.launch(intent);
     }
+
+    private void setupThemeSwitch() {
+        MenuItem themeItem = navigationView.getMenu().findItem(R.id.menu_theme_switch);
+
+        if (themeItem != null) {
+            // Set the action view programmatically
+            themeItem.setActionView(R.layout.menu_theme_switch);
+            View actionView = themeItem.getActionView();
+
+            if (actionView != null) {
+                SwitchCompat themeSwitch = actionView.findViewById(R.id.drawer_switch);
+
+                if (themeSwitch != null) {
+
+                    boolean isCustomTheme = !pref.isSystemTheme();
+                    themeSwitch.setChecked(isCustomTheme);
+
+                    // Apply custom thumb and track colors
+                    applyCustomSwitchColors(themeSwitch);
+
+                    themeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                        pref.setSystemTheme(!isChecked);
+                        ThemeManager.applyTheme(activity);
+                        updateThemeIconVisibility();
+                        activity.recreate();
+                    });
+                }
+            }
+        }
+    }
+
+    private void applyCustomSwitchColors(SwitchCompat themeSwitch) {
+        try {
+            // Apply custom drawables
+            Drawable thumbDrawable = ContextCompat.getDrawable(activity, R.drawable.custom_thumb);
+            Drawable trackDrawable = ContextCompat.getDrawable(activity, R.drawable.custom_track);
+
+            if (thumbDrawable != null) {
+                themeSwitch.setThumbDrawable(thumbDrawable);
+            }
+
+            if (trackDrawable != null) {
+                themeSwitch.setTrackDrawable(trackDrawable);
+            }
+
+        } catch (Resources.NotFoundException e) {
+            Log.e("DrawerHelper", "Custom switch drawables not found", e);
+
+            // Fallback: Use tint colors
+            applyCustomSwitchTints(themeSwitch);
+        }
+    }
+
+    private void applyCustomSwitchTints(SwitchCompat themeSwitch) {
+        // Thumb color (the circle part)
+        int thumbColor = ContextCompat.getColor(activity, R.color.switch_thumb_color);
+        themeSwitch.setThumbTintList(ColorStateList.valueOf(thumbColor));
+
+        // Track colors (the background)
+        int trackChecked = ContextCompat.getColor(activity, R.color.switch_track_checked);
+        int trackUnchecked = ContextCompat.getColor(activity, R.color.switch_track_unchecked);
+
+        ColorStateList trackColorStateList = new ColorStateList(
+                new int[][]{
+                        new int[]{android.R.attr.state_checked},
+                        new int[]{-android.R.attr.state_checked}
+                },
+                new int[]{trackChecked, trackUnchecked}
+        );
+
+        themeSwitch.setTrackTintList(trackColorStateList);
+    }
+
+    private void updateThemeIconVisibility() {
+        boolean isCustomTheme = !pref.isSystemTheme();
+
+        if (themeImageView != null) {
+            themeImageView.setVisibility(isCustomTheme ? View.VISIBLE : View.GONE);
+        }
+    }
+
 
     public interface OnDrawerItemSelectedListener {
         void onItemSelected(String title);
     }
-
 }
