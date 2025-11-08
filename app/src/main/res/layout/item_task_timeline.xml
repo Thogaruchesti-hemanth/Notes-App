@@ -15,7 +15,7 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:padding="12dp"
-        android:background="@drawable/task_item_background">
+        android:background="@drawable/bg_rounded_gradient">
 
         <!-- Time -->
         <TextView

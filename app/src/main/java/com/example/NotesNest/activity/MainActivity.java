@@ -136,15 +136,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateThemeButtonIcon() {
         if (pref.isSystemTheme()) {
-            themeButton.setImageDrawable(
-                    ContextCompat.getDrawable(this, R.drawable.ic_system_theme)
-            );
+         themeButton.setVisibility(View.INVISIBLE);
             return;
         }
 
         int drawable = pref.getTheme().equals("dark")
                 ? R.drawable.ic_night
-                : R.drawable.ic_day;
+                : R.drawable.ic_sun;
 
         themeButton.setImageDrawable(ContextCompat.getDrawable(this, drawable));
     }

@@ -491,7 +491,7 @@ public class LoginActivity extends AppCompatActivity {
 
 
         binding.termsCheckbox.setChecked(false);
-        binding.profileImageView.setImageResource(R.drawable.profile_pic); // optional: reset profile image
+        binding.profileImageView.setImageResource(R.drawable.ic_profile); // optional: reset profile image
         clearError(); // also clear error message
 
         // Stop any loading animations

@@ -32,7 +32,7 @@
                 android:id="@+id/searchIcon"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/ic_search_black" />
+                android:src="@drawable/ic_search" />
 
             <!-- Editable Search Field -->
             <EditText
@@ -56,7 +56,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:backgroundTint="@android:color/transparent"
-                android:src="@drawable/ic_clear_black"
+                android:src="@drawable/ic_close"
                 android:visibility="gone" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
@@ -95,7 +95,7 @@
                 android:layout_width="40dp"
                 android:layout_height="50dp"
                 android:layout_gravity="end"
-                android:background="@drawable/fade_right_gradient" />
+                android:background="@drawable/bg_gradient_fade_right" />
         </FrameLayout>
 
         <!-- Add (+) Button -->
@@ -109,7 +109,7 @@
             android:backgroundTint="?attr/colorPrimary"
             android:contentDescription="add"
             android:paddingHorizontal="12dp"
-            android:src="@drawable/ic_add_black" />
+            android:src="@drawable/ic_add" />
     </androidx.appcompat.widget.LinearLayoutCompat>
 
     <TextView

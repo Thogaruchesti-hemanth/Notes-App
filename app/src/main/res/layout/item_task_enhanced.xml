@@ -17,7 +17,7 @@
         android:gravity="center_vertical"
         android:paddingStart="20dp"
         android:paddingEnd="20dp"
-        android:background="@drawable/task_item_gradient">
+        android:background="@drawable/bg_rounded_gradient">
 
         <!-- Time with icon -->
         <LinearLayout
@@ -79,7 +79,7 @@
                 android:textSize="12sp"
                 android:textColor="@android:color/white"
                 android:alpha="0.8"
-                android:background="@drawable/type_pill"
+                android:background="@drawable/bg_transparent_white_12dp"
                 android:paddingHorizontal="8dp"
                 android:paddingVertical="2dp" />
 

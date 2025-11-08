@@ -18,7 +18,7 @@
             android:layout_height="match_parent"
             android:contentDescription="Profile Image"
             android:scaleType="centerCrop"
-            android:src="@drawable/profile_pic" />
+            android:src="@drawable/ic_profile" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:layout_width="40dp"
@@ -26,7 +26,7 @@
             android:layout_gravity="bottom|end"
             android:layout_margin="4dp"
             android:contentDescription="Change Image"
-            android:src="@drawable/ic_camera"
+            android:src="@drawable/ic_info_add"
             app:backgroundTint="?attr/colorPrimary"
             app:tint="@android:color/white" />
     </FrameLayout>

@@ -12,43 +12,41 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="horizontal"
+        android:background="@drawable/bg_rounded_gradient"
         android:gravity="center_vertical"
+        android:orientation="horizontal"
         android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:background="@drawable/task_item_background">
+        android:paddingEnd="16dp">
 
         <!-- Time Section -->
         <TextView
             android:id="@+id/tvTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="10:00 AM"
-            android:textSize="14sp"
-            android:textStyle="bold"
+            android:padding="16dp"
             android:textColor="@android:color/white"
-            android:paddingEnd="16dp" />
+            android:textSize="14sp"
+            android:textStyle="bold" />
 
         <!-- Vertical Divider -->
         <View
             android:layout_width="1dp"
             android:layout_height="30dp"
-            android:background="@android:color/white"
-            android:alpha="0.5" />
+            android:alpha="0.5"
+            android:background="@android:color/white" />
 
         <!-- Title Section -->
         <TextView
             android:id="@+id/tvTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:layout_marginStart="16dp"
-            android:text="Meeting with team about project updates"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="@android:color/white"
+            android:layout_weight="1"
+            android:ellipsize="end"
             android:maxLines="1"
-            android:ellipsize="end" />
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
     </LinearLayout>
 

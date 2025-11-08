@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:gravity="center"
-    android:background="@drawable/button_background"
+    android:background="@drawable/selector_chip_outline"
     android:layout_margin="0dp">
     <TextView
         android:id="@+id/tabText"

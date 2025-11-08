@@ -1,51 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- Spacing scale (4dp grid) -->
-    <dimen name="spacing_xxs">2dp</dimen>
-    <dimen name="spacing_xs">4dp</dimen>
-    <dimen name="spacing_xs2">6dp</dimen>
-    <dimen name="spacing_sm">8dp</dimen>
-    <dimen name="spacing_md">12dp</dimen>
-    <dimen name="spacing_lg">16dp</dimen>
-    <dimen name="spacing_xl">20dp</dimen>
-    <dimen name="spacing_xxl">24dp</dimen>
-    <dimen name="spacing_3xl">32dp</dimen>
-    <dimen name="spacing_4xl">40dp</dimen>
+    <!-- Padding / Margin scale -->
+    <dimen name="padding_2">2dp</dimen>
+    <dimen name="padding_4">4dp</dimen>
+    <dimen name="padding_6">6dp</dimen>
+    <dimen name="padding_8">8dp</dimen>
+    <dimen name="padding_12">12dp</dimen>
+    <dimen name="padding_16">16dp</dimen>
+    <dimen name="padding_20">20dp</dimen>
+    <dimen name="padding_24">24dp</dimen>
+    <dimen name="padding_32">32dp</dimen>
+    <dimen name="padding_40">40dp</dimen>
 
-    <!-- Font sizes -->
-    <dimen name="text_xs">10sp</dimen>
-    <dimen name="text_sm">12sp</dimen>
-    <dimen name="text_md">14sp</dimen>
-    <dimen name="text_lg">16sp</dimen>
-    <dimen name="text_xl">18sp</dimen>
-    <dimen name="text_2xl">20sp</dimen>
-    <dimen name="text_3xl">24sp</dimen>
-    <dimen name="text_4xl">28sp</dimen>
-    <dimen name="text_5xl">30sp</dimen>
+    <dimen name="margin_2">2dp</dimen>
+    <dimen name="margin_4">4dp</dimen>
+    <dimen name="margin_6">6dp</dimen>
+    <dimen name="margin_8">8dp</dimen>
+    <dimen name="margin_12">12dp</dimen>
+    <dimen name="margin_16">16dp</dimen>
+    <dimen name="margin_20">20dp</dimen>
+    <dimen name="margin_24">24dp</dimen>
+    <dimen name="margin_32">32dp</dimen>
+    <dimen name="margin_40">40dp</dimen>
+
+    <!-- Text sizes -->
+    <dimen name="text_10">10sp</dimen>
+    <dimen name="text_12">12sp</dimen>
+    <dimen name="text_14">14sp</dimen>
+    <dimen name="text_16">16sp</dimen>
+    <dimen name="text_18">18sp</dimen>
+    <dimen name="text_20">20sp</dimen>
+    <dimen name="text_24">24sp</dimen>
+    <dimen name="text_28">28sp</dimen>
+    <dimen name="text_30">30sp</dimen>
 
     <!-- Rounded corners -->
-    <dimen name="radius_sm">4dp</dimen>
-    <dimen name="radius_md">8dp</dimen>
-    <dimen name="radius_lg">12dp</dimen>
-    <dimen name="radius_xl">16dp</dimen>
-    <dimen name="radius_round">50dp</dimen>
+    <dimen name="radius_2">2dp</dimen>
+    <dimen name="radius_4">4dp</dimen>
+    <dimen name="radius_8">8dp</dimen>
+    <dimen name="radius_12">12dp</dimen>
+    <dimen name="radius_16">16dp</dimen>
+    <dimen name="radius_24">24dp</dimen>
+    <dimen name="radius_30">30dp</dimen>
+    <dimen name="radius_50">50dp</dimen>
+    <dimen name="radius_100">100dp</dimen>
 
-    <!-- sizes -->
-    <dimen name="size_xs">12dp</dimen>
-    <dimen name="size_sm">16dp</dimen>
-    <dimen name="size_md">24dp</dimen>
-    <dimen name="size_lg">32dp</dimen>
-    <dimen name="size_xl">48dp</dimen>
-    <dimen name="size_xl2">50dp</dimen>
-    <dimen name="size_2xl">72dp</dimen>
-    <dimen name="size_3xl">100dp</dimen>
-    <dimen name="size_4xl">200dp</dimen>
+    <!-- Common sizes -->
+    <dimen name="size_1">1dp</dimen>
+    <dimen name="size_2">2dp</dimen>
+    <dimen name="size_8">8dp</dimen>
+    <dimen name="size_12">12dp</dimen>
+    <dimen name="size_16">16dp</dimen>
+    <dimen name="size_20">20dp</dimen>
+    <dimen name="size_24">24dp</dimen>
+    <dimen name="size_30">30dp</dimen>
+    <dimen name="size_32">32dp</dimen>
+    <dimen name="size_40">40dp</dimen>
+    <dimen name="size_48">48dp</dimen>
+    <dimen name="size_50">50dp</dimen>
+    <dimen name="size_72">72dp</dimen>
+    <dimen name="size_80">80dp</dimen>
+    <dimen name="size_100">100dp</dimen>
+    <dimen name="size_200">200dp</dimen>
 
     <!-- Elevation -->
-    <dimen name="elevation_sm">2dp</dimen>
-    <dimen name="elevation_md">4dp</dimen>
-    <dimen name="elevation_lg">8dp</dimen>
+    <dimen name="elevation_2">2dp</dimen>
+    <dimen name="elevation_4">4dp</dimen>
+    <dimen name="elevation_8">8dp</dimen>
 
     <!-- Common component sizes -->
     <dimen name="button_height">48dp</dimen>
