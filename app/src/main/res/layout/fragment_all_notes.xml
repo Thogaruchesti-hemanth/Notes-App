@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/notes_fragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSecondary">
@@ -9,29 +10,29 @@
         android:id="@+id/searchLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="4dp"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="4dp"
+        android:layout_marginHorizontal="@dimen/margin_16"
+        android:layout_marginVertical="@dimen/margin_8"
+        app:cardCornerRadius="@dimen/radius_12"
+        app:cardElevation="@dimen/elevation_4"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="@dimen/size_48"
             android:background="@android:color/white"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingStart="12dp"
-            android:paddingEnd="8dp">
+            android:paddingVertical="@dimen/padding_12">
 
             <!-- Search Icon -->
             <ImageView
                 android:id="@+id/searchIcon"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:layout_width="@dimen/size_24"
+                android:layout_height="@dimen/size_24"
+                android:layout_marginStart="@dimen/margin_10"
+                android:contentDescription="@string/text_search_icon"
                 android:src="@drawable/ic_search" />
 
             <!-- Editable Search Field -->
@@ -39,11 +40,12 @@
                 android:id="@+id/searchEditText"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="@dimen/margin_8"
                 android:layout_weight="1"
                 android:background="@android:color/transparent"
-                android:hint="Search your notes"
+                android:hint="@string/text_search_your_notes"
                 android:imeOptions="actionSearch"
+                android:importantForAutofill="no"
                 android:inputType="text"
                 android:maxLines="1"
                 android:textColor="@color/black"
@@ -53,9 +55,11 @@
             <!-- Clear (X) Button -->
             <ImageButton
                 android:id="@+id/clearSearchBtn"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:layout_width="@dimen/size_24"
+                android:layout_height="@dimen/size_24"
+                android:layout_marginEnd="@dimen/margin_10"
                 android:backgroundTint="@android:color/transparent"
+                android:contentDescription="@string/text_close"
                 android:src="@drawable/ic_close"
                 android:visibility="gone" />
         </LinearLayout>
@@ -67,7 +71,7 @@
         android:layout_height="wrap_content"
         android:background="?attr/colorSecondary"
         android:orientation="horizontal"
-        android:paddingVertical="6dp"
+        android:paddingVertical="@dimen/padding_6"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/searchLayout">
@@ -85,15 +89,15 @@
                 android:background="?attr/colorSecondary"
                 app:tabIndicatorColor="@color/tabSelectedTextColor"
                 app:tabIndicatorFullWidth="false"
-                app:tabIndicatorHeight="3dp"
+                app:tabIndicatorHeight="@dimen/size_3"
                 app:tabMode="scrollable"
                 app:tabRippleColor="@android:color/transparent" />
 
             <!-- Fading overlay on the right side -->
             <View
                 android:id="@+id/fadeOverlay"
-                android:layout_width="40dp"
-                android:layout_height="50dp"
+                android:layout_width="@dimen/size_48"
+                android:layout_height="@dimen/size_48"
                 android:layout_gravity="end"
                 android:background="@drawable/bg_gradient_fade_right" />
         </FrameLayout>
@@ -101,14 +105,14 @@
         <!-- Add (+) Button -->
         <ImageButton
             android:id="@+id/btnAdd"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="@dimen/size_40"
+            android:layout_height="@dimen/size_40"
             android:layout_gravity="center_vertical"
-            android:layout_marginEnd="16dp"
+            android:layout_marginEnd="@dimen/margin_16"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:backgroundTint="?attr/colorPrimary"
-            android:contentDescription="add"
-            android:paddingHorizontal="12dp"
+            android:contentDescription="@string/text_add"
+            android:paddingHorizontal="@dimen/padding_12"
             android:src="@drawable/ic_add" />
     </androidx.appcompat.widget.LinearLayoutCompat>
 
@@ -116,11 +120,10 @@
         android:id="@+id/title_text_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginVertical="10dp"
-        android:layout_marginStart="20dp"
-        android:text="All Notes"
+        android:layout_marginVertical="@dimen/margin_10"
+        android:layout_marginStart="@dimen/margin_20"
         android:textColor="?attr/colorPrimary"
-        android:textSize="36sp"
+        android:textSize="@dimen/text_36"
         android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@+id/recyclerView"
         app:layout_constraintStart_toStartOf="parent"
@@ -130,9 +133,9 @@
         android:id="@+id/createButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="30dp"
+        android:layout_marginEnd="@dimen/margin_30"
         android:backgroundTint="@color/tabSelectedTextColor"
-        android:text="create"
+        android:text="@string/text_create"
         android:textColor="@color/black"
         app:layout_constraintBottom_toTopOf="@id/recyclerView"
         app:layout_constraintEnd_toEndOf="parent"
@@ -143,7 +146,7 @@
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginHorizontal="10dp"
+        android:layout_marginHorizontal="@dimen/margin_10"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

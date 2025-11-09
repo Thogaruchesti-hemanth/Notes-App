@@ -4,7 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSecondary"
-    android:padding="16dp">
+    android:contentDescription="@string/text_note_add_and_edit_screen"
+    android:padding="@dimen/padding_16">
 
     <!-- Toolbar -->
     <androidx.appcompat.widget.Toolbar
@@ -16,146 +17,86 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:navigationIcon="@drawable/ic_arrow_right"
-        app:title="Edit Note"
+        app:title="@string/text_edit_note"
         app:titleTextColor="?attr/colorPrimary" />
 
+    <!-- Save Button  -->
     <Button
         android:id="@+id/btnSave"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="12dp"
+        android:layout_marginEnd="@dimen/margin_12"
         android:backgroundTint="@color/tabSelectedTextColorLight"
-        android:text="Save"
+        android:text="@string/text_save"
         android:textColor="@color/black"
         app:layout_constraintBottom_toBottomOf="@id/toolbar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/toolbar" />
 
     <!-- Title Input -->
-    <EditText
-        android:id="@+id/etTitle"
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/titleTextInputLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@android:color/transparent"
-        android:hint="Enter the title"
-        android:paddingHorizontal="6dp"
-        android:paddingVertical="12dp"
-        android:textColor="?attr/colorPrimary"
-        android:textSize="22sp"
-        android:textStyle="bold"
+        android:hint="@string/text_enter_the_title"
+        app:boxBackgroundMode="none"
+        app:hintTextColor="@color/grey_400"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar" />
+        app:layout_constraintTop_toBottomOf="@id/toolbar">
 
-    <!-- Time Layout -->
-    <LinearLayout
-        android:id="@+id/timeLayout"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="8dp"
-        android:background="@drawable/bg_secondary_rounded_stroke_4"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="12dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/etTitle">
-
-        <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:backgroundTint="@color/black"
-            android:src="@drawable/ic_clock" />
-
-        <TextView
-            android:layout_width="0dp"
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etTitle"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_weight="1"
-            android:text="Time"
-            android:textColor="?attr/colorPrimary" />
-
-        <TextView
-            android:id="@+id/tvTime"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="10:00 AM"
-            android:textColor="@color/textColor"
+            android:background="@android:color/transparent"
+            android:cursorVisible="true"
+            android:inputType="textCapSentences"
+            android:paddingHorizontal="@dimen/padding_6"
+            android:paddingVertical="@dimen/padding_12"
+            android:textColor="?attr/colorPrimary"
+            android:textSize="@dimen/text_22"
             android:textStyle="bold" />
-    </LinearLayout>
 
-    <!-- Date Layout -->
-    <LinearLayout
-        android:id="@+id/dateLayout"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="8dp"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/bg_secondary_rounded_stroke_4"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="12dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/timeLayout">
+    </com.google.android.material.textfield.TextInputLayout>
 
-        <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:backgroundTint="@color/black"
-            android:src="@drawable/ic_calender" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_weight="1"
-            android:text="Date"
-            android:textColor="?attr/colorPrimary" />
-
-        <TextView
-            android:id="@+id/tvDate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="2024-07-26"
-            android:textColor="@color/textColor"
-            android:textStyle="bold" />
-    </LinearLayout>
 
     <!--Category Layout -->
     <LinearLayout
         android:id="@+id/categoryLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="8dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginHorizontal="@dimen/margin_8"
+        android:layout_marginTop="@dimen/margin_8"
         android:background="@drawable/bg_secondary_rounded_stroke_4"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="12dp"
+        android:padding="@dimen/padding_12"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/dateLayout">
+        app:layout_constraintTop_toBottomOf="@id/titleTextInputLayout">
 
         <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="@dimen/size_20"
+            android:layout_height="@dimen/size_20"
             android:backgroundTint="@color/black"
+            android:contentDescription="@string/text_notes_categories"
             android:src="@drawable/ic_category" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="@dimen/margin_12"
             android:layout_weight="1"
-            android:text="Category"
+            android:text="@string/text_category"
             android:textColor="?attr/colorPrimary" />
 
         <TextView
             android:id="@+id/tvCategory"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="All"
+            android:text="@string/text_all"
             android:textColor="@color/textColor"
             android:textStyle="bold" />
     </LinearLayout>
@@ -165,90 +106,85 @@
         android:id="@+id/etNote"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="@dimen/margin_8"
+        android:layout_marginBottom="@dimen/margin_10"
         android:background="@android:color/transparent"
         android:gravity="top"
-        android:padding="12dp"
-        app:layout_constraintBottom_toTopOf="@+id/bottomBar"
+        android:padding="@dimen/padding_12"
+        app:layout_constraintBottom_toTopOf="@+id/ckeditor_toolbar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/categoryLayout" />
 
-    <!-- Bottom bar with formatting + Save -->
+    <!-- Floating CKEditor Toolbar -->
     <LinearLayout
-        android:id="@+id/bottomBar"
-        android:layout_width="0dp"
+        android:id="@+id/ckeditor_toolbar"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:layout_gravity="center_horizontal|bottom"
+        android:layout_margin="@dimen/margin_20"
+        android:background="@drawable/bg_primary_rounded_24"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="@dimen/padding_8"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <!-- Floating CKEditor Toolbar -->
-        <LinearLayout
-            android:id="@+id/ckeditor_toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal|bottom"
-            android:layout_marginHorizontal="20dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="10dp"
-            android:background="@drawable/bg_primary_rounded_24"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:padding="8dp">
+        <ImageButton
+            android:id="@+id/color_selection"
+            android:layout_width="@dimen/size_48"
+            android:layout_height="@dimen/size_48"
+            android:layout_marginEnd="@dimen/margin_4"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/text_color_picker"
+            android:src="@drawable/ic_color_picker" />
 
-            <ImageButton
-                android:id="@+id/color_selection"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_marginEnd="4dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_color_picker" />
+        <View
+            android:layout_width="@dimen/size_1"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="@dimen/margin_4"
+            android:background="?attr/colorSecondary" />
 
-            <View
-                android:layout_width="1dp"
-                android:layout_height="match_parent"
-                android:layout_marginEnd="4dp"
-                android:background="?attr/colorSecondary" />
+        <ImageButton
+            android:id="@+id/btn_bold"
+            android:layout_width="@dimen/size_48"
+            android:layout_height="@dimen/size_48"
+            android:layout_marginEnd="@dimen/margin_4"
+            android:background="@drawable/selector_item_background"
+            android:contentDescription="@string/text_text_bold_format"
+            android:src="@drawable/ic_format_bold"
+            app:tint="@color/selector_tab_text_color" />
 
-            <ImageButton
-                android:id="@+id/btn_bold"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_marginEnd="4dp"
-                android:background="@drawable/selector_item_background"
-                android:src="@drawable/ic_format_bold"
-                app:tint="@color/selector_tab_text_color" />
+        <ImageButton
+            android:id="@+id/btn_italic"
+            android:layout_width="@dimen/size_48"
+            android:layout_height="@dimen/size_48"
+            android:layout_marginEnd="@dimen/margin_4"
+            android:background="@drawable/selector_item_background"
+            android:contentDescription="@string/text_text_italic_format"
+            android:src="@drawable/ic_format_italic"
+            app:tint="@color/selector_tab_text_color" />
 
-            <ImageButton
-                android:id="@+id/btn_italic"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_marginEnd="4dp"
-                android:background="@drawable/selector_item_background"
-                android:src="@drawable/ic_format_italic"
-                app:tint="@color/selector_tab_text_color" />
+        <ImageButton
+            android:id="@+id/btn_bullet_list"
+            android:layout_width="@dimen/size_48"
+            android:layout_height="@dimen/size_48"
+            android:layout_marginEnd="@dimen/margin_4"
+            android:background="@drawable/selector_item_background"
+            android:contentDescription="@string/text_text_bullet_points_format"
+            android:src="@drawable/ic_format_list_bulleted"
+            app:tint="@color/selector_tab_text_color" />
 
-            <ImageButton
-                android:id="@+id/btn_bullet_list"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_marginEnd="4dp"
-                android:background="@drawable/selector_item_background"
-                android:src="@drawable/ic_format_list_bulleted"
-                app:tint="@color/selector_tab_text_color" />
-
-            <ImageButton
-                android:id="@+id/btn_numbered_list"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_marginEnd="4dp"
-                android:background="@drawable/selector_item_background"
-                android:src="@drawable/ic_format_number_list"
-                app:tint="@color/selector_tab_text_color" />
-        </LinearLayout>
-
+        <ImageButton
+            android:id="@+id/btn_numbered_list"
+            android:layout_width="@dimen/size_48"
+            android:layout_height="@dimen/size_48"
+            android:layout_marginEnd="@dimen/margin_4"
+            android:background="@drawable/selector_item_background"
+            android:contentDescription="@string/text_text_format_number_list"
+            android:src="@drawable/ic_format_number_list"
+            app:tint="@color/selector_tab_text_color" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

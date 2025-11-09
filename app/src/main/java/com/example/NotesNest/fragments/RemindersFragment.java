@@ -39,15 +39,14 @@ import java.util.concurrent.Executors;
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class RemindersFragment extends Fragment {
 
+    private final List<CalendarItem> calendarItemList = new ArrayList<>();
     private TextView selectedDateTv, promptTextView;
     private RecyclerView calendarRv, hourRecyclerView;
     private LocalDate selectedDate = LocalDate.now();
     private CalendarAdapter calendarAdapter;
-    private final List<CalendarItem> calendarItemList = new ArrayList<>();
-    private Button createButton;
 
     private AppDatabase db;
-    private ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private List<ReminderEntity> currentReminders = new ArrayList<>();
 
     @Nullable
@@ -64,7 +63,7 @@ public class RemindersFragment extends Fragment {
         promptTextView = view.findViewById(R.id.prompt_text_view);
         calendarRv = view.findViewById(R.id.calendarRecyclerView);
         hourRecyclerView = view.findViewById(R.id.hourRecyclerView);
-        createButton = view.findViewById(R.id.createButton);
+        Button createButton = view.findViewById(R.id.createButton);
 
         setupCalendar();
         updateSelectedDateText();
@@ -95,7 +94,7 @@ public class RemindersFragment extends Fragment {
         TimelineAdapter adapter = new TimelineAdapter(
                 requireContext(),
                 tasks,
-                task -> showReminderOptions(task)
+                this::showReminderOptions
         );
 
         hourRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -110,14 +109,14 @@ public class RemindersFragment extends Fragment {
         executor.execute(() -> {
 
             Calendar cal = Calendar.getInstance();
-            cal.set(selectedDate.getYear(), selectedDate.getMonthValue()-1, selectedDate.getDayOfMonth(), 0,0,0);
+            cal.set(selectedDate.getYear(), selectedDate.getMonthValue() - 1, selectedDate.getDayOfMonth(), 0, 0, 0);
             long start = cal.getTimeInMillis();
 
-            cal.set(Calendar.HOUR_OF_DAY,23);
-            cal.set(Calendar.MINUTE,59);
+            cal.set(Calendar.HOUR_OF_DAY, 23);
+            cal.set(Calendar.MINUTE, 59);
             long end = cal.getTimeInMillis();
 
-            currentReminders = db.reminderDao().getRemindersByDateRange(start,end);
+            currentReminders = db.reminderDao().getRemindersByDateRange(start, end);
 
             List<Task> tasks = new ArrayList<>();
 
@@ -126,7 +125,7 @@ public class RemindersFragment extends Fragment {
                 String title = r.getTitle();
                 if (title == null || title.isEmpty()) title = r.getMessage();
 
-                long endTime = r.getNotification() + 60*60*1000;
+                long endTime = r.getNotification() + 60 * 60 * 1000;
 
                 Task t = new Task(
                         title,
@@ -151,9 +150,9 @@ public class RemindersFragment extends Fragment {
     private void updatePromptText() {
         int count = currentReminders.size();
         if (count == 0) {
-            promptTextView.setText("No reminders for today");
+            promptTextView.setText(getString(R.string.text_no_reminders_for_today));
         } else {
-            promptTextView.setText("You have " + count + " reminders today");
+            promptTextView.setText(String.format("You have %d reminders today", count));
         }
     }
 
@@ -239,6 +238,19 @@ public class RemindersFragment extends Fragment {
                     date.getDayOfWeek().name().substring(0, 3),
                     date
             ));
+        }
+
+        // Set selected position based on initial selectedDate
+        int initialPos = -1;
+        for (int i = 0; i < calendarItemList.size(); i++) {
+            if (calendarItemList.get(i).localDate.equals(selectedDate)) {
+                initialPos = i;
+                break;
+            }
+        }
+        if (initialPos != -1) {
+            calendarAdapter.setSelectedPosition(initialPos);
+            calendarRv.scrollToPosition(initialPos);
         }
 
         calendarAdapter.notifyDataSetChanged();

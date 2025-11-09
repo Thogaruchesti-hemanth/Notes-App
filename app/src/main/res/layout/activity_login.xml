@@ -11,55 +11,59 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="@dimen/padding_16">
 
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/profile_layout"
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            android:layout_gravity="center"
-            android:layout_marginBottom="16dp"
-            android:visibility="gone"
-            app:cardCornerRadius="60dp"
-            app:cardElevation="4dp">
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center">
 
-            <ImageView
-                android:id="@+id/profile_image_view"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:contentDescription="@string/text_profile_image"
-                android:scaleType="centerCrop"
-                android:src="@drawable/ic_profile" />
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/profile_layout"
+                android:layout_width="@dimen/size_120"
+                android:layout_height="@dimen/size_120"
+                android:layout_gravity="center"
+                android:visibility="gone"
+                app:cardCornerRadius="@dimen/radius_60"
+                app:cardElevation="@dimen/elevation_4">
+
+                <ImageView
+                    android:id="@+id/profile_image_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@string/text_profile_image"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_profile" />
+            </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/upload_image_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom|end"
-                android:layout_margin="4dp"
                 android:contentDescription="@string/text_upload_image"
+                android:visibility="gone"
                 app:backgroundTint="?attr/colorPrimary"
-                app:fabCustomSize="40dp"
-                app:maxImageSize="20dp"
+                app:fabCustomSize="@dimen/size_40"
+                app:maxImageSize="@dimen/size_20"
                 app:srcCompat="@drawable/ic_info_add"
                 app:tint="?attr/colorOnPrimary" />
-        </com.google.android.material.card.MaterialCardView>
-
+        </FrameLayout>
         <!-- Header -->
         <TextView
             android:id="@+id/header_title_text_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="5dp"
+            android:layout_margin="@dimen/margin_6"
             android:text="@string/text_hey_login_now"
             android:textColor="@color/tabSelectedTextColor"
-            android:textSize="48sp"
+            android:textSize="@dimen/text_48"
             android:textStyle="bold" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="5dp">
+            android:layout_margin="@dimen/margin_4">
 
             <TextView
                 android:id="@+id/old_user_text_view"
@@ -67,13 +71,13 @@
                 android:layout_height="wrap_content"
                 android:text="@string/text_i_am_an_old_user"
                 android:textColor="@drawable/selector_tab_text_color"
-                android:textSize="16sp"
+                android:textSize="@dimen/text_16"
                 android:textStyle="bold|normal" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="5dp"
+                android:layout_marginHorizontal="@dimen/margin_4"
                 android:text="@string/text_slash"
                 android:textColor="@drawable/selector_tab_text_color"
                 android:textSize="16sp" />
@@ -84,7 +88,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/text_create_new"
                 android:textColor="?attr/tabTextColor"
-                android:textSize="16sp"
+                android:textSize="@dimen/text_16"
                 android:textStyle="bold|normal" />
         </LinearLayout>
 
@@ -94,7 +98,7 @@
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="5dp"
+            android:layout_margin="@dimen/margin_4"
             android:visibility="gone"
             app:boxBackgroundMode="outline">
 
@@ -105,7 +109,7 @@
                 android:hint="@string/text_user_name"
                 android:inputType="text"
                 android:textColor="?attr/colorPrimary"
-                android:textSize="18sp" />
+                android:textSize="@dimen/text_18" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Email -->
@@ -113,7 +117,7 @@
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="5dp"
+            android:layout_margin="@dimen/margin_4"
             app:boxBackgroundMode="outline">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -123,7 +127,7 @@
                 android:hint="@string/text_email"
                 android:inputType="textEmailAddress"
                 android:textColor="?attr/colorPrimary"
-                android:textSize="18sp" />
+                android:textSize="@dimen/text_18" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Password -->
@@ -132,7 +136,7 @@
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="5dp"
+            android:layout_margin="@dimen/margin_4"
             app:boxBackgroundMode="outline"
             app:endIconMode="password_toggle">
 
@@ -143,7 +147,7 @@
                 android:hint="@string/text_password"
                 android:inputType="textPassword"
                 android:textColor="?attr/colorPrimary"
-                android:textSize="18sp" />
+                android:textSize="@dimen/text_18" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Forgot Password -->
@@ -151,12 +155,12 @@
             android:id="@+id/forgot_password_text_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="5dp"
+            android:layout_marginEnd="@dimen/margin_4"
             android:gravity="end"
-            android:padding="4dp"
+            android:padding="@dimen/padding_4"
             android:text="@string/text_forgot_password"
             android:textColor="?attr/tabTextColor"
-            android:textSize="14sp" />
+            android:textSize="@dimen/text_14" />
 
         <!-- Confirm Password (signup only) -->
         <com.google.android.material.textfield.TextInputLayout
@@ -164,7 +168,7 @@
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="5dp"
+            android:layout_margin="@dimen/margin_4"
             android:visibility="gone"
             app:boxBackgroundMode="outline"
             app:endIconMode="password_toggle">
@@ -176,16 +180,16 @@
                 android:hint="@string/text_confirm_password"
                 android:inputType="textPassword"
                 android:textColor="?attr/colorPrimary"
-                android:textSize="18sp" />
+                android:textSize="@dimen/text_18" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
             android:id="@+id/errorTextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
+            android:layout_margin="@dimen/margin_10"
             android:textColor="@color/google_red"
-            android:textSize="14sp"
+            android:textSize="@dimen/text_14"
             android:visibility="gone" />
 
         <!-- Login Button -->
@@ -193,8 +197,8 @@
             android:id="@+id/login_border_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="5dp"
-            android:layout_marginVertical="20dp">
+            android:layout_marginHorizontal="@dimen/margin_6"
+            android:layout_marginVertical="@dimen/margin_20">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/login_button"
@@ -210,8 +214,8 @@
             android:id="@+id/google_border_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="5dp"
-            android:layout_marginBottom="5dp">
+            android:layout_marginHorizontal="@dimen/margin_6"
+            android:layout_marginBottom="@dimen/margin_6">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/google_sign_in_button"
@@ -229,7 +233,7 @@
             android:id="@+id/termsLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="10dp"
+            android:layout_marginHorizontal="@dimen/margin_10"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:visibility="visible">
@@ -243,11 +247,11 @@
                 android:id="@+id/termsTextView"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
+                android:layout_marginStart="@dimen/margin_4"
                 android:layout_weight="1"
                 android:text="@string/terms_agreement"
                 android:textColor="?attr/colorPrimary"
-                android:textSize="12sp" />
+                android:textSize="@dimen/text_12" />
 
         </LinearLayout>
 

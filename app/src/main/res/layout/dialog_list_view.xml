@@ -2,7 +2,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:background="@drawable/bg_dialog_rounded"
-    android:elevation="6dp"
+    android:elevation="@dimen/elevation_6"
     android:orientation="vertical">
 
     <LinearLayout
@@ -11,27 +11,26 @@
         android:background="@drawable/bg_rounded_top_8"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="16dp">
+        android:padding="@dimen/padding_16">
 
         <TextView
-            android:id="@+id/dialog_title_text_view"
+            android:id="@+id/title_text_view"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center_vertical|center_horizontal"
-            android:text="Categories"
             android:textColor="@color/black"
-            android:textSize="16sp"
+            android:textSize="@dimen/text_16"
             android:textStyle="bold" />
 
         <ImageView
             android:id="@+id/cancel_image_view"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:clickable="true"
-            android:contentDescription="close"
+            android:contentDescription="@string/text_close"
             android:focusable="true"
-            android:padding="6dp"
+            android:padding="@dimen/padding_6"
             android:src="@drawable/ic_close" />
     </LinearLayout>
 
@@ -40,6 +39,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:divider="@null"
-        android:padding="16dp"
+        android:padding="@dimen/padding_16"
         android:scrollbars="none" />
 </LinearLayout>

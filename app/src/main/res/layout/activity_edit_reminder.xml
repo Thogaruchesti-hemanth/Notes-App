@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/addEditReminder"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true">
@@ -9,17 +10,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?attr/colorSecondary"
-        android:paddingHorizontal="20dp">
+        android:paddingHorizontal="@dimen/padding_20">
 
         <!-- Toolbar Row -->
-        <LinearLayout
+        <androidx.appcompat.widget.LinearLayoutCompat
             android:id="@+id/headerLayout"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="@dimen/margin_20"
             android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingVertical="20dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
@@ -28,55 +27,67 @@
                 android:id="@+id/ivBack"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:contentDescription="@string/text_navigate_to_previous_screen_icon"
                 android:src="@drawable/ic_arrow_right" />
 
             <TextView
                 android:id="@+id/tvTitle"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="10dp"
+                android:layout_gravity="center_vertical"
                 android:layout_weight="1"
-                android:text="Add Reminder"
+                android:text="@string/text_add_reminder"
                 android:textColor="?attr/colorPrimary"
-                android:textSize="22sp"
+                android:textSize="@dimen/text_22"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tvSave"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Save"
+                android:text="@string/text_save"
                 android:textColor="@color/tabSelectedTextColor"
-                android:textSize="18sp"
+                android:textSize="@dimen/text_18"
                 android:textStyle="bold" />
-        </LinearLayout>
+        </androidx.appcompat.widget.LinearLayoutCompat>
 
-        <EditText
-            android:id="@+id/title_text_view"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/titleTextInputLayout"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="10dp"
             android:background="@android:color/transparent"
-            android:cursorVisible="true"
-            android:focusable="true"
-            android:focusableInTouchMode="true"
-            android:hint="Reminder Title"
-            android:paddingTop="4dp"
-            android:textColor="?attr/colorPrimary"
-            android:textSize="24sp"
-            android:textStyle="bold"
+            android:hint="@string/text_reminder_title"
+            app:boxBackgroundMode="none"
+            app:hintTextColor="@color/grey_400"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/headerLayout" />
+            app:layout_constraintTop_toBottomOf="@id/headerLayout">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/title_text_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:cursorVisible="true"
+                android:inputType="textCapSentences"
+                android:paddingHorizontal="@dimen/padding_6"
+                android:paddingVertical="@dimen/padding_12"
+                android:textColor="?attr/colorPrimary"
+                android:textSize="@dimen/text_24"
+                android:textStyle="bold" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
 
         <com.google.android.material.button.MaterialButtonToggleGroup
             android:id="@+id/chipGroupType"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="10dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginHorizontal="@dimen/margin_10"
+            android:layout_marginTop="@dimen/margin_10"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/title_text_view"
+            app:layout_constraintTop_toBottomOf="@id/titleTextInputLayout"
             app:singleSelection="true">
 
             <com.google.android.material.button.MaterialButton
@@ -85,8 +96,10 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:backgroundTint="@color/selector_chip_bg"
                 android:checkable="true"
-                android:text="Reminder" />
+                android:text="@string/text_reminder"
+                android:textColor="@color/selector_chip_text_color" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/chipTask"
@@ -94,8 +107,10 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:backgroundTint="@color/selector_chip_bg"
                 android:checkable="true"
-                android:text="Task" />
+                android:text="@string/text_task"
+                android:textColor="@color/selector_chip_text_color" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/chipBirthday"
@@ -103,46 +118,48 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:backgroundTint="@color/selector_chip_bg"
                 android:checkable="true"
-                android:text="Birthday" />
+                android:text="@string/text_birthday"
+                android:textColor="@color/selector_chip_text_color" />
 
         </com.google.android.material.button.MaterialButtonToggleGroup>
 
         <LinearLayout
             android:id="@+id/timeLayout"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="8dp"
-            android:layout_marginTop="10dp"
+            android:layout_height="@dimen/size_48"
+            android:layout_marginHorizontal="@dimen/margin_8"
+            android:layout_marginTop="@dimen/margin_10"
             android:background="@drawable/bg_secondary_rounded_stroke_4"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:padding="12dp"
+            android:padding="@dimen/padding_12"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/chipGroupType">
 
             <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="@dimen/size_20"
+                android:layout_height="@dimen/size_20"
                 android:backgroundTint="@color/black"
+                android:contentDescription="@string/text_time_icon"
                 android:src="@drawable/ic_clock" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="@dimen/margin_12"
                 android:layout_weight="1"
-                android:text="Time"
+                android:text="@string/text_time"
                 android:textColor="?attr/colorPrimary" />
 
             <TextView
                 android:id="@+id/tvTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="10:00 AM"
                 android:textColor="@color/textColor"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -151,38 +168,38 @@
         <LinearLayout
             android:id="@+id/dateLayout"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="8dp"
-            android:layout_marginTop="10dp"
+            android:layout_height="@dimen/size_48"
+            android:layout_marginHorizontal="@dimen/margin_8"
+            android:layout_marginTop="@dimen/margin_10"
             android:background="@drawable/bg_secondary_rounded_stroke_4"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:padding="12dp"
+            android:padding="@dimen/padding_12"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/timeLayout">
 
             <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="@dimen/size_20"
+                android:layout_height="@dimen/size_20"
                 android:backgroundTint="@color/black"
+                android:contentDescription="@string/text_calender_icon"
                 android:src="@drawable/ic_calender" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="@dimen/margin_12"
                 android:layout_weight="1"
-                android:text="Date"
+                android:text="@string/text_date"
                 android:textColor="?attr/colorPrimary" />
 
             <TextView
                 android:id="@+id/tvDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="2024-07-26"
                 android:textColor="@color/textColor"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -191,45 +208,47 @@
         <LinearLayout
             android:id="@+id/repeatLayout"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="8dp"
-            android:layout_marginTop="10dp"
+            android:layout_height="@dimen/size_48"
+            android:layout_marginHorizontal="@dimen/margin_8"
+            android:layout_marginTop="@dimen/margin_10"
             android:background="@drawable/bg_secondary_rounded_stroke_4"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:padding="12dp"
+            android:padding="@dimen/padding_12"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/dateLayout">
 
             <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="@dimen/size_20"
+                android:layout_height="@dimen/size_20"
                 android:backgroundTint="@color/black"
+                android:contentDescription="@string/text_repeat_icon"
                 android:src="@drawable/ic_repeat" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="@dimen/margin_12"
                 android:layout_weight="1"
-                android:text="Repeat"
+                android:text="@string/text_repeat"
                 android:textColor="?attr/colorPrimary" />
 
             <TextView
                 android:id="@+id/tvRepeat"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Does not repeat"
+                android:text="@string/text_does_not_repeat"
                 android:textColor="@color/textColor"
                 android:textStyle="bold" />
 
             <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:layout_marginStart="8dp"
+                android:layout_width="@dimen/size_16"
+                android:layout_height="@dimen/size_16"
+                android:layout_marginStart="@dimen/margin_8"
+                android:contentDescription="@string/text_chevron_down_arrow"
                 android:src="@drawable/ic_chevron_down" />
         </LinearLayout>
 
@@ -237,115 +256,108 @@
         <LinearLayout
             android:id="@+id/notifyLayout"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="8dp"
-            android:layout_marginTop="10dp"
+            android:layout_height="@dimen/size_48"
+            android:layout_marginHorizontal="@dimen/margin_8"
+            android:layout_marginTop="@dimen/margin_10"
             android:background="@drawable/bg_secondary_rounded_stroke_4"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:padding="12dp"
+            android:padding="@dimen/padding_12"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/repeatLayout">
 
             <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="@dimen/size_20"
+                android:layout_height="@dimen/size_20"
                 android:backgroundTint="@color/black"
+                android:contentDescription="@string/text_notification_icon"
                 android:src="@drawable/ic_notification" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="@dimen/margin_12"
                 android:layout_weight="1"
-                android:text="Notify"
+                android:text="@string/text_notify"
                 android:textColor="?attr/colorPrimary" />
 
             <TextView
                 android:id="@+id/tvNotify"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="On that day"
+                android:text="@string/text_on_that_day"
                 android:textColor="@color/textColor"
                 android:textStyle="bold" />
 
             <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:layout_marginStart="8dp"
+                android:layout_width="@dimen/size_16"
+                android:layout_height="@dimen/size_16"
+                android:layout_marginStart="@dimen/margin_8"
+                android:contentDescription="@string/text_chevron_down_arrow"
                 android:src="@drawable/ic_chevron_down" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/colorLayout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/margin_8"
+            android:layout_marginTop="@dimen/margin_10"
+            android:background="@drawable/bg_secondary_rounded_stroke_4"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="@dimen/padding_12"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/notifyLayout">
+
+            <ImageView
+                android:layout_width="@dimen/size_20"
+                android:layout_height="@dimen/size_20"
+                android:backgroundTint="@color/black"
+                android:contentDescription="@string/text_color_picker"
+                android:src="@drawable/ic_color_picker2" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/margin_12"
+                android:layout_weight="1"
+                android:text="@string/text_background_color"
+                android:textColor="?attr/colorPrimary" />
+
+            <View
+                android:id="@+id/colorPreview"
+                android:layout_width="@dimen/size_32"
+                android:layout_height="@dimen/size_32"
+                android:background="@drawable/bg_circle_outline_80"
+                android:elevation="@dimen/elevation_4"
+                android:outlineProvider="background" />
         </LinearLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilDetails"
             android:layout_width="0dp"
-            android:layout_height="120dp"
-            android:layout_marginHorizontal="8dp"
-            android:layout_marginTop="10dp"
+            android:layout_height="@dimen/size_120"
+            android:layout_marginHorizontal="@dimen/margin_8"
+            android:layout_marginTop="@dimen/margin_10"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/notifyLayout">
+            app:layout_constraintTop_toBottomOf="@id/colorLayout">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etDetails"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="top"
-                android:hint="Add a message or details..."
+                android:hint="@string/text_add_a_message_or_details"
                 android:inputType="textMultiLine" />
         </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Color -->
-        <TextView
-            android:id="@+id/tvColor"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="10dp"
-            android:paddingTop="20dp"
-            android:text="Color"
-            android:textSize="14sp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tilDetails" />
-
-        <LinearLayout
-            android:id="@+id/colorLayout"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="8dp"
-            android:layout_marginTop="10dp"
-            android:background="@drawable/bg_secondary_rounded_stroke_4"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="12dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvColor">
-
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:backgroundTint="@color/black"
-                android:src="@drawable/ic_color_picker" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_weight="1"
-                android:text="Select Color"
-                android:textColor="?attr/colorPrimary" />
-
-            <View
-                android:id="@+id/colorPreview"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:background="@drawable/bg_circle_outline_80" />
-        </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

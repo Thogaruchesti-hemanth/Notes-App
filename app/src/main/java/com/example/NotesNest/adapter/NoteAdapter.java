@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.NotesNest.R;
@@ -17,8 +18,9 @@ import com.example.NotesNest.activity.EditNoteActivity;
 import com.example.NotesNest.databases.AppDatabase;
 import com.example.NotesNest.databases.entities.CategoryEntity;
 import com.example.NotesNest.databases.entities.NoteEntity;
-import com.example.NotesNest.utils.CommonAlertDialogs;
+import com.example.NotesNest.utils.CommonDialogs;
 import com.example.NotesNest.utils.DateTimeUtils;
+import com.example.NotesNest.utils.NoteDiffCallback;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -73,12 +75,12 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
 
         // Click listener for full note content
         holder.mainLayout.setOnClickListener(v -> {
-            int currentPos = holder.getAdapterPosition();
+            int currentPos = holder.getBindingAdapterPosition();
             if (currentPos == RecyclerView.NO_POSITION) return;
 
             NoteEntity currentNote = noteList.get(currentPos);
 
-            CommonAlertDialogs.showNoteContentDialog(context, currentNote, new CommonAlertDialogs.NoteDialogCallback() {
+            CommonDialogs.showNoteContentDialog(context, currentNote, new CommonDialogs.NoteDialogCallback() {
                 @Override
                 public void setDateTime(TextView dateView, TextView timeView, String date, String time) {
                     DateTimeUtils.setDateTime(date, time, dateView, timeView);
@@ -93,12 +95,12 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
 
         // Long click for edit/delete
         holder.mainLayout.setOnLongClickListener(v -> {
-            int currentPos = holder.getAdapterPosition();
+            int currentPos = holder.getBindingAdapterPosition();
             if (currentPos == RecyclerView.NO_POSITION) return true;
 
             NoteEntity currentNote = noteList.get(currentPos);
 
-            CommonAlertDialogs.showOptionsDialog(context, currentNote, currentPos, new CommonAlertDialogs.NoteOptionsListener() {
+            CommonDialogs.showOptionsDialog(context, currentNote, currentPos, new CommonDialogs.NoteOptionsListener() {
                 @Override
                 public void onEdit(NoteEntity note) {
                     Intent intent = new Intent(context, EditNoteActivity.class);
@@ -149,11 +151,15 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         return noteList.size();
     }
 
-    public void updateData(List<NoteEntity> notes) {
-        if (notes == null) return;
+    public void updateData(List<NoteEntity> newNotes) {
+        if (newNotes == null) return;
+        DiffUtil.DiffResult diffResult =
+                DiffUtil.calculateDiff(new NoteDiffCallback(noteList, newNotes));
+
         noteList.clear();
-        noteList.addAll(notes);
-        notifyDataSetChanged();
+        noteList.addAll(newNotes);
+
+        diffResult.dispatchUpdatesTo(this);
     }
 
     public static class NoteViewHolder extends RecyclerView.ViewHolder {

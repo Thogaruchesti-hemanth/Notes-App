@@ -1,13 +1,13 @@
 package com.example.NotesNest.utils;
 
+import static com.example.NotesNest.utils.Constants.DEFAULT_COLORS;
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Handler;
 import android.os.Looper;
-import android.text.Html;
-import android.text.Spanned;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
@@ -17,19 +17,22 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.cardview.widget.CardView;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.NotesNest.R;
 import com.example.NotesNest.adapter.CategoryAdapter;
+import com.example.NotesNest.adapter.ColorAdapter;
 import com.example.NotesNest.databases.entities.NoteEntity;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.List;
 import java.util.Objects;
 
-public class CommonAlertDialogs {
+public class CommonDialogs {
 
     public static void showOptionsDialog(Context context, NoteEntity note, int position, NoteOptionsListener listener) {
         new MaterialAlertDialogBuilder(context)
@@ -45,6 +48,7 @@ public class CommonAlertDialogs {
 
     public static void showCategoryDialog(
             Context context,
+            String title,
             List<String> categoryNames,
             int selectedIndex,
             OnCategorySelectedListener listener
@@ -56,6 +60,8 @@ public class CommonAlertDialogs {
 
         ListView listView = dialogView.findViewById(R.id.cardTypeList);
         ImageView cancelIcon = dialogView.findViewById(R.id.cancel_image_view);
+        TextView titleTextView = dialogView.findViewById(R.id.title_text_view);
+        titleTextView.setText(title);
 
         CategoryAdapter adapter = new CategoryAdapter(context, categoryNames);
         adapter.setSelectedIndex(selectedIndex);
@@ -191,7 +197,7 @@ public class CommonAlertDialogs {
         dialogTitle.setText(note.title);
 
         dialogContent.getSettings().setJavaScriptEnabled(false);
-        dialogContent.loadDataWithBaseURL(null,note.message,"text/html","UTF-8",null);
+        dialogContent.loadDataWithBaseURL(null, note.message, "text/html", "UTF-8", null);
 
         // Format date/time - callback provided for flexibility
         callback.setDateTime(dialogDate, dialogTime, note.date, note.time);
@@ -224,8 +230,42 @@ public class CommonAlertDialogs {
 
     }
 
+    /**
+     * Show a generic color picker bottom sheet.
+     *
+     * @param context       Context of the activity/fragment
+     * @param selectedColor Currently selected color
+     * @param callback      Callback to return the selected color
+     */
+    public static void showColorPicker(Context context, String selectedColor, ColorSelectedListener callback) {
+        BottomSheetDialog dialog = new BottomSheetDialog(context);
+
+        // Inflate the bottom sheet layout
+        View sheetView = LayoutInflater.from(context).inflate(
+                R.layout.bottom_color_picker,
+                dialog.getDelegate().findViewById(com.google.android.material.R.id.design_bottom_sheet),
+                false
+        );
+
+        sheetView.setBackgroundResource(R.drawable.bg_bottom_sheet);
+
+        RecyclerView recyclerView = sheetView.findViewById(R.id.colorRecycler);
+        recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false));
+
+        ColorAdapter adapter = new ColorAdapter(DEFAULT_COLORS, selectedColor, color -> {
+            callback.onColorSelected(color);
+            dialog.dismiss();
+        });
+
+        recyclerView.setAdapter(adapter);
+
+        dialog.setContentView(sheetView);
+        dialog.show();
+    }
+
     public interface NoteDialogCallback {
         void setDateTime(TextView dateView, TextView timeView, String date, String time);
+
         void setCategory(TextView categoryView, int categoryId);
     }
 
@@ -245,5 +285,9 @@ public class CommonAlertDialogs {
 
     public interface ConfirmCallback {
         void onConfirm();
+    }
+
+    public interface ColorSelectedListener {
+        void onColorSelected(String color);
     }
 }

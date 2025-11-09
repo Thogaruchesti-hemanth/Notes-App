@@ -1,5 +1,6 @@
 package com.example.NotesNest.activity;
 
+import static com.example.NotesNest.utils.Constants.DEFAULT_COLORS;
 import static com.example.NotesNest.utils.Constants.TYPE_BIRTHDAY;
 import static com.example.NotesNest.utils.Constants.TYPE_REMINDER;
 import static com.example.NotesNest.utils.Constants.TYPE_TASK;
@@ -8,24 +9,24 @@ import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.NotesNest.R;
-import com.example.NotesNest.adapter.ColorAdapter;
 import com.example.NotesNest.databases.AppDatabase;
 import com.example.NotesNest.databases.entities.ReminderEntity;
 import com.example.NotesNest.databinding.ActivityEditReminderBinding;
-import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.example.NotesNest.notifications.schedulers.NotificationScheduler;
+import com.example.NotesNest.utils.CommonDialogs;
 
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -53,7 +54,7 @@ public class EditReminderActivity extends AppCompatActivity {
     private static final String[] NOTIFY_OPTIONS = {"On that day", "Day before", "2 days before", "1 week before"};
 
     // --- Default values ---
-    private static final String DEFAULT_COLOR = "#FFFFFF";
+    private static final String DEFAULT_COLOR = DEFAULT_COLORS[0];
 
     // --- Formats ---
     private final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
@@ -98,6 +99,7 @@ public class EditReminderActivity extends AppCompatActivity {
         }
 
         // show soft keyboard cursor on title
+        binding.titleTextView.setHint("Reminder Title");
         binding.titleTextView.requestFocus();
     }
 
@@ -110,6 +112,7 @@ public class EditReminderActivity extends AppCompatActivity {
 
         // Default chip selection
         binding.chipGroupType.check(R.id.chipReminder);
+        updateLayoutsVisibility();
     }
 
     private void bindListeners() {
@@ -120,36 +123,75 @@ public class EditReminderActivity extends AppCompatActivity {
         binding.timeLayout.setOnClickListener(v -> showTimePicker());
         binding.dateLayout.setOnClickListener(v -> showDatePicker());
 
-        binding.repeatLayout.setOnClickListener(v -> showOptionsDialog("Select Repeat Option", REPEAT_OPTIONS, which -> {
-            selectedRepeat = REPEAT_OPTIONS[which];
-            // force yearly for birthdays
-            if (TYPE_BIRTHDAY.equals(selectedType)) {
-                selectedRepeat = "Yearly";
-            }
-            binding.tvRepeat.setText(selectedRepeat);
-        }));
+        binding.repeatLayout.setOnClickListener(v -> {
+            // Convert REPEAT_OPTIONS array to a List<String> (if needed)
+            List<String> repeatOptions = Arrays.asList(REPEAT_OPTIONS);
 
-        binding.notifyLayout.setOnClickListener(v -> showOptionsDialog("Select Notification Time", NOTIFY_OPTIONS, which -> {
-            selectedNotify = NOTIFY_OPTIONS[which];
-            binding.tvNotify.setText(selectedNotify);
-        }));
+            // Find the pre-selected index
+            int preselectIndex = repeatOptions.indexOf(selectedRepeat);
+            if (preselectIndex < 0) preselectIndex = 0;
+            CommonDialogs.showCategoryDialog(this, "Repeat Options", repeatOptions, preselectIndex, (selectedOption, position) -> {
+                if (TYPE_BIRTHDAY.equals(selectedType)) {
+                    selectedRepeat = "Yearly";
+                } else {
+                    selectedRepeat = selectedOption;
+                }
+                binding.tvRepeat.setText(selectedRepeat);
+            });
+        });
 
-        binding.colorLayout.setOnClickListener(v -> showColorPicker());
+        binding.notifyLayout.setOnClickListener(v -> {
+            List<String> notifyOptions = Arrays.asList(NOTIFY_OPTIONS);
+
+            // Pre-select the currently selected notification option
+            int preselectIndex = notifyOptions.indexOf(selectedNotify);
+            if (preselectIndex < 0) preselectIndex = 0;
+
+            CommonDialogs.showCategoryDialog(this, "Notify Options", notifyOptions, preselectIndex, (selectedOption, position) -> {
+                selectedNotify = selectedOption;
+                binding.tvNotify.setText(selectedNotify);
+            });
+        });
+
+        binding.colorLayout.setOnClickListener(v -> CommonDialogs.showColorPicker(this, selectedColor, color -> {
+            selectedColor = color;
+            binding.colorPreview.setBackgroundColor(android.graphics.Color.parseColor(selectedColor));
+        }));
 
         binding.chipGroupType.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
             if (!isChecked) return;
             if (checkedId == R.id.chipReminder) selectedType = TYPE_REMINDER;
             else if (checkedId == R.id.chipTask) selectedType = TYPE_TASK;
-            else if (checkedId == R.id.chipBirthday) {
-                selectedType = TYPE_BIRTHDAY;
-                // force birthday repeats yearly
-                selectedRepeat = "Yearly";
-                binding.tvRepeat.setText(selectedRepeat);
-            }
+            else if (checkedId == R.id.chipBirthday) selectedType = TYPE_BIRTHDAY;
+
+            handleTypeSpecificBehaviour();
             updateTitleHint();
         });
 
         binding.titleTextView.setOnFocusChangeListener((v, hasFocus) -> binding.titleTextView.setCursorVisible(hasFocus));
+    }
+
+    private void handleTypeSpecificBehaviour() {
+        switch (selectedType) {
+            case TYPE_TASK:
+                selectedRepeat = "Does not repeat";
+                break;
+            case TYPE_BIRTHDAY:
+                selectedRepeat = "Yearly";
+                break;
+            default:
+                selectedRepeat = REPEAT_OPTIONS[0];
+        }
+        binding.tvRepeat.setText(selectedRepeat);
+        updateLayoutsVisibility();
+    }
+
+    private void updateLayoutsVisibility() {
+        if (TYPE_REMINDER.equals(selectedType)) {
+            binding.repeatLayout.setVisibility(android.view.View.VISIBLE);
+        } else {
+            binding.repeatLayout.setVisibility(android.view.View.GONE);
+        }
     }
 
     private void updateTitleHint() {
@@ -168,7 +210,8 @@ public class EditReminderActivity extends AppCompatActivity {
     private void showTimePicker() {
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
         int minute = calendar.get(Calendar.MINUTE);
-        TimePickerDialog dlg = new TimePickerDialog(this, (view, hourOfDay, minute1) -> {
+
+        TimePickerDialog dlg = new TimePickerDialog(new ContextThemeWrapper(this, R.style.CustomTimePickerTheme), (view, hourOfDay, minute1) -> {
             calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
             calendar.set(Calendar.MINUTE, minute1);
             selectedDateTime = calendar.getTimeInMillis();
@@ -178,48 +221,17 @@ public class EditReminderActivity extends AppCompatActivity {
     }
 
     private void showDatePicker() {
-        DatePickerDialog dlg = new DatePickerDialog(this,
-                (view, year, month, dayOfMonth) -> {
-                    calendar.set(Calendar.YEAR, year);
-                    calendar.set(Calendar.MONTH, month);
-                    calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-                    selectedDateTime = calendar.getTimeInMillis();
-                    refreshDateTimeOnUi();
-                },
-                calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+        DatePickerDialog dlg = new DatePickerDialog(new ContextThemeWrapper(this, R.style.CustomDatePickerTheme), (view, year, month, dayOfMonth) -> {
+            calendar.set(Calendar.YEAR, year);
+            calendar.set(Calendar.MONTH, month);
+            calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+            selectedDateTime = calendar.getTimeInMillis();
+            refreshDateTimeOnUi();
+        }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
 
         // Prevent past dates
         dlg.getDatePicker().setMinDate(System.currentTimeMillis() - 1000);
         dlg.show();
-    }
-
-    private void showOptionsDialog(@NonNull String title, @NonNull String[] items, @NonNull OnOptionSelected callback) {
-        new AlertDialog.Builder(this)
-                .setTitle(title)
-                .setItems(items, (dialog, which) -> callback.onSelected(which))
-                .show();
-    }
-
-    private void showColorPicker() {
-        BottomSheetDialog dialog = new BottomSheetDialog(this);
-        View view = getLayoutInflater().inflate(R.layout.bottom_color_picker, dialog.getDelegate().findViewById(com.google.android.material.R.id.design_bottom_sheet), false);
-        dialog.setContentView(view);
-
-        androidx.recyclerview.widget.RecyclerView recycler = view.findViewById(R.id.colorRecycler);
-        recycler.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-
-        // Colors array kept same as previous implementation
-        final String[] colors = {"#FF5733", "#33FF57", "#3357FF", "#F333FF", "#FF33A1", "#33FFF3",
-                "#FFD733", "#8D33FF", "#FF3333", "#33FF8C", "#FF8333", "#33B5FF"};
-
-        ColorAdapter adapter = new ColorAdapter(colors, selectedColor, color -> {
-            selectedColor = color;
-            binding.colorPreview.setBackgroundColor(android.graphics.Color.parseColor(selectedColor));
-            dialog.dismiss();
-        });
-
-        recycler.setAdapter(adapter);
-        dialog.show();
     }
 
     private void refreshDateTimeOnUi() {
@@ -275,6 +287,12 @@ public class EditReminderActivity extends AppCompatActivity {
             runOnUiThread(() -> {
                 if (id > 0) {
                     showToast("Saved successfully!");
+                    NotificationScheduler.scheduleOneTime(
+                            this,
+                            (int) id,
+                            entity.getNotification(),
+                            entity.getRepeatType(),
+                            entity.isRepeated());
                     finish();
                 } else {
                     showToast("Failed to save!");
@@ -288,6 +306,19 @@ public class EditReminderActivity extends AppCompatActivity {
             db.reminderDao().updateReminder(entity);
             runOnUiThread(() -> {
                 showToast("Updated successfully!");
+
+                // Cancel any existing scheduled notifications
+                NotificationScheduler.cancel(this, entity.getId());
+
+                // Reschedule new notification with repeat if applicable
+                NotificationScheduler.scheduleOneTime(
+                        this,
+                        entity.getId(),
+                        entity.getNotification(),
+                        entity.getRepeatType(),
+                        entity.isRepeated()
+                );
+
                 finish();
             });
         });
@@ -364,8 +395,4 @@ public class EditReminderActivity extends AppCompatActivity {
         binding = null;
     }
 
-    // Lightweight functional callback for option dialogs
-    private interface OnOptionSelected {
-        void onSelected(int which);
-    }
 }

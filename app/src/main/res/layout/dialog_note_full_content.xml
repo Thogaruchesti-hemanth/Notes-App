@@ -3,21 +3,20 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="0dp">
+    android:orientation="vertical">
 
     <androidx.cardview.widget.CardView
         android:id="@+id/dialog_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="8dp">
+        app:cardCornerRadius="@dimen/radius_12"
+        app:cardElevation="@dimen/elevation_8">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:padding="@dimen/padding_20">
 
             <!-- Header -->
             <LinearLayout
@@ -33,9 +32,8 @@
                     android:layout_weight="1"
                     android:ellipsize="end"
                     android:maxLines="2"
-                    android:text="Note Title"
                     android:textColor="@color/black"
-                    android:textSize="20sp"
+                    android:textSize="@dimen/text_20"
                     android:textStyle="bold" />
             </LinearLayout>
 
@@ -51,9 +49,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:lineSpacingExtra="4dp"
-                    android:scrollbars="none"
-                    android:textColor="@color/black"
-                    android:textSize="16sp" />
+                    android:scrollbars="none" />
             </ScrollView>
 
             <LinearLayout
@@ -65,26 +61,25 @@
                     android:id="@+id/dialog_category"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:minWidth="@dimen/spacing_xl"
-                    android:layout_marginTop="4dp"
-                    android:paddingHorizontal="8dp"
-                    android:paddingVertical="4dp"
-                    android:text="Category"
+                    android:layout_marginTop="@dimen/margin_4"
                     android:background="@drawable/bg_rounded_stroke_12"
+                    android:minWidth="@dimen/size_20"
+                    android:paddingHorizontal="@dimen/padding_8"
+                    android:paddingVertical="@dimen/margin_4"
                     android:textColor="@color/black"
-                    android:textSize="12sp"
+                    android:textSize="@dimen/text_12"
                     android:visibility="visible" />
 
 
                 <View
                     android:layout_width="0dp"
-                    android:layout_height="1dp"
+                    android:layout_height="@dimen/size_1"
                     android:layout_weight="1" />
 
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="@dimen/margin_8"
                     android:orientation="horizontal">
 
                     <TextView
@@ -92,16 +87,16 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textColor="@color/black"
-                        android:textSize="12sp"
+                        android:textSize="@dimen/text_12"
                         android:textStyle="italic" />
 
                     <TextView
                         android:id="@+id/dialog_time"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
+                        android:layout_marginStart="@dimen/margin_8"
                         android:textColor="@color/black"
-                        android:textSize="12sp"
+                        android:textSize="@dimen/text_12"
                         android:textStyle="italic" />
                 </LinearLayout>
             </LinearLayout>

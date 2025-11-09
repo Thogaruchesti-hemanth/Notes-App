@@ -173,6 +173,7 @@ public class LoginActivity extends AppCompatActivity {
         binding.forgotPasswordTextView.setVisibility(View.GONE);
         binding.googleSignInButton.setVisibility(View.GONE);
         binding.profileLayout.setVisibility(View.VISIBLE);
+        binding.uploadImageButton.setVisibility(View.VISIBLE);
 
         binding.oldUserTextView.setTextColor(ContextCompat.getColor(this, R.color.textColor));
         binding.goToSignup.setTextColor(ContextCompat.getColor(this, R.color.textselectedColor));
@@ -188,6 +189,7 @@ public class LoginActivity extends AppCompatActivity {
         binding.editTextUserNameLayout.setVisibility(View.GONE);
         binding.confirmPasswordLayout.setVisibility(View.GONE);
         binding.profileLayout.setVisibility(View.GONE);
+        binding.uploadImageButton.setVisibility(View.GONE);
         binding.termsLayout.setVisibility(View.VISIBLE); // Show terms in login
 
         binding.oldUserTextView.setTextColor(ContextCompat.getColor(this, R.color.textselectedColor));
