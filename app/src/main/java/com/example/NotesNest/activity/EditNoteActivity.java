@@ -1,13 +1,12 @@
 package com.example.NotesNest.activity;
 
-import android.app.DatePickerDialog;
-import android.app.TimePickerDialog;
+import static com.example.NotesNest.utils.Constants.DEFAULT_COLORS;
+
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.view.ContextThemeWrapper;
 import android.view.View;
 import android.webkit.WebView;
 import android.widget.Button;
@@ -15,25 +14,20 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.TimePicker;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.NotesNest.R;
-import com.example.NotesNest.adapter.ColorAdapter;
 import com.example.NotesNest.databases.AppDatabase;
 import com.example.NotesNest.databases.entities.CategoryEntity;
 import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.editor.CKEditorHelper;
-import com.example.NotesNest.utils.CommonAlertDialogs;
+import com.example.NotesNest.utils.CommonDialogs;
 import com.example.NotesNest.utils.DraftManager;
-import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -60,29 +54,17 @@ public class EditNoteActivity extends AppCompatActivity {
 
     // --- Intent keys / constants -------------------------------------------------
     public static final String EXTRA_ITEM_ID = "itemId";
-
-    private static final String DEFAULT_COLOR = "#FFFFFF";
-    private static final String[] DEFAULT_COLORS = {
-            "#FFFFFF", "#FFCDD2", "#F8BBD0", "#E1BEE7", "#D1C4E9", "#C5CAE9",
-            "#BBDEFB", "#B3E5FC", "#B2EBF2", "#B2DFDB", "#C8E6C9", "#DCEDC8",
-            "#F0F4C3", "#FFF9C4"
-    };
-
+    private final String DEFAULT_COLOR = DEFAULT_COLORS[0];
     private final SimpleDateFormat DISPLAY_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-    private final SimpleDateFormat DISPLAY_TIME_FORMAT = new SimpleDateFormat("hh:mm a", Locale.getDefault());
     private final SimpleDateFormat STORE_TIME_FORMAT = new SimpleDateFormat("HH:mm", Locale.getDefault());
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
-    private final Calendar selectedDateTime = Calendar.getInstance();
     private final List<CategoryEntity> categories = new ArrayList<>();
     private final List<String> categoryNames = new ArrayList<>();
+    private final Calendar currentDateTime = Calendar.getInstance();
     // --- UI references ----------------------------------------------------------
     private EditText etTitle;
     private WebView editorWebView;
-    private TextView tvDate;
-    private TextView tvTime;
     private TextView tvCategory;
-    private LinearLayout dateLayout;
-    private LinearLayout timeLayout;
     private LinearLayout categoryLayout;
     private Button saveBtn;
     // Toolbar controls
@@ -122,7 +104,6 @@ public class EditNoteActivity extends AppCompatActivity {
             updateBackgroundColor();
         }
 
-        updateDateTimeDisplay();
     }
 
     private void initDependencies() {
@@ -139,11 +120,7 @@ public class EditNoteActivity extends AppCompatActivity {
 
         etTitle = findViewById(R.id.etTitle);
         editorWebView = findViewById(R.id.etNote);
-        tvDate = findViewById(R.id.tvDate);
-        tvTime = findViewById(R.id.tvTime);
         tvCategory = findViewById(R.id.tvCategory);
-        dateLayout = findViewById(R.id.dateLayout);
-        timeLayout = findViewById(R.id.timeLayout);
         categoryLayout = findViewById(R.id.categoryLayout);
         saveBtn = findViewById(R.id.btnSave);
 
@@ -152,7 +129,10 @@ public class EditNoteActivity extends AppCompatActivity {
         btnBullet = findViewById(R.id.btn_bullet_list);
         btnNumber = findViewById(R.id.btn_numbered_list);
 
-        findViewById(R.id.color_selection).setOnClickListener(v -> showColorPickerBottomSheet());
+        findViewById(R.id.color_selection).setOnClickListener(v -> CommonDialogs.showColorPicker(this, selectedColor, color -> {
+            selectedColor = color;
+            updateBackgroundColor();
+        }));
 
     }
 
@@ -184,8 +164,6 @@ public class EditNoteActivity extends AppCompatActivity {
 
 
     private void setupListeners() {
-        timeLayout.setOnClickListener(v -> showTimePicker());
-        dateLayout.setOnClickListener(v -> showDatePicker());
 
         categoryLayout.setOnClickListener(v -> {
             int preselectIndex = 0;
@@ -196,7 +174,7 @@ public class EditNoteActivity extends AppCompatActivity {
                 }
             }
 
-            CommonAlertDialogs.showCategoryDialog(this, categoryNames, preselectIndex, (selectedCategory, position) -> {
+            CommonDialogs.showCategoryDialog(this, "Categories", categoryNames, preselectIndex, (selectedCategory, position) -> {
                 tvCategory.setText(selectedCategory);
                 selectedCategoryId = categories.get(position).id;
             });
@@ -212,28 +190,27 @@ public class EditNoteActivity extends AppCompatActivity {
 
     // Toggle a command state by querying document.queryCommandState or list-specific helper
     private void toggleCommandState(@NonNull View view, @NonNull String command) {
-        if (command.equals("insertUnorderedList") || command.equals("insertOrderedList")) {
-            editorWebView.evaluateJavascript("getListType();", value -> {
+        if ("insertUnorderedList".equals(command) || "insertOrderedList".equals(command)) {
+            // Wait a tiny bit to allow JS to update the list state
+            editorWebView.postDelayed(() -> editorWebView.evaluateJavascript("getListType();", value -> {
                 final String listType = value == null ? "" : value.replace("\"", "");
                 final boolean isBullet = "ul".equals(listType);
                 final boolean isNumber = "ol".equals(listType);
 
                 mainHandler.post(() -> {
-                    setButtonSelected(btnBullet, isBullet);
-                    setButtonSelected(btnNumber, isNumber);
+                    btnBullet.setSelected(isBullet);
+                    btnNumber.setSelected(isNumber);
                 });
-            });
+            }), 50); // 50ms delay to let JS update
             return;
         }
 
-        editorWebView.evaluateJavascript("document.queryCommandState('" + command + "')", value -> {
-            final boolean active = Boolean.parseBoolean(value == null ? "false" : value);
-            mainHandler.post(() -> view.setSelected(active));
-        });
-    }
-
-    private void setButtonSelected(ImageButton button, boolean selected) {
-        button.setSelected(selected);
+        // For bold / italic etc.
+        editorWebView.postDelayed(() -> editorWebView.evaluateJavascript(
+                "document.queryCommandState('" + command + "')", value -> {
+                    final boolean active = Boolean.parseBoolean(value == null ? "false" : value);
+                    mainHandler.post(() -> view.setSelected(active));
+                }), 50);
     }
 
     // --- Category loading ------------------------------------------------------
@@ -271,44 +248,6 @@ public class EditNoteActivity extends AppCompatActivity {
         });
     }
 
-    // --- Date / Time pickers --------------------------------------------------
-    private void showTimePicker() {
-        int hour = selectedDateTime.get(Calendar.HOUR_OF_DAY);
-        int minute = selectedDateTime.get(Calendar.MINUTE);
-
-        TimePickerDialog dialog = new TimePickerDialog(
-                new ContextThemeWrapper(this, R.style.CustomTimePickerTheme),
-                (TimePicker view, int hourOfDay, int minute1) -> {
-                    selectedDateTime.set(Calendar.HOUR_OF_DAY, hourOfDay);
-                    selectedDateTime.set(Calendar.MINUTE, minute1);
-                    updateDateTimeDisplay();
-                },
-                hour,
-                minute,
-                false
-        );
-        dialog.show();
-    }
-
-    private void showDatePicker() {
-        DatePickerDialog dialog = new DatePickerDialog(
-                new ContextThemeWrapper(this, R.style.CustomDatePickerTheme),
-                (view, year, month, dayOfMonth) -> {
-                    selectedDateTime.set(year, month, dayOfMonth);
-                    updateDateTimeDisplay();
-                },
-                selectedDateTime.get(Calendar.YEAR),
-                selectedDateTime.get(Calendar.MONTH),
-                selectedDateTime.get(Calendar.DAY_OF_MONTH)
-        );
-        dialog.show();
-    }
-
-    private void updateDateTimeDisplay() {
-        tvDate.setText(DISPLAY_DATE_FORMAT.format(selectedDateTime.getTime()));
-        tvTime.setText(DISPLAY_TIME_FORMAT.format(selectedDateTime.getTime()));
-    }
-
     // --- Note loading ---------------------------------------------------------
     private void loadNoteIfProvided() {
         Intent intent = getIntent();
@@ -329,9 +268,6 @@ public class EditNoteActivity extends AppCompatActivity {
 
                             selectedColor = bgColor;
                             updateBackgroundColor();
-
-                            if (note.date != null) tvDate.setText(note.date);
-                            if (note.time != null) tvTime.setText(note.time);
                         });
 
                         if (note.category_id != null) {
@@ -357,8 +293,9 @@ public class EditNoteActivity extends AppCompatActivity {
         }
 
         editorHelper.getContent(htmlContent -> {
-            final String dateStr = DISPLAY_DATE_FORMAT.format(selectedDateTime.getTime());
-            final String timeStr = STORE_TIME_FORMAT.format(selectedDateTime.getTime());
+            currentDateTime.setTimeInMillis(System.currentTimeMillis());
+            final String dateStr = DISPLAY_DATE_FORMAT.format(currentDateTime.getTime());
+            final String timeStr = STORE_TIME_FORMAT.format(currentDateTime.getTime());
 
             executorService.execute(() -> {
                 if (isEditing && noteId != -1) {
@@ -400,8 +337,6 @@ public class EditNoteActivity extends AppCompatActivity {
 
         etTitle.setText(draftManager.getDraftTitle());
         editorHelper.setContent(draftManager.getDraftContent());
-        tvDate.setText(draftManager.getDraftDate());
-        tvTime.setText(draftManager.getDraftTime());
         tvCategory.setText(draftManager.getDraftCategory());
         selectedColor = draftManager.getDraftColor() == null ? DEFAULT_COLOR : draftManager.getDraftColor();
 
@@ -412,8 +347,8 @@ public class EditNoteActivity extends AppCompatActivity {
         editorHelper.getContent(htmlContent -> draftManager.saveDraft(
                 etTitle.getText() == null ? "" : etTitle.getText().toString(),
                 htmlContent,
-                tvDate.getText() == null ? "" : tvDate.getText().toString(),
-                tvTime.getText() == null ? "" : tvTime.getText().toString(),
+                "",
+                "",
                 tvCategory.getText() == null ? "" : tvCategory.getText().toString(),
                 selectedColor
         ));
@@ -437,8 +372,6 @@ public class EditNoteActivity extends AppCompatActivity {
         etTitle.setText("");
         editorHelper.setContent("");
 
-        tvDate.setText("");
-        tvTime.setText("");
         tvCategory.setText("");
 
         selectedColor = DEFAULT_COLOR;
@@ -450,25 +383,6 @@ public class EditNoteActivity extends AppCompatActivity {
         btnItalic.setSelected(false);
         btnBullet.setSelected(false);
         btnNumber.setSelected(false);
-    }
-
-    // --- Color picker bottom sheet -------------------------------------------
-    private void showColorPickerBottomSheet() {
-        BottomSheetDialog dialog = new BottomSheetDialog(this);
-        View view = getLayoutInflater().inflate(R.layout.bottom_color_picker, dialog.getDelegate().findViewById(com.google.android.material.R.id.design_bottom_sheet), false);
-        dialog.setContentView(view);
-
-        RecyclerView recycler = view.findViewById(R.id.colorRecycler);
-        recycler.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-
-        ColorAdapter adapter = new ColorAdapter(DEFAULT_COLORS, selectedColor, color -> {
-            selectedColor = color;
-            updateBackgroundColor();
-            dialog.dismiss();
-        });
-
-        recycler.setAdapter(adapter);
-        dialog.show();
     }
 
     // --- Lifecycle ------------------------------------------------------------

@@ -5,19 +5,18 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSecondary"
-    android:padding="20dp"
+    android:padding="@dimen/padding_20"
     tools:context=".fragments.RemindersFragment">
 
     <TextView
         android:id="@+id/selected_date_text_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:drawableEnd="@drawable/ic_chevron_down"
-        android:drawablePadding="10dp"
-        android:text="08 July 2022"
-        android:textSize="@dimen/text_2xl"
+        android:layout_marginTop="@dimen/margin_10"
+        android:drawablePadding="@dimen/padding_12"
+        android:textSize="@dimen/text_20"
         android:textStyle="bold"
+        app:drawableEndCompat="@drawable/ic_chevron_down"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -25,8 +24,7 @@
         android:id="@+id/prompt_text_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:text="you have total 3 tasks today"
+        android:layout_marginTop="@dimen/margin_6"
         android:textColor="@color/textColor"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/selected_date_text_view" />
@@ -35,18 +33,18 @@
         android:id="@+id/createButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_10"
         android:backgroundTint="@color/tabSelectedTextColor"
-        android:text="create"
-        android:layout_marginTop="10dp"
+        android:text="@string/text_create"
         android:textColor="@color/black"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/calendarRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="@dimen/margin_20"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/prompt_text_view" />
@@ -55,9 +53,9 @@
         android:id="@+id/timeline_text_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:text="Timelines"
-        android:textSize="16sp"
+        android:layout_marginTop="@dimen/margin_10"
+        android:text="@string/text_timelines"
+        android:textSize="@dimen/text_16"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/calendarRecyclerView" />
@@ -66,12 +64,11 @@
         android:id="@+id/hourRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="@dimen/margin_10"
         android:overScrollMode="always"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/timeline_text_view"
-        app:layout_constraintBottom_toBottomOf="parent"/>
-
+        app:layout_constraintTop_toBottomOf="@+id/timeline_text_view" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

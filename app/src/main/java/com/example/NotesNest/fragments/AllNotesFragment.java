@@ -1,5 +1,7 @@
 package com.example.NotesNest.fragments;
 
+import static com.example.NotesNest.editor.CKEditorHelper.getThemeColor;
+
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
@@ -19,78 +21,59 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.example.NotesNest.R;
 import com.example.NotesNest.activity.EditNoteActivity;
 import com.example.NotesNest.adapter.NoteAdapter;
-import com.example.NotesNest.adapter.NoteShimmerAdapter;
 import com.example.NotesNest.databases.AppDatabase;
 import com.example.NotesNest.databases.entities.CategoryEntity;
 import com.example.NotesNest.databases.entities.NoteEntity;
-import com.example.NotesNest.utils.CommonAlertDialogs;
+import com.example.NotesNest.utils.CommonDialogs;
 import com.example.NotesNest.utils.ThemeManager;
 import com.google.android.material.tabs.TabLayout;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class AllNotesFragment extends Fragment {
+public class AllNotesFragment extends Fragment implements ThemeManager.ThemeChangeListener {
 
     private static final int REQUEST_CODE_ADD_EDIT = 1001;
-
-    // Executors
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
 
-    // Views
     private RecyclerView recyclerView;
+    private NoteAdapter adapter;
     private EditText searchEditText;
     private ImageButton clearSearchBtn;
     private TabLayout tabLayout;
     private ImageButton btnAdd;
     private Button createButton;
     private TextView titleTextView;
-
-    private NoteAdapter adapter;
     private Runnable searchRunnable;
-
-    private AppDatabase db;
-    private List<CategoryEntity> categoryList = new ArrayList<>();
-
     private String selectedCategory = "All";
+    private List<CategoryEntity> categoryList = new ArrayList<>();
     private int unselectedTabColor = -1;
 
     public AllNotesFragment() {
+        // Required empty constructor
     }
 
     @Nullable
     @Override
-    public View onCreateView(
-            @NonNull LayoutInflater inflater,
-            @Nullable ViewGroup container,
-            @Nullable Bundle savedInstanceState
-    ) {
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+
         View view = inflater.inflate(R.layout.fragment_all_notes, container, false);
 
-        db = AppDatabase.getInstance(requireContext());
-        initViews(view);
-        initColors();
-        setupRecycler();
-        setupSearch();
-        setupCreateButton();
-
-        loadCategories();
-        return view;
-    }
-
-    private void initViews(View view) {
         tabLayout = view.findViewById(R.id.tabLayout);
         btnAdd = view.findViewById(R.id.btnAdd);
         createButton = view.findViewById(R.id.createButton);
@@ -98,43 +81,56 @@ public class AllNotesFragment extends Fragment {
         titleTextView = view.findViewById(R.id.title_text_view);
         searchEditText = view.findViewById(R.id.searchEditText);
         clearSearchBtn = view.findViewById(R.id.clearSearchBtn);
-    }
 
-    private void initColors() {
+        // Resolve unselected tab color once
         Context ctx = getContext();
-        if (ctx == null) return;
+        if (ctx != null) {
+            unselectedTabColor = getThemeColor(ctx, com.google.android.material.R.attr.colorPrimary);
+        }
 
-        unselectedTabColor = ThemeManager.getThemeColor(
-                ctx,
-                ContextCompat.getColor(ctx, R.color.black),
-                ContextCompat.getColor(ctx, R.color.white)
-        );
+        AppDatabase.getInstance(requireContext());
+
+        setupRecycler();
+        setupSearch();
+        setupCreateButton();
+        loadCategories();
+
+        // Register for theme changes
+        ThemeManager.registerListener(this);
+
+        return view;
     }
 
-    /* ─────────────────────────────────────────────────────────────
-     *  Category Loading
-     * ───────────────────────────────────────────────────────────── */
+    private void setupCreateButton() {
+        createButton.setOnClickListener(v -> openCreateItem());
+    }
+
+    private void openCreateItem() {
+        Intent intent = new Intent(getContext(), EditNoteActivity.class);
+        startActivityForResult(intent, REQUEST_CODE_ADD_EDIT);
+    }
+
     private void loadCategories() {
         executor.execute(() -> {
+            Context ctx = getContext();
+            if (ctx == null) return;
 
-            List<CategoryEntity> categories = db.categoryDao().getAllCategories();
+            AppDatabase db = AppDatabase.getInstance(ctx);
+            List<CategoryEntity> categoriesFromDb = db.categoryDao().getAllCategories();
 
-            boolean foundAll = false;
-            for (CategoryEntity c : categories)
-                if ("All".equalsIgnoreCase(c.name)) {
-                    foundAll = true;
-                    break;
-                }
-
-            if (!foundAll) {
-                CategoryEntity def = new CategoryEntity();
-                def.name = "All";
-                db.categoryDao().insert(def);
-                categories = db.categoryDao().getAllCategories();
+            boolean hasAll = categoriesFromDb.stream().anyMatch(cat -> "All".equalsIgnoreCase(cat.name));
+            if (!hasAll) {
+                CategoryEntity all = new CategoryEntity();
+                all.name = "All";
+                all.color = null;
+                all.icon = null;
+                db.categoryDao().insert(all);
+                categoriesFromDb = db.categoryDao().getAllCategories();
             }
 
-            categoryList = categories;
+            categoryList = categoriesFromDb;
 
+            // Set default selected category
             if (selectedCategory == null || selectedCategory.isEmpty()) {
                 selectedCategory = categoryList.isEmpty() ? "All" : categoryList.get(0).name;
             }
@@ -147,201 +143,166 @@ public class AllNotesFragment extends Fragment {
         });
     }
 
-    /* ─────────────────────────────────────────────────────────────
-     *  Tabs
-     * ───────────────────────────────────────────────────────────── */
     private void setupTabs() {
         tabLayout.removeAllTabs();
 
-        for (CategoryEntity c : categoryList) {
+        for (CategoryEntity category : categoryList) {
             TabLayout.Tab tab = tabLayout.newTab();
-            tab.setCustomView(createCustomTab(c.name, c.name.equals(selectedCategory)));
+            View customView = createCustomTab(category.name, category.name.equals(selectedCategory));
+            tab.setCustomView(customView);
             tabLayout.addTab(tab);
+
+            customView.setOnClickListener(v -> tab.select());
         }
 
-        selectMatchingTab();
+        // Select the correct tab
+        selectTabByName(selectedCategory);
 
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                applyTabSelected(tab);
-                updateFromTab(tab);
+                setTabSelected(tab);
+                if (tab != null && tab.getCustomView() != null) {
+                    TextView tx = tab.getCustomView().findViewById(R.id.tabText);
+                    if (tx != null) {
+                        selectedCategory = tx.getText().toString();
+                        titleTextView.setText(selectedCategory);
+                        filterNotes(selectedCategory);
+                    }
+                }
             }
 
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
-                applyTabUnselected(tab);
+                setTabUnselected(tab);
             }
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
-                updateFromTab(tab);
+                if (tab != null && tab.getCustomView() != null) {
+                    TextView tx = tab.getCustomView().findViewById(R.id.tabText);
+                    if (tx != null) {
+                        titleTextView.setText(tx.getText().toString());
+                        filterNotes(tx.getText().toString());
+                    }
+                }
             }
         });
 
-        btnAdd.setOnClickListener(v -> showAddCategoryDialog());
-        attachLongPressDeleteToTabs();
-    }
-
-    private void selectMatchingTab() {
-        for (int i = 0; i < tabLayout.getTabCount(); i++) {
-            TabLayout.Tab t = tabLayout.getTabAt(i);
-            if (t == null || t.getCustomView() == null) continue;
-
-            TextView tv = t.getCustomView().findViewById(R.id.tabText);
-            if (tv != null && tv.getText().toString().equals(selectedCategory)) {
-                tabLayout.selectTab(t);
-                applyTabSelected(t);
-                titleTextView.setText(selectedCategory);
-                return;
-            }
-        }
-    }
-
-    private View createCustomTab(String title, boolean selected) {
-        Context ctx = getContext();
-        if (ctx == null) return new View(getContext());
-
-        View v = LayoutInflater.from(ctx).inflate(R.layout.custom_tab, null);
-        TextView tv = v.findViewById(R.id.tabText);
-        tv.setText(title);
-
-        tv.setTypeface(null, selected ? Typeface.BOLD : Typeface.NORMAL);
-        tv.setTextColor(selected
-                ? ContextCompat.getColor(ctx, R.color.tabSelectedTextColor)
-                : unselectedTabColor
-        );
-
-        v.setOnClickListener(_v -> {
-            int index = tabLayout.getSelectedTabPosition();
-            TabLayout.Tab tab = tabLayout.getTabAt(index);
-            if (tab != null) tab.select();
-        });
-
-        return v;
-    }
-
-    private void applyTabSelected(@Nullable TabLayout.Tab tab) {
-        if (tab == null || tab.getCustomView() == null) return;
-
-        TextView tv = tab.getCustomView().findViewById(R.id.tabText);
-        if (tv == null) return;
-
-        tv.setTypeface(null, Typeface.BOLD);
-        Context ctx = getContext();
-        if (ctx != null)
-            tv.setTextColor(ContextCompat.getColor(ctx, R.color.tabSelectedTextColor));
-    }
-
-    private void applyTabUnselected(@Nullable TabLayout.Tab tab) {
-        if (tab == null || tab.getCustomView() == null) return;
-
-        TextView tv = tab.getCustomView().findViewById(R.id.tabText);
-        if (tv == null) return;
-
-        tv.setTypeface(null, Typeface.NORMAL);
-        tv.setTextColor(unselectedTabColor);
-    }
-
-    private void updateFromTab(TabLayout.Tab tab) {
-        if (tab == null || tab.getCustomView() == null) return;
-
-        TextView tv = tab.getCustomView().findViewById(R.id.tabText);
-        if (tv == null) return;
-
-        selectedCategory = tv.getText().toString();
-        titleTextView.setText(selectedCategory);
-        filterNotes(selectedCategory);
-    }
-
-    private void attachLongPressDeleteToTabs() {
+        // Long press to delete category
         for (int i = 0; i < tabLayout.getTabCount(); i++) {
             TabLayout.Tab tab = tabLayout.getTabAt(i);
-            if (tab == null || tab.getCustomView() == null) continue;
+            if (tab == null) continue;
+            View tabView = tab.getCustomView();
+            if (tabView == null) continue;
 
-            View v = tab.getCustomView();
-            v.setOnLongClickListener(view -> {
-                TextView t = view.findViewById(R.id.tabText);
-                if (t == null) return true;
-
-                String cat = t.getText().toString();
-                if ("All".equalsIgnoreCase(cat)) {
-                    showToast("‘All’ cannot be deleted.");
+            tabView.setOnLongClickListener(v -> {
+                TextView text = tabView.findViewById(R.id.tabText);
+                if (text == null) return true;
+                String categoryName = text.getText().toString();
+                if (!"All".equals(categoryName)) {
+                    showDeleteCategoryDialog(categoryName);
                 } else {
-                    showDeleteCategoryDialog(cat);
+                    Toast.makeText(getContext(), "‘All’ cannot be deleted.", Toast.LENGTH_SHORT).show();
                 }
                 return true;
             });
         }
+
+        // Add button click
+        btnAdd.setOnClickListener(v -> showAddCategoryDialog());
     }
 
-    /* ─────────────────────────────────────────────────────────────
-     *  Category CRUD
-     * ───────────────────────────────────────────────────────────── */
+    private void selectTabByName(String categoryName) {
+        boolean matched = false;
+        for (int i = 0; i < tabLayout.getTabCount(); i++) {
+            TabLayout.Tab t = tabLayout.getTabAt(i);
+            if (t == null || t.getCustomView() == null) continue;
+            TextView txt = t.getCustomView().findViewById(R.id.tabText);
+            if (txt != null && txt.getText().toString().equals(categoryName)) {
+                tabLayout.selectTab(t);
+                setTabSelected(t);
+                matched = true;
+                break;
+            }
+        }
+
+        if (!matched && tabLayout.getTabCount() > 0) {
+            TabLayout.Tab first = tabLayout.getTabAt(0);
+            if (first != null) {
+                tabLayout.selectTab(first);
+                setTabSelected(first);
+                TextView txt = Objects.requireNonNull(first.getCustomView()).findViewById(R.id.tabText);
+                if (txt != null) selectedCategory = txt.getText().toString();
+            }
+        }
+        titleTextView.setText(selectedCategory);
+    }
+
+    private View createCustomTab(String title, boolean selected) {
+        LayoutInflater inflater = LayoutInflater.from(getContext());
+        View view = inflater.inflate(R.layout.custom_tab, tabLayout, false);
+        TextView text = view.findViewById(R.id.tabText);
+        text.setText(title);
+        text.setTypeface(null, selected ? Typeface.BOLD : Typeface.NORMAL);
+        text.setTextColor(selected ? ContextCompat.getColor(requireContext(), R.color.tabSelectedTextColor) : unselectedTabColor);
+        return view;
+    }
+
+    private void setTabSelected(@Nullable TabLayout.Tab tab) {
+        if (tab == null || tab.getCustomView() == null) return;
+        TextView text = tab.getCustomView().findViewById(R.id.tabText);
+        if (text == null) return;
+        text.setTypeface(null, Typeface.BOLD);
+        text.setTextColor(ContextCompat.getColor(requireContext(), R.color.tabSelectedTextColor));
+    }
+
+    private void setTabUnselected(@Nullable TabLayout.Tab tab) {
+        if (tab == null || tab.getCustomView() == null) return;
+        TextView text = tab.getCustomView().findViewById(R.id.tabText);
+        if (text == null) return;
+        text.setTypeface(null, Typeface.NORMAL);
+        text.setTextColor(unselectedTabColor);
+    }
+
     private void showAddCategoryDialog() {
-        Context ctx = getContext();
-        if (ctx == null) return;
+        CommonDialogs.showInputDialog(requireContext(), "Add Category", "Enter category name", "Add", "Cancel", name -> executor.execute(() -> {
+            AppDatabase db = AppDatabase.getInstance(requireContext());
+            CategoryEntity entity = new CategoryEntity();
+            entity.name = name;
+            entity.color = null;
+            entity.icon = null;
+            db.categoryDao().insert(entity);
 
-        CommonAlertDialogs.showInputDialog(
-                ctx,
-                "Add Category",
-                "Enter category name",
-                "Add",
-                "Cancel",
-                name -> executor.execute(() -> {
-
-                    CategoryEntity e = new CategoryEntity();
-                    e.name = name;
-                    db.categoryDao().insert(e);
-
-                    mainHandler.post(() -> {
-                        if (!isAdded()) return;
-                        loadCategories();
-                    });
-                })
-        );
+            mainHandler.post(this::loadCategories);
+        }));
     }
 
     private void showDeleteCategoryDialog(String name) {
-        Context ctx = getContext();
-        if (ctx == null) return;
+        String message = "Are you sure you want to delete the category '" + name + "'? " +
+                "All notes under this category will be moved to 'All'.";
 
-        String msg = "Are you sure you want to delete '" + name +
-                "'?\nNotes will be moved to 'All'.";
-
-        CommonAlertDialogs.showConfirmDialog(
-                ctx,
-                "Delete Category",
-                msg,
-                "Delete",
-                "Cancel",
-                () -> executor.execute(() -> {
-
-                    int id = getCategoryIdByName(name);
-                    if (id != -1) {
-                        db.noteDao().resetCategoryNotes(id);
-                        db.categoryDao().deleteByName(name);
-                    }
-
-                    mainHandler.post(() -> {
-                        if (!isAdded()) return;
-                        selectedCategory = "All";
-                        loadCategories();
-                        filterNotes("All");
-                        showToast("Category Deleted.");
-                    });
-                })
-        );
+        CommonDialogs.showConfirmDialog(requireContext(), "Delete Category", message, "Delete", "Cancel", () -> executor.execute(() -> {
+            AppDatabase db = AppDatabase.getInstance(requireContext());
+            int catId = getCategoryIdByName(name);
+            if (catId != -1) {
+                db.noteDao().resetCategoryNotes(catId);
+                db.categoryDao().deleteByName(name);
+            }
+            mainHandler.post(() -> {
+                if (!isAdded()) return;
+                loadCategories();
+                selectedCategory = "All";
+                filterNotes("All");
+                Toast.makeText(getContext(), "Category deleted.", Toast.LENGTH_SHORT).show();
+            });
+        }));
     }
 
-    /* ─────────────────────────────────────────────────────────────
-     *  Search
-     * ───────────────────────────────────────────────────────────── */
     private void setupSearch() {
-
         searchEditText.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int st, int c, int a) {
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
 
             @Override
@@ -349,15 +310,13 @@ public class AllNotesFragment extends Fragment {
             }
 
             @Override
-            public void onTextChanged(CharSequence s, int st, int b, int c) {
-                String q = s.toString().trim();
-                clearSearchBtn.setVisibility(q.isEmpty() ? View.GONE : View.VISIBLE);
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String query = s.toString().trim();
+                clearSearchBtn.setVisibility(query.isEmpty() ? View.GONE : View.VISIBLE);
 
-                if (searchRunnable != null)
-                    searchHandler.removeCallbacks(searchRunnable);
-
-                searchRunnable = () -> performSearch(q);
-                searchHandler.postDelayed(searchRunnable, 300);
+                if (searchRunnable != null) searchHandler.removeCallbacks(searchRunnable);
+                searchRunnable = () -> performSearch(query);
+                searchHandler.postDelayed(searchRunnable, 300); // debounce 300ms
             }
         });
 
@@ -368,18 +327,22 @@ public class AllNotesFragment extends Fragment {
     }
 
     private void performSearch(String query) {
-        executor.execute(() -> {
+        Context ctx = getContext();
+        if (ctx == null) return;
 
+        executor.execute(() -> {
+            AppDatabase db = AppDatabase.getInstance(ctx);
             List<NoteEntity> result;
             if (query.isEmpty()) {
-                result = getNotesForCategory(selectedCategory);
-            } else if ("All".equals(selectedCategory)) {
-                result = db.noteDao().searchNotes(query);
+                result = getNotesForCategory(db, selectedCategory);
             } else {
-                int id = getCategoryIdByName(selectedCategory);
-                result = db.noteDao().searchNotesInCategory(query, id);
+                if ("All".equals(selectedCategory)) {
+                    result = db.noteDao().searchNotes(query);
+                } else {
+                    int catId = getCategoryIdByName(selectedCategory);
+                    result = db.noteDao().searchNotesInCategory(query, catId);
+                }
             }
-
             mainHandler.post(() -> {
                 if (!isAdded()) return;
                 updateRecycler(result);
@@ -387,22 +350,18 @@ public class AllNotesFragment extends Fragment {
         });
     }
 
-    /* ─────────────────────────────────────────────────────────────
-     *  Notes
-     * ───────────────────────────────────────────────────────────── */
     private void setupRecycler() {
-        recyclerView.setLayoutManager(
-                new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
-
-        recyclerView.setAdapter(new NoteShimmerAdapter(6));
         adapter = new NoteAdapter(new ArrayList<>(), requireContext());
+        recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
+        recyclerView.setAdapter(adapter);
     }
 
-    private void loadNotesByCategory(String category) {
+    private void loadNotesByCategory(String categoryName) {
         executor.execute(() -> {
-
-            List<NoteEntity> notes = getNotesForCategory(category);
-
+            Context ctx = getContext();
+            if (ctx == null) return;
+            AppDatabase db = AppDatabase.getInstance(ctx);
+            List<NoteEntity> notes = getNotesForCategory(db, categoryName);
             mainHandler.post(() -> {
                 if (!isAdded()) return;
                 updateRecycler(notes);
@@ -410,62 +369,63 @@ public class AllNotesFragment extends Fragment {
         });
     }
 
-    private List<NoteEntity> getNotesForCategory(String category) {
-        if ("All".equals(category)) {
+    private List<NoteEntity> getNotesForCategory(AppDatabase db, String categoryName) {
+        if ("All".equals(categoryName)) {
             return db.noteDao().getAllNotes();
         } else {
-            int id = getCategoryIdByName(category);
-            if (id == -1) return db.noteDao().getAllNotes();
-            return db.noteDao().getNotesByCategory(id);
+            int catId = getCategoryIdByName(categoryName);
+            if (catId == -1) return db.noteDao().getAllNotes();
+            return db.noteDao().getNotesByCategory(catId);
         }
     }
 
-    private void filterNotes(String cat) {
-        String q = searchEditText.getText().toString().trim();
-        if (q.isEmpty()) loadNotesByCategory(cat);
-        else performSearch(q);
+    private void filterNotes(String category) {
+        selectedCategory = category;
+        String query = searchEditText.getText().toString().trim();
+        if (query.isEmpty()) {
+            loadNotesByCategory(category);
+        } else {
+            performSearch(query);
+        }
     }
 
     private void updateRecycler(List<NoteEntity> notes) {
-        if (!(recyclerView.getAdapter() instanceof NoteAdapter)) {
-            recyclerView.setAdapter(adapter);
-        }
         adapter.updateData(notes);
     }
 
     private int getCategoryIdByName(String name) {
-        for (CategoryEntity c : categoryList)
-            if (c != null && name.equals(c.name))
-                return c.id;
+        for (CategoryEntity c : categoryList) {
+            if (c != null && name.equals(c.name)) return c.id;
+        }
         return -1;
     }
 
-    /* ─────────────────────────────────────────────────────────────
-     *  Create Button
-     * ───────────────────────────────────────────────────────────── */
-    private void setupCreateButton() {
-        createButton.setOnClickListener(v -> {
-            Intent i = new Intent(getContext(), EditNoteActivity.class);
-            startActivityForResult(i, REQUEST_CODE_ADD_EDIT);
-        });
-    }
-
-    /* ─────────────────────────────────────────────────────────────
-     *  Lifecycle
-     * ───────────────────────────────────────────────────────────── */
     @Override
     public void onResume() {
         super.onResume();
         String q = searchEditText.getText().toString().trim();
-        if (q.isEmpty()) loadNotesByCategory(selectedCategory);
-        else performSearch(q);
+        if (q.isEmpty()) {
+            loadNotesByCategory(selectedCategory);
+        } else {
+            performSearch(q);
+        }
     }
 
-    /* ─────────────────────────────────────────────────────────────
-     *  Utility
-     * ───────────────────────────────────────────────────────────── */
-    private void showToast(String msg) {
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        ThemeManager.unregisterListener(this);
+    }
+
+    @Override
+    public void onThemeChanged(String newTheme) {
         if (!isAdded()) return;
-        Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
+        unselectedTabColor = getThemeColor(requireContext(), com.google.android.material.R.attr.colorPrimary);
+        refreshTabsAndRecycler();
+    }
+
+    private void refreshTabsAndRecycler() {
+        setupTabs();
+        filterNotes(selectedCategory);
     }
 }

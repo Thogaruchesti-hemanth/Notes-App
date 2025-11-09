@@ -23,23 +23,26 @@ import com.google.firebase.FirebaseApp;
 
 import java.util.Random;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ThemeManager.ThemeChangeListener {
 
     private ImageView themeButton;
     private TextView greetingText;
     private ViewPager2 viewPager;
     private SharedPreferenceUtil pref;
+    private boolean isRecreatingForTheme = false;
 
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Apply theme before layout inflation
+        // Apply theme before inflating layout
         applyTheme(this);
+
         super.onCreate(savedInstanceState);
+        isRecreatingForTheme = false; // reset after recreation
         setContentView(R.layout.activity_main);
 
         FirebaseApp.initializeApp(this);
-        AppDatabase.getInstance(this);     // Ensure DB init
+        AppDatabase.getInstance(this); // Ensure DB init
 
         pref = new SharedPreferenceUtil(this);
 
@@ -47,13 +50,11 @@ public class MainActivity extends AppCompatActivity {
         initGreeting();
         setupViewPager();
         setupDrawer();
-
         refreshThemeUI();
-    }
 
-    /* ----------------------------------------------------------
-     *  Initialization
-     * -------------------------------------------------------- */
+        // Register for dynamic theme changes
+        ThemeManager.registerListener(this);
+    }
 
     private void initViews() {
         greetingText = findViewById(R.id.name_text_view);
@@ -63,26 +64,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initGreeting() {
-        String[] words = {"Hi", "Hello", "Hey", "Welcome"};
-        String greeting = words[new Random().nextInt(words.length)];
+        String[] greetings = {"Hi", "Hello", "Hey", "Welcome"};
+        String greeting = greetings[new Random().nextInt(greetings.length)];
         greetingText.setText(String.format("%s, %s", greeting, pref.getUserName()));
     }
 
     private void setupViewPager() {
         viewPager = findViewById(R.id.viewPager);
         viewPager.setAdapter(new MainPagerAdapter(this));
-
         viewPager.setUserInputEnabled(false);
         viewPager.setCurrentItem(0, false);
     }
 
-    /* ----------------------------------------------------------
-     *  Drawer + navigation
-     * -------------------------------------------------------- */
-
     private void setupDrawer() {
         DrawerHelper drawerHelper = new DrawerHelper(this);
-
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setCheckedItem(R.id.menu_all_notes);
 
@@ -96,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case "Use Custom Theme":
                     pref.setSystemTheme(false);
-                    recreateWithTheme();
+                    applyThemeAndRecreateOnce();
                     break;
             }
         };
@@ -106,10 +101,6 @@ public class MainActivity extends AppCompatActivity {
         viewPager.setCurrentItem(index, false);
     }
 
-    /* ----------------------------------------------------------
-     *  Theme Logic
-     * -------------------------------------------------------- */
-
     private void toggleTheme() {
         pref.setSystemTheme(false);
 
@@ -117,12 +108,23 @@ public class MainActivity extends AppCompatActivity {
         pref.setTheme(nextTheme);
         pref.setCustomTheme(true);
 
-        recreateWithTheme();
+        applyThemeAndRecreateOnce();
     }
 
-    private void recreateWithTheme() {
-        ThemeManager.applyTheme(this);
-        recreate();
+    /**
+     * Apply theme and recreate activity only once to avoid flickering
+     */
+    private void applyThemeAndRecreateOnce() {
+        if (isRecreatingForTheme) return; // avoid multiple recreates
+
+        String lastTheme = ThemeManager.getCurrentThemeMode(this);
+        applyTheme(this);
+        String appliedTheme = ThemeManager.getCurrentThemeMode(this);
+        // Only recreate if theme actually changed
+        if (!lastTheme.equals(appliedTheme)) {
+            isRecreatingForTheme = true;
+            recreate();
+        }
     }
 
     private void refreshThemeUI() {
@@ -136,25 +138,32 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateThemeButtonIcon() {
         if (pref.isSystemTheme()) {
-         themeButton.setVisibility(View.INVISIBLE);
+            themeButton.setVisibility(View.INVISIBLE);
             return;
         }
 
-        int drawable = pref.getTheme().equals("dark")
-                ? R.drawable.ic_night
-                : R.drawable.ic_sun;
-
+        int drawable = pref.getTheme().equals("dark") ? R.drawable.ic_night : R.drawable.ic_sun;
         themeButton.setImageDrawable(ContextCompat.getDrawable(this, drawable));
     }
 
     /* ----------------------------------------------------------
-     *  Lifecycle
+     *  ThemeManager.ThemeChangeListener
+     *  Called when theme changes dynamically
      * -------------------------------------------------------- */
+    @Override
+    public void onThemeChanged(String newTheme) {
+        refreshThemeUI(); // update button/icon dynamically
+    }
 
     @Override
     protected void onResume() {
         super.onResume();
-        applyTheme(this);
         refreshThemeUI();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        ThemeManager.unregisterListener(this);
     }
 }

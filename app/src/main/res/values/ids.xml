@@ -2,4 +2,5 @@
 <resources>
     <item name="Allbtn" type="id" />
     <item name="AllBtn" type="id" />
+    <item name="ivAppIcon" type="id" />
 </resources>
