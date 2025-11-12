@@ -21,14 +21,22 @@ public class Constants {
             "#E0FFFF", // Light Cyan
             "#FAFAD2", // Light Goldenrod Yellow
             "#F5DEB3", // Wheat
-            "#F7F4F0",
-            "#E5EDE4",
-            "#F5E9E8",
-            "#E8EFF2",
-            "#F9EEDD",
-            "#EAEAEA",
-            "#ECEAF3"
 
 
     };
+
+    // [startColor, endColor]
+    public static  final int[][] professionalGradients = {
+            {0xFF6A00F4, 0xFF8921F8}, // Deep Purple
+            {0xFFFF512F, 0xFFDD2476}, // Sunset
+            {0xFF2193B0, 0xFF6DD5ED}, // Ocean Blue
+            {0xFFEE9CA7, 0xFFFFDDE1}, // Pink Violet
+            {0xFF56AB2F, 0xFFA8E063}, // Green Mint
+            {0xFFBDC3C7, 0xFF2C3E50}, // Gray Silver
+            {0xFF2980B9, 0xFF6DD5FA}, // Blue Gray
+            {0xFF000000, 0xFF434343}, // Dark Night
+            {0xFFFF7E5F, 0xFFFEB47B}, // Orange Coral
+            {0xFF6A11CB, 0xFF2575FC}  // Purple Ocean
+    };
+
 }

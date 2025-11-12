@@ -35,8 +35,15 @@ public class ColorAdapter extends RecyclerView.Adapter<ColorAdapter.ColorViewHol
     public void onBindViewHolder(@NonNull ColorViewHolder holder, int position) {
 
         String color = colors[position];
+        boolean isSelected = color.equals(selected);
 
-        holder.colorView.getBackground().setTint(Color.parseColor(color));
+        // ✅ Apply fill tint
+        holder.fillView.getBackground().setTint(Color.parseColor(color));
+
+        // ✅ Change border depending on selected
+        holder.borderView.setBackgroundResource(
+                isSelected ? R.drawable.bg_circle_border_selected : R.drawable.bg_circle_border_unselected
+        );
 
         // Tick visibility
         holder.checkIcon.setVisibility(color.equals(selected) ? View.VISIBLE : View.GONE);
@@ -58,13 +65,14 @@ public class ColorAdapter extends RecyclerView.Adapter<ColorAdapter.ColorViewHol
     }
 
     static class ColorViewHolder extends RecyclerView.ViewHolder {
-        View colorView;
+        View fillView,borderView;
         ImageView checkIcon;
 
         public ColorViewHolder(@NonNull View itemView) {
             super(itemView);
-            colorView = itemView.findViewById(R.id.viewColor);
+            fillView = itemView.findViewById(R.id.fillView);
             checkIcon = itemView.findViewById(R.id.checkIcon);
+            borderView = itemView.findViewById(R.id.borderView);
         }
     }
 }

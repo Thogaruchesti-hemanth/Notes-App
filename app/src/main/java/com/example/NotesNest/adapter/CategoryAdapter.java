@@ -62,7 +62,7 @@ public class CategoryAdapter extends BaseAdapter {
             textView.setTextColor(ContextCompat.getColor(context, R.color.tabSelectedTextColorLight));
         } else {
             textView.setTypeface(Typeface.DEFAULT);
-            textView.setTextColor(ThemeManager.getThemeColor(context, ContextCompat.getColor(context, R.color.black), ContextCompat.getColor(context, R.color.white)));
+            textView.setTextColor(ThemeManager.getThemeColor(context, R.color.black, R.color.white));
         }
 
         return convertView;

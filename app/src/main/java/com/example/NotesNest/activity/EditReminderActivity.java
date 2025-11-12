@@ -7,6 +7,7 @@ import static com.example.NotesNest.utils.Constants.TYPE_TASK;
 
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.ContextThemeWrapper;
@@ -71,6 +72,9 @@ public class EditReminderActivity extends AppCompatActivity {
     private long selectedDateTime = -1L;
     private String selectedRepeat = REPEAT_OPTIONS[0];
     private String selectedNotify = NOTIFY_OPTIONS[0];
+
+    private int selectedGradientStart;
+    private int selectedGradientEnd;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -153,10 +157,30 @@ public class EditReminderActivity extends AppCompatActivity {
             });
         });
 
-        binding.colorLayout.setOnClickListener(v -> CommonDialogs.showColorPicker(this, selectedColor, color -> {
-            selectedColor = color;
-            binding.colorPreview.setBackgroundColor(android.graphics.Color.parseColor(selectedColor));
-        }));
+        binding.colorLayout.setOnClickListener(v ->
+                CommonDialogs.showGradientPicker(this, (startColor, endColor) -> {
+
+                    // Save gradient in fields
+                    if (currentEntity != null) {
+                        currentEntity.setGradientStartColor(startColor);
+                        currentEntity.setGradientEndColor(endColor);
+                    }
+
+                    selectedGradientStart = startColor;
+                    selectedGradientEnd = endColor;
+
+
+                    // Preview the gradient on the view
+                    GradientDrawable gradient = new GradientDrawable(
+                            GradientDrawable.Orientation.LEFT_RIGHT,
+                            new int[]{startColor, endColor}
+                    );
+                    gradient.setCornerRadius(16f); // optional: rounded corners
+                    binding.colorPreview.setBackground(gradient);
+
+                })
+        );
+
 
         binding.chipGroupType.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
             if (!isChecked) return;
@@ -264,6 +288,8 @@ public class EditReminderActivity extends AppCompatActivity {
             entity.setRepeatType(selectedRepeat);
             entity.setNotifyType(selectedNotify);
             entity.setBackgroundColor(selectedColor);
+            entity.setGradientStartColor(selectedGradientStart);
+            entity.setGradientEndColor(selectedGradientEnd);
             entity.setMessage(message);
             if (TYPE_BIRTHDAY.equals(selectedType)) entity.setName(title);
             insertReminder(entity);
@@ -276,6 +302,9 @@ public class EditReminderActivity extends AppCompatActivity {
             currentEntity.setNotifyType(selectedNotify);
             currentEntity.setBackgroundColor(selectedColor);
             currentEntity.setMessage(message);
+
+            currentEntity.setGradientEndColor(selectedGradientStart);
+            currentEntity.setGradientEndColor(selectedGradientEnd);
             if (TYPE_BIRTHDAY.equals(selectedType)) currentEntity.setName(title);
             updateReminder(currentEntity);
         }
@@ -339,6 +368,19 @@ public class EditReminderActivity extends AppCompatActivity {
 
     private void populateFromEntity(@NonNull ReminderEntity entity) {
         selectedType = entity.getType() == null ? TYPE_REMINDER : entity.getType();
+
+
+        if (entity.getGradientStartColor() != 0 && entity.getGradientEndColor() != 0) {
+            GradientDrawable gradient = new GradientDrawable(
+                    GradientDrawable.Orientation.LEFT_RIGHT,
+                    new int[]{entity.getGradientStartColor(), entity.getGradientEndColor()}
+            );
+            gradient.setCornerRadius(16f);
+            binding.colorPreview.setBackground(gradient);
+        } else if (!TextUtils.isEmpty(entity.getBackgroundColor())) {
+            binding.colorPreview.setBackgroundColor(android.graphics.Color.parseColor(entity.getBackgroundColor()));
+        }
+
 
         // Set chip selection
         switch (selectedType) {

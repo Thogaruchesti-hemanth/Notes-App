@@ -42,7 +42,7 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class AllNotesFragment extends Fragment implements ThemeManager.ThemeChangeListener {
+public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeListener {
 
     private static final int REQUEST_CODE_ADD_EDIT = 1001;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -62,7 +62,7 @@ public class AllNotesFragment extends Fragment implements ThemeManager.ThemeChan
     private List<CategoryEntity> categoryList = new ArrayList<>();
     private int unselectedTabColor = -1;
 
-    public AllNotesFragment() {
+    public NotesFragment() {
         // Required empty constructor
     }
 
@@ -72,7 +72,7 @@ public class AllNotesFragment extends Fragment implements ThemeManager.ThemeChan
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
 
-        View view = inflater.inflate(R.layout.fragment_all_notes, container, false);
+        View view = inflater.inflate(R.layout.fragment_notes, container, false);
 
         tabLayout = view.findViewById(R.id.tabLayout);
         btnAdd = view.findViewById(R.id.btnAdd);

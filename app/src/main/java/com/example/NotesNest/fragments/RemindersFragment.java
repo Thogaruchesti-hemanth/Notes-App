@@ -4,6 +4,7 @@ import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,13 +41,12 @@ import java.util.concurrent.Executors;
 public class RemindersFragment extends Fragment {
 
     private final List<CalendarItem> calendarItemList = new ArrayList<>();
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private TextView selectedDateTv, promptTextView;
     private RecyclerView calendarRv, hourRecyclerView;
     private LocalDate selectedDate = LocalDate.now();
     private CalendarAdapter calendarAdapter;
-
     private AppDatabase db;
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private List<ReminderEntity> currentReminders = new ArrayList<>();
 
     @Nullable
@@ -150,9 +150,9 @@ public class RemindersFragment extends Fragment {
     private void updatePromptText() {
         int count = currentReminders.size();
         if (count == 0) {
-            promptTextView.setText(getString(R.string.text_no_reminders_for_today));
+            promptTextView.setText("No reminders scheduled. Enjoy your day.");
         } else {
-            promptTextView.setText(String.format("You have %d reminders today", count));
+            promptTextView.setText(String.format(" %d reminders are planned for this day.", count));
         }
     }
 
@@ -190,7 +190,7 @@ public class RemindersFragment extends Fragment {
 
     private void showDatePicker() {
         DatePickerDialog dialog = new DatePickerDialog(
-                requireContext(),
+                new ContextThemeWrapper(requireContext(), R.style.CustomTimePickerTheme),
                 (view, y, m, d) -> {
                     selectedDate = LocalDate.of(y, m + 1, d);
                     updateSelectedDateText();
@@ -223,7 +223,26 @@ public class RemindersFragment extends Fragment {
             calendarRv.smoothScrollToPosition(pos);
             loadRemindersForSelectedDate();
         });
+
+        // ✅ ADDED → load next month when scrolled to end
+        calendarRv.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+
+                LinearLayoutManager lm = (LinearLayoutManager) recyclerView.getLayoutManager();
+                if (lm == null) return;
+
+                int lastVisible = lm.findLastVisibleItemPosition();
+                int total = calendarAdapter.getItemCount();
+
+                if (lastVisible == total - 1) {
+                    appendNextMonth();
+                }
+            }
+        });
     }
+
 
     private void loadMonthData() {
         calendarItemList.clear();
@@ -254,6 +273,28 @@ public class RemindersFragment extends Fragment {
         }
 
         calendarAdapter.notifyDataSetChanged();
+    }
+
+
+    /* ✅ ADDED → load next month data */
+    private void appendNextMonth() {
+        YearMonth currentMonth = YearMonth.from(selectedDate);
+        YearMonth nextMonth = currentMonth.plusMonths(1);
+
+        List<CalendarItem> nextItems = new ArrayList<>();
+        LocalDate first = nextMonth.atDay(1);
+        int days = nextMonth.lengthOfMonth();
+
+        for (int i = 0; i < days; i++) {
+            LocalDate date = first.plusDays(i);
+            nextItems.add(new CalendarItem(
+                    String.valueOf(date.getDayOfMonth()),
+                    date.getDayOfWeek().name().substring(0, 3),
+                    date
+            ));
+        }
+
+        calendarAdapter.addNext(nextItems);
     }
 
 
