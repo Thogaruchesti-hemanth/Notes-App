@@ -24,11 +24,35 @@ import com.example.NotesNest.databases.entities.ReminderEntity;
                 CategoryEntity.class,
                 ReminderEntity.class
         },
-        version = 3,
+        version = 4,
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
 
+    static final Migration MIGRATION_3_4 = new Migration(3, 4) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            // Drop the reminders table
+            database.execSQL("DROP TABLE IF EXISTS reminders");
+
+            // Recreate the reminders table with the new schema
+            database.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `reminders` (" +
+                            "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                            "`type` TEXT, " +
+                            "`title` TEXT, " +
+                            "`name` TEXT, " +
+                            "`message` TEXT, " +
+                            "`notification` INTEGER NOT NULL, " +
+                            "`repeated` INTEGER NOT NULL, " +
+                            "`repeatType` TEXT, " +
+                            "`notifyType` TEXT, " +
+                            "`gradientStartColor` INTEGER NOT NULL DEFAULT 0, " +
+                            "`gradientEndColor` INTEGER NOT NULL DEFAULT 0" +
+                            ")"
+            );
+        }
+    };
     private static volatile AppDatabase INSTANCE;
 
     public static AppDatabase getInstance(Context context) {
@@ -40,23 +64,13 @@ public abstract class AppDatabase extends RoomDatabase {
                                     AppDatabase.class,
                                     "notesDatabase.db"
                             )
-                            .addMigrations(MIGRATION_2_3)
+                            .addMigrations(MIGRATION_3_4)
                             .build();
                 }
             }
         }
         return INSTANCE;
     }
-
-    static final Migration MIGRATION_2_3 = new Migration(2, 3) {
-        @Override
-        public void migrate(@NonNull SupportSQLiteDatabase database) {
-            // Add the new columns for gradient colors
-            database.execSQL("ALTER TABLE reminders ADD COLUMN gradientStartColor INTEGER NOT NULL DEFAULT 0");
-            database.execSQL("ALTER TABLE reminders ADD COLUMN gradientEndColor INTEGER NOT NULL DEFAULT 0");
-        }
-    };
-
 
     public abstract NoteDao noteDao();
 

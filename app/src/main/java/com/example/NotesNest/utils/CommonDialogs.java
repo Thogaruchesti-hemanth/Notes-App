@@ -14,7 +14,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.WebView;
 import android.widget.Button;
@@ -28,7 +27,6 @@ import android.widget.TextView;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatDialog;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -37,6 +35,7 @@ import com.example.NotesNest.R;
 import com.example.NotesNest.adapter.CategoryAdapter;
 import com.example.NotesNest.adapter.ColorAdapter;
 import com.example.NotesNest.databases.entities.NoteEntity;
+import com.example.NotesNest.databases.entities.ReminderEntity;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
@@ -283,7 +282,8 @@ public class CommonDialogs {
 
                 currentColor[0] = newColor;
 
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
             callback.onColorSelected(color);
 
             // ✅ Let animation play slightly then dismiss
@@ -352,49 +352,121 @@ public class CommonDialogs {
     }
 
 
+    public static void showGradientPicker(@NonNull Context context,
+                                          int selectedStartColor,
+                                          int selectedEndColor,
+                                          @NonNull OnGradientSelectedListener listener) {
 
-    public static void showGradientPicker(@NonNull Context context, @NonNull OnGradientSelectedListener listener) {
+        BottomSheetDialog dialog = new BottomSheetDialog(context);
+        View sheetView = LayoutInflater.from(context).inflate(
+                R.layout.bottom_sheet_gradient_picker,
+                null,
+                false
+        );
 
-        // Create Bottom Sheet Dialog
-        AppCompatDialog dialog = new AppCompatDialog(context);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.bottom_sheet_gradient_picker);
+        LinearLayout container = sheetView.findViewById(R.id.gradientContainer);
 
-        LinearLayout container = dialog.findViewById(R.id.gradientContainer);
-
-        // Dynamically add gradient options
-        for (int i = 0; i < professionalGradients.length; i++) {
-            int start = professionalGradients[i][0];
-            int end = professionalGradients[i][1];
+        // Add each gradient as a capsule item
+        for (int[] professionalGradient : professionalGradients) {
+            int start = professionalGradient[0];
+            int end = professionalGradient[1];
 
             View gradientView = new View(context);
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                    0,
                     LinearLayout.LayoutParams.MATCH_PARENT,
-                    1f
+                    80 // capsule height in dp
             );
-            params.setMargins(8, 8, 8, 8);
+            params.setMargins(0, 8, 0, 8);
             gradientView.setLayoutParams(params);
 
-            GradientDrawable gradientDrawable = new GradientDrawable(
+            GradientDrawable drawable = new GradientDrawable(
                     GradientDrawable.Orientation.LEFT_RIGHT,
                     new int[]{start, end}
             );
-            gradientDrawable.setCornerRadius(16f);
-            gradientView.setBackground(gradientDrawable);
+            drawable.setCornerRadius(50f); // capsule shape
 
-            int finalStart = start;
-            int finalEnd = end;
+            // Highlight if matches selected gradient
+            if (start == selectedStartColor && end == selectedEndColor) {
+                drawable.setStroke(2, Color.BLACK); // selected border
+            } else {
+                drawable.setStroke(0, Color.TRANSPARENT);
+            }
+
+            gradientView.setBackground(drawable);
+
             gradientView.setOnClickListener(v -> {
-                listener.onGradientSelected(finalStart,finalEnd);
+                listener.onGradientSelected(start, end);
                 dialog.dismiss();
             });
 
             container.addView(gradientView);
         }
 
+        dialog.setContentView(sheetView);
         dialog.show();
     }
+
+    public static void showCustomDialog(
+            Context context,
+            ReminderEntity reminder,
+            String positiveText,
+            String negativeText,
+            Runnable positiveAction,
+            Runnable negativeAction
+    ) {
+        View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_reminder_options, null);
+
+        TextView dialogTitle = dialogView.findViewById(R.id.dialog_title);
+        TextView dialogMessage = dialogView.findViewById(R.id.dialog_message);
+        Button btnEdit = dialogView.findViewById(R.id.btn_edit);
+        Button btnDelete = dialogView.findViewById(R.id.btn_delete);
+        LinearLayout reminderLayout = dialogView.findViewById(R.id.reminderLayout);
+
+        dialogTitle.setText(reminder.getTitle());
+        dialogMessage.setText(reminder.getMessage());
+
+        btnEdit.setText(positiveText != null ? positiveText : "OK");
+        btnDelete.setText(negativeText != null ? negativeText : "Cancel");
+
+        GradientDrawable drawable = new GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[]{reminder.getGradientStartColor(), reminder.getGradientEndColor()}
+        );
+
+        reminderLayout.setBackground(drawable);
+
+        AlertDialog dialog = new AlertDialog.Builder(context)
+                .setView(dialogView)
+                .create();
+
+        dialog.show();
+        dialog.setCancelable(false
+        );
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
+            lp.copyFrom(dialog.getWindow().getAttributes());
+            lp.width = (int) (context.getResources().getDisplayMetrics().widthPixels * 0.85);
+            lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
+            dialog.getWindow().setAttributes(lp);
+        }
+
+        // Assign click listeners
+        btnEdit.setOnClickListener(v -> {
+            dialog.dismiss();
+            if (positiveAction != null) positiveAction.run();
+        });
+
+        btnDelete.setOnClickListener(v -> {
+            dialog.dismiss();
+            if (negativeAction != null) negativeAction.run();
+        });
+        dialogView.findViewById(R.id.closeButton).setOnClickListener(view -> {
+            dialog.dismiss();
+        });
+    }
+
 
     public interface ThemeSelectionListener {
         void onThemeSelected(int theme);

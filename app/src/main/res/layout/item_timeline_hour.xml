@@ -3,9 +3,10 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
+    android:gravity="center_vertical"
     android:padding="8dp">
 
-    <!-- Left: Hour Text -->
+    <!-- Hour Label -->
     <TextView
         android:id="@+id/tvHour"
         android:layout_width="wrap_content"
@@ -13,21 +14,20 @@
         android:text="00:00"
         android:layout_marginEnd="20dp"
         android:textSize="14sp"
-        android:textColor="@color/grey_900"/>
+        android:textColor="?colorPrimary"/>
 
-    <!-- Horizontal scroll for 60 minute slots -->
+    <!-- Scrollable minute container -->
     <HorizontalScrollView
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:scrollbars="none">
-        <!-- Right: Minute container -->
+
         <LinearLayout
             android:id="@+id/tasksContainer"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:orientation="horizontal" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"/>
     </HorizontalScrollView>
 </LinearLayout>

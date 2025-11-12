@@ -1,9 +1,9 @@
 package com.example.NotesNest.activity;
 
-import static com.example.NotesNest.utils.Constants.DEFAULT_COLORS;
 import static com.example.NotesNest.utils.Constants.TYPE_BIRTHDAY;
 import static com.example.NotesNest.utils.Constants.TYPE_REMINDER;
 import static com.example.NotesNest.utils.Constants.TYPE_TASK;
+import static com.example.NotesNest.utils.Constants.professionalGradients;
 
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
@@ -49,13 +49,9 @@ public class EditReminderActivity extends AppCompatActivity {
     // --- Public intent keys ---
     public static final String EXTRA_REMINDER_ID = "reminder_id";
 
-
     // --- UI option arrays ---
     private static final String[] REPEAT_OPTIONS = {"Does not repeat", "Daily", "Weekly", "Monthly", "Yearly"};
     private static final String[] NOTIFY_OPTIONS = {"On that day", "Day before", "2 days before", "1 week before"};
-
-    // --- Default values ---
-    private static final String DEFAULT_COLOR = DEFAULT_COLORS[0];
 
     // --- Formats ---
     private final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
@@ -68,13 +64,12 @@ public class EditReminderActivity extends AppCompatActivity {
     private ExecutorService executor;
     private ReminderEntity currentEntity;
     private String selectedType = TYPE_REMINDER;
-    private String selectedColor = DEFAULT_COLOR;
     private long selectedDateTime = -1L;
     private String selectedRepeat = REPEAT_OPTIONS[0];
     private String selectedNotify = NOTIFY_OPTIONS[0];
 
-    private int selectedGradientStart;
-    private int selectedGradientEnd;
+    private int selectedGradientStart = professionalGradients[0][0];
+    private int selectedGradientEnd = professionalGradients[0][1];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,11 +107,14 @@ public class EditReminderActivity extends AppCompatActivity {
         binding.tvTitle.setText(R.string.edit_reminder_title_placeholder); // replace with appropriate string
         binding.tvRepeat.setText(selectedRepeat);
         binding.tvNotify.setText(selectedNotify);
-        binding.colorPreview.setBackgroundColor(android.graphics.Color.parseColor(selectedColor));
 
         // Default chip selection
         binding.chipGroupType.check(R.id.chipReminder);
         updateLayoutsVisibility();
+
+        int startColor = selectedGradientStart;
+        int endColor = selectedGradientEnd;
+        updateColorPreview(startColor, endColor);
     }
 
     private void bindListeners() {
@@ -158,7 +156,7 @@ public class EditReminderActivity extends AppCompatActivity {
         });
 
         binding.colorLayout.setOnClickListener(v ->
-                CommonDialogs.showGradientPicker(this, (startColor, endColor) -> {
+                CommonDialogs.showGradientPicker(this, selectedGradientStart,selectedGradientEnd ,(startColor, endColor) -> {
 
                     // Save gradient in fields
                     if (currentEntity != null) {
@@ -175,7 +173,7 @@ public class EditReminderActivity extends AppCompatActivity {
                             GradientDrawable.Orientation.LEFT_RIGHT,
                             new int[]{startColor, endColor}
                     );
-                    gradient.setCornerRadius(16f); // optional: rounded corners
+                    gradient.setCornerRadius(50f);
                     binding.colorPreview.setBackground(gradient);
 
                 })
@@ -272,6 +270,11 @@ public class EditReminderActivity extends AppCompatActivity {
             return;
         }
 
+        if (selectedDateTime < System.currentTimeMillis()) {
+            showToast("Cannot set reminder for past time");
+            return;
+        }
+
         if (TYPE_BIRTHDAY.equals(selectedType) && TextUtils.isEmpty(message)) {
             showToast("Birthday message/details required");
             return;
@@ -287,7 +290,6 @@ public class EditReminderActivity extends AppCompatActivity {
             entity.setRepeated(repeated);
             entity.setRepeatType(selectedRepeat);
             entity.setNotifyType(selectedNotify);
-            entity.setBackgroundColor(selectedColor);
             entity.setGradientStartColor(selectedGradientStart);
             entity.setGradientEndColor(selectedGradientEnd);
             entity.setMessage(message);
@@ -300,7 +302,6 @@ public class EditReminderActivity extends AppCompatActivity {
             currentEntity.setRepeated(repeated);
             currentEntity.setRepeatType(selectedRepeat);
             currentEntity.setNotifyType(selectedNotify);
-            currentEntity.setBackgroundColor(selectedColor);
             currentEntity.setMessage(message);
 
             currentEntity.setGradientEndColor(selectedGradientStart);
@@ -375,10 +376,8 @@ public class EditReminderActivity extends AppCompatActivity {
                     GradientDrawable.Orientation.LEFT_RIGHT,
                     new int[]{entity.getGradientStartColor(), entity.getGradientEndColor()}
             );
-            gradient.setCornerRadius(16f);
+            gradient.setCornerRadius(50f);
             binding.colorPreview.setBackground(gradient);
-        } else if (!TextUtils.isEmpty(entity.getBackgroundColor())) {
-            binding.colorPreview.setBackgroundColor(android.graphics.Color.parseColor(entity.getBackgroundColor()));
         }
 
 
@@ -415,10 +414,9 @@ public class EditReminderActivity extends AppCompatActivity {
 
         binding.etDetails.setText(entity.getMessage());
 
-        if (!TextUtils.isEmpty(entity.getBackgroundColor())) {
-            selectedColor = entity.getBackgroundColor();
-            binding.colorPreview.setBackgroundColor(android.graphics.Color.parseColor(selectedColor));
-        }
+        selectedGradientStart = entity.getGradientStartColor();
+        selectedGradientEnd = entity.getGradientEndColor();
+        updateColorPreview(selectedGradientStart,selectedGradientEnd);
 
         updateTitleHint();
     }
@@ -436,5 +434,15 @@ public class EditReminderActivity extends AppCompatActivity {
         }
         binding = null;
     }
+
+    private void updateColorPreview(int startColor, int endColor) {
+        GradientDrawable gradient = new GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[]{startColor, endColor}
+        );
+        gradient.setCornerRadius(50f); // makes it capsule/pill
+        binding.colorPreview.setBackground(gradient);
+    }
+
 
 }

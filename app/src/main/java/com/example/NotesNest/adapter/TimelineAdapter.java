@@ -1,18 +1,22 @@
 package com.example.NotesNest.adapter;
 
 import android.content.Context;
+import android.graphics.drawable.GradientDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.NotesNest.R;
 import com.example.NotesNest.models.Task;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
@@ -20,15 +24,11 @@ import java.util.Map;
 
 public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Holder> {
 
-    public interface OnTaskClickListener {
-        void onTaskClick(Task task);
-    }
-
     private final Context context;
     private final OnTaskClickListener listener;
 
-    // hour → minute → task
-    private final Map<Integer, Map<Integer, Task>> timeMap = new HashMap<>();
+    // hour → minute → list of tasks
+    private final Map<Integer, Map<Integer, List<Task>>> timeMap = new HashMap<>();
 
     public TimelineAdapter(Context context, List<Task> tasks, OnTaskClickListener listener) {
         this.context = context;
@@ -55,45 +55,73 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Holder
 
         holder.minuteContainer.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(context);
-
-        Map<Integer, Task> minuteMap = timeMap.get(hour);
+        Map<Integer, List<Task>> minuteMap = timeMap.get(hour);
 
         for (int min = 0; min < 60; min++) {
+            // each minute = a small stacked container
+            FrameLayout minuteFrame = new FrameLayout(context);
+            LinearLayout.LayoutParams frameParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            frameParams.setMargins(4, 0, 4, 0);
+            minuteFrame.setLayoutParams(frameParams);
 
             if (minuteMap != null && minuteMap.containsKey(min)) {
-                Task task = minuteMap.get(min);
+                List<Task> taskList = minuteMap.get(min);
 
-                View taskView = inflater.inflate(R.layout.item_task_timeline, holder.minuteContainer, false);
+                int stackOffset = 0;
+                for (Task task : taskList) {
+                    View taskView = inflater.inflate(R.layout.item_task_enhanced, minuteFrame, false);
 
-                TextView tvTime = taskView.findViewById(R.id.tvTime);
-                TextView tvTitle = taskView.findViewById(R.id.tvTitle);
+                    TextView tvTime = taskView.findViewById(R.id.tvTime);
+                    TextView tvTitle = taskView.findViewById(R.id.tvTitle);
+                    TextView tvType = taskView.findViewById(R.id.tvType);
+                    LinearLayout taskContainer = taskView.findViewById(R.id.taskContainer);
 
-                Calendar c = Calendar.getInstance();
-                c.setTimeInMillis(task.getStartTime());
+                    Calendar c = Calendar.getInstance();
+                    c.setTimeInMillis(task.getStartTime());
 
-                tvTime.setText(String.format("%02d:%02d",
-                        c.get(Calendar.HOUR_OF_DAY),
-                        c.get(Calendar.MINUTE)));
+                    tvTime.setText(String.format("%02d:%02d",
+                            c.get(Calendar.HOUR_OF_DAY),
+                            c.get(Calendar.MINUTE)));
+                    tvTitle.setText(task.getTitle());
+                    tvType.setText(task.getType());
 
-                tvTitle.setText(task.getTitle());
+                    // gradient background
+                    GradientDrawable gradient = new GradientDrawable(
+                            GradientDrawable.Orientation.LEFT_RIGHT,
+                            new int[]{task.getStartColor(), task.getEndColor()}
+                    );
+                    gradient.setCornerRadius(50f);
+                    taskContainer.setBackground(gradient);
 
-                taskView.setOnClickListener(v -> {
-                    if (listener != null) listener.onTaskClick(task);
-                });
+                    // stack overlap
+                    taskView.setTranslationX(stackOffset);
+                    taskView.setTranslationY(stackOffset / 6f);
+                    stackOffset += 60;
 
-                holder.minuteContainer.addView(taskView);
+                    taskView.setOnClickListener(v -> {
+                        if (listener != null) listener.onTaskClick(task);
+                    });
+
+                    minuteFrame.addView(taskView);
+                    holder.tvHour.setTextColor(ContextCompat.getColor(context,R.color.tabSelectedTextColor));
+                }
+                // increase minuteFrame width so last overlapped card fits
+                minuteFrame.setMinimumWidth(stackOffset + 400);
 
             } else {
                 TextView dash = new TextView(context);
-                dash.setText("–");                       // nicer dash
-                dash.setTextSize(10);                    // smaller size
-                dash.setTextColor(0xFF9AA0A6);           // soft gray
-                dash.setPadding(4, 2, 4, 2);             // left, top, right, bottom
+                dash.setText("–");
+                dash.setTextSize(10);
+                dash.setTextColor(0xFF9AA0A6);
+                dash.setPadding(4, 2, 4, 2);
                 dash.setIncludeFontPadding(false);
-
-                holder.minuteContainer.addView(dash);
-
+                minuteFrame.addView(dash);
             }
+
+            holder.minuteContainer.addView(minuteFrame);
         }
     }
 
@@ -106,14 +134,19 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Holder
         for (Task task : tasks) {
             Calendar c = Calendar.getInstance();
             c.setTimeInMillis(task.getStartTime());
-
             int hour = c.get(Calendar.HOUR_OF_DAY);
             int min = c.get(Calendar.MINUTE);
 
-            Map<Integer, Task> hourMap = timeMap.getOrDefault(hour, new HashMap<>());
-            hourMap.put(min, task);
+            Map<Integer, List<Task>> hourMap = timeMap.getOrDefault(hour, new HashMap<>());
+            List<Task> taskList = hourMap.getOrDefault(min, new ArrayList<>());
+            taskList.add(task);
+            hourMap.put(min, taskList);
             timeMap.put(hour, hourMap);
         }
+    }
+
+    public interface OnTaskClickListener {
+        void onTaskClick(Task task);
     }
 
     static class Holder extends RecyclerView.ViewHolder {

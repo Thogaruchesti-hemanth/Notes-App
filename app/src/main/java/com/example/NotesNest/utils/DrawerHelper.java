@@ -2,6 +2,7 @@ package com.example.NotesNest.utils;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -82,6 +83,8 @@ public class DrawerHelper {
             OnDrawerItemSelectedListener listener
     ) {
         String title = Objects.requireNonNull(item.getTitle()).toString();
+        String appLink = "https://notesnest-app.web.app/"; // your link
+
 
         switch (title) {
 
@@ -104,12 +107,31 @@ public class DrawerHelper {
                 showThemeDialog(activity, drawerLayout);
                 break;
 
+            case "Help & Support":
+            case "Privacy Policy":
+            case "About App":
+                openWebLink(activity, appLink);
+                drawerLayout.closeDrawer(GravityCompat.START);
+                break;
+
             default:
                 if (listener != null) {
                     listener.onItemSelected(title);
                 }
                 drawerLayout.closeDrawer(GravityCompat.START);
                 break;
+        }
+    }
+
+    /**
+     * Opens a web link in the browser
+     */
+    private static void openWebLink(Activity activity, String url) {
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        try {
+            activity.startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(activity, "No browser app found to open link", Toast.LENGTH_SHORT).show();
         }
     }
 

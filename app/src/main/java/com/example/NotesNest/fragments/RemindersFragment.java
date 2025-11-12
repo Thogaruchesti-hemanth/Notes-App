@@ -27,6 +27,7 @@ import com.example.NotesNest.databases.AppDatabase;
 import com.example.NotesNest.databases.entities.ReminderEntity;
 import com.example.NotesNest.models.CalendarItem;
 import com.example.NotesNest.models.Task;
+import com.example.NotesNest.utils.CommonDialogs;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -133,7 +134,9 @@ public class RemindersFragment extends Fragment {
                         r.getNotification(),
                         endTime,
                         r.getId(),
-                        r.getMessage()
+                        r.getMessage(),
+                        r.getGradientStartColor(),
+                        r.getGradientEndColor()
                 );
 
                 tasks.add(t);
@@ -165,17 +168,14 @@ public class RemindersFragment extends Fragment {
 
         if (reminder == null) return;
 
-        new AlertDialog.Builder(requireContext())
-                .setTitle(reminder.getTitle())
-                .setMessage(reminder.getMessage())
-                .setPositiveButton("Edit", (d, w) -> {
+        CommonDialogs.showCustomDialog(requireContext(), reminder, "Edit", "Delete", () -> {
                     Intent i = new Intent(requireContext(), EditReminderActivity.class);
                     i.putExtra("reminder_id", reminder.getId());
                     startActivity(i);
-                })
-                .setNegativeButton("Delete", (d, w) -> deleteReminder(reminder))
-                .setNeutralButton("Cancel", null)
-                .show();
+                },
+                () -> {
+                    deleteReminder(reminder);
+                });
     }
 
     private void deleteReminder(ReminderEntity reminder) {

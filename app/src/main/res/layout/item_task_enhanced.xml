@@ -2,22 +2,20 @@
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/cardView"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginHorizontal="8dp"
-    android:layout_marginVertical="4dp"
-    app:cardCornerRadius="30dp"
+    android:layout_width="300dp"
+    android:layout_height="100dp"
+    app:cardCornerRadius="50dp"
     app:cardElevation="4dp"
     app:cardUseCompatPadding="true">
 
     <LinearLayout
+        android:id="@+id/taskContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
-        android:background="@drawable/bg_rounded_gradient">
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp">
 
         <!-- Time with icon -->
         <LinearLayout
@@ -29,7 +27,7 @@
             <ImageView
                 android:layout_width="16dp"
                 android:layout_height="16dp"
-                android:src="@drawable/ic_clock"/>
+                android:src="@drawable/ic_reminders"/>
 
             <TextView
                 android:id="@+id/tvTime"
@@ -37,7 +35,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:text="10:00 AM"
-                android:textSize="14sp"
+                android:textSize="12sp"
                 android:textStyle="bold"
                 android:textColor="@android:color/white" />
         </LinearLayout>
@@ -46,25 +44,23 @@
         <View
             android:layout_width="1dp"
             android:layout_height="24dp"
-            android:layout_marginStart="12dp"
-            android:layout_marginEnd="12dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
             android:background="@android:color/white"
             android:alpha="0.3" />
 
         <!-- Title with type indicator -->
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="130dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:paddingVertical="8dp">
+            android:orientation="vertical">
 
             <TextView
                 android:id="@+id/tvTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Meeting with team about project updates"
-                android:textSize="16sp"
+                android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="@android:color/white"
                 android:maxLines="1"
@@ -76,7 +72,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:text="Reminder"
-                android:textSize="12sp"
+                android:textSize="10sp"
                 android:textColor="@android:color/white"
                 android:alpha="0.8"
                 android:background="@drawable/bg_transparent_white_12dp"

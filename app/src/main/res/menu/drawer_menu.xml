@@ -14,14 +14,24 @@
         <item
             android:id="@+id/menu_reminders"
             android:icon="@drawable/ic_reminders"
-            android:title="Reminder" />
+            android:title="Reminders" />
 
     </group>
 
-    <!-- Settings Group -->
+    <!-- ===== Appearance / Settings (Bottom Section) ===== -->
     <group
         android:id="@+id/group_settings"
         android:checkableBehavior="none">
+
+        <item
+            android:id="@+id/menu_appearance_header"
+            android:title="Settings"
+            android:checkable="false" />
+
+        <item
+            android:id="@+id/menu_theme"
+            android:icon="@drawable/ic_light_mode"
+            android:title="Theme" />
 
         <item
             android:id="@+id/menu_logout"
@@ -31,23 +41,17 @@
         <item
             android:id="@+id/menu_support"
             android:icon="@drawable/ic_support"
-            android:title="Support" />
-
-    </group>
-
-    <group
-        android:id="@+id/group_appearance"
-        android:checkableBehavior="none">
+            android:title="Help &amp; Support" />
 
         <item
-            android:id="@+id/menu_appearance_header"
-            android:title="App Appearance"
-            android:checkable="false" />
+            android:id="@+id/privacy_prolicy"
+            android:icon="@drawable/ic_privacy"
+            android:title="Privacy Policy" />
 
         <item
-            android:id="@+id/menu_theme"
-            android:icon="@drawable/ic_light_mode"
-            android:title="Theme" />
+            android:id="@+id/about_app"
+            android:icon="@drawable/ic_about"
+            android:title="About App" />
 
     </group>
 </menu>

@@ -15,8 +15,6 @@ public class ReminderEntity {
     private String message;     // reminder & task
     private long notification;  // time in millis
     private boolean repeated;   // yearly/based on user
-    private String backgroundColor;
-
     private int gradientStartColor; // store start color as int
     private int gradientEndColor;   // store end color as int
 
@@ -38,7 +36,6 @@ public class ReminderEntity {
         this.message = message;
         this.notification = notification;
         this.repeated = repeated;
-        this.backgroundColor = backgroundColor;
         this.repeatType = repeatType;
         this.notifyType = notifyType;
     }
@@ -101,14 +98,6 @@ public class ReminderEntity {
         this.repeated = repeated;
     }
 
-    public String getBackgroundColor() {
-        return backgroundColor;
-    }
-
-    public void setBackgroundColor(String backgroundColor) {
-        this.backgroundColor = backgroundColor;
-    }
-
     public String getRepeatType() {
         return repeatType;
     }
@@ -137,7 +126,6 @@ public class ReminderEntity {
                 ", message='" + message + '\'' +
                 ", notification=" + notification +
                 ", repeated=" + repeated +
-                ", backgroundColor='" + backgroundColor + '\'' +
                 ", repeatType='" + repeatType + '\'' +
                 ", notifyType='" + notifyType + '\'' +
                 '}';
