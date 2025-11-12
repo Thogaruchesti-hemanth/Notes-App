@@ -17,6 +17,9 @@ public class ReminderEntity {
     private boolean repeated;   // yearly/based on user
     private String backgroundColor;
 
+    private int gradientStartColor; // store start color as int
+    private int gradientEndColor;   // store end color as int
+
     // Add these missing fields
     private String repeatType;  // "Daily", "Weekly", "Monthly", "Yearly", "None"
     private String notifyType;  // "On that day", "Day before", etc.
@@ -139,6 +142,13 @@ public class ReminderEntity {
                 ", notifyType='" + notifyType + '\'' +
                 '}';
     }
+
+    // getters & setters
+    public int getGradientStartColor() { return gradientStartColor; }
+    public void setGradientStartColor(int gradientStartColor) { this.gradientStartColor = gradientStartColor; }
+
+    public int getGradientEndColor() { return gradientEndColor; }
+    public void setGradientEndColor(int gradientEndColor) { this.gradientEndColor = gradientEndColor; }
 
     public boolean isBirthday() {
         return "birthday".equals(type);

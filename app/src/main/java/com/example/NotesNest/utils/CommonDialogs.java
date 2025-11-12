@@ -1,23 +1,34 @@
 package com.example.NotesNest.utils;
 
 import static com.example.NotesNest.utils.Constants.DEFAULT_COLORS;
+import static com.example.NotesNest.utils.Constants.professionalGradients;
 
+import android.animation.ArgbEvaluator;
+import android.animation.ValueAnimator;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 
+import androidx.annotation.ColorInt;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatDialog;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -247,20 +258,146 @@ public class CommonDialogs {
                 false
         );
 
-        sheetView.setBackgroundResource(R.drawable.bg_bottom_sheet);
+        View customSheetContainer = sheetView.findViewById(R.id.bottom_color_picker);
+
+        // ---- Initial background ----
+        int[] currentColor = {Color.parseColor(selectedColor)};
+        customSheetContainer.getBackground().setTint(currentColor[0]);
 
         RecyclerView recyclerView = sheetView.findViewById(R.id.colorRecycler);
         recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false));
 
         ColorAdapter adapter = new ColorAdapter(DEFAULT_COLORS, selectedColor, color -> {
+
+            try {
+                int newColor = Color.parseColor(color);
+
+                // ✅ Smooth animationN
+                ValueAnimator colorAnim = ValueAnimator.ofObject(new ArgbEvaluator(), currentColor[0], newColor);
+                colorAnim.setDuration(250);
+                colorAnim.addUpdateListener(anim -> {
+                    int value = (int) anim.getAnimatedValue();
+                    customSheetContainer.getBackground().setTint(value);
+                });
+                colorAnim.start();
+
+                currentColor[0] = newColor;
+
+            } catch (Exception ignored) {}
             callback.onColorSelected(color);
-            dialog.dismiss();
+
+            // ✅ Let animation play slightly then dismiss
+            sheetView.postDelayed(dialog::dismiss, 260);
+
         });
 
         recyclerView.setAdapter(adapter);
 
         dialog.setContentView(sheetView);
         dialog.show();
+    }
+
+    public static void showThemeSelectionDialog(
+            Context context,
+            int selectedTheme,
+            ThemeSelectionListener listener
+    ) {
+
+        View view = LayoutInflater.from(context)
+                .inflate(R.layout.dialog_theme_selector, null);
+
+        RadioGroup radioGroup = view.findViewById(R.id.radioGroup);
+        RadioButton radioLight = view.findViewById(R.id.radioLight);
+        RadioButton radioDark = view.findViewById(R.id.radioDark);
+        RadioButton radioSystem = view.findViewById(R.id.radioSystemDefault);
+        // Pre-select
+        switch (selectedTheme) {
+            case 1:
+                radioLight.setChecked(true);
+                break;
+            case 2:
+                radioDark.setChecked(true);
+                break;
+            default:
+                radioSystem.setChecked(true);
+        }
+
+        AlertDialog dialog = new AlertDialog.Builder(context)
+                .setView(view)
+                .create();
+
+
+        radioGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            int theme;
+            if (checkedId == R.id.radioLight) {
+                theme = 1;
+            } else if (checkedId == R.id.radioDark) {
+                theme = 2;
+            } else {
+                theme = 3;
+            }
+            listener.onThemeSelected(theme);
+            dialog.dismiss();
+        });
+
+        dialog.show();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
+            lp.copyFrom(dialog.getWindow().getAttributes());
+            lp.width = (int) (context.getResources().getDisplayMetrics().widthPixels * 0.8);
+            lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
+            dialog.getWindow().setAttributes(lp);
+        }
+    }
+
+
+
+    public static void showGradientPicker(@NonNull Context context, @NonNull OnGradientSelectedListener listener) {
+
+        // Create Bottom Sheet Dialog
+        AppCompatDialog dialog = new AppCompatDialog(context);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.bottom_sheet_gradient_picker);
+
+        LinearLayout container = dialog.findViewById(R.id.gradientContainer);
+
+        // Dynamically add gradient options
+        for (int i = 0; i < professionalGradients.length; i++) {
+            int start = professionalGradients[i][0];
+            int end = professionalGradients[i][1];
+
+            View gradientView = new View(context);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    1f
+            );
+            params.setMargins(8, 8, 8, 8);
+            gradientView.setLayoutParams(params);
+
+            GradientDrawable gradientDrawable = new GradientDrawable(
+                    GradientDrawable.Orientation.LEFT_RIGHT,
+                    new int[]{start, end}
+            );
+            gradientDrawable.setCornerRadius(16f);
+            gradientView.setBackground(gradientDrawable);
+
+            int finalStart = start;
+            int finalEnd = end;
+            gradientView.setOnClickListener(v -> {
+                listener.onGradientSelected(finalStart,finalEnd);
+                dialog.dismiss();
+            });
+
+            container.addView(gradientView);
+        }
+
+        dialog.show();
+    }
+
+    public interface ThemeSelectionListener {
+        void onThemeSelected(int theme);
     }
 
     public interface NoteDialogCallback {
@@ -289,5 +426,9 @@ public class CommonDialogs {
 
     public interface ColorSelectedListener {
         void onColorSelected(String color);
+    }
+
+    public interface OnGradientSelectedListener {
+        void onGradientSelected(@ColorInt int startColor, @ColorInt int endColor);
     }
 }

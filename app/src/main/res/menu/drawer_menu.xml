@@ -45,9 +45,9 @@
             android:checkable="false" />
 
         <item
-            android:id="@+id/menu_theme_switch"
-            android:title="Custom Theme"
-            android:actionLayout="@layout/menu_theme_switch"/>
+            android:id="@+id/menu_theme"
+            android:icon="@drawable/ic_light_mode"
+            android:title="Theme" />
 
     </group>
 </menu>
