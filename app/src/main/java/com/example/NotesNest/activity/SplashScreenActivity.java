@@ -9,11 +9,11 @@ import android.widget.ImageView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AppCompatDelegate;
 
 import com.example.NotesNest.R;
 import com.example.NotesNest.utils.DBSeedUtil;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
+import com.example.NotesNest.utils.ThemeManager;
 
 @SuppressLint("CustomSplashScreen")
 public class SplashScreenActivity extends AppCompatActivity {
@@ -29,7 +29,7 @@ public class SplashScreenActivity extends AppCompatActivity {
 
         prefs = new SharedPreferenceUtil(this);
 
-        applyTheme();
+        ThemeManager.applyTheme(this);
         updateLogo();
         DBSeedUtil.seedDefaultCategories(this);
 
@@ -37,16 +37,6 @@ public class SplashScreenActivity extends AppCompatActivity {
                 .postDelayed(this::goToNextScreen, SPLASH_DELAY_MS);
     }
 
-    /** Apply app theme based on stored preference */
-    private void applyTheme() {
-        boolean isDark = "dark".equalsIgnoreCase(prefs.getTheme());
-
-        AppCompatDelegate.setDefaultNightMode(
-                isDark ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
-        );
-    }
-
-    /** Updates the splash logo based on theme */
     private void updateLogo() {
         ImageView logo = findViewById(R.id.splash_logo);
         boolean isDark = "dark".equalsIgnoreCase(prefs.getTheme());
@@ -57,7 +47,9 @@ public class SplashScreenActivity extends AppCompatActivity {
         );
     }
 
-    /** Navigate to login or main screen */
+    /**
+     * Navigate to login or main screen
+     */
     private void goToNextScreen() {
         Class<?> nextActivity = prefs.getLogin()
                 ? MainActivity.class

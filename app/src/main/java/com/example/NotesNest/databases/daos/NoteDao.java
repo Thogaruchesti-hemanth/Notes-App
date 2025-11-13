@@ -22,13 +22,21 @@ public interface NoteDao {
     List<NoteEntity> getNotesByCategory(int categoryId);
 
     // 🔹 Insert / update / delete
-    @Insert void insert(NoteEntity note);
-    @Update void update(NoteEntity note);
-    @Delete void delete(NoteEntity note);
-    @Query("DELETE FROM notes WHERE id = :noteId") void deleteNoteById(int noteId);
+    @Insert
+    void insert(NoteEntity note);
+
+    @Update
+    void update(NoteEntity note);
+
+    @Delete
+    void delete(NoteEntity note);
+
+    @Query("DELETE FROM notes WHERE id = :noteId")
+    void deleteNoteById(int noteId);
 
     // 🔹 Get note by ID
-    @Query("SELECT * FROM notes WHERE id = :id") NoteEntity getNoteById(int id);
+    @Query("SELECT * FROM notes WHERE id = :id")
+    NoteEntity getNoteById(int id);
 
     // 🔹 Reset notes if category deleted
     @Query("UPDATE notes SET category_id = NULL WHERE category_id = :oldCategoryId")

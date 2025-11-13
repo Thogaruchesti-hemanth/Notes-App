@@ -150,13 +150,13 @@ public class DrawerHelper {
 
             switch (theme) {
                 case 1:
-                    ThemeManager.updateTheme(activity, "light");
+                    ThemeManager.updateTheme(activity, "light", activity);
                     break;
                 case 2:
-                    ThemeManager.updateTheme(activity, "dark");
+                    ThemeManager.updateTheme(activity, "dark", activity);
                     break;
                 case 3:
-                    ThemeManager.updateTheme(activity, "system");
+                    ThemeManager.updateTheme(activity, "system", activity);
                     break;
             }
 

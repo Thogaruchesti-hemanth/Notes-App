@@ -30,10 +30,14 @@ import com.example.NotesNest.AnimatedRunningBorderLayout;
 import com.example.NotesNest.FirebaseHelper;
 import com.example.NotesNest.R;
 import com.example.NotesNest.databinding.ActivityLoginBinding;
+import com.example.NotesNest.utils.ValidationUtils;
+import com.example.NotesNest.utils.formaters.ValidationTextWatcher;
+import com.google.android.material.textfield.TextInputLayout;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
 
 /**
  * LoginActivity - Cleaned (Option A)
@@ -74,7 +78,37 @@ public class LoginActivity extends AppCompatActivity {
         initUi();
         registerLaunchers();
         bindListeners();
+        setupRealtimeValidation();
     }
+
+    private void setupRealtimeValidation() {
+        // Real-time validation for signup fields
+        binding.loginEmail.addTextChangedListener(new ValidationTextWatcher(
+                binding.loginEmailLayout,
+                binding.loginEmail,
+                binding.errorTextView,
+                ValidationTextWatcher.FieldType.EMAIL));
+
+        binding.userNameEditText.addTextChangedListener(new ValidationTextWatcher(
+                binding.editTextUserNameLayout,
+                binding.userNameEditText,
+                binding.errorTextView,
+                ValidationTextWatcher.FieldType.USERNAME));
+
+        binding.loginPassword.addTextChangedListener(new ValidationTextWatcher(
+                binding.loginPasswordLayout,
+                binding.loginPassword,
+                binding.errorTextView,
+                ValidationTextWatcher.FieldType.PASSWORD));
+
+        binding.confirmPassword.addTextChangedListener(new ValidationTextWatcher(
+                binding.confirmPasswordLayout,
+                binding.confirmPassword,
+                ValidationTextWatcher.FieldType.CONFIRM_PASSWORD,
+                binding.errorTextView,
+                binding.loginPassword));
+    }
+
 
     private void initUi() {
         loginBorder = binding.loginBorderLayout;
@@ -136,28 +170,8 @@ public class LoginActivity extends AppCompatActivity {
 
         binding.googleSignInButton.setOnClickListener(v -> firebaseHelper.signInWithGoogle(googleLauncher, this));
 
-        // Clear error when user starts typing
-        setupErrorClearingListeners();
-    }
-
-    private void setupErrorClearingListeners() {
-        binding.loginEmail.setOnFocusChangeListener((v, hasFocus) -> {
-            if (hasFocus) clearError();
-        });
-
-        binding.loginPassword.setOnFocusChangeListener((v, hasFocus) -> {
-            if (hasFocus) clearError();
-        });
-
-        binding.userNameEditText.setOnFocusChangeListener((v, hasFocus) -> {
-            if (hasFocus) clearError();
-        });
-
-        binding.confirmPassword.setOnFocusChangeListener((v, hasFocus) -> {
-            if (hasFocus) clearError();
-        });
-
         binding.termsCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> clearError());
+
     }
 
     // ----------------- UI Mode Helpers -----------------
@@ -211,13 +225,13 @@ public class LoginActivity extends AppCompatActivity {
         // Start the loading animation
         loginBorder.startLoading();
 
-        if (isValidEmail(email)) {
+        if (!ValidationUtils.isValidEmail(email)) {
             showError("Invalid email");
             loginBorder.stopLoading(); // stop animation on failure
             return;
         }
 
-        if (password.isEmpty()) {
+        if (!ValidationUtils.isValidPassword(password)) {
             showError("Enter your password");
             loginBorder.stopLoading(); // stop animation on failure
             return;
@@ -257,22 +271,22 @@ public class LoginActivity extends AppCompatActivity {
         // Clear previous errors
         clearError();
 
-        if (!isValidUsername(username)) {
-            showError("Username must be at least 3 characters");
+        if (!ValidationUtils.isValidUsername(username)) {
+            showError("Username must be 3–15 characters long and contain only letters, numbers, or underscores");
             return;
         }
 
-        if (isValidEmail(email)) {
+        if (!ValidationUtils.isValidEmail(email)) {
             showError("Invalid email");
             return;
         }
 
-        if (!isValidPassword(password)) {
-            showError("Password must be 8+ chars, contain upper & lower case letters and a number");
+        if (!ValidationUtils.isValidPassword(password)) {
+            showError("Password must be 8+ chars, contain upper & lower case letters, a number, and a symbol");
             return;
         }
 
-        if (!password.equals(confirm)) {
+        if (!ValidationUtils.doPasswordsMatch(password, confirm)) {
             showError("Passwords do not match");
             return;
         }
@@ -325,8 +339,8 @@ public class LoginActivity extends AppCompatActivity {
 
     private void forgotPassword() {
         final String email = binding.loginEmail.getText() == null ? "" : binding.loginEmail.getText().toString().trim();
-        if (isValidEmail(email)) {
-            showError("Enter a valid email to reset password");
+        if (email.isEmpty() || !ValidationUtils.isValidEmail(email)) {
+            showError("Please enter a valid email to reset your password");
             return;
         }
 
@@ -359,20 +373,6 @@ public class LoginActivity extends AppCompatActivity {
         binding.errorTextView.setText("");
     }
 
-    // ----------------- Validation helpers -----------------
-
-    private boolean isValidEmail(@NonNull String email) {
-        return !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches();
-    }
-
-    private boolean isValidPassword(@NonNull String password) {
-        return password.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}$");
-    }
-
-    private boolean isValidUsername(@NonNull String username) {
-        return username.matches("^[a-zA-Z0-9_]{3,}$");
-    }
-
     // ----------------- Session helpers -----------------
 
     private void saveSession(@NonNull String email) {
@@ -395,7 +395,7 @@ public class LoginActivity extends AppCompatActivity {
             // 3️⃣ Save the email securely
             securePrefs.edit().putString("user_email", email).apply();
 
-            Log.i(TAG, "✅ Session saved successfully. Email: " + email);
+            Log.i(TAG, "✅ Session saved successfully.");
 
         } catch (Exception e) {
             // Catch all exceptions safely
@@ -480,35 +480,61 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void clearAllInputs() {
+        // --- 1️⃣ Disable animations temporarily ---
+        disableErrorAnimations(binding.loginEmailLayout);
+        disableErrorAnimations(binding.loginPasswordLayout);
+        disableErrorAnimations(binding.editTextUserNameLayout);
+        disableErrorAnimations(binding.confirmPasswordLayout);
+
+        // --- 2️⃣ Clear all inputs instantly ---
         binding.loginEmail.setText("");
         binding.loginPassword.setText("");
         binding.userNameEditText.setText("");
         binding.confirmPassword.setText("");
 
-        // Clear focus
         binding.loginEmail.clearFocus();
         binding.loginPassword.clearFocus();
         binding.userNameEditText.clearFocus();
         binding.confirmPassword.clearFocus();
 
+        // --- 3️⃣ Immediately remove all errors ---
+        binding.loginEmailLayout.setError(null);
+        binding.loginPasswordLayout.setError(null);
+        binding.editTextUserNameLayout.setError(null);
+        binding.confirmPasswordLayout.setError(null);
 
+        binding.loginEmailLayout.setErrorEnabled(false);
+        binding.loginPasswordLayout.setErrorEnabled(false);
+        binding.editTextUserNameLayout.setErrorEnabled(false);
+        binding.confirmPasswordLayout.setErrorEnabled(false);
+
+        // --- 4️⃣ Clear the shared error text ---
+        binding.errorTextView.setText("");
+        binding.errorTextView.setVisibility(View.GONE);
+
+        // --- 5️⃣ Reset other UI parts ---
         binding.termsCheckbox.setChecked(false);
-        binding.profileImageView.setImageResource(R.drawable.ic_profile); // optional: reset profile image
-        clearError(); // also clear error message
-
-        // Stop any loading animations
+        binding.profileImageView.setImageResource(R.drawable.ic_profile);
         loginBorder.stopLoading();
         googleBorder.stopLoading();
 
+        // --- 6️⃣ Force layout refresh immediately ---
+        binding.getRoot().invalidate();
+        binding.getRoot().requestLayout();
 
-        // Hide keyboard
+        // --- 7️⃣ Hide keyboard ---
         View currentFocus = getCurrentFocus();
         if (currentFocus != null) {
             InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-            if (imm != null) {
-                imm.hideSoftInputFromWindow(currentFocus.getWindowToken(), 0);
-            }
+            if (imm != null) imm.hideSoftInputFromWindow(currentFocus.getWindowToken(), 0);
         }
+    }
+
+    // Helper: disables animations completely before clearing errors
+    private void disableErrorAnimations(@NonNull TextInputLayout layout) {
+        layout.setErrorEnabled(false);
+        layout.setError(null);
+        layout.jumpDrawablesToCurrentState(); // 👈 instantly stops any pending animations
     }
 
 
