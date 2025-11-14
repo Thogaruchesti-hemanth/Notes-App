@@ -107,9 +107,24 @@ public class DrawerHelper {
                 showThemeDialog(activity, drawerLayout);
                 break;
 
-            case "Help & Support":
+            case "Email Support":
+                Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
+                emailIntent.setData(Uri.parse("mailto:"));
+
+                emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{"saihemanth225@gmail.com"});
+                emailIntent.putExtra(Intent.EXTRA_SUBJECT, "NotesNest App Support");
+                emailIntent.putExtra(Intent.EXTRA_TEXT, "Hello team,\n\nI need help with...");
+
+                try {
+                    activity.startActivity(Intent.createChooser(emailIntent, "Send Email"));
+                } catch (ActivityNotFoundException e) {
+                    Toast.makeText(activity, "No email app found.", Toast.LENGTH_SHORT).show();
+                }
+                drawerLayout.closeDrawer(GravityCompat.START);
+                break;
             case "Privacy Policy":
             case "About App":
+            case "FAQ":
                 openWebLink(activity, appLink);
                 drawerLayout.closeDrawer(GravityCompat.START);
                 break;
