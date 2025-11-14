@@ -26,10 +26,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import com.example.NotesNest.FirebaseHelper;
 import com.example.NotesNest.R;
 import com.example.NotesNest.activity.LoginActivity;
-import com.example.NotesNest.FirebaseHelper;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 
 import java.io.ByteArrayOutputStream;
@@ -235,7 +236,8 @@ public class DrawerHelper {
 
         EditText userNameEdit = dialogView.findViewById(R.id.user_name_edit_text);
         EditText emailEdit = dialogView.findViewById(R.id.email_edit_text);
-        profileImage = dialogView.findViewById(R.id.profile_image_edit);
+        profileImage = dialogView.findViewById(R.id.profile_image_view);
+        FloatingActionButton profileUpdateButton = dialogView.findViewById(R.id.upload_image_button);
 
         userNameEdit.setText(userNameTextView.getText());
         emailEdit.setText(emailTextView.getText());
@@ -249,7 +251,7 @@ public class DrawerHelper {
             profileImage.setImageResource(R.drawable.ic_profile);
         }
 
-        profileImage.setOnClickListener(v -> openGalleryForDialog(profileImage));
+        profileUpdateButton.setOnClickListener(v -> openGalleryForDialog(profileImage));
 
         dialogView.findViewById(R.id.cancel_view)
                 .setOnClickListener(v -> dialog.dismiss());

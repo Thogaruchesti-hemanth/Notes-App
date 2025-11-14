@@ -64,7 +64,6 @@
                 android:id="@+id/email_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:editable="false"
                 android:enabled="false"
                 android:hint="Email"
                 android:inputType="textEmailAddress"
@@ -84,18 +83,47 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <com.google.android.material.imageview.ShapeableImageView
-        android:id="@+id/profile_image_edit"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
+
+    <FrameLayout
+        android:id="@+id/profile_frame"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginTop="50dp"
-        android:background="@color/layout_background"
-        android:onClick="dialogOpen"
-        android:scaleType="centerCrop"
-        android:src="@drawable/ic_profile"
-        app:layout_constraintLeft_toLeftOf="@id/constraintLayout"
-        app:layout_constraintRight_toRightOf="@id/constraintLayout"
-        app:layout_constraintTop_toTopOf="parent"
-        app:shapeAppearanceOverlay="@style/RoundedImageStyle" />
+        app:layout_constraintLeft_toLeftOf="@+id/constraintLayout"
+        app:layout_constraintRight_toRightOf="@+id/constraintLayout"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/profile_layout"
+            android:layout_width="@dimen/size_100"
+            android:layout_height="@dimen/size_100"
+            android:layout_gravity="center"
+            android:visibility="visible"
+            app:cardCornerRadius="@dimen/radius_60"
+            app:cardElevation="@dimen/elevation_4">
+
+            <ImageView
+                android:id="@+id/profile_image_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@string/text_profile_image"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_profile" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/upload_image_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:contentDescription="@string/text_upload_image"
+            android:visibility="visible"
+            app:backgroundTint="?attr/colorPrimary"
+            app:fabCustomSize="@dimen/size_40"
+            app:maxImageSize="@dimen/size_20"
+            app:srcCompat="@drawable/ic_info_add"
+            app:tint="?attr/colorOnPrimary" />
+
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
