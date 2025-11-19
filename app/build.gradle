@@ -1,21 +1,29 @@
+// Apply Android application plugin
 apply plugin: 'com.android.application'
 
+// Load keystore properties for signing (release builds)
 def keystoreProperties = new Properties()
 def keystorePropertiesFile = rootProject.file('key.properties')
 
-// Check if key.properties exists, then load it
+// Load keystore only if file exists
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
 android {
+
+    // App namespace (recommended instead of package)
     namespace 'com.example.NotesNest'
+
+    // Compile SDK version
     compileSdk 35
 
+    // Enable viewBinding
     buildFeatures {
         viewBinding true
     }
 
+    // Signing configuration for release APK
     signingConfigs {
         release {
             storeFile file(keystoreProperties['storeFile'] ?: 'key.properties')
@@ -29,6 +37,7 @@ android {
         applicationId "com.hemanth.NotesNest"
         minSdk 24
         targetSdk 35
+
         versionCode 4
         versionName "2.0.0"
 
@@ -36,16 +45,34 @@ android {
     }
 
     buildTypes {
+
         release {
+            // Use release signing
             signingConfig signingConfigs.release
+
+            // Disable cleartext traffic for security (Play Store requirement)
             manifestPlaceholders = [usesCleartextTraffic: "false"]
+
+            // Enable R8 code shrinking & optimization
+            minifyEnabled true
+
+            // Remove unused resources to reduce APK size
+            shrinkResources true
+
+            // Use default R8 + custom rules file
+            proguardFiles(
+                    getDefaultProguardFile('proguard-android-optimize.txt'),
+                    'proguard-rules.pro'
+            )
         }
+
         debug {
             signingConfig signingConfigs.debug
             manifestPlaceholders = [usesCleartextTraffic: "true"]
         }
     }
 
+    // Java compatibility
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
@@ -53,39 +80,55 @@ android {
 }
 
 dependencies {
-    implementation libs.work.runtime
-    def room_version = "2.8.3"
 
-    implementation "androidx.room:room-runtime:$room_version"
-    annotationProcessor "androidx.room:room-compiler:$room_version"
-
-    implementation "androidx.room:room-ktx:$room_version"
-
-    implementation "androidx.webkit:webkit:1.14.0"
-
-    implementation 'androidx.viewpager2:viewpager2:1.1.0'
-
-
-    implementation 'com.google.firebase:firebase-core:9.6.1'
-
+    // ------- AndroidX Core UI Libraries -------
     implementation libs.appcompat
     implementation libs.material
     implementation libs.activity
     implementation libs.constraintlayout
-    implementation 'com.google.firebase:firebase-storage:22.0.0'
-    testImplementation libs.junit
-    androidTestImplementation libs.ext.junit
-    androidTestImplementation libs.espresso.core
-    implementation 'com.squareup.picasso:picasso:2.8'
-    implementation 'com.google.firebase:firebase-database:22.0.0'
-    implementation 'androidx.security:security-crypto:1.1.0-alpha03'
-    implementation 'com.google.android.gms:play-services-auth:20.4.0'
-    implementation 'com.google.firebase:firebase-auth:22.3.1'
-    implementation 'com.google.android.gms:play-services-auth:21.2.0'
     implementation 'com.google.android.material:material:1.12.0'
+
+    // ------- Room Database -------
+    def room_version = "2.8.3"
+    implementation "androidx.room:room-runtime:$room_version"
+    annotationProcessor "androidx.room:room-compiler:$room_version"
+    implementation "androidx.room:room-ktx:$room_version"
+
+    // ------- WorkManager -------
+    implementation libs.work.runtime
+
+    // ------- Firebase (using latest recommended versions) -------
+    // ⚠ Removed firebase-core (DEPRECATED — caused missing classes)
+    implementation 'com.google.firebase:firebase-auth:22.3.1'
+    implementation 'com.google.firebase:firebase-storage:22.0.0'
+    implementation 'com.google.firebase:firebase-database:22.0.0'
+
+    // Add Firebase Analytics ONLY if you need it:
+    // implementation 'com.google.firebase:firebase-analytics-ktx'
+
+    // ------- Google Sign-In -------
+    // Use ONLY latest version (removed duplicate older version)
+    implementation 'com.google.android.gms:play-services-auth:21.2.0'
+
+    // ------- WebKit -------
+    implementation "androidx.webkit:webkit:1.14.0"
+
+    // ------- UI Components -------
+    implementation 'androidx.viewpager2:viewpager2:1.1.0'
     implementation 'com.facebook.shimmer:shimmer:0.5.0'
     implementation 'com.google.android.flexbox:flexbox:3.0.0'
 
+    // ------- Security -------
+    implementation 'androidx.security:security-crypto:1.1.0-alpha03'
+
+    // ------- Image Loading -------
+    implementation 'com.squareup.picasso:picasso:2.8'
+
+    // ------- Testing -------
+    testImplementation libs.junit
+    androidTestImplementation libs.ext.junit
+    androidTestImplementation libs.espresso.core
 }
 
+// Apply Google Services plugin for Firebase
 apply plugin: 'com.google.gms.google-services'
