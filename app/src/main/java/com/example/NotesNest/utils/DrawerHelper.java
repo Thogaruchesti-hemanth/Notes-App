@@ -9,9 +9,12 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
@@ -22,6 +25,7 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.OptIn;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -29,6 +33,10 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import com.example.NotesNest.FirebaseHelper;
 import com.example.NotesNest.R;
 import com.example.NotesNest.activity.LoginActivity;
+import com.example.NotesNest.databases.AppDatabase;
+import com.google.android.material.badge.BadgeDrawable;
+import com.google.android.material.badge.BadgeUtils;
+import com.google.android.material.badge.ExperimentalBadgeUtils;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
@@ -36,6 +44,7 @@ import com.google.android.material.navigation.NavigationView;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.concurrent.Executors;
 
 public class DrawerHelper {
 
@@ -44,12 +53,14 @@ public class DrawerHelper {
     private final NavigationView navigationView;
     private final SharedPreferenceUtil pref;
     private final FirebaseHelper firebaseHelper;
+    private final AppDatabase db;
     public OnDrawerItemSelectedListener listener;
-
     private ImageView profileImageView, profileImage;
     private TextView userNameTextView, emailTextView;
     private ActivityResultLauncher<Intent> galleryLauncher;
     private ImageView currentDialogImageView;
+    private BadgeDrawable notesBadge;
+    private BadgeDrawable remindersBadge;
 
     public DrawerHelper(AppCompatActivity activity) {
         this.activity = activity;
@@ -57,12 +68,14 @@ public class DrawerHelper {
         this.navigationView = activity.findViewById(R.id.nav_view);
         this.pref = new SharedPreferenceUtil(activity);
         this.firebaseHelper = new FirebaseHelper();
+        db = AppDatabase.getInstance(activity);
 
         setupHeaderViews();
         setupMenuButton();
         setupGalleryLauncher();
         loadUserData();
         updateThemeMenuIcon();
+        setupBadges();
 
         navigationView.getHeaderView(0)
                 .findViewById(R.id.edit_header_button)
@@ -401,6 +414,53 @@ public class DrawerHelper {
                 themeItem.setIcon(R.drawable.ic_system_mode);
                 break;
         }
+    }
+
+
+    private void setupBadges() {
+
+        Executors.newSingleThreadExecutor().execute(() -> {
+
+            int notesCount = db.noteDao().getTotalNotesCount();
+            int remindersCount = db.reminderDao().getTotalCount();
+
+            // Switch back to main thread
+            new Handler(Looper.getMainLooper()).post(() -> {
+                Menu menu = navigationView.getMenu();
+
+                setupBadgeForMenuItem(
+                        menu.findItem(R.id.menu_all_notes),
+                        notesCount
+                );
+
+                setupBadgeForMenuItem(
+                        menu.findItem(R.id.menu_reminders),
+                        remindersCount
+                );
+            });
+        });
+    }
+
+
+    @OptIn(markerClass = ExperimentalBadgeUtils.class)
+    private void setupBadgeForMenuItem(MenuItem item, int count) {
+
+        View actionView = item.getActionView();
+        if (actionView == null) return;
+
+        ImageView iconView = actionView.findViewById(R.id.badge_icon);
+        iconView.setImageDrawable(item.getIcon());
+
+        BadgeDrawable badge = BadgeDrawable.create(activity);
+
+        badge.setNumber(count);
+        badge.setVisible(count > 0);
+
+        BadgeUtils.attachBadgeDrawable(
+                badge,
+                iconView,
+                navigationView
+        );
     }
 
 

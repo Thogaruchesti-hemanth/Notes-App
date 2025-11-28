@@ -54,4 +54,8 @@ public interface NoteDao {
     @Query("SELECT notes.* FROM notes JOIN notes_fts ON notes.id = notes_fts.rowid " +
             "WHERE notes_fts MATCH :query ORDER BY notes.id DESC")
     List<NoteEntity> fullTextSearch(String query);
+
+    // 🔹 Get total notes count
+    @Query("SELECT COUNT(*) FROM notes")
+    int getTotalNotesCount();
 }

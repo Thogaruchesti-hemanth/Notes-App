@@ -9,12 +9,14 @@
         <item
             android:id="@+id/menu_all_notes"
             android:icon="@drawable/ic_notes"
-            android:title="All Notes" />
+            android:title="All Notes"
+            android:actionLayout="@layout/menu_badge_layout"/>
 
         <item
             android:id="@+id/menu_reminders"
             android:icon="@drawable/ic_reminders"
-            android:title="Reminders" />
+            android:title="Reminders"
+            android:actionLayout="@layout/menu_badge_layout"/>
 
     </group>
 
