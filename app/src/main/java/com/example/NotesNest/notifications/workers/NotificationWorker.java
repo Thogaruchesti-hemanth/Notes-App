@@ -2,6 +2,7 @@ package com.example.NotesNest.notifications.workers;
 
 import static com.example.NotesNest.utils.Constants.TYPE_BIRTHDAY;
 
+import android.app.Application;
 import android.content.Context;
 import android.text.TextUtils;
 import android.util.Log;
@@ -10,10 +11,11 @@ import androidx.annotation.NonNull;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import com.example.NotesNest.databases.AppDatabase;
 import com.example.NotesNest.databases.entities.ReminderEntity;
+import com.example.NotesNest.databases.repositories.ReminderRepository;
 import com.example.NotesNest.notifications.helper.NotificationHelper;
 import com.example.NotesNest.notifications.schedulers.NotificationScheduler;
+import com.example.NotesNest.utils.SharedPreferenceUtil;
 
 import java.util.Calendar;
 import java.util.Locale;
@@ -56,8 +58,9 @@ public class NotificationWorker extends Worker {
             return Result.failure();
         }
 
-        AppDatabase db = AppDatabase.getInstance(context);
-        ReminderEntity entity = db.reminderDao().getById(reminderId);
+        ReminderRepository repo = new ReminderRepository((Application) context.getApplicationContext());
+        String userId = new SharedPreferenceUtil(context).getUserId();
+        ReminderEntity entity = repo.getReminderById(userId,reminderId);
 
         if (entity == null) {
             Log.w(TAG, "Entity not found for id: " + reminderId);
@@ -65,11 +68,11 @@ public class NotificationWorker extends Worker {
         }
 
         // ------------ Prepare title & message ----------------
-        String title = TYPE_BIRTHDAY.equals(entity.getType())
-                ? (entity.getName() != null ? entity.getName() : "Birthday")
-                : (entity.getTitle() != null ? entity.getTitle() : "Reminder");
+        String title = TYPE_BIRTHDAY.equals(entity.type)
+                ? (entity.name != null ? entity.name : "Birthday")
+                : (entity.title != null ? entity.title : "Reminder");
 
-        String message = entity.getMessage() != null ? entity.getMessage() : "";
+        String message = entity.message != null ? entity.message : "";
 
         String channelId = TextUtils.isEmpty(channel)
                 ? NotificationHelper.CHANNEL_ID_REMINDERS
@@ -93,8 +96,8 @@ public class NotificationWorker extends Worker {
         }
 
         // ------------ Repeat handling ----------------
-        String repeatType = entity.getRepeatType();
-        boolean isRepeatFlag = entity.isRepeated();
+        String repeatType = entity.repeatType;
+        boolean isRepeatFlag = entity.isRepeated;
 
         // backward compatibility
         if (TextUtils.isEmpty(repeatType)) {
@@ -102,7 +105,7 @@ public class NotificationWorker extends Worker {
             if (!TextUtils.isEmpty(fromInput)) repeatType = fromInput;
         }
         if (!isRepeatFlag) {
-            isRepeatFlag = getInputData().getBoolean(KEY_IS_REPEAT_FLAG, entity.isRepeated());
+            isRepeatFlag = getInputData().getBoolean(KEY_IS_REPEAT_FLAG, entity.isRepeated);
         }
 
         try {
@@ -110,27 +113,27 @@ public class NotificationWorker extends Worker {
                     !TextUtils.isEmpty(repeatType) &&
                     !"Does not repeat".equalsIgnoreCase(repeatType)) {
 
-                long lastTrigger = entity.getNotification() > 0
-                        ? entity.getNotification()
+                long lastTrigger = entity.notificationTime > 0
+                        ? entity.notificationTime
                         : System.currentTimeMillis();
 
                 long nextTrigger = computeNextOccurrence(
                         lastTrigger,
                         repeatType,
-                        entity.getType(),
-                        entity.getNotification()
+                        entity.type,
+                        entity.notificationTime
                 );
 
                 if (nextTrigger > 0) {
 
                     // Update DB
-                    entity.setNotification(nextTrigger);
-                    db.reminderDao().updateReminder(entity);
+                    entity.notificationTime = nextTrigger;
+                    repo.update(entity);
 
                     // Schedule next
                     NotificationScheduler.scheduleOneTime(
                             context,
-                            entity.getId(),
+                            entity.id,
                             nextTrigger,
                             repeatType,
                             true
@@ -139,19 +142,19 @@ public class NotificationWorker extends Worker {
                     Log.d(TAG, String.format(
                             Locale.US,
                             "Rescheduled id=%d repeatType=%s next=%d",
-                            entity.getId(),
+                            entity.id,
                             repeatType,
                             nextTrigger
                     ));
                 } else {
-                    Log.w(TAG, "computeNextOccurrence returned <=0 for id=" + entity.getId());
+                    Log.w(TAG, "computeNextOccurrence returned <=0 for id=" + entity.id);
                 }
             } else {
-                Log.d(TAG, "Not repeating for id=" + entity.getId());
+                Log.d(TAG, "Not repeating for id=" + entity.id);
             }
 
         } catch (Exception ex) {
-            Log.e(TAG, "Failed to schedule next occurrence for id=" + entity.getId(), ex);
+            Log.e(TAG, "Failed to schedule next occurrence for id=" + entity.id, ex);
         }
 
         return Result.success();
@@ -170,84 +173,68 @@ public class NotificationWorker extends Worker {
 
         try {
             // DAILY
-            if ("daily".equals(rt)) {
-                Calendar cal = Calendar.getInstance();
-                cal.setTimeInMillis(lastTriggerMillis);
-                cal.add(Calendar.DAY_OF_YEAR, 1);
-                return cal.getTimeInMillis();
-            }
-
-            // WEEKLY
-            if ("weekly".equals(rt)) {
-                Calendar cal = Calendar.getInstance();
-                cal.setTimeInMillis(lastTriggerMillis);
-                cal.add(Calendar.WEEK_OF_YEAR, 1);
-                return cal.getTimeInMillis();
-            }
-
-            // MONTHLY
-            if ("monthly".equals(rt)) {
-
-                Calendar base = Calendar.getInstance();
-                base.setTimeInMillis(
-                        entityNotificationMillis > 0 ? entityNotificationMillis : lastTriggerMillis
-                );
-
-                int targetDay = base.get(Calendar.DAY_OF_MONTH);
-                int hour = base.get(Calendar.HOUR_OF_DAY);
-                int minute = base.get(Calendar.MINUTE);
-                int second = base.get(Calendar.SECOND);
-
-                Calendar candidate = Calendar.getInstance();
-                candidate.setTimeInMillis(lastTriggerMillis);
-                candidate.add(Calendar.MONTH, 1);
-
-                for (int i = 0; i < 120; i++) {
-
-                    int y = candidate.get(Calendar.YEAR);
-                    int m = candidate.get(Calendar.MONTH);
-
-                    candidate.set(Calendar.YEAR, y);
-                    candidate.set(Calendar.MONTH, m);
-                    candidate.set(Calendar.DAY_OF_MONTH, targetDay);
-                    candidate.set(Calendar.HOUR_OF_DAY, hour);
-                    candidate.set(Calendar.MINUTE, minute);
-                    candidate.set(Calendar.SECOND, second);
-                    candidate.set(Calendar.MILLISECOND, 0);
-
-                    if (candidate.get(Calendar.MONTH) == m) {
-                        if (candidate.getTimeInMillis() <= System.currentTimeMillis()) {
-                            candidate.add(Calendar.MONTH, 1);
-                            continue;
-                        }
-                        return candidate.getTimeInMillis();
-                    }
-                    candidate.add(Calendar.MONTH, 1);
+            switch (rt) {
+                case "daily": {
+                    Calendar cal = Calendar.getInstance();
+                    cal.setTimeInMillis(lastTriggerMillis);
+                    cal.add(Calendar.DAY_OF_YEAR, 1);
+                    return cal.getTimeInMillis();
                 }
-                return -1;
+
+                // WEEKLY
+                case "weekly": {
+                    Calendar cal = Calendar.getInstance();
+                    cal.setTimeInMillis(lastTriggerMillis);
+                    cal.add(Calendar.WEEK_OF_YEAR, 1);
+                    return cal.getTimeInMillis();
+                }
+
+                // MONTHLY
+                case "monthly":
+
+                    Calendar base = Calendar.getInstance();
+                    base.setTimeInMillis(
+                            entityNotificationMillis > 0 ? entityNotificationMillis : lastTriggerMillis
+                    );
+
+                    int targetDay = base.get(Calendar.DAY_OF_MONTH);
+                    int hour = base.get(Calendar.HOUR_OF_DAY);
+                    int minute = base.get(Calendar.MINUTE);
+                    int second = base.get(Calendar.SECOND);
+
+                    Calendar candidate = Calendar.getInstance();
+                    candidate.setTimeInMillis(lastTriggerMillis);
+                    candidate.add(Calendar.MONTH, 1);
+
+                    for (int i = 0; i < 120; i++) {
+
+                        int y = candidate.get(Calendar.YEAR);
+                        int m = candidate.get(Calendar.MONTH);
+
+                        candidate.set(Calendar.YEAR, y);
+                        candidate.set(Calendar.MONTH, m);
+                        candidate.set(Calendar.DAY_OF_MONTH, targetDay);
+                        candidate.set(Calendar.HOUR_OF_DAY, hour);
+                        candidate.set(Calendar.MINUTE, minute);
+                        candidate.set(Calendar.SECOND, second);
+                        candidate.set(Calendar.MILLISECOND, 0);
+
+                        if (candidate.get(Calendar.MONTH) == m) {
+                            if (candidate.getTimeInMillis() <= System.currentTimeMillis()) {
+                                candidate.add(Calendar.MONTH, 1);
+                                continue;
+                            }
+                            return candidate.getTimeInMillis();
+                        }
+                        candidate.add(Calendar.MONTH, 1);
+                    }
+                    return -1;
             }
 
             // YEARLY / (Birthday → same logic)
             if ("yearly".equals(rt) || TYPE_BIRTHDAY.equals(reminderType)) {
 
-                Calendar base = Calendar.getInstance();
-                base.setTimeInMillis(
-                        entityNotificationMillis > 0 ? entityNotificationMillis : lastTriggerMillis
-                );
-
-                int day = base.get(Calendar.DAY_OF_MONTH);
-                int month = base.get(Calendar.MONTH);
-                int hour = base.get(Calendar.HOUR_OF_DAY);
-                int minute = base.get(Calendar.MINUTE);
-                int second = base.get(Calendar.SECOND);
-
-                Calendar next = Calendar.getInstance();
-                next.set(Calendar.MONTH, month);
-                next.set(Calendar.DAY_OF_MONTH, day);
-                next.set(Calendar.HOUR_OF_DAY, hour);
-                next.set(Calendar.MINUTE, minute);
-                next.set(Calendar.SECOND, second);
-                next.set(Calendar.MILLISECOND, 0);
+                Calendar next = getCalendar(lastTriggerMillis, entityNotificationMillis);
 
                 if (next.getTimeInMillis() <= System.currentTimeMillis()) {
                     next.add(Calendar.YEAR, 1);
@@ -264,5 +251,28 @@ public class NotificationWorker extends Worker {
         }
 
         return -1;
+    }
+
+    @NonNull
+    private static Calendar getCalendar(long lastTriggerMillis, long entityNotificationMillis) {
+        Calendar base = Calendar.getInstance();
+        base.setTimeInMillis(
+                entityNotificationMillis > 0 ? entityNotificationMillis : lastTriggerMillis
+        );
+
+        int day = base.get(Calendar.DAY_OF_MONTH);
+        int month = base.get(Calendar.MONTH);
+        int hour = base.get(Calendar.HOUR_OF_DAY);
+        int minute = base.get(Calendar.MINUTE);
+        int second = base.get(Calendar.SECOND);
+
+        Calendar next = Calendar.getInstance();
+        next.set(Calendar.MONTH, month);
+        next.set(Calendar.DAY_OF_MONTH, day);
+        next.set(Calendar.HOUR_OF_DAY, hour);
+        next.set(Calendar.MINUTE, minute);
+        next.set(Calendar.SECOND, second);
+        next.set(Calendar.MILLISECOND, 0);
+        return next;
     }
 }

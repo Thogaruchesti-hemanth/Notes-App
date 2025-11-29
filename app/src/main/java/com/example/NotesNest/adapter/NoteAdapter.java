@@ -10,13 +10,14 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
+import androidx.lifecycle.LifecycleOwner;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.NotesNest.R;
 import com.example.NotesNest.activity.EditNoteActivity;
 import com.example.NotesNest.databases.AppDatabase;
-import com.example.NotesNest.databases.entities.CategoryEntity;
+import com.example.NotesNest.databases.ViewModels.CategoryViewModel;
 import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.utils.CommonDialogs;
 import com.example.NotesNest.utils.DateTimeUtils;
@@ -30,12 +31,14 @@ import java.util.concurrent.Executors;
 public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder> {
 
     private final Context context;
-    private final ExecutorService executorService;
+    private final CategoryViewModel categoryViewModel;
     private final ArrayList<NoteEntity> noteList;
+    private final ExecutorService executorService;
 
-    public NoteAdapter(ArrayList<NoteEntity> noteList, Context context) {
+    public NoteAdapter(ArrayList<NoteEntity> noteList, Context context, CategoryViewModel categoryViewModel) {
         this.noteList = noteList;
         this.context = context;
+        this.categoryViewModel = categoryViewModel;
         this.executorService = Executors.newSingleThreadExecutor();
     }
 
@@ -55,7 +58,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         holder.textViewContent.getSettings().setJavaScriptEnabled(false);
         holder.textViewContent.loadDataWithBaseURL(
                 null,
-                note.message,
+                note.content,
                 "text/html",
                 "UTF-8",
                 null
@@ -63,7 +66,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
 
         int bgColor;
         try {
-            bgColor = android.graphics.Color.parseColor(note.background_color);
+            bgColor = android.graphics.Color.parseColor(note.colorHex);
         } catch (Exception e) {
             bgColor = android.graphics.Color.WHITE;
         }
@@ -71,9 +74,10 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         holder.textViewContent.setBackgroundColor(bgColor);
         holder.mainLayout.setCardBackgroundColor(bgColor);
 
-        DateTimeUtils.setDateTime(note.date, note.time, holder.textDate, holder.textTime);
+        // Timestamp-based date/time
+        DateTimeUtils.setDateTime(note.createdAt, holder.textDate, holder.textTime);
 
-        // Click listener for full note content
+        // Click listener to show full content
         holder.mainLayout.setOnClickListener(v -> {
             int currentPos = holder.getBindingAdapterPosition();
             if (currentPos == RecyclerView.NO_POSITION) return;
@@ -82,18 +86,18 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
 
             CommonDialogs.showNoteContentDialog(context, currentNote, new CommonDialogs.NoteDialogCallback() {
                 @Override
-                public void setDateTime(TextView dateView, TextView timeView, String date, String time) {
-                    DateTimeUtils.setDateTime(date, time, dateView, timeView);
+                public void setDateTime(long timeStamp, TextView dateView, TextView timeView) {
+                    DateTimeUtils.setDateTime(timeStamp, dateView, timeView);
                 }
 
                 @Override
                 public void setCategory(TextView categoryView, int categoryId) {
-                    setCategoryForDialog(categoryId, categoryView);
+                    bindCategory(categoryId, categoryView);
                 }
             });
         });
 
-        // Long click for edit/delete
+        // Long-click listener for edit/delete
         holder.mainLayout.setOnLongClickListener(v -> {
             int currentPos = holder.getBindingAdapterPosition();
             if (currentPos == RecyclerView.NO_POSITION) return true;
@@ -118,16 +122,16 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         });
     }
 
-    private void setCategoryForDialog(Integer categoryId, TextView categoryView) {
+    private void bindCategory(Integer categoryId, TextView categoryView) {
+        if (categoryView == null) return;
+
         if (categoryId == null) {
             categoryView.setVisibility(View.GONE);
             return;
         }
 
-        executorService.execute(() -> {
-            CategoryEntity category = AppDatabase.getInstance(context).categoryDao().getCategoryById(categoryId);
-
-            ((android.app.Activity) context).runOnUiThread(() -> {
+        if (context instanceof LifecycleOwner) {
+            categoryViewModel.getCategoryById(categoryId).observe((LifecycleOwner) context, category -> {
                 if (category != null) {
                     categoryView.setText(category.name);
                     categoryView.setVisibility(View.VISIBLE);
@@ -135,7 +139,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
                     categoryView.setVisibility(View.GONE);
                 }
             });
-        });
+        }
     }
 
     private void deleteNote(int noteId, int position) {

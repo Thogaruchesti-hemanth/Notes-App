@@ -9,10 +9,10 @@ public class SharedPreferenceUtil {
     private static final String KEY_USERNAME = "user_name";
     private static final String KEY_EMAIL = "user_email";
     private static final String KEY_PHOTO = "user_image";
+    private static final String KEY_USERID = "user_id";
     private static final String KEY_LOGIN = "is_login";
     private static final String KEY_SYSTEM_THEME = "system_theme";
 
-    private static final String KEY_CUSTOM_THEME = "custom_theme";
     private static final String KEY_THEME = "theme"; // light / dark
     private static SharedPreferences sharedPreferences;
 
@@ -42,6 +42,10 @@ public class SharedPreferenceUtil {
         return sharedPreferences.getString(KEY_EMAIL, "user@example.com");
     }
 
+    public String getUserId(){
+        return sharedPreferences.getString(KEY_USERID,"-1");
+    }
+
     public void setUserEmail(String userEmail) {
         sharedPreferences.edit().putString(KEY_EMAIL, userEmail).apply();
     }
@@ -49,6 +53,11 @@ public class SharedPreferenceUtil {
     public void setKeyLogin(boolean value) {
         sharedPreferences.edit().putBoolean(KEY_LOGIN, value).apply();
     }
+
+    public void setUserId(String userId){
+        sharedPreferences.edit().putString(KEY_USERID,userId).apply();
+    }
+
 
     public boolean getLogin() {
         return sharedPreferences.getBoolean(KEY_LOGIN, false);
@@ -71,14 +80,6 @@ public class SharedPreferenceUtil {
 
     public void setSystemTheme(boolean enabled) {
         sharedPreferences.edit().putBoolean("system_theme", enabled).apply();
-    }
-
-    public boolean isCustomTheme() {
-        return sharedPreferences.getBoolean(KEY_CUSTOM_THEME, false);
-    }
-
-    public void setCustomTheme(boolean enabled) {
-        sharedPreferences.edit().putBoolean(KEY_CUSTOM_THEME, enabled).apply();
     }
 
     public String getTheme() {

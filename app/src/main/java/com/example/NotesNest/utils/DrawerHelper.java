@@ -274,14 +274,15 @@ public class DrawerHelper {
         boolean isNameChanged = !name.equals(pref.getUserName());
         boolean isEmailChanged = !email.equals(pref.getUserEmail());
         boolean isImageChanged = base64Image != null && !base64Image.isEmpty();
+        String userId = pref.getUserId();
 
         if (isNameChanged || isEmailChanged || isImageChanged) {
             firebaseHelper.updateUserData(
-                    email,
+                    userId,
                     name,
                     base64Image,
                     activity,
-                    () -> Toast.makeText(activity, "Details Updated in Firebase", Toast.LENGTH_SHORT).show()
+                    () -> Toast.makeText(activity, "Details Updated SuccessFully", Toast.LENGTH_SHORT).show()
             );
         }
 
@@ -305,10 +306,10 @@ public class DrawerHelper {
         pref.setUserImage(base64Image);
         updateDrawerHeaderImage(base64Image);
 
-        String email = pref.getUserEmail();
-        if (email != null && !email.isEmpty()) {
+        String userId = pref.getUserId();
+        if (userId != null && !userId.isEmpty()) {
             firebaseHelper.updateUserData(
-                    email,
+                    userId,
                     pref.getUserName(),
                     base64Image,
                     activity,

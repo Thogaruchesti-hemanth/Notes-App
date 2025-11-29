@@ -5,8 +5,6 @@ import static com.example.NotesNest.utils.Constants.DEFAULT_COLORS;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.view.View;
 import android.webkit.WebView;
 import android.widget.Button;
@@ -20,83 +18,75 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.NotesNest.R;
-import com.example.NotesNest.databases.AppDatabase;
 import com.example.NotesNest.databases.entities.CategoryEntity;
 import com.example.NotesNest.databases.entities.NoteEntity;
+import com.example.NotesNest.databases.ViewModels.CategoryViewModel;
+import com.example.NotesNest.databases.ViewModels.NoteViewModel;
 import com.example.NotesNest.editor.CKEditorHelper;
 import com.example.NotesNest.utils.CommonDialogs;
 import com.example.NotesNest.utils.DraftManager;
+import com.example.NotesNest.utils.SharedPreferenceUtil;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
-import java.util.Locale;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
- * EditNoteActivity
- * <p>
- * Refactored and cleaned-up version of the original activity. Focus is on
- * readability, maintainability and long-term reuse without changing behavior.
- * All previous features are preserved:
- * - Create / Edit notes
- * - Date / Time pickers
- * - Category selection
- * - Background color picker
- * - Rich editor integration via CKEditorHelper (JS bridge)
- * - Draft saving/restoring on pause
+ * EditNoteActivity — MVVM refactor using NoteViewModel + CategoryViewModel
+ * No direct DB access here; all read/write go through ViewModels -> Repositories.
  */
 public class EditNoteActivity extends AppCompatActivity {
 
-    // --- Intent keys / constants -------------------------------------------------
+    // Intent keys / constants
     public static final String EXTRA_ITEM_ID = "itemId";
     private final String DEFAULT_COLOR = DEFAULT_COLORS[0];
-    private final SimpleDateFormat DISPLAY_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-    private final SimpleDateFormat STORE_TIME_FORMAT = new SimpleDateFormat("HH:mm", Locale.getDefault());
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+
+    // Local category caches (UI-only)
     private final List<CategoryEntity> categories = new ArrayList<>();
     private final List<String> categoryNames = new ArrayList<>();
-    private final Calendar currentDateTime = Calendar.getInstance();
-    // --- UI references ----------------------------------------------------------
+    // UI references
     private EditText etTitle;
     private WebView editorWebView;
     private TextView tvCategory;
     private LinearLayout categoryLayout;
     private Button saveBtn;
-    // Toolbar controls
     private ImageButton btnBold;
     private ImageButton btnItalic;
     private ImageButton btnBullet;
     private ImageButton btnNumber;
-    // --- Helpers / state --------------------------------------------------------
+    // Helpers / state
     private CKEditorHelper editorHelper;
     private DraftManager draftManager;
-    private AppDatabase database;
-    private ExecutorService executorService;
+    // ViewModels
+    private NoteViewModel noteViewModel;
+    private CategoryViewModel categoryViewModel;
+    // UI state
     private boolean isEditing = false;
     private int noteId = -1;
     private String selectedColor = DEFAULT_COLOR;
     private int selectedCategoryId = -1;
+    private long originalCreatedAt = -1;
 
-    // ---------------------------------------------------------------------------
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_note);
 
-        initDependencies();
+        draftManager = new DraftManager(this);
+
         bindViews();
         setupToolbar();
+        setupEditorHelper();
+        initViewModels();
         setupListeners();
+        observeViewModels();
 
-        loadCategoriesAsync();
-        loadNoteIfProvided();
-        restoreDraftIfNeeded();
+        // Start loading data
+        categoryViewModel.getAllCategories(); // ensures LiveData exists; actual values are observed below
+        handleIncomingIntent();
 
         // default background when creating a new note
         if (!isEditing) {
@@ -104,13 +94,7 @@ public class EditNoteActivity extends AppCompatActivity {
             updateBackgroundColor();
         }
 
-    }
-
-    private void initDependencies() {
-        draftManager = new DraftManager(this);
-        executorService = Executors.newSingleThreadExecutor();
-        database = AppDatabase.getInstance(this);
-        editorHelper = new CKEditorHelper(this, findViewById(R.id.etNote));
+        restoreDraftIfNeeded();
     }
 
     private void bindViews() {
@@ -129,11 +113,22 @@ public class EditNoteActivity extends AppCompatActivity {
         btnBullet = findViewById(R.id.btn_bullet_list);
         btnNumber = findViewById(R.id.btn_numbered_list);
 
-        findViewById(R.id.color_selection).setOnClickListener(v -> CommonDialogs.showColorPicker(this, selectedColor, color -> {
-            selectedColor = color;
-            updateBackgroundColor();
-        }));
+        noteId = getIntent().getIntExtra("itemId", -1);
 
+        findViewById(R.id.color_selection).setOnClickListener(v ->
+                CommonDialogs.showColorPicker(this, selectedColor, color -> {
+                    selectedColor = color;
+                    updateBackgroundColor();
+                }));
+    }
+
+    private void setupEditorHelper() {
+        editorHelper = new CKEditorHelper(this, findViewById(R.id.etNote));
+    }
+
+    private void initViewModels() {
+        noteViewModel = new ViewModelProvider(this).get(NoteViewModel.class);
+        categoryViewModel = new ViewModelProvider(this).get(CategoryViewModel.class);
     }
 
     private void setupToolbar() {
@@ -152,7 +147,6 @@ public class EditNoteActivity extends AppCompatActivity {
 
         btnBullet.setOnClickListener(v -> {
             runJs("toggleList()");
-            // list state is handled separately inside toggleCommandState
             toggleCommandState(v, "insertUnorderedList");
         });
 
@@ -162,9 +156,7 @@ public class EditNoteActivity extends AppCompatActivity {
         });
     }
 
-
     private void setupListeners() {
-
         categoryLayout.setOnClickListener(v -> {
             int preselectIndex = 0;
             for (int i = 0; i < categories.size(); i++) {
@@ -174,10 +166,11 @@ public class EditNoteActivity extends AppCompatActivity {
                 }
             }
 
-            CommonDialogs.showCategoryDialog(this, "Categories", categoryNames, preselectIndex, (selectedCategory, position) -> {
-                tvCategory.setText(selectedCategory);
-                selectedCategoryId = categories.get(position).id;
-            });
+            CommonDialogs.showCategoryDialog(this, "Categories", new ArrayList<>(categoryNames), preselectIndex,
+                    (selectedCategory, position) -> {
+                        tvCategory.setText(selectedCategory);
+                        selectedCategoryId = categories.get(position).id;
+                    });
         });
 
         saveBtn.setOnClickListener(v -> saveNote());
@@ -188,103 +181,126 @@ public class EditNoteActivity extends AppCompatActivity {
         editorWebView.post(() -> editorWebView.evaluateJavascript("javascript:" + js, null));
     }
 
-    // Toggle a command state by querying document.queryCommandState or list-specific helper
+    // Toggle format button state by querying document.queryCommandState or list helper
     private void toggleCommandState(@NonNull View view, @NonNull String command) {
         if ("insertUnorderedList".equals(command) || "insertOrderedList".equals(command)) {
-            // Wait a tiny bit to allow JS to update the list state
             editorWebView.postDelayed(() -> editorWebView.evaluateJavascript("getListType();", value -> {
                 final String listType = value == null ? "" : value.replace("\"", "");
                 final boolean isBullet = "ul".equals(listType);
                 final boolean isNumber = "ol".equals(listType);
 
-                mainHandler.post(() -> {
+                runOnUiThread(() -> {
                     btnBullet.setSelected(isBullet);
                     btnNumber.setSelected(isNumber);
                 });
-            }), 50); // 50ms delay to let JS update
+            }), 50);
             return;
         }
 
-        // For bold / italic etc.
         editorWebView.postDelayed(() -> editorWebView.evaluateJavascript(
                 "document.queryCommandState('" + command + "')", value -> {
                     final boolean active = Boolean.parseBoolean(value == null ? "false" : value);
-                    mainHandler.post(() -> view.setSelected(active));
+                    runOnUiThread(() -> view.setSelected(active));
                 }), 50);
     }
 
-    // --- Category loading ------------------------------------------------------
-    private void loadCategoriesAsync() {
-        executorService.execute(() -> {
-            List<CategoryEntity> loaded = database.categoryDao().getAllCategories();
+    // Observe ViewModels
+    private void observeViewModels() {
+
+        // Observe categories LiveData and update local cache + UI
+        categoryViewModel.getAllCategories().observe(this, loaded -> {
+            if (loaded == null) return;
+
+            // create a modifiable copy
+            List<CategoryEntity> list = new ArrayList<>(loaded);
+
             boolean hasAll = false;
-            for (CategoryEntity c : loaded) {
+            for (CategoryEntity c : list) {
                 if ("All".equalsIgnoreCase(c.name)) {
                     hasAll = true;
                     break;
                 }
             }
-
             if (!hasAll) {
                 CategoryEntity all = new CategoryEntity();
                 all.id = 0;
                 all.name = "All";
-                loaded.add(0, all);
+                list.add(0, all);
             }
 
             categories.clear();
-            categories.addAll(loaded);
+            categories.addAll(list);
 
             categoryNames.clear();
             for (CategoryEntity c : categories) categoryNames.add(c.name);
 
-            mainHandler.post(() -> {
-                // select default when creating
-                if (!isEditing && !categories.isEmpty()) {
-                    tvCategory.setText(categories.get(0).name);
-                    selectedCategoryId = categories.get(0).id;
+            // If not editing, select default category
+            if (!isEditing && !categories.isEmpty()) {
+                tvCategory.setText(categories.get(0).name);
+                selectedCategoryId = categories.get(0).id;
+            } else {
+                // If editing and selectedCategoryId is already known, try set human-readable name
+                if (isEditing && selectedCategoryId != -1) {
+                    for (CategoryEntity c : categories) {
+                        if (c.id == selectedCategoryId) {
+                            tvCategory.setText(c.name);
+                            break;
+                        }
+                    }
                 }
-            });
+            }
+        });
+
+        // Observe single note LiveData (for editing)
+        noteViewModel.getNoteById(noteId).observe(this, note -> {
+            if (note == null) return;
+
+            isEditing = true;
+
+            final String title = note.title == null ? "" : note.title;
+            final String content = note.content == null ? "" : note.content;
+            final String bgColor = note.colorHex == null ? DEFAULT_COLOR : note.colorHex;
+
+            etTitle.setText(title);
+            editorHelper.setContent(content);
+
+            selectedColor = bgColor;
+            originalCreatedAt = note.createdAt;
+            updateBackgroundColor();
+
+            if (note.categoryId != null) {
+                selectedCategoryId = note.categoryId;
+                // try find name in cached categories; if not present, observe category by id
+                boolean found = false;
+                for (CategoryEntity c : categories) {
+                    if (c.id == selectedCategoryId) {
+                        tvCategory.setText(c.name);
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    categoryViewModel.getCategoryById(selectedCategoryId).observe(this, cat -> {
+                        if (cat != null) tvCategory.setText(cat.name);
+                    });
+                }
+            }
         });
     }
 
-    // --- Note loading ---------------------------------------------------------
-    private void loadNoteIfProvided() {
+    private void handleIncomingIntent() {
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra(EXTRA_ITEM_ID)) {
             noteId = intent.getIntExtra(EXTRA_ITEM_ID, -1);
             if (noteId != -1) {
-                isEditing = true;
-                executorService.execute(() -> {
-                    NoteEntity note = database.noteDao().getNoteById(noteId);
-                    if (note != null) {
-                        final String title = note.title == null ? "" : note.title;
-                        final String content = note.message == null ? "" : note.message;
-                        final String bgColor = note.background_color == null ? DEFAULT_COLOR : note.background_color;
-
-                        mainHandler.post(() -> {
-                            etTitle.setText(title);
-                            editorHelper.setContent(content);
-
-                            selectedColor = bgColor;
-                            updateBackgroundColor();
-                        });
-
-                        if (note.category_id != null) {
-                            selectedCategoryId = note.category_id;
-                            CategoryEntity cat = database.categoryDao().getCategoryById(note.category_id);
-                            if (cat != null) {
-                                final String catName = cat.name;
-                                mainHandler.post(() -> tvCategory.setText(catName));
-                            }
-                        }
-                    }
-                });
+                // we set isEditing when the note LiveData emits
+                // call getNoteById() so LiveData is created and observed by observeViewModels()
+                noteViewModel.getNoteById(noteId);
             }
         }
     }
 
-    // --- Saving / Updating note -----------------------------------------------
+    // Save/update note (uses ViewModel)
     private void saveNote() {
         final String title = etTitle.getText() == null ? "" : etTitle.getText().toString().trim();
         if (title.isEmpty()) {
@@ -293,44 +309,43 @@ public class EditNoteActivity extends AppCompatActivity {
         }
 
         editorHelper.getContent(htmlContent -> {
-            currentDateTime.setTimeInMillis(System.currentTimeMillis());
-            final String dateStr = DISPLAY_DATE_FORMAT.format(currentDateTime.getTime());
-            final String timeStr = STORE_TIME_FORMAT.format(currentDateTime.getTime());
+            long timestamp = System.currentTimeMillis();
+            String userId = new SharedPreferenceUtil(this).getUserId();
 
-            executorService.execute(() -> {
-                if (isEditing && noteId != -1) {
-                    NoteEntity existing = database.noteDao().getNoteById(noteId);
-                    if (existing != null) {
-                        existing.title = title;
-                        existing.message = htmlContent;
-                        existing.date = dateStr;
-                        existing.time = timeStr;
-                        existing.category_id = selectedCategoryId;
-                        existing.background_color = selectedColor;
-                        database.noteDao().update(existing);
-                    }
-                } else {
-                    NoteEntity newNote = new NoteEntity();
-                    newNote.title = title;
-                    newNote.message = htmlContent;
-                    newNote.date = dateStr;
-                    newNote.time = timeStr;
-                    newNote.category_id = selectedCategoryId;
-                    newNote.background_color = selectedColor;
-                    database.noteDao().insert(newNote);
-                }
+            if (isEditing && noteId != -1) {
+                // update existing
+                final NoteEntity updated = new NoteEntity();
+                updated.id = noteId;
+                updated.userId = userId;
+                updated.title = title;
+                updated.content = htmlContent;
+                updated.createdAt = originalCreatedAt;
+                updated.updatedAt = timestamp;
+                updated.categoryId = selectedCategoryId;
+                updated.colorHex = selectedColor;
 
-                mainHandler.post(() -> {
-                    clearDraft();
-                    resetUI();
-                    Toast.makeText(EditNoteActivity.this, "Note saved successfully", Toast.LENGTH_SHORT).show();
-                    finish();
-                });
-            });
+                noteViewModel.updateNote(updated);
+            } else {
+                final NoteEntity newNote = new NoteEntity();
+                newNote.title = title;
+                newNote.userId = userId;
+                newNote.content = htmlContent;
+                newNote.createdAt = timestamp;
+                newNote.updatedAt = timestamp;
+                newNote.categoryId = selectedCategoryId;
+                newNote.colorHex = selectedColor;
+
+                noteViewModel.insertNote(newNote);
+            }
+
+            clearDraft();
+            resetUI();
+            Toast.makeText(EditNoteActivity.this, "Note saved successfully", Toast.LENGTH_SHORT).show();
+            finish();
         });
     }
 
-    // --- Draft handling -------------------------------------------------------
+    // Draft handling
     private void restoreDraftIfNeeded() {
         if (isEditing) return;
         if (!draftManager.hasValidDraft()) return;
@@ -358,7 +373,7 @@ public class EditNoteActivity extends AppCompatActivity {
         draftManager.clearDraft();
     }
 
-    // --- UI helpers -----------------------------------------------------------
+    // UI helpers
     private void updateBackgroundColor() {
         editorHelper.setBackgroundColor(selectedColor);
         try {
@@ -385,18 +400,10 @@ public class EditNoteActivity extends AppCompatActivity {
         btnNumber.setSelected(false);
     }
 
-    // --- Lifecycle ------------------------------------------------------------
+    // Lifecycle
     @Override
     protected void onPause() {
         super.onPause();
         saveDraftSilently();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (executorService != null && !executorService.isShutdown()) {
-            executorService.shutdownNow();
-        }
     }
 }

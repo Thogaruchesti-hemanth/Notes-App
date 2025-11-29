@@ -37,6 +37,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 
 public class FirebaseHelper {
@@ -45,25 +46,27 @@ public class FirebaseHelper {
     private static final String EMAIL = "email";
     private static final String IMAGE = "userImage";
     private static final String PASSWORD = "password";
-    private static final String REFERENCE = "Users";
+    private static final String USER_ID = "userId";
+
     private final DatabaseReference databaseReference;
     private final FirebaseAuth mAuth;
 
     public FirebaseHelper() {
-        databaseReference = FirebaseDatabase.getInstance().getReference(REFERENCE);
+        databaseReference = FirebaseDatabase.getInstance().getReference("Users");
         mAuth = FirebaseAuth.getInstance();
     }
 
     public GoogleSignInClient getGoogleSignInClient(Context context) {
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestIdToken(context.getString(R.string.default_web_client_id)).requestEmail().build();
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(context.getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
 
         return GoogleSignIn.getClient(context, gso);
     }
 
-    // Force Google chooser every time
     public void signInWithGoogle(ActivityResultLauncher<Intent> launcher, Activity activity) {
         GoogleSignInClient client = getGoogleSignInClient(activity);
-
         client.signOut().addOnCompleteListener(task -> {
             Intent signInIntent = client.getSignInIntent();
             launcher.launch(signInIntent);
@@ -86,12 +89,10 @@ public class FirebaseHelper {
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
         mAuth.signInWithCredential(credential).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
-                FirebaseUser user = mAuth.getCurrentUser();
-                if (user != null) {
-                    saveGoogleUserToDatabase(user, context, callback);
-                }
+                FirebaseUser firebaseUser = mAuth.getCurrentUser();
+                if (firebaseUser != null) saveGoogleUserToDatabase(firebaseUser, context, callback);
             } else {
-                Toast.makeText(context, "Authentication Failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, "Authentication Failed", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -100,177 +101,141 @@ public class FirebaseHelper {
         String email = firebaseUser.getEmail();
         String userName = firebaseUser.getDisplayName();
         String photoUrl = firebaseUser.getPhotoUrl() != null ? firebaseUser.getPhotoUrl().toString() : "";
+        String uid = firebaseUser.getUid();
 
-        // Download image + convert to Base64 using modern Executor approach
-        downloadImageAndConvertToBase64(photoUrl, base64 -> {
-            // Check if user already exists in Firebase
-            databaseReference.child(encodeEmail(email)).addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    if (snapshot.exists()) {
-                        // Existing user -> use stored data
-                        String existingUserName = snapshot.child(USERNAME).getValue(String.class);
-                        String existingUserImage = snapshot.child(IMAGE).getValue(String.class);
+        downloadImageAndConvertToBase64(photoUrl, base64Image -> databaseReference.child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
 
-                        new SharedPreferenceUtil(context).setUserName(existingUserName);
-                        new SharedPreferenceUtil(context).setUserEmail(email);
-                        new SharedPreferenceUtil(context).setUserImage(existingUserImage);
-                        new SharedPreferenceUtil(context).setKeyLogin(true);
+                if (snapshot.exists()) {
+                    String existingName = snapshot.child(USERNAME).getValue(String.class);
+                    String existingImage = snapshot.child(IMAGE).getValue(String.class);
 
-                        callback.onGoogleLoginSuccess(existingUserName, email);
-                    } else {
-                        // New user -> save with Base64 image
-                        Map<String, String> userData = new HashMap<>();
-                        userData.put(USERNAME, userName != null ? userName : "");
-                        userData.put(EMAIL, email);
-                        userData.put(IMAGE, base64); // store Base64 instead of URL
-                        userData.put(PASSWORD, ""); // Google users don't need password
+                    saveToLocal(context, existingName, email, existingImage, uid);
 
-                        databaseReference.child(encodeEmail(email)).setValue(userData).addOnCompleteListener(task -> {
-                            if (task.isSuccessful()) {
-                                new SharedPreferenceUtil(context).setUserName(userName);
-                                new SharedPreferenceUtil(context).setUserEmail(email);
-                                new SharedPreferenceUtil(context).setUserImage(base64); // save Base64 locally
-                                new SharedPreferenceUtil(context).setKeyLogin(true);
+                    callback.onGoogleLoginSuccess(existingName, email);
+                } else {
+                    Map<String, String> userData = new HashMap<>();
+                    userData.put(USERNAME, userName != null ? userName : "");
+                    userData.put(EMAIL, email);
+                    userData.put(IMAGE, base64Image);
+                    userData.put(PASSWORD, "");
+                    userData.put(USER_ID, uid);
 
-                                callback.onGoogleLoginSuccess(userName, email);
-                            } else {
-                                Toast.makeText(context, "Failed to save Google user: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    }
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
-                    Toast.makeText(context, "Database error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-            });
-        });
-    }
-
-
-    // Login with email & password
-    public void loginUser(String email, String password, Context context, LoginCallback callback) {
-        mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                FirebaseUser user = mAuth.getCurrentUser();
-                if (user != null) {
-                    databaseReference.child(encodeEmail(email)).addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot snapshot) {
-                            if (snapshot.exists()) {
-                                String userName = snapshot.child(USERNAME).getValue(String.class);
-                                String userEmail = snapshot.child(EMAIL).getValue(String.class);
-                                String userImage = snapshot.child(IMAGE).getValue(String.class);
-
-                                new SharedPreferenceUtil(context).setUserName(userName);
-                                new SharedPreferenceUtil(context).setUserEmail(userEmail);
-                                new SharedPreferenceUtil(context).setUserImage(userImage);
-                                new SharedPreferenceUtil(context).setKeyLogin(true);
-                                callback.onLoginSuccess();
-                            } else {
-                                String msg = "User data not found. Please contact support.";
-                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
-                                callback.onLoginFailure(msg);
-                            }
-                        }
-
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError error) {
-                            String msg = "Database error: " + error.getMessage();
-                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
-                            callback.onLoginFailure(msg);
+                    databaseReference.child(uid).setValue(userData).addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            saveToLocal(context, userName, email, base64Image, uid);
+                            callback.onGoogleLoginSuccess(userName, email);
                         }
                     });
                 }
-            } else {
-                // Handle auth failures professionally
-                String errorMsg = "Login failed. Please check your credentials.";
+            }
 
-                if (task.getException() != null) {
-                    String ex = task.getException().getMessage();
-                    if (ex != null && ex.contains("There is no user record")) {
-                        errorMsg = "No account found with this email.";
-                    } else if (ex != null && ex.contains("The password is invalid")) {
-                        errorMsg = "Incorrect password. Please try again.";
-                    } else if (ex != null && ex.contains("A network error")) {
-                        errorMsg = "Network error. Check your connection.";
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(context, "Database error", Toast.LENGTH_SHORT).show();
+            }
+        }));
+    }
+
+    // Email & Password Login
+    public void loginUser(String email, String password, Context context, LoginCallback callback) {
+        mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                String uid = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
+
+                databaseReference.child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            String userName = snapshot.child(USERNAME).getValue(String.class);
+                            String userEmail = snapshot.child(EMAIL).getValue(String.class);
+                            String userImage = snapshot.child(IMAGE).getValue(String.class);
+
+                            saveToLocal(context, userName, userEmail, userImage, uid);
+                            callback.onLoginSuccess();
+                        } else {
+                            callback.onLoginFailure("User data missing");
+                        }
                     }
-                }
 
-                Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show();
-                callback.onLoginFailure(errorMsg);
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        callback.onLoginFailure("Database error");
+                    }
+                });
+            } else {
+                callback.onLoginFailure("Login failed");
             }
         });
     }
 
     // Signup new user
-    public void signupUser(String userName, String email, String password, String confirmPassword, String imageBase64, Context context, SignupCallback callback) {
-        if (!confirmPassword.equals(password)) {
+    public void signupUser(String userName, String email, String password,
+                           String confirmPassword, String imageBase64,
+                           Context context, SignupCallback callback) {
+
+        if (!password.equals(confirmPassword)) {
             Toast.makeText(context, "Passwords do not match", Toast.LENGTH_SHORT).show();
             return;
         }
 
         mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
-                FirebaseUser user = mAuth.getCurrentUser();
-                if (user != null) {
-                    Map<String, String> userData = new HashMap<>();
-                    userData.put(USERNAME, userName);
-                    userData.put(EMAIL, email);
-                    userData.put(PASSWORD, password);
-                    userData.put(IMAGE, imageBase64);
+                String uid = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
 
-                    databaseReference.child(encodeEmail(email)).setValue(userData).addOnCompleteListener(dbTask -> {
-                        if (dbTask.isSuccessful()) {
-                            callback.onSignupSuccess(userName, email);
-                        } else {
-                            user.delete();
-                            Toast.makeText(context, "Signup failed: " + dbTask.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                }
-            } else {
-                Toast.makeText(context, "Authentication failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                Map<String, String> userData = new HashMap<>();
+                userData.put(USERNAME, userName);
+                userData.put(EMAIL, email);
+                userData.put(PASSWORD, password);
+                userData.put(IMAGE, imageBase64);
+                userData.put(USER_ID, uid);
+
+                databaseReference.child(uid).setValue(userData).addOnCompleteListener(dbTask -> {
+                    if (dbTask.isSuccessful()) {
+                        callback.onSignupSuccess(userName, email);
+                    } else {
+                        // failure
+                        String error = task.getException() != null ?
+                                task.getException().getMessage() : "Signup failed";
+                        callback.onFailure(error);
+                    }
+                });
             }
         });
     }
 
-    // Update user data
-    public void updateUserData(String email, String userName, String imageBase64, Context context, UpdateCallback callback) {
+    // Update Data
+    public void updateUserData(String uid, String userName, String imageBase64,
+                               Context context, UpdateCallback callback) {
+
         Map<String, Object> updates = new HashMap<>();
         updates.put(USERNAME, userName);
-        if (imageBase64 != null && !imageBase64.isEmpty()) {
+        if (imageBase64 != null && !imageBase64.isEmpty())
             updates.put(IMAGE, imageBase64);
-        }
 
-        databaseReference.child(encodeEmail(email)).updateChildren(updates).addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                callback.onUpdateSuccess();
-            } else {
-                Toast.makeText(context, "Update failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-            }
+        databaseReference.child(uid).updateChildren(updates).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) callback.onUpdateSuccess();
         });
     }
 
+    // Reset Password
     public void resetPassword(String email, ResetPasswordCallback callback) {
-        FirebaseAuth.getInstance().sendPasswordResetEmail(email).addOnSuccessListener(unused -> callback.onResetSuccess()).addOnFailureListener(e -> callback.onResetFailure(e.getMessage()));
+        FirebaseAuth.getInstance().sendPasswordResetEmail(email)
+                .addOnSuccessListener(unused -> callback.onResetSuccess())
+                .addOnFailureListener(e -> callback.onResetFailure(e.getMessage()));
     }
 
-    // Helper: encode email (replace '.' with ',')
-    private String encodeEmail(String email) {
-        return email.replace(".", ",");
-    }
-
+    // Convert image → Base64
     public void downloadImageAndConvertToBase64(String imageUrl, Base64Callback callback) {
         if (imageUrl == null || imageUrl.isEmpty()) {
-            callback.onBase64Ready(""); // no image
+            callback.onBase64Ready("");
             return;
         }
 
         Executors.newSingleThreadExecutor().execute(() -> {
             String base64 = "";
+
             try {
                 URL url = new URL(imageUrl);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -285,8 +250,8 @@ public class FirebaseHelper {
                     byte[] imageBytes = baos.toByteArray();
                     base64 = android.util.Base64.encodeToString(imageBytes, android.util.Base64.DEFAULT);
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
+
+            } catch (Exception ignored) {
             }
 
             String finalBase64 = base64;
@@ -294,12 +259,20 @@ public class FirebaseHelper {
         });
     }
 
+    private void saveToLocal(Context context, String name, String email, String image, String uid) {
+        SharedPreferenceUtil sp = new SharedPreferenceUtil(context);
+        sp.setUserName(name);
+        sp.setUserEmail(email);
+        sp.setUserImage(image);
+        sp.setUserId(uid);
+        sp.setKeyLogin(true);
+    }
+
+    // Interfaces
     public interface Base64Callback {
         void onBase64Ready(String base64);
     }
 
-
-    // Interfaces
     public interface ResetPasswordCallback {
         void onResetSuccess();
 
@@ -312,11 +285,16 @@ public class FirebaseHelper {
 
     public interface LoginCallback {
         void onLoginSuccess();
-        default void onLoginFailure(@NonNull String message) { }
+
+        default void onLoginFailure(@NonNull String message) {
+        }
     }
 
     public interface SignupCallback {
         void onSignupSuccess(String userName, String email);
+
+        void onFailure(String errorMessage);
+
     }
 
     public interface UpdateCallback {

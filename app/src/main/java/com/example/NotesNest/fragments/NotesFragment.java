@@ -2,6 +2,7 @@ package com.example.NotesNest.fragments;
 
 import static com.example.NotesNest.editor.CKEditorHelper.getThemeColor;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
@@ -19,36 +20,38 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.example.NotesNest.R;
 import com.example.NotesNest.activity.EditNoteActivity;
 import com.example.NotesNest.adapter.NoteAdapter;
-import com.example.NotesNest.databases.AppDatabase;
+import com.example.NotesNest.databases.ViewModels.CategoryViewModel;
+import com.example.NotesNest.databases.ViewModels.NoteViewModel;
 import com.example.NotesNest.databases.entities.CategoryEntity;
 import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.utils.CommonDialogs;
+import com.example.NotesNest.utils.SharedPreferenceUtil;
 import com.example.NotesNest.utils.ThemeManager;
 import com.google.android.material.tabs.TabLayout;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeListener {
 
-    private static final int REQUEST_CODE_ADD_EDIT = 1001;
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    //state
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
-
+    // UI
     private RecyclerView recyclerView;
     private NoteAdapter adapter;
     private EditText searchEditText;
@@ -57,14 +60,23 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
     private ImageButton btnAdd;
     private Button createButton;
     private TextView titleTextView;
+    // ViewModels
+    private NoteViewModel noteViewModel;
+    private CategoryViewModel categoryViewModel;
     private Runnable searchRunnable;
     private String selectedCategory = "All";
     private List<CategoryEntity> categoryList = new ArrayList<>();
     private int unselectedTabColor = -1;
 
-    public NotesFragment() {
-        // Required empty constructor
-    }
+    // LiveData observer reference so we can remove when switching queries
+    private Observer<List<NoteEntity>> currentNotesObserver;
+
+    // Replace with real user id if your app supports multiple users
+    private String currentUserId = null;
+
+    private ActivityResultLauncher<Intent> addEditNoteLauncher;
+
+    public NotesFragment() { /* Required empty constructor */ }
 
     @Nullable
     @Override
@@ -74,6 +86,7 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
 
         View view = inflater.inflate(R.layout.fragment_notes, container, false);
 
+        //find views
         tabLayout = view.findViewById(R.id.tabLayout);
         btnAdd = view.findViewById(R.id.btnAdd);
         createButton = view.findViewById(R.id.createButton);
@@ -81,24 +94,52 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         titleTextView = view.findViewById(R.id.title_text_view);
         searchEditText = view.findViewById(R.id.searchEditText);
         clearSearchBtn = view.findViewById(R.id.clearSearchBtn);
+        currentUserId = new SharedPreferenceUtil(getContext()).getUserId();
 
-        // Resolve unselected tab color once
-        Context ctx = getContext();
-        if (ctx != null) {
-            unselectedTabColor = getThemeColor(ctx, com.google.android.material.R.attr.colorPrimary);
+        Context context = getContext();
+
+        addEditNoteLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        // Refresh notes list after add/edit
+                        String query = searchEditText.getText().toString().trim();
+                        if (!query.isEmpty()) {
+                            runSearch(query);
+                        }
+                    }
+                });
+
+
+        //theme color for unselected tabs
+        if (context != null) {
+            unselectedTabColor = getThemeColor(context, com.google.android.material.R.attr.colorPrimary);
         }
 
-        AppDatabase.getInstance(requireContext());
+        // init ViewModels
+        noteViewModel = new ViewModelProvider(requireActivity()).get(NoteViewModel.class);
+        categoryViewModel = new ViewModelProvider(requireActivity()).get(CategoryViewModel.class);
 
+        // init Recycler + adapter
         setupRecycler();
+
+        //setup UI listeners
         setupSearch();
         setupCreateButton();
-        loadCategories();
+        btnAdd.setOnClickListener(v -> showAddCategoryDialog());
+
+        observeCategories();
 
         // Register for theme changes
         ThemeManager.registerListener(this);
 
         return view;
+    }
+
+    private void setupRecycler() {
+        adapter = new NoteAdapter(new ArrayList<>(), requireContext(), categoryViewModel);
+        recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
+        recyclerView.setAdapter(adapter);
     }
 
     private void setupCreateButton() {
@@ -107,43 +148,68 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
 
     private void openCreateItem() {
         Intent intent = new Intent(getContext(), EditNoteActivity.class);
-        startActivityForResult(intent, REQUEST_CODE_ADD_EDIT);
+        addEditNoteLauncher.launch(intent);
     }
 
-    private void loadCategories() {
-        executor.execute(() -> {
-            Context ctx = getContext();
-            if (ctx == null) return;
-
-            AppDatabase db = AppDatabase.getInstance(ctx);
-            List<CategoryEntity> categoriesFromDb = db.categoryDao().getAllCategories();
-
-            boolean hasAll = categoriesFromDb.stream().anyMatch(cat -> "All".equalsIgnoreCase(cat.name));
-            if (!hasAll) {
-                CategoryEntity all = new CategoryEntity();
-                all.name = "All";
-                all.color = null;
-                all.icon = null;
-                db.categoryDao().insert(all);
-                categoriesFromDb = db.categoryDao().getAllCategories();
+    private void setupSearch() {
+        searchEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
 
-            categoryList = categoriesFromDb;
-
-            // Set default selected category
-            if (selectedCategory == null || selectedCategory.isEmpty()) {
-                selectedCategory = categoryList.isEmpty() ? "All" : categoryList.get(0).name;
+            @Override
+            public void afterTextChanged(Editable s) {
             }
 
-            mainHandler.post(() -> {
-                if (!isAdded()) return;
-                setupTabs();
-                loadNotesByCategory(selectedCategory);
-            });
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String query = s.toString().trim();
+                clearSearchBtn.setVisibility(query.isEmpty() ? View.GONE : View.VISIBLE);
+
+                if (searchRunnable != null) searchHandler.removeCallbacks(searchRunnable);
+                searchRunnable = () -> runSearch(query);
+                searchHandler.postDelayed(searchRunnable, 300); // debounce 300ms
+            }
+        });
+
+        clearSearchBtn.setOnClickListener(v -> {
+            searchEditText.setText("");
+            runSearch("");
         });
     }
 
-    private void setupTabs() {
+    private void observeCategories() {
+        // Observe category list
+        categoryViewModel.getAllCategories().observe(getViewLifecycleOwner(), categories -> {
+
+            List<CategoryEntity> list = new ArrayList<>();
+            if (categories != null) list.addAll(categories);
+
+            // Ensure "All" exists (UI-only item). Do not persist duplicate.
+            boolean hasAll = false;
+            for (CategoryEntity c : list) {
+                if ("All".equalsIgnoreCase(c.name)) {
+                    hasAll = true;
+                    break;
+                }
+            }
+            if (!hasAll) {
+                CategoryEntity all = new CategoryEntity();
+                all.id = 0;
+                all.name = "All";
+                list.add(0, all);
+            }
+
+            categoryList = list;
+            buildTabs();
+            // initial load (select first or previously selected)
+            selectTabByName(selectedCategory);
+            // load notes for current selection
+            runSearch(searchEditText.getText().toString().trim());
+        });
+    }
+
+    private void buildTabs() {
         tabLayout.removeAllTabs();
 
         for (CategoryEntity category : categoryList) {
@@ -155,20 +221,16 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
             customView.setOnClickListener(v -> tab.select());
         }
 
-        // Select the correct tab
-        selectTabByName(selectedCategory);
-
+        // set listeners
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 setTabSelected(tab);
-                if (tab != null && tab.getCustomView() != null) {
-                    TextView tx = tab.getCustomView().findViewById(R.id.tabText);
-                    if (tx != null) {
-                        selectedCategory = tx.getText().toString();
-                        titleTextView.setText(selectedCategory);
-                        filterNotes(selectedCategory);
-                    }
+                String name = extractTabName(tab);
+                if (name != null) {
+                    selectedCategory = name;
+                    titleTextView.setText(selectedCategory);
+                    runSearch(searchEditText.getText().toString().trim());
                 }
             }
 
@@ -179,64 +241,39 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
-                if (tab != null && tab.getCustomView() != null) {
-                    TextView tx = tab.getCustomView().findViewById(R.id.tabText);
-                    if (tx != null) {
-                        titleTextView.setText(tx.getText().toString());
-                        filterNotes(tx.getText().toString());
-                    }
+                String name = extractTabName(tab);
+                if (name != null) {
+                    titleTextView.setText(name);
+                    runSearch(searchEditText.getText().toString().trim());
                 }
             }
         });
 
-        // Long press to delete category
+        // long-press to delete (All cannot be deleted)
         for (int i = 0; i < tabLayout.getTabCount(); i++) {
-            TabLayout.Tab tab = tabLayout.getTabAt(i);
-            if (tab == null) continue;
-            View tabView = tab.getCustomView();
-            if (tabView == null) continue;
-
-            tabView.setOnLongClickListener(v -> {
-                TextView text = tabView.findViewById(R.id.tabText);
-                if (text == null) return true;
-                String categoryName = text.getText().toString();
-                if (!"All".equals(categoryName)) {
-                    showDeleteCategoryDialog(categoryName);
-                } else {
+            TabLayout.Tab t = tabLayout.getTabAt(i);
+            if (t == null || t.getCustomView() == null) continue;
+            View tv = t.getCustomView();
+            tv.setOnLongClickListener(v -> {
+                String name = extractTabName(t);
+                if (name == null) return true;
+                if ("All".equalsIgnoreCase(name)) {
                     Toast.makeText(getContext(), "‘All’ cannot be deleted.", Toast.LENGTH_SHORT).show();
+                } else {
+                    showDeleteCategoryDialog(name);
                 }
                 return true;
             });
         }
 
-        // Add button click
+        // Add category button
         btnAdd.setOnClickListener(v -> showAddCategoryDialog());
     }
 
-    private void selectTabByName(String categoryName) {
-        boolean matched = false;
-        for (int i = 0; i < tabLayout.getTabCount(); i++) {
-            TabLayout.Tab t = tabLayout.getTabAt(i);
-            if (t == null || t.getCustomView() == null) continue;
-            TextView txt = t.getCustomView().findViewById(R.id.tabText);
-            if (txt != null && txt.getText().toString().equals(categoryName)) {
-                tabLayout.selectTab(t);
-                setTabSelected(t);
-                matched = true;
-                break;
-            }
-        }
-
-        if (!matched && tabLayout.getTabCount() > 0) {
-            TabLayout.Tab first = tabLayout.getTabAt(0);
-            if (first != null) {
-                tabLayout.selectTab(first);
-                setTabSelected(first);
-                TextView txt = Objects.requireNonNull(first.getCustomView()).findViewById(R.id.tabText);
-                if (txt != null) selectedCategory = txt.getText().toString();
-            }
-        }
-        titleTextView.setText(selectedCategory);
+    private String extractTabName(TabLayout.Tab tab) {
+        if (tab == null || tab.getCustomView() == null) return null;
+        TextView txt = tab.getCustomView().findViewById(R.id.tabText);
+        return txt == null ? null : txt.getText().toString();
     }
 
     private View createCustomTab(String title, boolean selected) {
@@ -265,127 +302,73 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         text.setTextColor(unselectedTabColor);
     }
 
-    private void showAddCategoryDialog() {
-        CommonDialogs.showInputDialog(requireContext(), "Add Category", "Enter category name", "Add", "Cancel", name -> executor.execute(() -> {
-            AppDatabase db = AppDatabase.getInstance(requireContext());
-            CategoryEntity entity = new CategoryEntity();
-            entity.name = name;
-            entity.color = null;
-            entity.icon = null;
-            db.categoryDao().insert(entity);
+    private void selectTabByName(String categoryName) {
+        boolean matched = false;
+        for (int i = 0; i < tabLayout.getTabCount(); i++) {
+            TabLayout.Tab t = tabLayout.getTabAt(i);
+            if (t == null || t.getCustomView() == null) continue;
+            TextView txt = t.getCustomView().findViewById(R.id.tabText);
+            if (txt != null && txt.getText().toString().equals(categoryName)) {
+                tabLayout.selectTab(t);
+                setTabSelected(t);
+                matched = true;
+                break;
+            }
+        }
 
-            mainHandler.post(this::loadCategories);
-        }));
+        if (!matched && tabLayout.getTabCount() > 0) {
+            TabLayout.Tab first = tabLayout.getTabAt(0);
+            if (first != null) {
+                tabLayout.selectTab(first);
+                setTabSelected(first);
+                TextView txt = Objects.requireNonNull(first.getCustomView()).findViewById(R.id.tabText);
+                if (txt != null) selectedCategory = txt.getText().toString();
+            }
+        }
+        titleTextView.setText(selectedCategory);
     }
 
-    private void showDeleteCategoryDialog(String name) {
-        String message = "Are you sure you want to delete the category '" + name + "'? " +
-                "All notes under this category will be moved to 'All'.";
+    // ----- Search / Notes loading using ViewModel (no direct DB calls) -----
+    private void runSearch(String query) {
+        // remove previous observer
+        if (currentNotesObserver != null) {
+            noteViewModel.getAllNotes(currentUserId).removeObserver(currentNotesObserver);
+            noteViewModel.getNotesByCategory(currentUserId, 0).removeObserver(currentNotesObserver);
+            noteViewModel.searchNotes(currentUserId, query).removeObserver(currentNotesObserver);
+            // we remove from possible LiveData sources to be safe
+        }
 
-        CommonDialogs.showConfirmDialog(requireContext(), "Delete Category", message, "Delete", "Cancel", () -> executor.execute(() -> {
-            AppDatabase db = AppDatabase.getInstance(requireContext());
-            int catId = getCategoryIdByName(name);
-            if (catId != -1) {
-                db.noteDao().resetCategoryNotes(catId);
-                db.categoryDao().deleteByName(name);
-            }
-            mainHandler.post(() -> {
-                if (!isAdded()) return;
-                loadCategories();
-                selectedCategory = "All";
-                filterNotes("All");
-                Toast.makeText(getContext(), "Category deleted.", Toast.LENGTH_SHORT).show();
-            });
-        }));
-    }
+        // new observer
+        currentNotesObserver = notes -> updateRecycler(notes != null ? notes : new ArrayList<>());
 
-    private void setupSearch() {
-        searchEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
+        if (query == null) query = "";
+        query = query.trim();
 
-            @Override
-            public void afterTextChanged(Editable s) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                String query = s.toString().trim();
-                clearSearchBtn.setVisibility(query.isEmpty() ? View.GONE : View.VISIBLE);
-
-                if (searchRunnable != null) searchHandler.removeCallbacks(searchRunnable);
-                searchRunnable = () -> performSearch(query);
-                searchHandler.postDelayed(searchRunnable, 300); // debounce 300ms
-            }
-        });
-
-        clearSearchBtn.setOnClickListener(v -> {
-            searchEditText.setText("");
-            performSearch("");
-        });
-    }
-
-    private void performSearch(String query) {
-        Context ctx = getContext();
-        if (ctx == null) return;
-
-        executor.execute(() -> {
-            AppDatabase db = AppDatabase.getInstance(ctx);
-            List<NoteEntity> result;
-            if (query.isEmpty()) {
-                result = getNotesForCategory(db, selectedCategory);
+        if (query.isEmpty()) {
+            // No search query — load by category
+            if ("All".equalsIgnoreCase(selectedCategory)) {
+                noteViewModel.getAllNotes(currentUserId).observe(getViewLifecycleOwner(), currentNotesObserver);
             } else {
-                if ("All".equals(selectedCategory)) {
-                    result = db.noteDao().searchNotes(query);
+                int catId = getCategoryIdByName(selectedCategory);
+                // If category not found in cache, fallback to all
+                if (catId == -1) {
+                    noteViewModel.getAllNotes(currentUserId).observe(getViewLifecycleOwner(), currentNotesObserver);
                 } else {
-                    int catId = getCategoryIdByName(selectedCategory);
-                    result = db.noteDao().searchNotesInCategory(query, catId);
+                    noteViewModel.getNotesByCategory(currentUserId, catId).observe(getViewLifecycleOwner(), currentNotesObserver);
                 }
             }
-            mainHandler.post(() -> {
-                if (!isAdded()) return;
-                updateRecycler(result);
-            });
-        });
-    }
-
-    private void setupRecycler() {
-        adapter = new NoteAdapter(new ArrayList<>(), requireContext());
-        recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
-        recyclerView.setAdapter(adapter);
-    }
-
-    private void loadNotesByCategory(String categoryName) {
-        executor.execute(() -> {
-            Context ctx = getContext();
-            if (ctx == null) return;
-            AppDatabase db = AppDatabase.getInstance(ctx);
-            List<NoteEntity> notes = getNotesForCategory(db, categoryName);
-            mainHandler.post(() -> {
-                if (!isAdded()) return;
-                updateRecycler(notes);
-            });
-        });
-    }
-
-    private List<NoteEntity> getNotesForCategory(AppDatabase db, String categoryName) {
-        if ("All".equals(categoryName)) {
-            return db.noteDao().getAllNotes();
         } else {
-            int catId = getCategoryIdByName(categoryName);
-            if (catId == -1) return db.noteDao().getAllNotes();
-            return db.noteDao().getNotesByCategory(catId);
-        }
-    }
-
-    private void filterNotes(String category) {
-        selectedCategory = category;
-        String query = searchEditText.getText().toString().trim();
-        if (query.isEmpty()) {
-            loadNotesByCategory(category);
-        } else {
-            performSearch(query);
+            // With search: use category-aware search
+            if ("All".equalsIgnoreCase(selectedCategory)) {
+                noteViewModel.searchNotes(currentUserId, query).observe(getViewLifecycleOwner(), currentNotesObserver);
+            } else {
+                int catId = getCategoryIdByName(selectedCategory);
+                if (catId == -1) {
+                    noteViewModel.searchNotes(currentUserId, query).observe(getViewLifecycleOwner(), currentNotesObserver);
+                } else {
+                    noteViewModel.searchNotesInCategory(currentUserId, catId, query).observe(getViewLifecycleOwner(), currentNotesObserver);
+                }
+            }
         }
     }
 
@@ -400,32 +383,56 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         return -1;
     }
 
+    // ----- Add / Delete category through ViewModel -----
+    private void showAddCategoryDialog() {
+        CommonDialogs.showInputDialog(requireContext(), "Add Category", "Enter category name", "Add", "Cancel", name -> {
+            CategoryEntity entity = new CategoryEntity();
+            entity.name = name;
+            // optional fields left null
+            categoryViewModel.insertCategory(entity);
+            // category LiveData will update automatically and rebuild tabs
+        });
+    }
+
+    private void showDeleteCategoryDialog(String name) {
+        String message = "Are you sure you want to delete the category '" + name + "'? " +
+                "All notes under this category will be moved to 'All'.";
+
+        CommonDialogs.showConfirmDialog(requireContext(), "Delete Category", message, "Delete", "Cancel", () -> {
+            int catId = getCategoryIdByName(name);
+            if (catId != -1) {
+                // reset notes into "All" (assumes NoteViewModel exposes this)
+                noteViewModel.resetCategoryNotes(currentUserId, catId);
+            }
+            // delete category by name
+            categoryViewModel.deleteCategoryByName(name);
+
+            Toast.makeText(getContext(), "Category deleted.", Toast.LENGTH_SHORT).show();
+        });
+    }
+
     @Override
     public void onResume() {
         super.onResume();
-        String q = searchEditText.getText().toString().trim();
-        if (q.isEmpty()) {
-            loadNotesByCategory(selectedCategory);
-        } else {
-            performSearch(q);
-        }
+        // reload current view (LiveData will normally keep things updated; call runSearch to ensure)
+        runSearch(searchEditText.getText().toString().trim());
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         ThemeManager.unregisterListener(this);
+        // clear any pending callbacks
+        if (searchRunnable != null) searchHandler.removeCallbacks(searchRunnable);
+        searchHandler.removeCallbacksAndMessages(null);
     }
 
     @Override
-    public void onThemeChanged(String newTheme) {
+    public void onThemeChanged(@NonNull String newTheme) {
         if (!isAdded()) return;
         unselectedTabColor = getThemeColor(requireContext(), com.google.android.material.R.attr.colorPrimary);
-        refreshTabsAndRecycler();
-    }
-
-    private void refreshTabsAndRecycler() {
-        setupTabs();
-        filterNotes(selectedCategory);
+        // rebuild UI colors
+        buildTabs();
+        runSearch(searchEditText.getText().toString().trim());
     }
 }

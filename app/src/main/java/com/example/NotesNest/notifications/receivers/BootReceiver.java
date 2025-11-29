@@ -1,17 +1,14 @@
 package com.example.NotesNest.notifications.receivers;
 
+import android.app.Application;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import com.example.NotesNest.databases.AppDatabase;
 import com.example.NotesNest.databases.entities.ReminderEntity;
+import com.example.NotesNest.databases.repositories.ReminderRepository;
 import com.example.NotesNest.notifications.schedulers.NotificationScheduler;
-
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class BootReceiver extends BroadcastReceiver {
 
@@ -25,21 +22,33 @@ public class BootReceiver extends BroadcastReceiver {
 
         Log.d(TAG, "Device booted — rescheduling reminders");
 
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(() -> {
-            AppDatabase db = AppDatabase.getInstance(context);
-            List<ReminderEntity> all = db.reminderDao().getAllReminders();
-            for (ReminderEntity r : all) {
-                // schedule only if notification time is in future, or if repeated schedule next
-                long notifyAt = r.getNotification();
-                if (r.isRepeated()) {
-                    // compute next occurrence - here we keep it simple and schedule immediate next occurrence
-                    long next = Math.max(System.currentTimeMillis() + 1000, notifyAt);
-                    NotificationScheduler.scheduleOneTime(context, r.getId(), next, r.getType(), true);
-                } else if (notifyAt > System.currentTimeMillis()) {
-                    NotificationScheduler.scheduleOneTime(context, r.getId(), notifyAt, r.getType(), false);
+        ReminderRepository repo = new ReminderRepository((Application) context.getApplicationContext());
+
+        repo.getAllReminders(1, reminders -> {
+            long now = System.currentTimeMillis();
+            for (ReminderEntity r : reminders) {
+                long notifyAt = r.notificationTime;
+
+                if (r.isRepeated) {
+                    long next = Math.max(now + 1000, notifyAt);
+                    NotificationScheduler.scheduleOneTime(
+                            context,
+                            r.id,
+                            next,
+                            r.type,
+                            true
+                    );
+                } else if (notifyAt > now) {
+                    NotificationScheduler.scheduleOneTime(
+                            context,
+                            r.id,
+                            notifyAt,
+                            r.type,
+                            false
+                    );
                 }
             }
+            Log.d(TAG, "All reminders rescheduled after boot");
         });
     }
 }

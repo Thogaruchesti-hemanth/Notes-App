@@ -207,21 +207,21 @@ public class CommonDialogs {
         dialogTitle.setText(note.title);
 
         dialogContent.getSettings().setJavaScriptEnabled(false);
-        dialogContent.loadDataWithBaseURL(null, note.message, "text/html", "UTF-8", null);
+        dialogContent.loadDataWithBaseURL(null, note.content, "text/html", "UTF-8", null);
 
         // Format date/time - callback provided for flexibility
-        callback.setDateTime(dialogDate, dialogTime, note.date, note.time);
+        callback.setDateTime(note.categoryId,dialogDate, dialogTime);
 
         // Set background color safely
         try {
-            dialogCard.setCardBackgroundColor(Color.parseColor(note.background_color));
-            dialogContent.setBackgroundColor(android.graphics.Color.parseColor(note.background_color));
+            dialogCard.setCardBackgroundColor(Color.parseColor(note.colorHex));
+            dialogContent.setBackgroundColor(android.graphics.Color.parseColor(note.colorHex));
         } catch (Exception e) {
             dialogCard.setCardBackgroundColor(Color.WHITE);
         }
 
         // Set category - callback to fetch category name dynamically
-        callback.setCategory(dialogCategory, note.category_id);
+        callback.setCategory(dialogCategory, note.categoryId);
 
         AlertDialog dialog = new AlertDialog.Builder(context)
                 .setView(dialogView)
@@ -422,15 +422,15 @@ public class CommonDialogs {
         Button btnDelete = dialogView.findViewById(R.id.btn_delete);
         LinearLayout reminderLayout = dialogView.findViewById(R.id.reminderLayout);
 
-        dialogTitle.setText(reminder.getTitle());
-        dialogMessage.setText(reminder.getMessage());
+        dialogTitle.setText(reminder.title);
+        dialogMessage.setText(reminder.message);
 
         btnEdit.setText(positiveText != null ? positiveText : "OK");
         btnDelete.setText(negativeText != null ? negativeText : "Cancel");
 
         GradientDrawable drawable = new GradientDrawable(
                 GradientDrawable.Orientation.LEFT_RIGHT,
-                new int[]{reminder.getGradientStartColor(), reminder.getGradientEndColor()}
+                new int[]{reminder.gradientStartColor, reminder.gradientEndColor}
         );
 
         reminderLayout.setBackground(drawable);
@@ -462,9 +462,7 @@ public class CommonDialogs {
             dialog.dismiss();
             if (negativeAction != null) negativeAction.run();
         });
-        dialogView.findViewById(R.id.closeButton).setOnClickListener(view -> {
-            dialog.dismiss();
-        });
+        dialogView.findViewById(R.id.closeButton).setOnClickListener(view -> dialog.dismiss());
     }
 
 
@@ -473,7 +471,7 @@ public class CommonDialogs {
     }
 
     public interface NoteDialogCallback {
-        void setDateTime(TextView dateView, TextView timeView, String date, String time);
+        void setDateTime(long timeStamp,TextView dateView, TextView timeView);
 
         void setCategory(TextView categoryView, int categoryId);
     }

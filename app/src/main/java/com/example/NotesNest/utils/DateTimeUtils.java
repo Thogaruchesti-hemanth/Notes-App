@@ -2,36 +2,29 @@ package com.example.NotesNest.utils;
 
 import android.widget.TextView;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
 public class DateTimeUtils {
-
-    // Actual input formats from your note object
-    private static final SimpleDateFormat inputDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-    private static final SimpleDateFormat inputTimeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
-
-    // Output formats you want to show in the UI
-    private static final SimpleDateFormat outputDateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
-    private static final SimpleDateFormat outputTimeFormat = new SimpleDateFormat("hh:mm a", Locale.getDefault());
-
-    public static void setDateTime(String dateString, String timeString, TextView dateView, TextView timeView) {
+    // Updated method to use timestamp safely with current locale
+    public static void setDateTime(long timestamp, TextView dateView, TextView timeView) {
         try {
-            Date date = inputDateFormat.parse(dateString);
-            Date time = inputTimeFormat.parse(timeString);
+            Date date = new Date(timestamp);
 
-            if (date != null) {
+            // Create formatters dynamically to respect current locale
+            SimpleDateFormat outputDateFormat = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
+            SimpleDateFormat outputTimeFormat = new SimpleDateFormat("hh:mm a", Locale.getDefault());
+
+            if (dateView != null) {
                 dateView.setText(outputDateFormat.format(date));
             }
-            if (time != null) {
-                timeView.setText(outputTimeFormat.format(time));
+            if (timeView != null) {
+                timeView.setText(outputTimeFormat.format(date));
             }
 
-        } catch (ParseException e) {
-            e.printStackTrace();
-            System.err.println("Error parsing date or time. date=" + dateString + ", time=" + timeString);
+        } catch (Exception e) {
+            System.err.println("Error formatting timestamp: " + timestamp);
         }
     }
 }

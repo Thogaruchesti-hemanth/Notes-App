@@ -1,5 +1,6 @@
 package com.example.NotesNest.databases.daos;
 
+import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
@@ -34,27 +35,27 @@ public interface CategoryDao {
     @Query("DELETE FROM categories WHERE id = :categoryId")
     void deleteCategoryById(int categoryId);
 
-    // 🔹 Get all categories sorted alphabetically
+    // 🔹 Get all categories as LiveData (reactive, offline-friendly)
     @Query("SELECT * FROM categories ORDER BY name ASC")
-    List<CategoryEntity> getAllCategories();
+    LiveData<List<CategoryEntity>> getAllCategories();
 
     // 🔹 Get category by ID
     @Query("SELECT * FROM categories WHERE id = :categoryId LIMIT 1")
-    CategoryEntity getCategoryById(int categoryId);
+    LiveData<CategoryEntity> getCategoryById(int categoryId);
 
-    // 🔹 Check if category exists by name (useful for avoiding duplicates)
+    // 🔹 Check if category exists by name
     @Query("SELECT COUNT(*) FROM categories WHERE name = :categoryName")
     int countCategoryByName(String categoryName);
 
-    // 🔹 Delete all categories (optional utility)
-    @Query("DELETE FROM categories")
-    void deleteAll();
-
     // 🔹 Get category by name
     @Query("SELECT * FROM categories WHERE name = :categoryName LIMIT 1")
-    CategoryEntity getCategoryByName(String categoryName);
+    LiveData<CategoryEntity> getCategoryByName(String categoryName);
 
-    // 🔹 Delete by name (used in your fragment)
+    // 🔹 Delete by name
     @Query("DELETE FROM categories WHERE name = :categoryName")
     void deleteByName(String categoryName);
+
+    // 🔹 Delete all categories
+    @Query("DELETE FROM categories")
+    void deleteAll();
 }
