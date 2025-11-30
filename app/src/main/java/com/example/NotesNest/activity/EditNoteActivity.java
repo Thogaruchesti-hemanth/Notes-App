@@ -26,6 +26,7 @@ import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.databases.ViewModels.CategoryViewModel;
 import com.example.NotesNest.databases.ViewModels.NoteViewModel;
 import com.example.NotesNest.editor.CKEditorHelper;
+import com.example.NotesNest.utils.AnalyticsHelper;
 import com.example.NotesNest.utils.CommonDialogs;
 import com.example.NotesNest.utils.DraftManager;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
@@ -405,5 +406,11 @@ public class EditNoteActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         saveDraftSilently();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        AnalyticsHelper.logScreenView(getClass().getSimpleName(), getClass().getSimpleName());
     }
 }

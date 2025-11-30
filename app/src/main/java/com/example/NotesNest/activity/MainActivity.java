@@ -12,11 +12,13 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.example.NotesNest.R;
 import com.example.NotesNest.adapter.MainPagerAdapter;
 import com.example.NotesNest.databases.AppDatabase;
+import com.example.NotesNest.utils.AnalyticsHelper;
 import com.example.NotesNest.utils.CommonDialogs;
 import com.example.NotesNest.utils.DrawerHelper;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.FirebaseApp;
+import com.google.firebase.analytics.FirebaseAnalytics;
 
 import java.util.Random;
 
@@ -25,6 +27,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView greetingText;
     private ViewPager2 viewPager;
     private SharedPreferenceUtil pref;
+
+    private FirebaseAnalytics firebaseAnalytics;
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -90,5 +94,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        AnalyticsHelper.logScreenView(getClass().getSimpleName(), getClass().getSimpleName());
     }
 }

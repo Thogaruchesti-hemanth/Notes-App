@@ -27,6 +27,7 @@ import com.example.NotesNest.databases.ViewModels.ReminderViewModel;
 import com.example.NotesNest.databases.entities.ReminderEntity;
 import com.example.NotesNest.models.CalendarItem;
 import com.example.NotesNest.models.Task;
+import com.example.NotesNest.utils.AnalyticsHelper;
 import com.example.NotesNest.utils.CommonDialogs;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
 
@@ -89,6 +90,8 @@ public class RemindersFragment extends Fragment {
     public void onResume() {
         super.onResume();
         loadRemindersForSelectedDate();
+        AnalyticsHelper.logScreenView("Reminders", "RemindersFragment");
+
     }
 
     /* ---------------- MVVM OBSERVERS ---------------- */

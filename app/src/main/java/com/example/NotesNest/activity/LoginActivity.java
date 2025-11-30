@@ -30,6 +30,7 @@ import com.example.NotesNest.AnimatedRunningBorderLayout;
 import com.example.NotesNest.FirebaseHelper;
 import com.example.NotesNest.R;
 import com.example.NotesNest.databinding.ActivityLoginBinding;
+import com.example.NotesNest.utils.AnalyticsHelper;
 import com.example.NotesNest.utils.ValidationUtils;
 import com.example.NotesNest.utils.formaters.ValidationTextWatcher;
 import com.google.android.material.textfield.TextInputLayout;
@@ -572,4 +573,10 @@ public class LoginActivity extends AppCompatActivity {
         layout.jumpDrawablesToCurrentState(); // 👈 instantly stops any pending animations
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        AnalyticsHelper.logScreenView(getClass().getSimpleName(), getClass().getSimpleName());
+
+    }
 }

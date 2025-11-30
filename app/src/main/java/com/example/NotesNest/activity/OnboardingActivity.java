@@ -19,6 +19,7 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.example.NotesNest.R;
 import com.example.NotesNest.adapter.OnboardingAdapter;
 import com.example.NotesNest.models.OnBoardItem;
+import com.example.NotesNest.utils.AnalyticsHelper;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
 
 import java.util.ArrayList;
@@ -134,5 +135,12 @@ public class OnboardingActivity extends AppCompatActivity {
         // Update button text on last page
         buttonNext.setText(index == onboardingAdapter.getItemCount() - 1
                 ? R.string.text_get_started : R.string.text_next);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        AnalyticsHelper.logScreenView(getClass().getSimpleName(), getClass().getSimpleName());
+
     }
 }

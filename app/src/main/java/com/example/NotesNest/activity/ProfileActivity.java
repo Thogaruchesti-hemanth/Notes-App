@@ -17,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.NotesNest.FirebaseHelper;
 import com.example.NotesNest.R;
+import com.example.NotesNest.utils.AnalyticsHelper;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
 
 import java.io.ByteArrayOutputStream;
@@ -123,5 +124,12 @@ public class ProfileActivity extends AppCompatActivity {
 
     private void showToast(String msg) {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        AnalyticsHelper.logScreenView(getClass().getSimpleName(), getClass().getSimpleName());
+
     }
 }

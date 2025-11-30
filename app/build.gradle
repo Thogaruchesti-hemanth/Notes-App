@@ -87,6 +87,7 @@ dependencies {
     implementation libs.activity
     implementation libs.constraintlayout
     implementation 'com.google.android.material:material:1.12.0'
+    implementation libs.play.services.measurement.api
 
     // ------- Room Database -------
     def room_version = "2.8.3"
@@ -102,6 +103,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-auth:22.3.1'
     implementation 'com.google.firebase:firebase-storage:22.0.0'
     implementation 'com.google.firebase:firebase-database:22.0.0'
+    implementation 'com.google.firebase:firebase-analytics'
 
     // Add Firebase Analytics ONLY if you need it:
     // implementation 'com.google.firebase:firebase-analytics-ktx'

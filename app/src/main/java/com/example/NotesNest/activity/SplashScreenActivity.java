@@ -11,6 +11,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.NotesNest.R;
+import com.example.NotesNest.utils.AnalyticsHelper;
 import com.example.NotesNest.utils.DBSeedUtil;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
 import com.example.NotesNest.utils.ThemeManager;
@@ -32,6 +33,7 @@ public class SplashScreenActivity extends AppCompatActivity {
         ThemeManager.applyTheme(this);
         updateLogo();
         DBSeedUtil.seedDefaultCategories(this);
+        AnalyticsHelper.init(this);
 
         new Handler(Looper.getMainLooper())
                 .postDelayed(this::goToNextScreen, SPLASH_DELAY_MS);
@@ -59,5 +61,11 @@ public class SplashScreenActivity extends AppCompatActivity {
         startActivity(intent);
         overridePendingTransition(R.anim.zoom_in, R.anim.zoom_out);
         finish();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        AnalyticsHelper.logScreenView(getClass().getSimpleName(), getClass().getSimpleName());
     }
 }
