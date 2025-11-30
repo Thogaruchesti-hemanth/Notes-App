@@ -1,86 +1,178 @@
-# Notes App
-![App Logo ](https://github.com/user-attachments/assets/7ad2fbd7-3ef6-46e4-b2af-458c40cb38e1)
+# 🌟 NoteNest — Version 2.0.0
 
-## Overview
-The **Notes App** is a feature-rich Android application developed in **Android Studio using Java**. It enables users to manage their **notes, important notes, reminders, to-do lists, and wish lists** with an intuitive and user-friendly interface. The app ensures secure authentication using **Firebase** and stores data efficiently using **SQLite**.
+![App Logo](https://github.com/user-attachments/assets/7ad2fbd7-3ef6-46e4-b2af-458c40cb38e1)
 
----
-
-## 📌 Features
-✅ **Notes Section:** Create, edit, and delete notes.  
-✅ **Important Notes:** Store crucial notes separately for quick access.  
-✅ **Reminders:** Set and receive notifications for important tasks.  
-✅ **To-Do List:** Manage and track daily tasks effectively.  
-✅ **Wish List:** Save items you want to remember for later.  
-✅ **Dark Mode:** Built-in support for dark mode for a comfortable viewing experience.  
-✅ **User Authentication:** Secure login with Firebase Authentication.  
-✅ **Local Storage:** SQLite database for fast and reliable data storage.  
+NoteNest 2.0.0 transforms the app from a simple notes utility into a **polished, secure, feature-rich, Play Store–ready productivity companion**.
+With a redesigned UI, improved performance, upgraded security, and smart organisation tools, this version delivers a truly modern note-taking experience.
 
 ---
 
-## 🚀 Tech Stack
-- **Programming Language:** Java
-- **IDE:** Android Studio
-- **Authentication:** Firebase
-- **Database:** SQLite (MySQLite)
-- **UI/UX:** Material Design with Dark Mode Support
+# 🚀 What’s New in Version 2.0.0
+
+Version 2.0.0 focuses on **stability, performance, security, UI/UX polish, and Play Store readiness**.
+
+### 🎯 Core Highlights
+
+* **Material You UI refresh**
+* **Room Database migration**
+* **Smart search, sorting & filtering**
+* **Dynamic user dashboard**
+* **Enhanced authentication (validation, forgot password, Google Sign-In)**
+* **Encrypted user data storage**
+* **Improved drawers, animations, badges & profile screen**
+* **Widgets & pinned notes**
+* **Fully optimised for phones & tablets**
+* **App performance boosts (R8, vector assets, DiffUtil, indexing)**
+* **Play Store compliant privacy & permissions**
 
 ---
 
-## 📸 Results
+# 📌 Features
 
-| Splash Screen  | Login Screen  | SignUp Screen | Drawer Screen  | Notes Screen  | Important Screen | 
-|--------------|----------------|----------------| --------------|----------------|----------------|
-| <img src="https://github.com/user-attachments/assets/183f505e-73d6-41be-9fd6-fa89ea4dc438" alt="Splash Screen" height="300"> | <img src="https://github.com/user-attachments/assets/1ae6881b-2e21-4c6d-877d-c3d331dbc333" alt="Login Screen" height="300"> |<img src="https://github.com/user-attachments/assets/b5d76bcf-bfcf-4ebc-9f04-64a2fd09929b" alt="SignUp Screen" height="300"> | <img src="https://github.com/user-attachments/assets/39a93134-2c8e-42e0-8ac8-6e306ba4ee42" alt="Drawer layout" height="300"> | <img src="https://github.com/user-attachments/assets/ee9a217a-ce91-4d23-8167-aeb6a3b5b4c8" alt="Notes Screen" height="300"> | <img src="https://github.com/user-attachments/assets/89171260-0fe7-4f8a-ad8a-e1b7c4811fac" alt="Important Notes Screen" height="300"> |
-| Reminder Screen  | To-DO Screen  | Wishes Screen | Edit Screen  | Logout Dialog  | Support Screen | 
-<img src="https://github.com/user-attachments/assets/e66a59e2-518d-4e24-817f-e3538a4c470f" alt="Reminders Screen" height="300"> | <img src="https://github.com/user-attachments/assets/1ab5a051-7409-4c3c-b301-a4199987274a" alt="To-DO Screen" height="300"> | <img src="https://github.com/user-attachments/assets/3090b821-ca85-49d1-b418-fe4f541c52bc" alt="wishes Screen" height="300"> | <img src="https://github.com/user-attachments/assets/d3471a0e-559d-4b34-8482-8eb8f0fe47de" alt="Edit Screen" height="300"> | <img src="https://github.com/user-attachments/assets/06e93911-47ad-408c-83f5-9498ddd09f12" alt="Logout Dialog" height="300"> | <img src="https://github.com/user-attachments/assets/cac84722-e934-4827-b8a6-c7651dbc7289" alt="Logout Dialog" height="300">
+### 📝 Notes Management
 
+* Create, edit, delete and categorize notes
+* Pin important notes
+* Smooth RecyclerView animations
+* Drag-and-drop note reordering
+* Real-time updates via **Room + LiveData**
 
+### ⏰ Reminders
 
-## 🛠 Installation & Setup
-1. **Clone the Repository:**
-   ```sh
-   git clone https://github.com/yourusername/notes-app.git
-   ```
-2. **Open in Android Studio.**
-3. **Set up Firebase:**
-   - Create a Firebase project.
-   - Enable Firebase Authentication (Email & Password login).
-   - Create a new `google-services.json` file by following Firebase setup instructions and add it to the app/ directory.
-4. **Run the App:**
-   - Select an emulator or physical device.
-   - Click **Run** ▶️ in Android Studio.
+* One-time & repeat reminders
+* WorkManager/AlarmManager support
+* Notification with note preview
+
+### 🎨 Modern UI
+
+* Material 3 Components
+* Adaptive layouts for phones & tablets
+* Dark/Light mode with smooth animations
+* Onboarding screens for new users
+
+### 🔐 Authentication
+
+* Email & password login (with strong validation)
+* Forgot password flow
+* Secure Google Sign-In
+* EncryptedSharedPreferences protection
+
+### 🎚️ Dashboard
+
+* Dynamic greetings (“Good Morning, Sai!”)
+* Search & category filters
+* Sorting (by category, recent, custom order)
+* Profile editing (image, name)
+
+### 📂 Drawer Menu
+
+* Dynamic counts (badge drawables)
+* Edit profile
+* Support & FAQs
+* Privacy Policy & Terms link
+* Logout confirmation dialogue
+
+### 📊 Performance
+
+* Room DB indexing
+* R8/ProGuard optimisation
+* Optimized bitmaps & vectors
+* Efficient LiveData observers
+* Memory-leak-safe lifecycle handling
+
+### 📄 Play Store Requirements
+
+* Professional branding
+* Adaptive app icon
+* Full privacy & terms documentation
+* Full crash-free UI behaviours
 
 ---
 
-## 🎯 Usage
-1. **Sign up or log in** using Firebase authentication.
-2. **Create and manage notes** in the Notes and Important Notes section.
-3. **Set reminders** for tasks and get notifications.
-4. **Use the To-Do list** to track pending tasks.
-5. **Switch between Light and Dark Mode** as per preference.
+# 🛠 Tech Stack
+
+| Component      | Technology                     |
+| -------------- | ------------------------------ |
+| Language       | Java                           |
+| IDE            | Android Studio                 |
+| Authentication | Firebase Auth + Google Sign-In |
+| Database       | Room (Upgraded from SQLite)    |
+| Storage        | EncryptedSharedPreferences     |
+| Architecture   | MVVM + LiveData                |
+| UI             | Material 3 + MotionLayout      |
+| Notifications  | WorkManager / AlarmManager     |
+| Analytics      | Optional Firebase Analytics    |
 
 ---
 
-## 🛠 Future Enhancements
-- **Cloud Syncing:** Store and sync notes using Firebase Firestore.
-- **Voice Notes:** Record and save voice memos.
-- **Task Sharing:** Share tasks with others for collaboration.
-- **Export Notes:** Save and export notes as PDFs or text files.
+# 📸 Screenshots — Version 2.0.0
+
+> *(Update with latest V2 screenshots later — placeholders kept for reference)*
+
+| Splash                                                                                                   | Login                                                                                                    | Signup                                                                                                   | Dashboard                                                                                                | Notes                                                                                                    | Important Notes                                                                                          |
+| -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| <img src="https://github.com/user-attachments/assets/183f505e-73d6-41be-9fd6-fa89ea4dc438" height="300"> | <img src="https://github.com/user-attachments/assets/1ae6881b-2e21-4c6d-877d-c3d331dbc333" height="300"> | <img src="https://github.com/user-attachments/assets/b5d76bcf-bfcf-4ebc-9f04-64a2fd09929b" height="300"> | <img src="https://github.com/user-attachments/assets/39a93134-2c8e-42e0-8ac8-6e306ba4ee42" height="300"> | <img src="https://github.com/user-attachments/assets/ee9a217a-ce91-4d23-8167-aeb6a3b5b4c8" height="300"> | <img src="https://github.com/user-attachments/assets/89171260-0fe7-4f8a-ad8a-e1b7c4811fac" height="300"> |
 
 ---
 
-## 🤝 Contributing
-Contributions are welcome! Feel free to **fork** this repository and submit a **pull request**. Please ensure that your code follows the project's coding standards.
+# 🧩 Installation Guide
+
+### 1. Clone Repository
+
+```sh
+git clone https://github.com/yourusername/NoteNest.git
+```
+
+### 2. Open Project in Android Studio
+
+Ensure Android Studio Flamingo/Koala or above.
+
+### 3. Configure Firebase
+
+* Add `google-services.json`
+* Enable Firebase Authentication (Email & Google Sign-In)
+
+### 4. Run the App
+
+Use physical device/emulator (API 23+ recommended).
 
 ---
 
-## 🔗 Connect with Me
-📧 Email: saihemanth225@gmail.com  
-🔗 GitHub: [Thogaruchesti Hemanth](https://github.com/Thogaruchesti-hemanth)  
-🔗 LinkedIn: [Thogaruchesti Hemanth](https://linkedin.com/in/thogaruchesti-hemanth)  
+# 🎯 Usage Workflow
+
+1. Create an account or use Google Sign-In
+2. Explore onboarding screens
+3. Start creating notes, reminders, wish lists, tasks
+4. Organise using categories, search, filters & sorting
+5. Activate dark mode anytime
+6. Edit profile, manage data, get reminders instantly
 
 ---
 
-**⭐ If you like this project, please consider giving it a star!**
+# 🔮 Future Enhancements
 
+* Cloud Sync via Firestore
+* Real-time collaboration
+* Voice Notes
+* Export notes to PDF/TXT
+* AI-powered smart suggestions
+* Home screen widgets for quick notes
+
+---
+
+# 🤝 Contributing
+
+Contributions are always welcome!
+Submit a pull request or create an issue for any enhancement or bug fix.
+
+---
+
+# 🔗 Connect with Me
+
+📧 Email: [saihemanth225@gmail.com](mailto:saihemanth225@gmail.com)
+💻 GitHub: [Thogaruchesti Hemanth](https://github.com/Thogaruchesti-hemanth)
+🔗 LinkedIn: [Thogaruchesti Hemanth](https://linkedin.com/in/thogaruchesti-hemanth)
+
+---
+
+⭐ **If you find NoteNest helpful, please give it a star!**
