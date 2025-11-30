@@ -439,9 +439,11 @@ public class LoginActivity extends AppCompatActivity {
 
 
     private void navigateToMain() {
-        startActivity(new Intent(this, MainActivity.class));
-        finish();
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
     }
+
 
     @Override
     protected void onDestroy() {
@@ -569,6 +571,5 @@ public class LoginActivity extends AppCompatActivity {
         layout.setError(null);
         layout.jumpDrawablesToCurrentState(); // 👈 instantly stops any pending animations
     }
-
 
 }

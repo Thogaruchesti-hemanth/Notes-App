@@ -5,13 +5,16 @@ import static com.example.NotesNest.editor.CKEditorHelper.getThemeColor;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.DragEvent;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -44,13 +47,18 @@ import com.example.NotesNest.utils.ThemeManager;
 import com.google.android.material.tabs.TabLayout;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeListener {
 
     //state
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
+    // Add these variables
+    private final Map<String, Integer> categoryNoteCounts = new HashMap<>();
     // UI
     private RecyclerView recyclerView;
     private NoteAdapter adapter;
@@ -67,14 +75,11 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
     private String selectedCategory = "All";
     private List<CategoryEntity> categoryList = new ArrayList<>();
     private int unselectedTabColor = -1;
-
     // LiveData observer reference so we can remove when switching queries
     private Observer<List<NoteEntity>> currentNotesObserver;
-
-    // Replace with real user id if your app supports multiple users
-    private String currentUserId = null;
-
     private ActivityResultLauncher<Intent> addEditNoteLauncher;
+    private String currentUserId = null;
+    private boolean isReordering = false;
 
     public NotesFragment() { /* Required empty constructor */ }
 
@@ -96,6 +101,8 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         clearSearchBtn = view.findViewById(R.id.clearSearchBtn);
         currentUserId = new SharedPreferenceUtil(getContext()).getUserId();
 
+        currentUserId = new SharedPreferenceUtil(getContext()).getUserId();
+
         Context context = getContext();
 
         addEditNoteLauncher = registerForActivityResult(
@@ -106,6 +113,8 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
                         String query = searchEditText.getText().toString().trim();
                         if (!query.isEmpty()) {
                             runSearch(query);
+                        } else {
+                            runSearch("");
                         }
                     }
                 });
@@ -181,9 +190,11 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
     private void observeCategories() {
         // Observe category list
         categoryViewModel.getAllCategories().observe(getViewLifecycleOwner(), categories -> {
-
             List<CategoryEntity> list = new ArrayList<>();
             if (categories != null) list.addAll(categories);
+
+            // ✅ Sort by category order instead of ID
+            list.sort(Comparator.comparingInt(c -> c.order));
 
             // Ensure "All" exists (UI-only item). Do not persist duplicate.
             boolean hasAll = false;
@@ -216,58 +227,117 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
             TabLayout.Tab tab = tabLayout.newTab();
             View customView = createCustomTab(category.name, category.name.equals(selectedCategory));
             tab.setCustomView(customView);
+            tab.setTag(category.name);
             tabLayout.addTab(tab);
 
-            customView.setOnClickListener(v -> tab.select());
+            // attach click & long-click behaviour
+            setupTabClickAndLongPress(tab);
         }
 
         // set listeners
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                setTabSelected(tab);
-                String name = extractTabName(tab);
-                if (name != null) {
-                    selectedCategory = name;
-                    titleTextView.setText(selectedCategory);
-                    runSearch(searchEditText.getText().toString().trim());
+                if (!isReordering) {
+                    setTabSelected(tab);
+                    String name = extractTabName(tab);
+                    if (name != null) {
+                        selectedCategory = name;
+                        titleTextView.setText(selectedCategory);
+                        runSearch(searchEditText.getText().toString().trim());
+                    }
                 }
             }
 
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
-                setTabUnselected(tab);
+                if (!isReordering) {
+                    setTabUnselected(tab);
+                }
             }
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
-                String name = extractTabName(tab);
-                if (name != null) {
-                    titleTextView.setText(name);
-                    runSearch(searchEditText.getText().toString().trim());
+                if (!isReordering) {
+                    String name = extractTabName(tab);
+                    if (name != null) {
+                        titleTextView.setText(name);
+                        runSearch(searchEditText.getText().toString().trim());
+                    }
                 }
             }
         });
 
-        // long-press to delete (All cannot be deleted)
-        for (int i = 0; i < tabLayout.getTabCount(); i++) {
-            TabLayout.Tab t = tabLayout.getTabAt(i);
-            if (t == null || t.getCustomView() == null) continue;
-            View tv = t.getCustomView();
-            tv.setOnLongClickListener(v -> {
-                String name = extractTabName(t);
-                if (name == null) return true;
-                if ("All".equalsIgnoreCase(name)) {
-                    Toast.makeText(getContext(), "‘All’ cannot be deleted.", Toast.LENGTH_SHORT).show();
-                } else {
-                    showDeleteCategoryDialog(name);
-                }
-                return true;
-            });
-        }
-
+        // Update note counts for all tabs
+        updateAllTabCounts();
         // Add category button
         btnAdd.setOnClickListener(v -> showAddCategoryDialog());
+    }
+
+    private void setupTabClickAndLongPress(TabLayout.Tab tab) {
+        if (tab == null || tab.getCustomView() == null) return;
+        View tabView = tab.getCustomView();
+
+        // Remove any existing listeners to avoid duplicates
+        tabView.setOnClickListener(null);
+        tabView.setOnLongClickListener(null);
+        tabView.setOnTouchListener(null);
+        tabView.setOnDragListener(null);
+
+        tabView.setOnClickListener(view -> {
+            if (isReordering) {
+                finishReordering();
+                return;
+            }
+            // Find the tab instance and select it
+            for (int i = 0; i < tabLayout.getTabCount(); i++) {
+                TabLayout.Tab t = tabLayout.getTabAt(i);
+                if (t != null && t.getCustomView() == view) {
+                    tabLayout.selectTab(t);
+                    break;
+                }
+            }
+        });
+
+        // Long-press deletes category (Option A). All cannot be deleted.
+        tabView.setOnLongClickListener(v -> {
+
+            if (isReordering) {
+                return true; // Already reordering, ignore long press
+            }
+
+            String name = extractTabName(tab);
+            if (name == null) return true;
+            if ("All".equalsIgnoreCase(name)) {
+                Toast.makeText(getContext(), "‘All’ cannot be deleted.", Toast.LENGTH_SHORT).show();
+                return true;
+            }
+            startReordering();
+            return true;
+        });
+
+        // If currently reordering, allow startDrag on touch down (to support drag)
+        tabView.setOnTouchListener((v, event) -> {
+            if (isReordering) {
+                String tabName = extractTabName(tab);
+                if ("All".equals(tabName)) {
+                    return false; // Don't allow dragging for "All" tab
+                }
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    startDrag(tab);
+                    return true;
+                }
+            }
+            return false;
+        });
+
+        // If in reorder mode, ensure drop listener is attached to this view
+        if (isReordering) {
+            String tabName = extractTabName(tab);
+            if (!"All".equals(tabName)) {
+                setupDropListener(tabView);
+            }
+        }
     }
 
     private String extractTabName(TabLayout.Tab tab) {
@@ -280,26 +350,49 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         LayoutInflater inflater = LayoutInflater.from(getContext());
         View view = inflater.inflate(R.layout.custom_tab, tabLayout, false);
         TextView text = view.findViewById(R.id.tabText);
+        TextView count = view.findViewById(R.id.tabCount);
         text.setText(title);
         text.setTypeface(null, selected ? Typeface.BOLD : Typeface.NORMAL);
         text.setTextColor(selected ? ContextCompat.getColor(requireContext(), R.color.tabSelectedTextColor) : unselectedTabColor);
+
+        // Set count if available and tab is selected
+        Integer noteCount = categoryNoteCounts.get(title);
+        if (selected && noteCount != null && noteCount > 0) {
+            count.setText(String.valueOf(noteCount));
+            count.setVisibility(View.VISIBLE);
+        } else {
+            count.setVisibility(View.GONE);
+        }
         return view;
     }
 
     private void setTabSelected(@Nullable TabLayout.Tab tab) {
         if (tab == null || tab.getCustomView() == null) return;
         TextView text = tab.getCustomView().findViewById(R.id.tabText);
+        TextView count = tab.getCustomView().findViewById(R.id.tabCount);
         if (text == null) return;
         text.setTypeface(null, Typeface.BOLD);
         text.setTextColor(ContextCompat.getColor(requireContext(), R.color.tabSelectedTextColor));
+
+        // Show count for selected tab
+        String categoryName = extractTabName(tab);
+        Integer noteCount = categoryNoteCounts.get(categoryName);
+        if (noteCount != null && noteCount > 0) {
+            count.setText(String.valueOf(noteCount));
+            count.setVisibility(View.VISIBLE);
+        } else {
+            count.setVisibility(View.GONE);
+        }
     }
 
     private void setTabUnselected(@Nullable TabLayout.Tab tab) {
         if (tab == null || tab.getCustomView() == null) return;
         TextView text = tab.getCustomView().findViewById(R.id.tabText);
+        TextView count = tab.getCustomView().findViewById(R.id.tabCount);
         if (text == null) return;
         text.setTypeface(null, Typeface.NORMAL);
         text.setTextColor(unselectedTabColor);
+        count.setVisibility(View.GONE);
     }
 
     private void selectTabByName(String categoryName) {
@@ -331,11 +424,14 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
     // ----- Search / Notes loading using ViewModel (no direct DB calls) -----
     private void runSearch(String query) {
         // remove previous observer
-        if (currentNotesObserver != null) {
-            noteViewModel.getAllNotes(currentUserId).removeObserver(currentNotesObserver);
-            noteViewModel.getNotesByCategory(currentUserId, 0).removeObserver(currentNotesObserver);
-            noteViewModel.searchNotes(currentUserId, query).removeObserver(currentNotesObserver);
-            // we remove from possible LiveData sources to be safe
+        try {
+            if (currentNotesObserver != null) {
+                noteViewModel.getAllNotes(currentUserId).removeObserver(currentNotesObserver);
+                noteViewModel.getNotesByCategory(currentUserId, 0).removeObserver(currentNotesObserver);
+                noteViewModel.searchNotes(currentUserId, query).removeObserver(currentNotesObserver);
+                // we remove from possible LiveData sources to be safe
+            }
+        } catch (Exception ignored) {
         }
 
         // new observer
@@ -370,6 +466,7 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
                 }
             }
         }
+        updateAllTabCounts();
     }
 
     private void updateRecycler(List<NoteEntity> notes) {
@@ -386,6 +483,10 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
     // ----- Add / Delete category through ViewModel -----
     private void showAddCategoryDialog() {
         CommonDialogs.showInputDialog(requireContext(), "Add Category", "Enter category name", "Add", "Cancel", name -> {
+            if (name == null || name.trim().isEmpty()) {
+                Toast.makeText(requireContext(), "Category name cannot be empty", Toast.LENGTH_SHORT).show();
+                return;
+            }
             CategoryEntity entity = new CategoryEntity();
             entity.name = name;
             // optional fields left null
@@ -416,6 +517,245 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         super.onResume();
         // reload current view (LiveData will normally keep things updated; call runSearch to ensure)
         runSearch(searchEditText.getText().toString().trim());
+        updateAllTabCounts();
+    }
+
+
+    // Add this method to update counts for all categories
+    private void updateAllTabCounts() {
+        categoryNoteCounts.clear();
+
+        // Get count for "All" category
+        noteViewModel.getNotesCount(currentUserId).observe(getViewLifecycleOwner(), count -> {
+            if (count != null) {
+                categoryNoteCounts.put("All", count);
+                updateTabCountDisplay("All", count);
+            }
+        });
+
+        // Get counts for each category
+        for (CategoryEntity category : categoryList) {
+            if (!"All".equals(category.name)) {
+                noteViewModel.getNotesCountByCategory(currentUserId, category.id)
+                        .observe(getViewLifecycleOwner(), count -> {
+                            if (count != null) {
+                                categoryNoteCounts.put(category.name, count);
+                                updateTabCountDisplay(category.name, count);
+                            }
+                        });
+            }
+        }
+    }
+
+    private void updateTabCountDisplay(String categoryName, int count) {
+        for (int i = 0; i < tabLayout.getTabCount(); i++) {
+            TabLayout.Tab tab = tabLayout.getTabAt(i);
+            if (tab != null && categoryName.equals(extractTabName(tab))) {
+                View customView = tab.getCustomView();
+                if (customView != null) {
+                    TextView countView = customView.findViewById(R.id.tabCount);
+                    if (countView != null) {
+                        if (count > 0 && categoryName.equals(selectedCategory)) {
+                            countView.setText(String.valueOf(count));
+                            countView.setVisibility(View.VISIBLE);
+                        } else {
+                            countView.setVisibility(View.GONE);
+                        }
+                    }
+                }
+                break;
+            }
+        }
+    }
+
+    private void startReordering() {
+        isReordering = true;
+        btnAdd.setVisibility(View.GONE);
+
+        // Change UI to indicate reordering mode
+        titleTextView.setText("Reordering tabs...");
+        titleTextView.setAlpha(0.7f);
+
+        // Set up drag listeners for all tabs
+        for (int i = 0; i < tabLayout.getTabCount(); i++) {
+            TabLayout.Tab tab = tabLayout.getTabAt(i);
+            if (tab != null && tab.getCustomView() != null) {
+                String tabName = extractTabName(tab);
+
+                // Re-setup the tab with updated listeners for reordering
+                setupTabClickAndLongPress(tab);
+
+                //Visual feedback for reorderable tabs
+                TextView text = tab.getCustomView().findViewById(R.id.tabText);
+
+                if (text != null) {
+                    if ("All".equals(tabName)) {
+                        text.setAlpha(0.5f); // Dim the "All" tab
+                    } else {
+                        text.setAlpha(0.8f);
+                        // Create a simple background for reorderable tabs
+                        text.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.grey_200));
+                    }
+                }
+            }
+        }
+        Toast.makeText(getContext(), "Drag to reorder tabs. Tap Done when finished.", Toast.LENGTH_LONG).show();
+    }
+
+    private void finishReordering() {
+        isReordering = false;
+        btnAdd.setVisibility(View.VISIBLE);
+
+        // Restore normal UI
+        titleTextView.setText(selectedCategory);
+        titleTextView.setAlpha(1.0f);
+
+        // remove drag listeners
+        for (int i = 0; i < tabLayout.getTabCount(); i++) {
+            TabLayout.Tab tab = tabLayout.getTabAt(i);
+            if (tab != null && tab.getCustomView() != null) {
+                tab.getCustomView().setOnDragListener(null);
+
+                // Restore normal tab appearance
+                TextView text = tab.getCustomView().findViewById(R.id.tabText);
+                if (text != null) {
+                    text.setAlpha(1.0f);
+                    text.setBackgroundResource(0); // Remove background
+                    text.setPadding(0, 0, 0, 0);
+                }
+            }
+        }
+
+        // rebuild tabs to reflect new order and reattach listeners
+        buildTabs();
+
+        Toast.makeText(getContext(), "Tab order updated", Toast.LENGTH_SHORT).show();
+    }
+
+    private void setupDropListener(View view) {
+        view.setOnDragListener((v, event) -> {
+            TabLayout.Tab draggedTab = (TabLayout.Tab) event.getLocalState();
+            if (draggedTab == null) return false;
+            String draggedName = extractTabName(draggedTab);
+            if ("All".equals(draggedName)) return false;
+
+            switch (event.getAction()) {
+                case DragEvent.ACTION_DRAG_STARTED:
+                    return true;
+
+                case DragEvent.ACTION_DRAG_ENTERED:
+                    v.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.textColor));
+                    return true;
+
+                case DragEvent.ACTION_DRAG_EXITED:
+
+                case DragEvent.ACTION_DRAG_ENDED:
+                    v.setBackgroundColor(Color.TRANSPARENT);
+                    return true;
+
+                case DragEvent.ACTION_DROP:
+                    v.setBackgroundColor(Color.TRANSPARENT);
+
+                    TabLayout.Tab targetTab = findTabByView(v);
+                    if (targetTab != null && draggedTab != targetTab) {
+                        reorderTabs(draggedTab, targetTab);
+                        return true;
+                    }
+                    break;
+            }
+            return false;
+        });
+    }
+
+    private TabLayout.Tab findTabByView(View view) {
+        for (int i = 0; i < tabLayout.getTabCount(); i++) {
+            TabLayout.Tab tab = tabLayout.getTabAt(i);
+            if (tab != null && tab.getCustomView() == view) {
+                return tab;
+            }
+        }
+        return null;
+    }
+
+    private void startDrag(TabLayout.Tab tab) {
+        if (tab == null || tab.getCustomView() == null) return;
+
+        // Start the drag with the tab as local state
+        View.DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(tab.getCustomView());
+
+        // For API 24+ we can use startDragAndDrop, for older API use startDrag
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            tab.getCustomView().startDragAndDrop(null, shadowBuilder, tab, 0);
+        } else {
+            tab.getCustomView().startDrag(null, shadowBuilder, tab, 0);
+        }
+    }
+
+    private void reorderTabs(TabLayout.Tab draggedTab, TabLayout.Tab targetTab) {
+        String draggedName = extractTabName(draggedTab);
+        String targetName = extractTabName(targetTab);
+
+        if ("All".equals(draggedName) || "All".equals(targetName)) {
+            return;
+        }
+
+        // Get the actual category entities
+        CategoryEntity draggedCategory = findCategoryByName(draggedName);
+        CategoryEntity targetCategory = findCategoryByName(targetName);
+
+        if (draggedCategory == null || targetCategory == null) {
+            return;
+        }
+
+        // Find indices in our category list
+        int draggedIndex = categoryList.indexOf(draggedCategory);
+        int targetIndex = categoryList.indexOf(targetCategory);
+
+        if (draggedIndex == -1 || targetIndex == -1 || draggedIndex == targetIndex) {
+            return;
+        }
+
+        // Reorder the category list
+        categoryList.remove(draggedIndex);
+
+        // Adjust target index if we removed an item before the target
+        int newIndex = targetIndex;
+        if (draggedIndex < targetIndex) {
+            newIndex = targetIndex - 1;
+        }
+
+        categoryList.add(newIndex, draggedCategory);
+
+        // Update database
+        updateCategoryOrderInDatabase();
+
+        // Completely rebuild the tabs to reflect the new order
+        buildTabs();
+
+        // Restore selection
+        selectTabByName(selectedCategory);
+
+        Toast.makeText(getContext(), "Reordered tabs", Toast.LENGTH_SHORT).show();
+    }
+
+    private CategoryEntity findCategoryByName(String name) {
+        for (CategoryEntity category : categoryList) {
+            if (category.name.equals(name)) {
+                return category;
+            }
+        }
+        return null;
+    }
+
+    private void updateCategoryOrderInDatabase() {
+        // Update category order in database
+        for (int i = 0; i < categoryList.size(); i++) {
+            CategoryEntity category = categoryList.get(i);
+            if (!"All".equals(category.name)) {
+                category.order = i; // You'll need to add an 'order' field to CategoryEntity
+                categoryViewModel.updateCategory(category);
+            }
+        }
     }
 
     @Override

@@ -75,4 +75,13 @@ public class NoteRepository {
     public void resetCategoryNotes(String userId, int categoryId) {
         executorService.execute(() -> noteDao.resetCategoryNotes(userId, categoryId));
     }
+
+    // COUNT METHODS - LiveData so they're automatically async
+    public LiveData<Integer> getNotesCount(String userId) {
+        return noteDao.getNotesCount(userId);
+    }
+
+    public LiveData<Integer> getNotesCountByCategory(String userId, int categoryId) {
+        return noteDao.getNotesCountByCategory(userId, categoryId);
+    }
 }
