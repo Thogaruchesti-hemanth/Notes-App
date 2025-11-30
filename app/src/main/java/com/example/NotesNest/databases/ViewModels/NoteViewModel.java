@@ -60,4 +60,13 @@ public class NoteViewModel extends AndroidViewModel {
     public void resetCategoryNotes(String userId, int categoryId) {
         noteRepository.resetCategoryNotes(userId, categoryId);
     }
+
+    // In your NoteViewModel class
+    public LiveData<Integer> getNotesCount(String userId) {
+        return noteRepository.getNotesCount(userId);
+    }
+
+    public LiveData<Integer> getNotesCountByCategory(String userId, int categoryId) {
+        return noteRepository.getNotesCountByCategory(userId, categoryId);
+    }
 }

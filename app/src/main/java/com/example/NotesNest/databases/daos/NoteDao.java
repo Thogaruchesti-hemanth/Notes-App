@@ -43,10 +43,6 @@ public interface NoteDao {
     @Delete
     void delete(NoteEntity note);
 
-    // Soft delete
-    @Query("UPDATE notes SET isDeleted = 1, updatedAt = :updateTime WHERE id = :noteId")
-    void softDelete(int noteId, long updateTime);
-
     // Full delete
     @Query("DELETE FROM notes WHERE id = :noteId")
     void deleteNoteById(int noteId);
@@ -87,4 +83,12 @@ public interface NoteDao {
 
     @Query("UPDATE notes SET categoryId = NULL WHERE userId = :userId AND categoryId = :categoryId")
     void resetCategoryNotes(String userId, int categoryId);
+
+    // Get total count of notes for a user (excluding deleted)
+    @Query("SELECT COUNT(*) FROM notes WHERE userId = :userId AND isDeleted = 0")
+    LiveData<Integer> getNotesCount(String userId);
+
+    // Get count of notes for a user in specific category (excluding deleted)
+    @Query("SELECT COUNT(*) FROM notes WHERE userId = :userId AND categoryId = :categoryId AND isDeleted = 0")
+    LiveData<Integer> getNotesCountByCategory(String userId, int categoryId);
 }

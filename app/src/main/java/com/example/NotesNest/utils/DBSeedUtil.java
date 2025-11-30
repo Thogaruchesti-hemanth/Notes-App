@@ -23,10 +23,10 @@ public class DBSeedUtil {
         Executors.newSingleThreadExecutor().execute(() -> {
 
             List<CategoryEntity> defaultCategories = Arrays.asList(
-                    new CategoryEntity("All"),
-                    new CategoryEntity("Work"),
-                    new CategoryEntity("Professional"),
-                    new CategoryEntity("Ideas")
+                    new CategoryEntity("All", 1),
+                    new CategoryEntity("Work", 2),
+                    new CategoryEntity("Professional", 3),
+                    new CategoryEntity("Ideas", 4)
             );
 
             db.categoryDao().insertAll(defaultCategories);
