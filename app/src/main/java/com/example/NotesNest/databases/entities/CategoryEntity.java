@@ -9,17 +9,12 @@ public class CategoryEntity {
     @PrimaryKey(autoGenerate = true)
     public int id;
 
-    public String name;   // e.g. All, Work, Ideas
-    public String color;  // optional UI accent
-    public String icon;   // optional
+    public String name;  // Work, Ideas, Personal…
 
-    public CategoryEntity(String name, String color, String icon) {
+    public CategoryEntity(String name) {
         this.name = name;
-        this.color = color;
-        this.icon = icon;
     }
 
-    // ✅ Room needs this default constructor
     public CategoryEntity() {
     }
 }

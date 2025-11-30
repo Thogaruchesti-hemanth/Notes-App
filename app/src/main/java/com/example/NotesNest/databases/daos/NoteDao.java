@@ -1,5 +1,6 @@
 package com.example.NotesNest.databases.daos;
 
+import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
@@ -13,15 +14,26 @@ import java.util.List;
 @Dao
 public interface NoteDao {
 
-    // 🔹 All notes
-    @Query("SELECT * FROM notes ORDER BY id DESC")
-    List<NoteEntity> getAllNotes();
+    // ------------------------------------------
+    // FETCH NOTES (LiveData)
+    // ------------------------------------------
 
-    // 🔹 Notes by category
-    @Query("SELECT * FROM notes WHERE category_id = :categoryId ORDER BY id DESC")
-    List<NoteEntity> getNotesByCategory(int categoryId);
+    // All notes for a user
+    @Query("SELECT * FROM notes WHERE userId = :userId AND isDeleted = 0 ORDER BY updatedAt DESC")
+    LiveData<List<NoteEntity>> getAllNotes(String userId);
 
-    // 🔹 Insert / update / delete
+    // Notes by category
+    @Query("SELECT * FROM notes WHERE userId = :userId AND categoryId = :categoryId AND isDeleted = 0 ORDER BY updatedAt DESC")
+    LiveData<List<NoteEntity>> getNotesByCategory(String userId, int categoryId);
+
+    // Get note by ID
+    @Query("SELECT * FROM notes WHERE id = :id")
+    LiveData<NoteEntity> getNoteById(int id);
+
+    // ------------------------------------------
+    // INSERT / UPDATE / DELETE (normal)
+    // ------------------------------------------
+
     @Insert
     void insert(NoteEntity note);
 
@@ -31,27 +43,48 @@ public interface NoteDao {
     @Delete
     void delete(NoteEntity note);
 
+    // Soft delete
+    @Query("UPDATE notes SET isDeleted = 1, updatedAt = :updateTime WHERE id = :noteId")
+    void softDelete(int noteId, long updateTime);
+
+    // Full delete
     @Query("DELETE FROM notes WHERE id = :noteId")
     void deleteNoteById(int noteId);
 
-    // 🔹 Get note by ID
-    @Query("SELECT * FROM notes WHERE id = :id")
-    NoteEntity getNoteById(int id);
+    // ------------------------------------------
+    // SEARCH (LiveData)
+    // ------------------------------------------
 
-    // 🔹 Reset notes if category deleted
-    @Query("UPDATE notes SET category_id = NULL WHERE category_id = :oldCategoryId")
-    void resetCategoryNotes(int oldCategoryId);
+    // Normal LIKE search
+    @Query("SELECT * FROM notes WHERE userId = :userId AND isDeleted = 0 AND " +
+            "(title LIKE '%' || :keyword || '%' OR content LIKE '%' || :keyword || '%') " +
+            "ORDER BY updatedAt DESC")
+    LiveData<List<NoteEntity>> searchNotes(String userId, String keyword);
 
-    // 🔹 Regular LIKE search (fallback)
-    @Query("SELECT * FROM notes WHERE title LIKE '%' || :keyword || '%' OR message LIKE '%' || :keyword || '%' ORDER BY id DESC")
-    List<NoteEntity> searchNotes(String keyword);
+    // Category-specific search
+    @Query("SELECT * FROM notes WHERE userId = :userId AND categoryId = :categoryId AND isDeleted = 0 AND " +
+            "(title LIKE '%' || :keyword || '%' OR content LIKE '%' || :keyword || '%') " +
+            "ORDER BY updatedAt DESC")
+    LiveData<List<NoteEntity>> searchNotesInCategory(String userId, int categoryId, String keyword);
 
-    // 🔹 Category-specific search
-    @Query("SELECT * FROM notes WHERE (title LIKE '%' || :keyword || '%' OR message LIKE '%' || :keyword || '%') AND category_id = :categoryId ORDER BY id DESC")
-    List<NoteEntity> searchNotesInCategory(String keyword, int categoryId);
-
-    // 🔹 Full-text (FTS4) search — super fast
+    // Full-text Search (FTS)
     @Query("SELECT notes.* FROM notes JOIN notes_fts ON notes.id = notes_fts.rowid " +
-            "WHERE notes_fts MATCH :query ORDER BY notes.id DESC")
-    List<NoteEntity> fullTextSearch(String query);
+            "WHERE notes.userId = :userId AND notes.isDeleted = 0 AND notes_fts MATCH :query " +
+            "ORDER BY notes.updatedAt DESC")
+    LiveData<List<NoteEntity>> fullTextSearch(int userId, String query);
+
+    // ------------------------------------------
+    // SYNC / OFFLINE-FIRST
+    // ------------------------------------------
+
+    // Get all unsynced notes
+    @Query("SELECT * FROM notes WHERE userId = :userId AND isSynced = 0 AND isDeleted = 0")
+    LiveData<List<NoteEntity>> getPendingSyncNotes(int userId);
+
+    // Mark note as synced
+    @Query("UPDATE notes SET isSynced = 1, updatedAt = :updateTime WHERE id = :noteId")
+    void markSynced(int noteId, long updateTime);
+
+    @Query("UPDATE notes SET categoryId = NULL WHERE userId = :userId AND categoryId = :categoryId")
+    void resetCategoryNotes(String userId, int categoryId);
 }

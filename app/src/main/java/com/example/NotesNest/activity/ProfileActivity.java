@@ -101,14 +101,14 @@ public class ProfileActivity extends AppCompatActivity {
 
     private void updateProfile() {
         String name = nameEditText.getText().toString().trim();
-        String email = emailEditText.getText().toString().trim();
+        String userId = prefs.getUserId();
 
         if (name.isEmpty()) {
             showToast("Please enter your name");
             return;
         }
 
-        firebaseHelper.updateUserData(email, name, base64Image, this, () -> {
+        firebaseHelper.updateUserData(userId, name, base64Image, this, () -> {
 
             // ✅ Update shared pref
             prefs.setUserName(name);

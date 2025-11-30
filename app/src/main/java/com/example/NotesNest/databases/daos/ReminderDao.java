@@ -1,5 +1,6 @@
 package com.example.NotesNest.databases.daos;
 
+import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
@@ -13,54 +14,35 @@ import java.util.List;
 @Dao
 public interface ReminderDao {
 
-    // Basic CRUD operations
+    // ------------------- Basic CRUD -------------------
     @Insert
     long insertReminder(ReminderEntity reminder);
 
     @Update
-    void updateReminder(ReminderEntity reminder);
+    int updateReminder(ReminderEntity reminder);
 
     @Delete
     void deleteReminder(ReminderEntity reminder);
 
-    // Get single reminder
-    @Query("SELECT * FROM reminders WHERE id = :id")
-    ReminderEntity getById(int id);
+    @Query("DELETE FROM reminders WHERE id = :id AND userId = :userId")
+    void deleteById(int id, int userId);
 
-    // Delete by ID
-    @Query("DELETE FROM reminders WHERE id = :id")
-    void deleteById(int id);
+    @Query("SELECT * FROM reminders WHERE id = :id AND userId = :userId AND isDeleted = 0")
+    ReminderEntity getById(int id, String userId);
 
-    // GET ALL REMINDERS - Different sorting options
-    @Query("SELECT * FROM reminders ORDER BY notification ASC")
-    List<ReminderEntity> getAllReminders();
+    // ------------------- Get All Reminders -------------------
+    @Query("SELECT * FROM reminders WHERE userId = :userId AND isDeleted = 0 ORDER BY notificationTime ASC")
+    List<ReminderEntity> getAllReminders(int userId);
 
-    @Query("SELECT * FROM reminders ORDER BY title ASC")
-    List<ReminderEntity> getAllRemindersOrderByTitle();
+    @Query("SELECT * FROM reminders WHERE userId = :userId")
+    LiveData<List<ReminderEntity>> getAllRemindersLive(String userId);
 
-    @Query("SELECT * FROM reminders ORDER BY type ASC, notification ASC")
-    List<ReminderEntity> getAllRemindersOrderByType();
+    // ------------------- Date Range with LiveData -------------------
+    @Query("SELECT * FROM reminders WHERE userId = :userId AND notificationTime BETWEEN :startDate AND :endDate AND isDeleted = 0 ORDER BY notificationTime ASC")
+    LiveData<List<ReminderEntity>> getRemindersByDateRangeLive(int userId, long startDate, long endDate);
 
-    // GET BY TYPE - Different variations
-    @Query("SELECT * FROM reminders WHERE type = :type ORDER BY notification ASC")
-    List<ReminderEntity> getRemindersByType(String type);
+    // ------------------- Get Single Reminder with LiveData -------------------
+    @Query("SELECT * FROM reminders WHERE id = :id AND userId = :userId AND isDeleted = 0")
+    LiveData<ReminderEntity> getReminderByIdLive(int id, String userId);
 
-    @Query("SELECT * FROM reminders WHERE type = :type ORDER BY title ASC")
-    List<ReminderEntity> getRemindersByTypeOrderByTitle(String type);
-
-    @Query("SELECT * FROM reminders WHERE type IN (:types) ORDER BY notification ASC")
-    List<ReminderEntity> getRemindersByTypes(List<String> types);
-
-    // Additional useful methods
-    @Query("SELECT * FROM reminders WHERE repeated = 1 ORDER BY notification ASC")
-    List<ReminderEntity> getRepeatedReminders();
-
-    @Query("SELECT COUNT(*) FROM reminders WHERE type = :type")
-    int getCountByType(String type);
-
-    @Query("SELECT COUNT(*) FROM reminders")
-    int getTotalCount();
-
-    @Query("SELECT * FROM reminders WHERE notification BETWEEN :startDate AND :endDate ORDER BY notification ASC")
-    List<ReminderEntity> getRemindersByDateRange(long startDate, long endDate);
 }

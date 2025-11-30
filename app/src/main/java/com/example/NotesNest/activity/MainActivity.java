@@ -4,10 +4,6 @@ import static com.example.NotesNest.utils.ThemeManager.applyTheme;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.view.View;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -29,7 +25,6 @@ public class MainActivity extends AppCompatActivity {
     private TextView greetingText;
     private ViewPager2 viewPager;
     private SharedPreferenceUtil pref;
-    private ProgressBar progressBar;
 
     @SuppressLint("MissingInflatedId")
     @Override

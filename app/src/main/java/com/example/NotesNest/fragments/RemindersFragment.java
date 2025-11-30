@@ -14,8 +14,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -23,11 +23,12 @@ import com.example.NotesNest.R;
 import com.example.NotesNest.activity.EditReminderActivity;
 import com.example.NotesNest.adapter.CalendarAdapter;
 import com.example.NotesNest.adapter.TimelineAdapter;
-import com.example.NotesNest.databases.AppDatabase;
+import com.example.NotesNest.databases.ViewModels.ReminderViewModel;
 import com.example.NotesNest.databases.entities.ReminderEntity;
 import com.example.NotesNest.models.CalendarItem;
 import com.example.NotesNest.models.Task;
 import com.example.NotesNest.utils.CommonDialogs;
+import com.example.NotesNest.utils.SharedPreferenceUtil;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -35,20 +36,18 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class RemindersFragment extends Fragment {
 
     private final List<CalendarItem> calendarItemList = new ArrayList<>();
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private TextView selectedDateTv, promptTextView;
     private RecyclerView calendarRv, hourRecyclerView;
     private LocalDate selectedDate = LocalDate.now();
     private CalendarAdapter calendarAdapter;
-    private AppDatabase db;
+    private ReminderViewModel reminderViewModel;
     private List<ReminderEntity> currentReminders = new ArrayList<>();
+    private String currentUserId = null;
 
     @Nullable
     @Override
@@ -58,7 +57,8 @@ public class RemindersFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_reminders, container, false);
 
-        db = AppDatabase.getInstance(requireContext());
+        // Initialize ViewModel
+        reminderViewModel = new ViewModelProvider(this).get(ReminderViewModel.class);
 
         selectedDateTv = view.findViewById(R.id.selected_date_text_view);
         promptTextView = view.findViewById(R.id.prompt_text_view);
@@ -66,9 +66,12 @@ public class RemindersFragment extends Fragment {
         hourRecyclerView = view.findViewById(R.id.hourRecyclerView);
         Button createButton = view.findViewById(R.id.createButton);
 
+        currentUserId = new SharedPreferenceUtil(getContext()).getUserId();
+
         setupCalendar();
         updateSelectedDateText();
         loadMonthData();
+        setupObservers();
         loadRemindersForSelectedDate();
 
         selectedDateTv.setOnClickListener(v -> showDatePicker());
@@ -88,6 +91,15 @@ public class RemindersFragment extends Fragment {
         loadRemindersForSelectedDate();
     }
 
+    /* ---------------- MVVM OBSERVERS ---------------- */
+
+    private void setupObservers() {
+        // Observe reminders data changes
+        reminderViewModel.getAllReminders(currentUserId).observe(getViewLifecycleOwner(), reminders -> {
+            // This LiveData observes all reminders, but we'll filter by date in loadRemindersForSelectedDate
+            // For better performance, you might want to modify the ViewModel to support date-range queries
+        });
+    }
 
     /* ---------------- TIMELINE ---------------- */
 
@@ -103,52 +115,59 @@ public class RemindersFragment extends Fragment {
         hourRecyclerView.setAdapter(adapter);
     }
 
-
     /* ---------------- LOAD REMINDERS ---------------- */
 
     private void loadRemindersForSelectedDate() {
-        executor.execute(() -> {
+        // Calculate date range for the selected date
+        Calendar cal = Calendar.getInstance();
+        cal.set(selectedDate.getYear(), selectedDate.getMonthValue() - 1, selectedDate.getDayOfMonth(), 0, 0, 0);
+        long start = cal.getTimeInMillis();
 
-            Calendar cal = Calendar.getInstance();
-            cal.set(selectedDate.getYear(), selectedDate.getMonthValue() - 1, selectedDate.getDayOfMonth(), 0, 0, 0);
-            long start = cal.getTimeInMillis();
+        cal.set(Calendar.HOUR_OF_DAY, 23);
+        cal.set(Calendar.MINUTE, 59);
+        cal.set(Calendar.SECOND, 59);
+        long end = cal.getTimeInMillis();
 
-            cal.set(Calendar.HOUR_OF_DAY, 23);
-            cal.set(Calendar.MINUTE, 59);
-            long end = cal.getTimeInMillis();
-
-            currentReminders = db.reminderDao().getRemindersByDateRange(start, end);
-
-            List<Task> tasks = new ArrayList<>();
-
-            for (ReminderEntity r : currentReminders) {
-
-                String title = r.getTitle();
-                if (title == null || title.isEmpty()) title = r.getMessage();
-
-                long endTime = r.getNotification() + 60 * 60 * 1000;
-
-                Task t = new Task(
-                        title,
-                        r.getType(),
-                        r.getNotification(),
-                        endTime,
-                        r.getId(),
-                        r.getMessage(),
-                        r.getGradientStartColor(),
-                        r.getGradientEndColor()
-                );
-
-                tasks.add(t);
+        // Use repository callback to get reminders for date range
+        // Note: You might want to add this method to your ViewModel and Repository
+        // For now, we'll filter from all reminders (less efficient but works with current setup)
+        reminderViewModel.getAllReminders(currentUserId).observe(getViewLifecycleOwner(), allReminders -> {
+            currentReminders = new ArrayList<>();
+            for (ReminderEntity reminder : allReminders) {
+                if (reminder.notificationTime >= start && reminder.notificationTime <= end) {
+                    currentReminders.add(reminder);
+                }
             }
-
-            requireActivity().runOnUiThread(() -> {
-                updatePromptText();
-                setupTimeline(tasks);
-            });
+            updateUIWithReminders();
         });
     }
 
+    private void updateUIWithReminders() {
+        List<Task> tasks = new ArrayList<>();
+
+        for (ReminderEntity r : currentReminders) {
+            String title = r.title;
+            if (title == null || title.isEmpty()) title = r.message;
+
+            long endTime = r.notificationTime + 60 * 60 * 1000;
+
+            Task t = new Task(
+                    title,
+                    r.type,
+                    r.notificationTime,
+                    endTime,
+                    r.id,
+                    r.message,
+                    r.gradientStartColor,
+                    r.gradientEndColor
+            );
+
+            tasks.add(t);
+        }
+
+        updatePromptText();
+        setupTimeline(tasks);
+    }
 
     private void updatePromptText() {
         int count = currentReminders.size();
@@ -159,32 +178,26 @@ public class RemindersFragment extends Fragment {
         }
     }
 
-
     /* ---------------- REMINDER OPTIONS ---------------- */
 
     private void showReminderOptions(Task task) {
         ReminderEntity reminder =
-                currentReminders.stream().filter(r -> r.getId() == task.getId()).findFirst().orElse(null);
+                currentReminders.stream().filter(r -> r.id == task.getId()).findFirst().orElse(null);
 
         if (reminder == null) return;
 
         CommonDialogs.showCustomDialog(requireContext(), reminder, "Edit", "Delete", () -> {
                     Intent i = new Intent(requireContext(), EditReminderActivity.class);
-                    i.putExtra("reminder_id", reminder.getId());
+                    i.putExtra("reminder_id", reminder.id);
                     startActivity(i);
                 },
-                () -> {
-                    deleteReminder(reminder);
-                });
+                () -> deleteReminder(reminder));
     }
 
     private void deleteReminder(ReminderEntity reminder) {
-        executor.execute(() -> {
-            db.reminderDao().deleteReminder(reminder);
-            requireActivity().runOnUiThread(this::loadRemindersForSelectedDate);
-        });
+        reminderViewModel.deleteReminder(reminder);
+        // UI will automatically update due to LiveData observation in loadRemindersForSelectedDate
     }
-
 
     /* ---------------- PICK DATE ---------------- */
 
@@ -208,7 +221,6 @@ public class RemindersFragment extends Fragment {
         selectedDateTv.setText(selectedDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy")));
     }
 
-
     /* ---------------- CALENDAR ---------------- */
 
     private void setupCalendar() {
@@ -224,7 +236,7 @@ public class RemindersFragment extends Fragment {
             loadRemindersForSelectedDate();
         });
 
-        // ✅ ADDED → load next month when scrolled to end
+        // Load next month when scrolled to end
         calendarRv.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
@@ -242,7 +254,6 @@ public class RemindersFragment extends Fragment {
             }
         });
     }
-
 
     private void loadMonthData() {
         calendarItemList.clear();
@@ -275,8 +286,6 @@ public class RemindersFragment extends Fragment {
         calendarAdapter.notifyDataSetChanged();
     }
 
-
-    /* ✅ ADDED → load next month data */
     private void appendNextMonth() {
         YearMonth currentMonth = YearMonth.from(selectedDate);
         YearMonth nextMonth = currentMonth.plusMonths(1);
@@ -295,14 +304,5 @@ public class RemindersFragment extends Fragment {
         }
 
         calendarAdapter.addNext(nextItems);
-    }
-
-
-    /* ---------------- LIFECYCLE ---------------- */
-
-    @Override
-    public void onDestroy() {
-        if (!executor.isShutdown()) executor.shutdown();
-        super.onDestroy();
     }
 }

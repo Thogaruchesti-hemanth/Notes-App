@@ -23,15 +23,23 @@ public class DBSeedUtil {
         Executors.newSingleThreadExecutor().execute(() -> {
 
             List<CategoryEntity> defaultCategories = Arrays.asList(
-                    new CategoryEntity("All", null, null),
-                    new CategoryEntity("Work", "#FFB300", "ic_work"),
-                    new CategoryEntity("Professional", "#42A5F5", "ic_professional"),
-                    new CategoryEntity("Ideas", "#66BB6A", "ic_ideas")
+                    new CategoryEntity("All"),
+                    new CategoryEntity("Work"),
+                    new CategoryEntity("Professional"),
+                    new CategoryEntity("Ideas")
             );
 
             db.categoryDao().insertAll(defaultCategories);
 
             pref.setCategorySeedDone(true);  // ✅ Save flag
         });
+    }
+
+    public static Context getContext() {
+        return context;
+    }
+
+    public static void setContext(Context context) {
+        DBSeedUtil.context = context;
     }
 }

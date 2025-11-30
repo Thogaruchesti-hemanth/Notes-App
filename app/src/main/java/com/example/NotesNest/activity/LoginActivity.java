@@ -33,6 +33,8 @@ import com.example.NotesNest.databinding.ActivityLoginBinding;
 import com.example.NotesNest.utils.ValidationUtils;
 import com.example.NotesNest.utils.formaters.ValidationTextWatcher;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -133,7 +135,7 @@ public class LoginActivity extends AppCompatActivity {
                 googleBorder.startLoading();
                 firebaseHelper.handleGoogleSignInResult(result.getData(), this, (userName, email) -> {
                     googleBorder.stopLoading();
-                    saveSession(email);
+                    saveSession();
                     navigateToMain();
                 });
             } else {
@@ -250,7 +252,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onLoginSuccess() {
                 loginBorder.stopLoading();
-                saveSession(email);
+                saveSession();
                 navigateToMain();
             }
 
@@ -293,10 +295,19 @@ public class LoginActivity extends AppCompatActivity {
 
         // disable button to prevent duplicate taps
         binding.loginButton.setEnabled(false);
-        firebaseHelper.signupUser(username, email, password, confirm, selectedImageBase64, this, (name, savedEmail) -> {
-            binding.loginButton.setEnabled(true);
-            saveSession(savedEmail);
-            navigateToMain();
+        firebaseHelper.signupUser(username, email, password, confirm, selectedImageBase64, this, new FirebaseHelper.SignupCallback() {
+            @Override
+            public void onSignupSuccess(String userName, String email) {
+                binding.loginButton.setEnabled(true);
+                saveSession();
+                navigateToMain();
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                binding.loginButton.setEnabled(true);
+                showError(errorMessage);
+            }
         });
     }
 
@@ -375,30 +386,53 @@ public class LoginActivity extends AppCompatActivity {
 
     // ----------------- Session helpers -----------------
 
-    private void saveSession(@NonNull String email) {
+
+    /**
+     * Save session securely (stores email, uid, username) using EncryptedSharedPreferences.
+     * It prefers values from FirebaseAuth currentUser; falls back to SharedPreferenceUtil if needed.
+     */
+    private void saveSession() {
         try {
-            // 1️⃣ Create or retrieve the MasterKey (AES256_GCM)
+            // Try getting info from Firebase currentUser first
+            FirebaseUser current = FirebaseAuth.getInstance().getCurrentUser();
+
+            String email = null;
+            String uid = null;
+            String username;
+
+            if (current != null) {
+                email = current.getEmail();
+                uid = current.getUid();
+            }
+
+            // If any value missing, fall back to SharedPreferenceUtil (FirebaseHelper saves there)
+            com.example.NotesNest.utils.SharedPreferenceUtil sp = new com.example.NotesNest.utils.SharedPreferenceUtil(this);
+            if (email == null || email.isEmpty()) email = sp.getUserEmail();
+            if (uid == null || uid.isEmpty()) uid = sp.getUserId();
+            username = sp.getUserName();
+
+            // Create or retrieve the MasterKey (AES256_GCM)
             MasterKey masterKey = new MasterKey.Builder(this)
                     .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
                     .build();
 
-            // 2️⃣ Create EncryptedSharedPreferences
-            //    It will automatically generate a keyset if it doesn't exist
             SharedPreferences securePrefs = EncryptedSharedPreferences.create(
                     this,
-                    "secure_prefs", // file name
+                    "secure_prefs",
                     masterKey,
                     EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                     EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
             );
 
-            // 3️⃣ Save the email securely
-            securePrefs.edit().putString("user_email", email).apply();
+            SharedPreferences.Editor editor = securePrefs.edit();
+            if (email != null) editor.putString("user_email", email);
+            if (uid != null) editor.putString("user_uid", uid);
+            if (username != null) editor.putString("user_name", username);
+            editor.apply();
 
-            Log.i(TAG, "✅ Session saved successfully.");
+            Log.i(TAG, "✅ Session saved securely: uid=" + (uid != null ? uid : "null"));
 
         } catch (Exception e) {
-            // Catch all exceptions safely
             Log.e(TAG, "❌ Failed to save user session securely", e);
         }
     }
@@ -414,7 +448,6 @@ public class LoginActivity extends AppCompatActivity {
         super.onDestroy();
         binding = null; // allow GC
     }
-
 
     // terms and conditions setup
     private void setupTermsAndConditionsText() {
