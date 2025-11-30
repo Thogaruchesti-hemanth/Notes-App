@@ -67,5 +67,9 @@
     <string name="text_timelines">Timelines</string>
     <string name="text_colors">Colors</string>
     <string name="text_done">Done</string>
+    <string name="text_on_boarding_image">onBoarding image</string>
+    <string name="text_next">Next</string>
+    <string name="text_get_started">Get Started</string>
+    <string name="text_welcome_to_notesnest">Welcome to NotesNest</string>
 
 </resources>

@@ -53,7 +53,7 @@ public class SplashScreenActivity extends AppCompatActivity {
     private void goToNextScreen() {
         Class<?> nextActivity = prefs.getLogin()
                 ? MainActivity.class
-                : LoginActivity.class;
+                : OnboardingActivity.class;
 
         Intent intent = new Intent(this, nextActivity);
         startActivity(intent);
