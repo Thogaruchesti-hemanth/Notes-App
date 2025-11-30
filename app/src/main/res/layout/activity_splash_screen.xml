@@ -22,7 +22,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/size_16"
         android:fontFamily="sans-serif-medium"
-        android:text="@string/text_notes_nest"
+        android:text="@string/text_welcome_to_notesnest"
         android:textColor="?attr/colorPrimary"
         android:textSize="@dimen/text_28"
         android:textStyle="bold" />
@@ -35,14 +35,6 @@
         android:fontFamily="sans-serif-light"
         android:text="@string/text_nest_your_ideas_let_them_take_flight"
         android:textColor="?attr/colorPrimary"
-        android:textSize="@dimen/text_14" />
-
-    <ProgressBar
-        android:id="@+id/splash_progress"
-        android:layout_width="@dimen/size_50"
-        android:layout_height="@dimen/size_50"
-        android:layout_marginTop="@dimen/margin_20"
-        android:indeterminate="true"
-        android:indeterminateTint="?attr/colorPrimary" />
+        android:textSize="@dimen/text_16" />
 
 </LinearLayout>

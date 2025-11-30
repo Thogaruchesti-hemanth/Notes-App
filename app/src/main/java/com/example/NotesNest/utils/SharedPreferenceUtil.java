@@ -12,6 +12,7 @@ public class SharedPreferenceUtil {
     private static final String KEY_USERID = "user_id";
     private static final String KEY_LOGIN = "is_login";
     private static final String KEY_SYSTEM_THEME = "system_theme";
+    private static final String ONBOARDING_KEY = "completed";
 
     private static final String KEY_THEME = "theme"; // light / dark
     private static SharedPreferences sharedPreferences;
@@ -42,22 +43,21 @@ public class SharedPreferenceUtil {
         return sharedPreferences.getString(KEY_EMAIL, "user@example.com");
     }
 
-    public String getUserId(){
-        return sharedPreferences.getString(KEY_USERID,"-1");
-    }
-
     public void setUserEmail(String userEmail) {
         sharedPreferences.edit().putString(KEY_EMAIL, userEmail).apply();
+    }
+
+    public String getUserId() {
+        return sharedPreferences.getString(KEY_USERID, "-1");
+    }
+
+    public void setUserId(String userId) {
+        sharedPreferences.edit().putString(KEY_USERID, userId).apply();
     }
 
     public void setKeyLogin(boolean value) {
         sharedPreferences.edit().putBoolean(KEY_LOGIN, value).apply();
     }
-
-    public void setUserId(String userId){
-        sharedPreferences.edit().putString(KEY_USERID,userId).apply();
-    }
-
 
     public boolean getLogin() {
         return sharedPreferences.getBoolean(KEY_LOGIN, false);
@@ -90,5 +90,12 @@ public class SharedPreferenceUtil {
         sharedPreferences.edit().putString(KEY_THEME, theme).apply();
     }
 
+    public boolean isOnboardingCompleted() {
+        return sharedPreferences.getBoolean(ONBOARDING_KEY, false);
+    }
+
+    public void setOnboardingCompleted(boolean completed) {
+        sharedPreferences.edit().putBoolean(ONBOARDING_KEY, completed).apply();
+    }
 
 }

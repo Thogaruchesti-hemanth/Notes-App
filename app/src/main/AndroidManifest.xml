@@ -26,6 +26,9 @@
             android:name=".activity.EditReminderActivity"
             android:exported="false" />
         <activity
+            android:name=".activity.OnboardingActivity"
+            android:exported="false" />
+        <activity
             android:name=".activity.EditNoteActivity"
             android:exported="false" />
         <activity
