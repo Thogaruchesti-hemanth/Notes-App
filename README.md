@@ -1,6 +1,7 @@
 # 🌟 NoteNest — Version 2.0.0
+<img width="1024" height="475" alt="Gemini_Generated_Image_w79lq4w79lq4w79l" src="https://github.com/user-attachments/assets/6b8f2a07-7fb5-4ef0-91ec-a57530c5bd34" />
 
-![App Logo](https://github.com/user-attachments/assets/7ad2fbd7-3ef6-46e4-b2af-458c40cb38e1)
+
 
 NoteNest 2.0.0 transforms the app from a simple notes utility into a **polished, secure, feature-rich, Play Store–ready productivity companion**.
 With a redesigned UI, improved performance, upgraded security, and smart organisation tools, this version delivers a truly modern note-taking experience.
@@ -107,13 +108,42 @@ Version 2.0.0 focuses on **stability, performance, security, UI/UX polish, and P
 
 # 📸 Screenshots — Version 2.0.0
 
-> *(Update with latest V2 screenshots later — placeholders kept for reference)*
+| Splash                                                                                                   | Login                                                                                                    | Signup                                                                                                   | Notes                                                                                                    | Reminders                                                                                                |
+| -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| <img src="https://github.com/user-attachments/assets/1e156c47-aeb4-4c15-9058-5dbcfc4df592" height="300"> | <img src="https://github.com/user-attachments/assets/ba3dd8ef-cb03-437a-b14c-f438d96d5410" height="300"> | <img src="https://github.com/user-attachments/assets/f0081357-b8da-494b-8b0f-3e009f4f73eb" height="300"> | <img src="https://github.com/user-attachments/assets/6be8f861-731e-4cee-8aa2-8e0089b93938" height="300"> | <img src="https://github.com/user-attachments/assets/aa5c625e-0fc3-47a0-acef-ae0fde168a47" height="300"> |
 
-| Splash                                                                                                   | Login                                                                                                    | Signup                                                                                                   | Dashboard                                                                                                | Notes                                                                                                    | Important Notes                                                                                          |
-| -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| <img src="https://github.com/user-attachments/assets/183f505e-73d6-41be-9fd6-fa89ea4dc438" height="300"> | <img src="https://github.com/user-attachments/assets/1ae6881b-2e21-4c6d-877d-c3d331dbc333" height="300"> | <img src="https://github.com/user-attachments/assets/b5d76bcf-bfcf-4ebc-9f04-64a2fd09929b" height="300"> | <img src="https://github.com/user-attachments/assets/39a93134-2c8e-42e0-8ac8-6e306ba4ee42" height="300"> | <img src="https://github.com/user-attachments/assets/ee9a217a-ce91-4d23-8167-aeb6a3b5b4c8" height="300"> | <img src="https://github.com/user-attachments/assets/89171260-0fe7-4f8a-ad8a-e1b7c4811fac" height="300"> |
+
+| DrawerMenu | EditReminder | EditNote |   |   |
+|-----------|--------------|----------|---|---|
+| <img src="https://github.com/user-attachments/assets/e03be1d0-da82-4836-8d5b-ac5623aa0819" height="300"> | <img src="https://github.com/user-attachments/assets/8068b354-20f2-4deb-aa5b-8db0c121f9ed" height="300"> | <img src="https://github.com/user-attachments/assets/edb386e5-3515-4688-b294-10f3a2baaed4" height="300"> |   |   |
+
 
 ---
+
+
+
+Here is the **fixed layout** with **5 images per row** in Markdown.
+You currently have **7 images**, so I arranged them as:
+
+* **Row 1 → 5 images**
+* **Row 2 → remaining 2 images** (you can add 3 more later)
+
+---
+
+# ✅ **Updated Markdown with 5 images per row**
+
+### **Row 1 (5 images)**
+
+---
+
+### **Row 2 (2 images now, space for 3 more)**
+
+---
+
+If you give me **3 more images**, I’ll fill the second row completely.
+
+If you want **all 7 images auto-centered without tables**, I can also format that for you.
+
 
 # 🧩 Installation Guide
 
@@ -160,18 +190,11 @@ Use physical device/emulator (API 23+ recommended).
 
 ---
 
-# 🤝 Contributing
-
-Contributions are always welcome!
-Submit a pull request or create an issue for any enhancement or bug fix.
-
----
-
 # 🔗 Connect with Me
 
-📧 Email: [saihemanth225@gmail.com](mailto:saihemanth225@gmail.com)
-💻 GitHub: [Thogaruchesti Hemanth](https://github.com/Thogaruchesti-hemanth)
-🔗 LinkedIn: [Thogaruchesti Hemanth](https://linkedin.com/in/thogaruchesti-hemanth)
+- 📧 Email: [saihemanth225@gmail.com](mailto:saihemanth225@gmail.com)
+- 💻 GitHub: [Thogaruchesti Hemanth](https://github.com/Thogaruchesti-hemanth)
+- 🔗 LinkedIn: [Thogaruchesti Hemanth](https://linkedin.com/in/thogaruchesti-hemanth)
 
 ---
 
