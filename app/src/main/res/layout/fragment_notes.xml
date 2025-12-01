@@ -106,16 +106,16 @@
 
         <!-- Add (+) Button -->
         <ImageButton
-            android:id="@+id/btnAdd"
+            android:id="@+id/manage_category_button"
             android:layout_width="@dimen/size_40"
             android:layout_height="@dimen/size_40"
             android:layout_gravity="center_vertical"
             android:layout_marginEnd="@dimen/margin_16"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:backgroundTint="?attr/colorPrimary"
+            android:backgroundTint="@color/grey_400"
             android:contentDescription="@string/text_add"
             android:paddingHorizontal="@dimen/padding_12"
-            android:src="@drawable/ic_add" />
+            android:src="@drawable/ic_3dots" />
     </androidx.appcompat.widget.LinearLayoutCompat>
 
     <TextView
