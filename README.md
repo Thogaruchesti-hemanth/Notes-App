@@ -117,33 +117,7 @@ Version 2.0.0 focuses on **stability, performance, security, UI/UX polish, and P
 |-----------|--------------|----------|---|---|
 | <img src="https://github.com/user-attachments/assets/e03be1d0-da82-4836-8d5b-ac5623aa0819" height="300"> | <img src="https://github.com/user-attachments/assets/8068b354-20f2-4deb-aa5b-8db0c121f9ed" height="300"> | <img src="https://github.com/user-attachments/assets/edb386e5-3515-4688-b294-10f3a2baaed4" height="300"> |   |   |
 
-
 ---
-
-
-
-Here is the **fixed layout** with **5 images per row** in Markdown.
-You currently have **7 images**, so I arranged them as:
-
-* **Row 1 → 5 images**
-* **Row 2 → remaining 2 images** (you can add 3 more later)
-
----
-
-# ✅ **Updated Markdown with 5 images per row**
-
-### **Row 1 (5 images)**
-
----
-
-### **Row 2 (2 images now, space for 3 more)**
-
----
-
-If you give me **3 more images**, I’ll fill the second row completely.
-
-If you want **all 7 images auto-centered without tables**, I can also format that for you.
-
 
 # 🧩 Installation Guide
 
