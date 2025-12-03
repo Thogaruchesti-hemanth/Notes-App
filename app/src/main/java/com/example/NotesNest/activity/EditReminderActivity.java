@@ -22,6 +22,7 @@ import com.example.NotesNest.R;
 import com.example.NotesNest.databases.entities.ReminderEntity;
 import com.example.NotesNest.databinding.ActivityEditReminderBinding;
 import com.example.NotesNest.notifications.schedulers.NotificationScheduler;
+import com.example.NotesNest.utils.AnalyticsHelper;
 import com.example.NotesNest.utils.CommonDialogs;
 import com.example.NotesNest.databases.ViewModels.ReminderViewModel;
 
@@ -340,6 +341,12 @@ public class EditReminderActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         binding = null;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        AnalyticsHelper.logScreenView(getClass().getSimpleName(), getClass().getSimpleName());
     }
 
     private interface OptionCallback {

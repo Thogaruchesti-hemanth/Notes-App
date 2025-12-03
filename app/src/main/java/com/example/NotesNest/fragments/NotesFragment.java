@@ -39,6 +39,8 @@ import com.example.NotesNest.databases.ViewModels.NoteViewModel;
 import com.example.NotesNest.databases.entities.CategoryEntity;
 import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.utils.CategoryManager;
+import com.example.NotesNest.utils.AnalyticsHelper;
+import com.example.NotesNest.utils.CommonDialogs;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
 import com.example.NotesNest.utils.ThemeManager;
 import com.google.android.material.tabs.TabLayout;
@@ -420,6 +422,8 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         // reload current view (LiveData will normally keep things updated; call runSearch to ensure)
         runSearch(searchEditText.getText().toString().trim());
         updateAllTabCounts();
+        AnalyticsHelper.logScreenView("Notes", "NotesFragment");
+
     }
 
 
