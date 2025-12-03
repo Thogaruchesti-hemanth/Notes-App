@@ -71,5 +71,10 @@
     <string name="text_next">Next</string>
     <string name="text_get_started">Get Started</string>
     <string name="text_welcome_to_notesnest">Welcome to NotesNest</string>
+    <string name="text_manage_categories">Manage Categories</string>
+    <string name="text_add_category">Add Category</string>
+    <string name="text_add_new_category">Add new category</string>
+    <string name="text_reorder_categories_icon">reorder Categories icon</string>
+    <string name="text_delete_category_icon">delete category icon</string>
 
 </resources>

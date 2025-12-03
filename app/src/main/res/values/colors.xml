@@ -62,6 +62,7 @@
     <color name="switch_track_checked">#2196F3</color>
     <color name="switch_track_unchecked">#BDBDBD</color>
 
+    <color name="grey_100">#F5F5F5</color>
     <color name="grey_200">#DBD8D8</color>
     <color name="grey_400">#9F9C9C</color>
     <color name="grey_900">#1D1E1D</color>
