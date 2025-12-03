@@ -27,4 +27,17 @@ public class DateTimeUtils {
             System.err.println("Error formatting timestamp: " + timestamp);
         }
     }
+
+    public static String getReadableDate(long timestamp) {
+        Date date = new Date(timestamp);
+        SimpleDateFormat df = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
+        return df.format(date);
+    }
+
+    public static String getReadableTime(long timestamp) {
+        Date date = new Date(timestamp);
+        SimpleDateFormat tf = new SimpleDateFormat("hh:mm a", Locale.getDefault());
+        return tf.format(date);
+    }
+
 }

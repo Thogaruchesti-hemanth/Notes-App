@@ -40,4 +40,8 @@ public class CategoryViewModel extends AndroidViewModel {
         categoryRepository.update(category);
     }
 
+    public void getCategoryName(int categoryId, CategoryRepository.CategoryNameCallback callback) {
+        categoryRepository.getCategoryName(categoryId, callback);
+    }
+
 }

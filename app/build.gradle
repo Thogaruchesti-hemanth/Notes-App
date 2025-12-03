@@ -16,7 +16,7 @@ android {
     namespace 'com.example.NotesNest'
 
     // Compile SDK version
-    compileSdk 35
+    compileSdk 36
 
     // Enable viewBinding
     buildFeatures {
@@ -35,7 +35,7 @@ android {
 
     defaultConfig {
         applicationId "com.hemanth.NotesNest"
-        minSdk 24
+        minSdk 31
         targetSdk 35
 
         versionCode 4

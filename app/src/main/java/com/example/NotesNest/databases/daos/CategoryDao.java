@@ -58,4 +58,7 @@ public interface CategoryDao {
     // 🔹 Delete all categories
     @Query("DELETE FROM categories")
     void deleteAll();
+
+    @Query("SELECT name FROM categories WHERE id = :categoryId LIMIT 1")
+    String getCategoryName(int categoryId);
 }

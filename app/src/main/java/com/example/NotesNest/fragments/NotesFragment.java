@@ -157,7 +157,7 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
     }
 
     private void setupRecycler() {
-        adapter = new NoteAdapter(new ArrayList<>(), requireContext(), categoryViewModel);
+        adapter = new NoteAdapter(new ArrayList<>(), requireContext(), categoryViewModel, noteViewModel);
         recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
         recyclerView.setAdapter(adapter);
     }

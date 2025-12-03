@@ -16,8 +16,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.NotesNest.R;
 import com.example.NotesNest.activity.EditNoteActivity;
-import com.example.NotesNest.databases.AppDatabase;
 import com.example.NotesNest.databases.ViewModels.CategoryViewModel;
+import com.example.NotesNest.databases.ViewModels.NoteViewModel;
 import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.utils.CommonDialogs;
 import com.example.NotesNest.utils.DateTimeUtils;
@@ -25,21 +25,19 @@ import com.example.NotesNest.utils.NoteDiffCallback;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder> {
 
     private final Context context;
     private final CategoryViewModel categoryViewModel;
     private final ArrayList<NoteEntity> noteList;
-    private final ExecutorService executorService;
+    private final NoteViewModel noteViewModel;
 
-    public NoteAdapter(ArrayList<NoteEntity> noteList, Context context, CategoryViewModel categoryViewModel) {
+    public NoteAdapter(ArrayList<NoteEntity> noteList, Context context, CategoryViewModel categoryViewModel, NoteViewModel noteViewModel) {
         this.noteList = noteList;
         this.context = context;
         this.categoryViewModel = categoryViewModel;
-        this.executorService = Executors.newSingleThreadExecutor();
+        this.noteViewModel = noteViewModel;
     }
 
     @NonNull
@@ -84,7 +82,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
 
             NoteEntity currentNote = noteList.get(currentPos);
 
-            CommonDialogs.showNoteContentDialog(context, currentNote, new CommonDialogs.NoteDialogCallback() {
+            CommonDialogs.showNoteContentDialog(context, currentNote, categoryViewModel, new CommonDialogs.NoteDialogCallback() {
                 @Override
                 public void setDateTime(long timeStamp, TextView dateView, TextView timeView) {
                     DateTimeUtils.setDateTime(timeStamp, dateView, timeView);
@@ -115,7 +113,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
 
                 @Override
                 public void onDelete(NoteEntity note, int pos) {
-                    deleteNote(note.id, pos);
+                    deleteNote(note, pos);
                 }
             });
             return true;
@@ -142,12 +140,9 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         }
     }
 
-    private void deleteNote(int noteId, int position) {
-        executorService.execute(() -> {
-            AppDatabase.getInstance(context).noteDao().deleteNoteById(noteId);
-            noteList.remove(position);
-            ((android.app.Activity) context).runOnUiThread(() -> notifyItemRemoved(position));
-        });
+    private void deleteNote(NoteEntity note, int position) {
+        noteViewModel.deleteNote(note);
+        ((android.app.Activity) context).runOnUiThread(() -> notifyItemRemoved(position));
     }
 
     @Override

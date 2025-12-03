@@ -44,6 +44,9 @@ public class NoteViewModel extends AndroidViewModel {
         noteRepository.update(note);
     }
 
+    public void deleteNote(NoteEntity note) {
+        noteRepository.delete(note);
+    }
     // SEARCH
 
     public LiveData<List<NoteEntity>> searchNotes(String userId, String keyword) {
@@ -69,4 +72,5 @@ public class NoteViewModel extends AndroidViewModel {
     public LiveData<Integer> getNotesCountByCategory(String userId, int categoryId) {
         return noteRepository.getNotesCountByCategory(userId, categoryId);
     }
+
 }
