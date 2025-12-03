@@ -35,6 +35,14 @@
                     android:textColor="@color/black"
                     android:textSize="@dimen/text_20"
                     android:textStyle="bold" />
+
+                <ImageButton
+                    android:id="@+id/share_button"
+                    android:layout_width="@dimen/size_48"
+                    android:layout_height="@dimen/size_48"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="@string/text_share_note_icon"
+                    android:src="@drawable/ic_share" />
             </LinearLayout>
 
             <!-- Content -->

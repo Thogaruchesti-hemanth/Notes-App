@@ -1,6 +1,8 @@
 package com.example.NotesNest.databases.repositories;
 
 import android.app.Application;
+import android.os.Handler;
+import android.os.Looper;
 
 import androidx.lifecycle.LiveData;
 
@@ -72,4 +74,21 @@ public class CategoryRepository {
     public boolean isCategoryExists(String categoryName) {
         return categoryDao.countCategoryByName(categoryName) > 0;
     }
+
+    public void getCategoryName(int categoryId, CategoryNameCallback callback) {
+        executorService.execute(() -> {
+            String name = categoryDao.getCategoryName(categoryId);
+            if (name == null) name = "Uncategorized";
+
+            String finalName = name;
+            new Handler(Looper.getMainLooper()).post(() -> {
+                callback.onResult(finalName);
+            });
+        });
+    }
+
+    public interface CategoryNameCallback {
+        void onResult(String categoryName);
+    }
+
 }

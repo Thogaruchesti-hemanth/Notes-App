@@ -18,6 +18,7 @@ import android.view.WindowManager;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -34,6 +35,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.NotesNest.R;
 import com.example.NotesNest.adapter.CategoryAdapter;
 import com.example.NotesNest.adapter.ColorAdapter;
+import com.example.NotesNest.databases.ViewModels.CategoryViewModel;
 import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.databases.entities.ReminderEntity;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
@@ -192,7 +194,7 @@ public class CommonDialogs {
         }
     }
 
-    public static void showNoteContentDialog(Context context, NoteEntity note, NoteDialogCallback callback) {
+    public static void showNoteContentDialog(Context context, NoteEntity note, CategoryViewModel categoryViewModel, NoteDialogCallback callback) {
 
         View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_note_full_content, null);
 
@@ -202,6 +204,7 @@ public class CommonDialogs {
         TextView dialogTime = dialogView.findViewById(R.id.dialog_time);
         TextView dialogCategory = dialogView.findViewById(R.id.dialog_category);
         CardView dialogCard = dialogView.findViewById(R.id.dialog_card);
+        ImageButton shareButton = dialogView.findViewById(R.id.share_button);
 
         // Set data
         dialogTitle.setText(note.title);
@@ -237,6 +240,8 @@ public class CommonDialogs {
             lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
             dialog.getWindow().setAttributes(lp);
         }
+
+        shareButton.setOnClickListener(view -> showShareBottomSheet(note, categoryViewModel, context, dialogView));
 
     }
 
@@ -465,6 +470,38 @@ public class CommonDialogs {
         dialogView.findViewById(R.id.closeButton).setOnClickListener(view -> dialog.dismiss());
     }
 
+    public static void showShareBottomSheet(NoteEntity note,CategoryViewModel categoryViewModel,Context context,View noteView) {
+
+        View sheetView = LayoutInflater.from(context)
+                .inflate(R.layout.share_bottom_sheet, null);
+
+        BottomSheetDialog sheet = new BottomSheetDialog(context);
+        sheet.setContentView(sheetView);
+
+        TextView shareText = sheetView.findViewById(R.id.share_text);
+        TextView shareImage = sheetView.findViewById(R.id.share_image);
+        TextView sharePdf = sheetView.findViewById(R.id.share_pdf);
+
+        sheet.show();
+
+        // ⭐ SHARE AS TEXT
+        shareText.setOnClickListener(v -> {
+            sheet.dismiss();
+            new NoteShareManager(context).shareAsText(note,categoryViewModel);
+        });
+
+        // ⭐ SHARE AS IMAGE
+        shareImage.setOnClickListener(v -> {
+            sheet.dismiss();
+            new NoteShareManager(context).shareAsImage(note,noteView);
+        });
+
+        // ⭐ SHARE AS PDF
+        sharePdf.setOnClickListener(v -> {
+            sheet.dismiss();
+            new NoteShareManager(context).shareAsPdf(note,noteView);
+        });
+    }
 
     public interface ThemeSelectionListener {
         void onThemeSelected(int theme);
