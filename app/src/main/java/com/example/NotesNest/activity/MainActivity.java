@@ -4,9 +4,11 @@ import static com.example.NotesNest.utils.ThemeManager.applyTheme;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.NotesNest.R;
@@ -15,6 +17,7 @@ import com.example.NotesNest.databases.AppDatabase;
 import com.example.NotesNest.utils.AnalyticsHelper;
 import com.example.NotesNest.utils.CommonDialogs;
 import com.example.NotesNest.utils.DrawerHelper;
+import com.example.NotesNest.utils.LayoutToggleViewModel;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.FirebaseApp;
@@ -27,8 +30,10 @@ public class MainActivity extends AppCompatActivity {
     private TextView greetingText;
     private ViewPager2 viewPager;
     private SharedPreferenceUtil pref;
+    ImageView toggleBtn;
 
-    private FirebaseAnalytics firebaseAnalytics;
+    private LayoutToggleViewModel layoutToggleViewModel;
+
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -44,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
 
         pref = new SharedPreferenceUtil(this);
 
+        layoutToggleViewModel = new ViewModelProvider(this).get(LayoutToggleViewModel.class);
+
         initViews();
         initGreeting();
         setupViewPager();
@@ -52,7 +59,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void initViews() {
         greetingText = findViewById(R.id.name_text_view);
+        toggleBtn = findViewById(R.id.layoutToggleBtn);
 
+        toggleBtn.setOnClickListener(v -> {
+            layoutToggleViewModel.toggleLayout();
+        });
     }
 
     private void initGreeting() {
