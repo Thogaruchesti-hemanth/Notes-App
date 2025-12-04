@@ -6,10 +6,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
@@ -52,6 +55,25 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         NoteEntity note = noteList.get(position);
 
         holder.textViewTitle.setText(note.title);
+        holder.textViewContent.setTag(position);
+        holder.readMoreView.setVisibility(View.GONE);
+
+        holder.textViewContent.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                // Check if this WebView is still displaying the same note
+                if ((int) view.getTag() == position) {
+                    int contentHeightPx = view.getContentHeight() * (int) view.getScaleY();
+                    int requiredPx = (int) (130 * context.getResources().getDisplayMetrics().density);
+
+                    if (contentHeightPx > requiredPx) {
+                        holder.readMoreView.setVisibility(View.VISIBLE);
+                    } else {
+                        holder.readMoreView.setVisibility(View.GONE);
+                    }
+                }
+            }
+        });
 
         holder.textViewContent.getSettings().setJavaScriptEnabled(false);
         holder.textViewContent.loadDataWithBaseURL(
@@ -120,6 +142,14 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         });
     }
 
+    @Override
+    public void onViewRecycled(@NonNull NoteViewHolder holder) {
+        super.onViewRecycled(holder);
+        holder.textViewContent.loadDataWithBaseURL(null, "", "text/html", "UTF-8", null);
+        holder.readMoreView.setVisibility(View.GONE);
+        holder.textViewContent.setTag(-1);
+    }
+
     private void bindCategory(Integer categoryId, TextView categoryView) {
         if (categoryView == null) return;
 
@@ -166,6 +196,8 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         TextView textViewTitle, textDate, textTime;
         WebView textViewContent;
         CardView mainLayout;
+        ImageView readMoreView;
+        ConstraintLayout constraintLayout;
 
         public NoteViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -174,6 +206,8 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
             textDate = itemView.findViewById(R.id.note_date);
             textTime = itemView.findViewById(R.id.note_time);
             mainLayout = itemView.findViewById(R.id.main_layout);
+            readMoreView = itemView.findViewById(R.id.read_more_view);
+            constraintLayout = itemView.findViewById(R.id.content_layout);
         }
     }
 }
