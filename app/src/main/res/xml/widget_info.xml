@@ -1,0 +1,12 @@
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+
+    android:configure="com.example.NotesNest.activity.NoteWidgetConfigureActivity"
+    android:initialLayout="@layout/widget_layout"
+    android:maxWidth="380dp"
+    android:maxHeight="180dp"
+    android:minWidth="150dp"
+    android:minHeight="20dp"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="900000"
+    android:widgetCategory="home_screen"
+    android:widgetFeatures="reconfigurable" />

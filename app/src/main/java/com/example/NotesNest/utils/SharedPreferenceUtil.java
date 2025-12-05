@@ -13,6 +13,8 @@ public class SharedPreferenceUtil {
     private static final String KEY_LOGIN = "is_login";
     private static final String KEY_SYSTEM_THEME = "system_theme";
     private static final String ONBOARDING_KEY = "completed";
+    private static final String WIDGET_PREF_NAME = "note_widgets";
+
 
     private static final String KEY_THEME = "theme"; // light / dark
     private static SharedPreferences sharedPreferences;
@@ -98,4 +100,15 @@ public class SharedPreferenceUtil {
         sharedPreferences.edit().putBoolean(ONBOARDING_KEY, completed).apply();
     }
 
+    public void saveWidgetNoteId(Context context, int appWidgetId, int noteId) {
+        SharedPreferences prefs = context.getSharedPreferences(WIDGET_PREF_NAME, Context.MODE_PRIVATE);
+        prefs.edit()
+                .putInt("widget_note_" + appWidgetId, noteId)
+                .apply();
+    }
+
+    public int getWidgetNoteId(Context context, int appWidgetId) {
+        SharedPreferences prefs = context.getSharedPreferences(WIDGET_PREF_NAME, Context.MODE_PRIVATE);
+        return prefs.getInt("widget_note_" + appWidgetId, -1);
+    }
 }
