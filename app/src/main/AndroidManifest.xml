@@ -22,6 +22,12 @@
         android:theme="@style/Theme.Notes"
         tools:targetApi="31">
         <activity
+            android:name=".activity.HelpAndSupportActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.SettingsActivity"
+            android:exported="false" />
+        <activity
             android:name=".activity.EditReminderActivity"
             android:exported="false" />
         <activity
@@ -77,6 +83,7 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_info" />
         </receiver>
+
         <receiver
             android:name=".widgets.CreateNoteWidget"
             android:exported="true"
@@ -88,7 +95,6 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/create_note_widget_info" />
         </receiver>
-
         <receiver
             android:name="com.google.android.gms.measurement.AppMeasurementInstallReferrerReceiver"
             android:exported="true" />

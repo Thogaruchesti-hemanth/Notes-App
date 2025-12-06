@@ -1,4 +1,10 @@
 <resources>
+
+
+    // Web app link
+    <string name="text_https_notesnest_app_web_app">https://notesnest-app.web.app/</string>
+
+
     <string name="app_name">NotesNest</string>
     <string name="default_web_client_id">787609574642-ri3pfeqei3mcoboka870jfms2e97grn3.apps.googleusercontent.com</string>
     <string name="text_splash_screen_logo">Splash Screen Logo</string>
@@ -87,5 +93,16 @@
     <string name="create_note_widget_label">Create Note Widget</string>
     <string name="widget_description">Quickly create new notes</string>
     <string name="text_create_note">Create Note</string>
+    <string name="text_edit_profile">Edit Profile</string>
+    <string name="text_edit_icon">edit icon</string>
+    <string name="text_go_pro">Go Pro</string>
+    <string name="text_all_notes">All Notes</string>
+    <string name="text_reminders">Reminders</string>
+    <string name="text_reminder_icon">reminder icon</string>
+    <string name="text_notes_icon">notes icon</string>
+    <string name="text_settings">Settings</string>
+    <string name="text_help_support"><![CDATA[Help & Support]]></string>
+    <string name="text_help_and_support_icon">help and support icon</string>
+    <string name="text_settings_icon">settings icon</string>
 
 </resources>

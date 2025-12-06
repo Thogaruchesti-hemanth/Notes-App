@@ -2,34 +2,36 @@ package com.example.NotesNest.utils;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.ImageDecoder;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.Base64;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.NotesNest.FirebaseHelper;
 import com.example.NotesNest.R;
-import com.example.NotesNest.activity.LoginActivity;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.example.NotesNest.activity.HelpAndSupportActivity;
+import com.example.NotesNest.activity.SettingsActivity;
+import com.example.NotesNest.adapter.MainPagerAdapter;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 
@@ -44,8 +46,8 @@ public class DrawerHelper {
     private final NavigationView navigationView;
     private final SharedPreferenceUtil pref;
     private final FirebaseHelper firebaseHelper;
-    public OnDrawerItemSelectedListener listener;
-
+    private ViewPager2 viewPager;
+    private LinearLayout selectedTopMenuItem;
     private ImageView profileImageView, profileImage;
     private TextView userNameTextView, emailTextView;
     private ActivityResultLauncher<Intent> galleryLauncher;
@@ -62,135 +64,116 @@ public class DrawerHelper {
         setupMenuButton();
         setupGalleryLauncher();
         loadUserData();
-        updateThemeMenuIcon();
-
-        navigationView.getHeaderView(0)
-                .findViewById(R.id.edit_header_button)
-                .setOnClickListener(v -> openEditDialog());
-
-        navigationView.setNavigationItemSelectedListener(item -> {
-            handleNavigationSelection(activity, drawerLayout, item, listener);
-            return true;
-        });
+        setupViewPager(activity);
+        setupTopMenu();
+        setupFooterMenu();
     }
 
-    /**
-     * Handles drawer item selection
-     */
-    private static void handleNavigationSelection(
-            Activity activity,
-            DrawerLayout drawerLayout,
-            @NonNull MenuItem item,
-            OnDrawerItemSelectedListener listener
-    ) {
-        String title = Objects.requireNonNull(item.getTitle()).toString();
-        String appLink = "https://notesnest-app.web.app/"; // your link
+    private void setupFooterMenu() {
+        View footerView = navigationView.findViewById(R.id.footer_menu);
 
-
-        switch (title) {
-
-            case "Logout":
-                new MaterialAlertDialogBuilder(activity)
-                        .setTitle("Logout")
-                        .setMessage("Are you sure you want to logout?")
-                        .setPositiveButton("Yes", (dialog, which) -> {
-                            new SharedPreferenceUtil(activity).setKeyLogin(false);
-                            Intent intent = new Intent(activity, LoginActivity.class);
-                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                            activity.startActivity(intent);
-                            activity.finish();
-                        })
-                        .setNegativeButton("Cancel", null)
-                        .show();
-                break;
-
-            case "Theme":
-                showThemeDialog(activity, drawerLayout);
-                break;
-
-            case "Email Support":
-                Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
-                emailIntent.setData(Uri.parse("mailto:"));
-
-                emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{"saihemanth225@gmail.com"});
-                emailIntent.putExtra(Intent.EXTRA_SUBJECT, "NotesNest App Support");
-                emailIntent.putExtra(Intent.EXTRA_TEXT, "Hello team,\n\nI need help with...");
-
-                try {
-                    activity.startActivity(Intent.createChooser(emailIntent, "Send Email"));
-                } catch (ActivityNotFoundException e) {
-                    Toast.makeText(activity, "No email app found.", Toast.LENGTH_SHORT).show();
-                }
-                drawerLayout.closeDrawer(GravityCompat.START);
-                break;
-            case "Privacy Policy":
-            case "About App":
-            case "FAQ":
-                openWebLink(activity, appLink);
-                drawerLayout.closeDrawer(GravityCompat.START);
-                break;
-
-            default:
-                if (listener != null) {
-                    listener.onItemSelected(title);
-                }
-                drawerLayout.closeDrawer(GravityCompat.START);
-                break;
-        }
-    }
-
-    /**
-     * Opens a web link in the browser
-     */
-    private static void openWebLink(Activity activity, String url) {
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-        try {
+        footerView.findViewById(R.id.settings_layout).setOnClickListener(view -> {
+            Intent intent = new Intent(activity, SettingsActivity.class);
             activity.startActivity(intent);
-        } catch (ActivityNotFoundException e) {
-            Toast.makeText(activity, "No browser app found to open link", Toast.LENGTH_SHORT).show();
-        }
+            drawerLayout.closeDrawer(GravityCompat.START);
+        });
+
+        footerView.findViewById(R.id.help_and_support_layout).setOnClickListener(view -> {
+            Intent intent = new Intent(activity, HelpAndSupportActivity.class);
+            activity.startActivity(intent);
+            drawerLayout.closeDrawer(GravityCompat.START);
+
+            /*openWebLink(activity, activity.getString(R.string.text_https_notesnest_app_web_app));
+            drawerLayout.closeDrawer(GravityCompat.START);*/
+        });
+
+
     }
 
-    /**
-     * Show theme selection dialog
-     */
-    private static void showThemeDialog(Activity activity, DrawerLayout drawerLayout) {
+    private void setupViewPager(AppCompatActivity activity) {
+        viewPager = activity.findViewById(R.id.viewPager);
+        viewPager.setAdapter(new MainPagerAdapter(activity));
+        viewPager.setUserInputEnabled(false);
+        viewPager.setCurrentItem(0, false);
+    }
 
-        String currentTheme = ThemeManager.getCurrentThemeMode(activity);
+    private void setupTopMenu() {
+        View header = navigationView.findViewById(R.id.top_menu);
 
-        int selected = 3; // system
-        if ("light".equals(currentTheme)) selected = 1;
-        else if ("dark".equals(currentTheme)) selected = 2;
+        LinearLayout notes = header.findViewById(R.id.notes_layout);
+        LinearLayout reminders = header.findViewById(R.id.reminders_layout);
 
-        CommonDialogs.showThemeSelectionDialog(activity, selected, theme -> {
+        // DEFAULT SELECTED
+        setTopMenuSelected(notes);
 
-            switch (theme) {
-                case 1:
-                    ThemeManager.updateTheme(activity, "light", activity);
-                    break;
-                case 2:
-                    ThemeManager.updateTheme(activity, "dark", activity);
-                    break;
-                case 3:
-                    ThemeManager.updateTheme(activity, "system", activity);
-                    break;
-            }
-
+        notes.setOnClickListener(v -> {
+            setTopMenuSelected(notes);
+            changePage(0);
             drawerLayout.closeDrawer(GravityCompat.START);
-            activity.recreate();
         });
+
+        reminders.setOnClickListener(v -> {
+            setTopMenuSelected(reminders);
+            changePage(1);
+            drawerLayout.closeDrawer(GravityCompat.START);
+        });
+    }
+
+    private void setTopMenuSelected(LinearLayout newSelected) {
+
+        // UNSELECT OLD ITEM
+        if (selectedTopMenuItem != null) {
+            selectedTopMenuItem.setSelected(false);
+
+            ImageView oldIcon = (ImageView) selectedTopMenuItem.getChildAt(0);
+            TextView oldText = (TextView) selectedTopMenuItem.getChildAt(1);
+
+            int defaultColor = getAttrColor(com.google.android.material.R.attr.colorSecondary);
+
+            oldIcon.setColorFilter(defaultColor);
+            oldText.setTextColor(defaultColor);
+        }
+
+        // SELECT NEW ITEM
+        newSelected.setSelected(true);
+        selectedTopMenuItem = newSelected;
+
+        ImageView newIcon = (ImageView) newSelected.getChildAt(0);
+        TextView newText = (TextView) newSelected.getChildAt(1);
+
+        // Selected color → Black
+        int selectedColor = activity.getColor(android.R.color.black);
+
+        newIcon.setColorFilter(selectedColor);
+        newText.setTextColor(selectedColor);
+    }
+
+    private int getAttrColor(int attr) {
+        TypedValue typedValue = new TypedValue();
+        activity.getTheme().resolveAttribute(attr, typedValue, true);
+        return typedValue.data;
+    }
+
+
+    private void changePage(int index) {
+        viewPager.setCurrentItem(index, false);
     }
 
     private void setupHeaderViews() {
-        View headerView = navigationView.getHeaderView(0);
+        View profileHeader = navigationView.findViewById(R.id.fragment_profile_image);
 
-        userNameTextView = headerView.findViewById(R.id.header_user_name);
-        emailTextView = headerView.findViewById(R.id.header_user_email);
-        profileImageView = headerView.findViewById(R.id.header_profile_image);
+        userNameTextView = profileHeader.findViewById(R.id.header_user_name);
+        emailTextView = profileHeader.findViewById(R.id.header_user_email);
+        profileImageView = profileHeader.findViewById(R.id.header_profile_image);
 
-        headerView.findViewById(R.id.edit_header_button)
+        profileHeader.findViewById(R.id.edit_header_button)
+                .setOnClickListener(v -> openEditDialog());
+
+
+        profileHeader.findViewById(R.id.edit_header_button)
                 .setOnClickListener(v -> openEditDialog());
     }
+
 
     private void setupMenuButton() {
         activity.findViewById(R.id.menubutton)
@@ -343,9 +326,11 @@ public class DrawerHelper {
     }
 
     private String compressAndEncodeImage(Uri uri) {
+        Bitmap bitmap;
         try {
-            Bitmap bitmap =
-                    MediaStore.Images.Media.getBitmap(activity.getContentResolver(), uri);
+            ImageDecoder.Source source =
+                    ImageDecoder.createSource(activity.getContentResolver(), uri);
+            bitmap = ImageDecoder.decodeBitmap(source);
 
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             int quality = 90;
@@ -380,32 +365,5 @@ public class DrawerHelper {
         Intent intent = new Intent(Intent.ACTION_PICK,
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         galleryLauncher.launch(intent);
-    }
-
-    /**
-     * Updates drawer menu icon based on current theme
-     */
-    private void updateThemeMenuIcon() {
-        MenuItem themeItem = navigationView.getMenu().findItem(R.id.menu_theme);
-        if (themeItem == null) return;
-
-        String theme = ThemeManager.getCurrentThemeMode(activity);
-
-        switch (theme) {
-            case "light":
-                themeItem.setIcon(R.drawable.ic_light_mode);
-                break;
-            case "dark":
-                themeItem.setIcon(R.drawable.ic_dark_mode);
-                break;
-            default:
-                themeItem.setIcon(R.drawable.ic_system_mode);
-                break;
-        }
-    }
-
-
-    public interface OnDrawerItemSelectedListener {
-        void onItemSelected(String title);
     }
 }
