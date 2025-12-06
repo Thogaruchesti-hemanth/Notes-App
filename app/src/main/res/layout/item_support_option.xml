@@ -1,0 +1,33 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/margin_10"
+    android:background="@drawable/bg_round_12"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="@dimen/padding_10">
+
+    <ImageView
+        android:id="@+id/ivIcon"
+        android:layout_width="@dimen/size_24"
+        android:layout_height="@dimen/size_24"
+        android:src="@drawable/ic_email" />
+
+    <TextView
+        android:id="@+id/tvText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/margin_12"
+        android:layout_weight="1"
+        android:text="@string/text_email_support"
+        android:textColor="?attr/colorPrimary"
+        android:textSize="@dimen/text_16"
+        android:textStyle="bold" />
+
+    <ImageView
+        android:id="@+id/ic_right_arrow"
+        android:layout_width="@dimen/size_24"
+        android:layout_height="@dimen/size_24"
+        android:src="@drawable/ic_chevron_right_black" />
+
+</LinearLayout>

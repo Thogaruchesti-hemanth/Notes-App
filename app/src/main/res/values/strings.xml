@@ -104,5 +104,12 @@
     <string name="text_help_support"><![CDATA[Help & Support]]></string>
     <string name="text_help_and_support_icon">help and support icon</string>
     <string name="text_settings_icon">settings icon</string>
+    <string name="text_down_arrow_icon">arrow icon</string>
+    <string name="text_search_settings">Search Settings</string>
+    <string name="text_email_support">Email Support</string>
+    <string name="text_faqs">FAQs</string>
+    <string name="text_get_in_touch">Get in Touch</string>
+    <string name="text_resources">Resources</string>
+    <string name="text_about">About</string>
 
 </resources>
