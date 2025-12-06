@@ -1,9 +1,206 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activity.SettingsActivity">
+    android:background="?attr/colorSecondary"
+    android:orientation="vertical">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:padding="@dimen/padding_16">
+
+        <ImageView
+            android:id="@+id/iv_back_arrow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/padding_4"
+            android:src="@drawable/ic_arrow_right" />
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_12"
+            android:text="Settings"
+            android:textSize="@dimen/text_20"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- 🔍 Search Bar -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/searchLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/margin_20"
+        android:layout_marginVertical="@dimen/margin_10"
+        app:cardCornerRadius="@dimen/radius_12"
+        app:cardElevation="@dimen/elevation_4">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/size_48"
+            android:background="@android:color/white"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingVertical="@dimen/padding_12">
+
+            <!-- Search Icon -->
+            <ImageView
+                android:id="@+id/searchIcon"
+                android:layout_width="@dimen/size_24"
+                android:layout_height="@dimen/size_24"
+                android:layout_marginStart="@dimen/margin_10"
+                android:contentDescription="@string/text_search_icon"
+                android:src="@drawable/ic_search" />
+
+            <!-- Editable Search Field -->
+            <EditText
+                android:id="@+id/searchEditText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/margin_8"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                android:cursorVisible="true"
+                android:hint="@string/text_search_settings"
+                android:imeOptions="actionSearch"
+                android:importantForAutofill="no"
+                android:inputType="text"
+                android:maxLines="1"
+                android:textColor="@color/black"
+                android:textColorHint="@color/grey_400"
+                android:textCursorDrawable="@drawable/search_cursor"
+                android:textSize="@dimen/text_16" />
+
+            <!-- Clear (X) Button -->
+            <ImageButton
+                android:id="@+id/clearSearchBtn"
+                android:layout_width="@dimen/size_24"
+                android:layout_height="@dimen/size_24"
+                android:layout_marginEnd="@dimen/margin_10"
+                android:backgroundTint="@android:color/transparent"
+                android:contentDescription="@string/text_close"
+                android:src="@drawable/ic_close"
+                android:visibility="gone" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- 🔽 Scrollable Content -->
+    <ScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/padding_16">
+
+            <!-- ⭐ FAQ Section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/margin_10"
+                android:text="@string/text_faqs"
+                android:textSize="@dimen/text_16"
+                android:textStyle="bold" />
+
+            <!-- FAQ Item 1 -->
+            <include
+                android:id="@+id/faq_container_1"
+                layout="@layout/item_faq" />
+
+            <!-- FAQ Item 2 -->
+            <include
+                android:id="@+id/faq_container_2"
+                layout="@layout/item_faq" />
+
+            <!-- FAQ Item 3 -->
+            <include
+                android:id="@+id/faq_container_3"
+                layout="@layout/item_faq" />
+
+
+            <!-- ⭐ GET IN TOUCH -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_30"
+                android:layout_marginBottom="@dimen/margin_10"
+                android:text="@string/text_get_in_touch"
+                android:textSize="@dimen/text_16"
+                android:textStyle="bold" />
+
+            <include
+                android:id="@+id/option_email"
+                layout="@layout/item_support_option"
+                android:tag="email_support" />
+
+            <include
+                android:id="@+id/option_report_bug"
+                layout="@layout/item_support_option"
+                android:tag="report_bug" />
+
+            <include
+                android:id="@+id/option_feedback"
+                layout="@layout/item_support_option"
+                android:tag="feedback" />
+
+            <!-- ⭐ RESOURCES -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_30"
+                android:layout_marginBottom="@dimen/margin_10"
+                android:text="@string/text_resources"
+                android:textSize="@dimen/text_16"
+                android:textStyle="bold" />
+
+            <include
+                android:id="@+id/option_user_guide"
+                layout="@layout/item_support_option"
+                android:tag="user_guide" />
+
+            <include
+                android:id="@+id/option_video_tutorials"
+                layout="@layout/item_support_option"
+                android:tag="video_tutorials" />
+
+            <include
+                android:id="@+id/option_whats_new"
+                layout="@layout/item_support_option"
+                android:tag="whats_new" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_30"
+                android:layout_marginBottom="@dimen/margin_10"
+                android:text="@string/text_about"
+                android:textSize="@dimen/text_16"
+                android:textStyle="bold" />
+
+            <include
+                android:id="@+id/option_about_app"
+                layout="@layout/item_support_option"
+                android:tag="about_app" />
+
+            <include
+                android:id="@+id/option_privacy_policy"
+                layout="@layout/item_support_option"
+                android:tag="privacy_policy" />
+
+            <include
+                android:id="@+id/option_terms_service"
+                layout="@layout/item_support_option"
+                android:tag="terms_service" />
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
