@@ -80,5 +80,12 @@
     <string name="text_share_note">Share Note</string>
     <string name="text_share_as_image">Share as Image</string>
     <string name="text_share_as_pdf">Share as Pdf</string>
+    <string name="text_select_note">Select Note</string>
+    <string name="text_back_button">back button</string>
+    <string name="text_create_a_note_first_then_come_back_here">Create a note first, then come back here</string>
+    <string name="text_no_notes_available">No notes available</string>
+    <string name="create_note_widget_label">Create Note Widget</string>
+    <string name="widget_description">Quickly create new notes</string>
+    <string name="text_create_note">Create Note</string>
 
 </resources>

@@ -33,14 +33,6 @@
         <activity
             android:name=".activity.ProfileActivity"
             android:exported="false" />
-
-        <receiver
-            android:name="com.google.android.gms.measurement.AppMeasurementInstallReferrerReceiver"
-            android:exported="true" />
-        <receiver
-            android:name=".notifications.receivers.ReminderReceiver"
-            android:exported="true" />
-
         <activity
             android:name=".activity.SplashScreenActivity"
             android:exported="true"
@@ -57,6 +49,13 @@
         <activity
             android:name=".activity.MainActivity"
             android:exported="true" />
+        <activity
+            android:name=".activity.NoteWidgetConfigureActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -68,6 +67,34 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
+        <receiver
+            android:name=".widgets.NoteWidget"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info" />
+        </receiver>
+        <receiver
+            android:name=".widgets.CreateNoteWidget"
+            android:exported="true"
+            android:label="@string/create_note_widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/create_note_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name="com.google.android.gms.measurement.AppMeasurementInstallReferrerReceiver"
+            android:exported="true" />
+        <receiver
+            android:name=".notifications.receivers.ReminderReceiver"
+            android:exported="true" />
     </application>
 
 </manifest>

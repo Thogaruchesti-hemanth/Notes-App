@@ -91,4 +91,7 @@ public interface NoteDao {
     // Get count of notes for a user in specific category (excluding deleted)
     @Query("SELECT COUNT(*) FROM notes WHERE userId = :userId AND categoryId = :categoryId AND isDeleted = 0")
     LiveData<Integer> getNotesCountByCategory(String userId, int categoryId);
+
+    @Query("SELECT * FROM notes WHERE id = :noteId LIMIT 1")
+    NoteEntity getNoteByIdSync(int noteId);
 }

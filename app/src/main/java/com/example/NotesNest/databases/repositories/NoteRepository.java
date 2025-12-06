@@ -84,4 +84,20 @@ public class NoteRepository {
     public LiveData<Integer> getNotesCountByCategory(String userId, int categoryId) {
         return noteDao.getNotesCountByCategory(userId, categoryId);
     }
+
+    public NoteEntity getNoteByIdSync(int noteId) {
+        try {
+            return executorService.submit(() ->
+                    noteDao.getNoteByIdSync(noteId)
+            ).get();
+        } catch (Exception e) {
+            android.util.Log.e(
+                    "NoteRepository",
+                    "Failed to fetch note (ID: " + noteId + ") in getNoteByIdSync: " + e.getMessage(),
+                    e
+            );
+            return null;
+        }
+    }
+
 }
