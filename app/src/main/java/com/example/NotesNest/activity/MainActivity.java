@@ -9,7 +9,6 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.NotesNest.R;
 import com.example.NotesNest.databases.AppDatabase;
@@ -24,10 +23,9 @@ import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
+    ImageView toggleBtn;
     private TextView greetingText;
     private SharedPreferenceUtil pref;
-    ImageView toggleBtn;
-
     private LayoutToggleViewModel layoutToggleViewModel;
 
 
@@ -56,8 +54,15 @@ public class MainActivity extends AppCompatActivity {
         greetingText = findViewById(R.id.name_text_view);
         toggleBtn = findViewById(R.id.layoutToggleBtn);
 
-        toggleBtn.setOnClickListener(v -> {
-            layoutToggleViewModel.toggleLayout();
+        toggleBtn.setOnClickListener(v -> layoutToggleViewModel.toggleLayout());
+
+        layoutToggleViewModel.isGrid().observe(this, isGrid -> {
+
+            if (isGrid) {
+                toggleBtn.setImageResource(R.drawable.ic_linear);
+            } else {
+                toggleBtn.setImageResource(R.drawable.ic_grid);
+            }
         });
     }
 
