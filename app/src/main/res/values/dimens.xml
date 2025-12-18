@@ -72,6 +72,7 @@
     <dimen name="size_50">50dp</dimen>
     <dimen name="size_72">72dp</dimen>
     <dimen name="size_80">80dp</dimen>
+    <dimen name="size_90">90dp</dimen>
     <dimen name="size_100">100dp</dimen>
     <dimen name="size_120">120dp</dimen>
     <dimen name="size_200">200dp</dimen>

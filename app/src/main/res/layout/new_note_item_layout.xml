@@ -18,19 +18,39 @@
             android:id="@+id/note_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:textColor="@color/black"
             android:textSize="@dimen/text_22"
             android:textStyle="bold" />
 
-        <WebView
-            android:id="@+id/note_text"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/content_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:maxHeight="200dp">
+
+            <WebView
+                android:id="@+id/note_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="8"
+                android:scrollbars="none"
+                android:textColor="@color/black"
+                android:textSize="@dimen/text_16"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <ImageView
+            android:id="@+id/read_more_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:maxLines="8"
-            android:scrollbars="none"
-            android:textColor="@color/black"
-            android:textSize="@dimen/text_16" />
+            android:paddingStart="@dimen/padding_8"
+            android:src="@drawable/ic_read_more" />
 
         <LinearLayout
             android:layout_width="match_parent"
