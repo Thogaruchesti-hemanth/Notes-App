@@ -45,6 +45,22 @@ public abstract class AppDatabase extends RoomDatabase {
         return INSTANCE;
     }
 
+    public static synchronized void resetInstance(Context context) {
+        if (INSTANCE != null) {
+            INSTANCE.close();
+            INSTANCE = null;
+        }
+
+        // Recreate Room DB instance immediately
+        INSTANCE = Room.databaseBuilder(
+                        context.getApplicationContext(),
+                        AppDatabase.class,
+                        "notesnest.db"
+                )
+                .build();
+    }
+
+
     // ------------------- DAOs -------------------
     public abstract NoteDao noteDao();
 

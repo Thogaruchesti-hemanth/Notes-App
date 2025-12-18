@@ -126,6 +126,29 @@
                 android:id="@+id/faq_container_3"
                 layout="@layout/item_faq" />
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_30"
+                android:layout_marginBottom="@dimen/margin_10"
+                android:text="@string/text_backup_settings"
+                android:textSize="@dimen/text_16"
+                android:textStyle="bold" />
+
+            <include
+                android:id="@+id/option_local_backup"
+                layout="@layout/item_support_option"
+                android:tag="local_backup" />
+
+            <include
+                android:id="@+id/option_drive_backup"
+                layout="@layout/item_support_option"
+                android:tag="drive_backup" />
+
+            <include
+                android:id="@+id/option_import_data"
+                layout="@layout/item_support_option"
+                android:tag="import_data" />
 
             <!-- ⭐ GET IN TOUCH -->
             <TextView

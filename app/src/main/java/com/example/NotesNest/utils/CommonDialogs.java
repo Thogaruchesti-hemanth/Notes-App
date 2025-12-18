@@ -5,6 +5,7 @@ import static com.example.NotesNest.utils.Constants.professionalGradients;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Color;
@@ -25,6 +26,7 @@ import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
@@ -213,7 +215,7 @@ public class CommonDialogs {
         dialogContent.loadDataWithBaseURL(null, note.content, "text/html", "UTF-8", null);
 
         // Format date/time - callback provided for flexibility
-        callback.setDateTime(note.categoryId,dialogDate, dialogTime);
+        callback.setDateTime(note.createdAt, dialogDate, dialogTime);
 
         // Set background color safely
         try {
@@ -470,7 +472,7 @@ public class CommonDialogs {
         dialogView.findViewById(R.id.closeButton).setOnClickListener(view -> dialog.dismiss());
     }
 
-    public static void showShareBottomSheet(NoteEntity note,CategoryViewModel categoryViewModel,Context context,View noteView) {
+    public static void showShareBottomSheet(NoteEntity note, CategoryViewModel categoryViewModel, Context context, View noteView) {
 
         View sheetView = LayoutInflater.from(context)
                 .inflate(R.layout.share_bottom_sheet, null);
@@ -487,28 +489,63 @@ public class CommonDialogs {
         // ⭐ SHARE AS TEXT
         shareText.setOnClickListener(v -> {
             sheet.dismiss();
-            new NoteShareManager(context).shareAsText(note,categoryViewModel);
+            new NoteShareManager(context).shareAsText(note, categoryViewModel);
         });
 
         // ⭐ SHARE AS IMAGE
         shareImage.setOnClickListener(v -> {
             sheet.dismiss();
-            new NoteShareManager(context).shareAsImage(note,noteView);
+            new NoteShareManager(context).shareAsImage(note, noteView);
         });
 
         // ⭐ SHARE AS PDF
         sharePdf.setOnClickListener(v -> {
             sheet.dismiss();
-            new NoteShareManager(context).shareAsPdf(note,noteView);
+            new NoteShareManager(context).shareAsPdf(note, noteView);
         });
     }
+
+    public static void showPasswordDialog(
+            Activity activity,
+            String title,
+            PasswordCallback callback
+    ) {
+        View view = LayoutInflater.from(activity).inflate(R.layout.dialog_enter_password, null);
+        EditText passwordEdit = view.findViewById(R.id.passwordEdit);
+
+        AlertDialog dialog = new AlertDialog.Builder(activity)
+                .setTitle(title)
+                .setView(view)
+                .setCancelable(true)
+                .setPositiveButton("OK", null) // We override later
+                .setNegativeButton("Cancel", (d, w) -> d.dismiss())
+                .create();
+
+        dialog.setOnShowListener(dlg -> {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+                String pw = passwordEdit.getText().toString().trim();
+
+                if (pw.length() < 4) {
+                    Toast.makeText(activity, "Choose a stronger password (min 4 chars)", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // Pass value to callback
+                callback.onPasswordEntered(pw.toCharArray());
+                dialog.dismiss();
+            });
+        });
+
+        dialog.show();
+    }
+
 
     public interface ThemeSelectionListener {
         void onThemeSelected(int theme);
     }
 
     public interface NoteDialogCallback {
-        void setDateTime(long timeStamp,TextView dateView, TextView timeView);
+        void setDateTime(long timeStamp, TextView dateView, TextView timeView);
 
         void setCategory(TextView categoryView, int categoryId);
     }
@@ -538,4 +575,9 @@ public class CommonDialogs {
     public interface OnGradientSelectedListener {
         void onGradientSelected(@ColorInt int startColor, @ColorInt int endColor);
     }
+
+    public interface PasswordCallback {
+        void onPasswordEntered(char[] password);
+    }
+
 }
