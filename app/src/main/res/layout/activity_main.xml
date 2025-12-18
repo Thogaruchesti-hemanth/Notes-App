@@ -44,6 +44,15 @@
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
+            <ImageView
+                android:id="@+id/layoutToggleBtn"
+                android:layout_width="@dimen/size_48"
+                android:layout_height="@dimen/size_48"
+                android:paddingHorizontal="@dimen/padding_12"
+                android:layout_marginEnd="@dimen/margin_30"
+                android:src="@drawable/ic_linear"
+                android:contentDescription="@string/text_layout_toggle_icon"/>
+
         </androidx.appcompat.widget.LinearLayoutCompat>
 
         <androidx.viewpager2.widget.ViewPager2

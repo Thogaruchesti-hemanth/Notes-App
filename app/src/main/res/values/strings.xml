@@ -111,5 +111,6 @@
     <string name="text_get_in_touch">Get in Touch</string>
     <string name="text_resources">Resources</string>
     <string name="text_about">About</string>
+    <string name="text_layout_toggle_icon">layout toggle icon</string>
 
 </resources>
