@@ -76,5 +76,12 @@
 
 
 
+    <color name="background">#F5F5F5</color>
+    <color name="textSecondary">#666666</color>
+    <color name="blue">#4285F4</color>
+    <color name="red">#EA4335</color>
+    <color name="green">#34A853</color>
+    <color name="orange">#FBBC05</color>
+    <color name="infoBackground">#E3F2FD</color>
 
 </resources>

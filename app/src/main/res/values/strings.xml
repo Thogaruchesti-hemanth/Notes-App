@@ -5,6 +5,14 @@
     <string name="text_https_notesnest_app_web_app">https://notesnest-app.web.app/</string>
 
 
+    //back-up array
+    <string-array name="backup_frequency_options">
+        <item>Daily</item>
+        <item>Weekly</item>
+        <item>Monthly</item>
+    </string-array>
+
+
     <string name="app_name">NotesNest</string>
     <string name="default_web_client_id">787609574642-ri3pfeqei3mcoboka870jfms2e97grn3.apps.googleusercontent.com</string>
     <string name="text_splash_screen_logo">Splash Screen Logo</string>
@@ -111,5 +119,8 @@
     <string name="text_get_in_touch">Get in Touch</string>
     <string name="text_resources">Resources</string>
     <string name="text_about">About</string>
+    <string name="text_backup_settings">Backup Settings</string>
+    <string name="text_working">Working...</string>
+    <string name="text_enter_password">Enter password</string>
 
 </resources>

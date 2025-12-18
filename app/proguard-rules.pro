@@ -119,3 +119,9 @@
 
 # Suppress Conscrypt warnings (we do not use it)
 -dontwarn org.conscrypt.**
+
+
+-keep class com.google.api.services.** { *; }
+-keep class com.google.api.client.** { *; }
+-keep class com.google.http.client.** { *; }
+
