@@ -40,7 +40,7 @@ import com.example.NotesNest.databases.entities.CategoryEntity;
 import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.utils.CategoryManager;
 import com.example.NotesNest.utils.AnalyticsHelper;
-import com.example.NotesNest.utils.CommonDialogs;
+import com.example.NotesNest.utils.LayoutToggleViewModel;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
 import com.example.NotesNest.utils.ThemeManager;
 import com.google.android.material.tabs.TabLayout;
@@ -77,6 +77,8 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
     private Observer<List<NoteEntity>> currentNotesObserver;
     private ActivityResultLauncher<Intent> addEditNoteLauncher;
     private String currentUserId = null;
+    private LayoutToggleViewModel layoutToggleViewModel;
+
 
     public NotesFragment() { /* Required empty constructor */ }
 
@@ -160,9 +162,27 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
 
     private void setupRecycler() {
         adapter = new NoteAdapter(new ArrayList<>(), requireContext(), categoryViewModel, noteViewModel);
-        recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
         recyclerView.setAdapter(adapter);
+
+        // default layout
+        recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
+
+        // observe layout toggle from activity
+        layoutToggleViewModel = new ViewModelProvider(requireActivity()).get(LayoutToggleViewModel.class);
+
+        layoutToggleViewModel.getLayoutType().observe(getViewLifecycleOwner(), isGrid -> {
+            if (isGrid) {
+                recyclerView.setLayoutManager(
+                        new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
+                );
+            } else {
+                recyclerView.setLayoutManager(
+                        new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL)
+                );
+            }
+        });
     }
+
 
     private void setupCreateButton() {
         createButton.setOnClickListener(v -> openCreateItem());

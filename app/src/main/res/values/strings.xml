@@ -122,5 +122,6 @@
     <string name="text_backup_settings">Backup Settings</string>
     <string name="text_working">Working...</string>
     <string name="text_enter_password">Enter password</string>
+    <string name="text_layout_toggle_icon">layout toggle icon</string>
 
 </resources>
