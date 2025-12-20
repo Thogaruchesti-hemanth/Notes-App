@@ -25,7 +25,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import android.graphics.Bitmap;
@@ -42,12 +45,22 @@ import java.util.concurrent.Executors;
 
 public class FirebaseHelper {
 
+    // Plan constants
+    public static final String PLAN_NONE = "none";
+    public static final String PLAN_MONTHLY = "monthly";
+    public static final String PLAN_YEARLY = "yearly";
+    public static final String PLAN_LIFETIME = "lifetime";
     private static final String USERNAME = "userName";
     private static final String EMAIL = "email";
     private static final String IMAGE = "userImage";
     private static final String PASSWORD = "password";
     private static final String USER_ID = "userId";
-
+    // Premium fields
+    private static final String IS_PREMIUM = "isPremium";
+    private static final String PREMIUM_PLAN = "premiumPlan";
+    private static final String PREMIUM_EXPIRY = "premiumExpiry";
+    private static final String PURCHASE_DATE = "purchaseDate";
+    private static final String PLAN_TYPE = "planType";
     private final DatabaseReference databaseReference;
     private final FirebaseAuth mAuth;
 
@@ -111,20 +124,43 @@ public class FirebaseHelper {
                     String existingName = snapshot.child(USERNAME).getValue(String.class);
                     String existingImage = snapshot.child(IMAGE).getValue(String.class);
 
-                    saveToLocal(context, existingName, email, existingImage, uid);
+                    // Get premium data
+                    Boolean isPremium = snapshot.child(IS_PREMIUM).getValue(Boolean.class);
+                    String premiumPlan = snapshot.child(PREMIUM_PLAN).getValue(String.class);
+                    String premiumExpiry = snapshot.child(PREMIUM_EXPIRY).getValue(String.class);
+                    String purchaseDate = snapshot.child(PURCHASE_DATE).getValue(String.class);
+                    String planType = snapshot.child(PLAN_TYPE).getValue(String.class);
+
+                    // Set defaults if null
+                    if (isPremium == null) isPremium = false;
+                    if (premiumPlan == null) premiumPlan = PLAN_NONE;
+                    if (premiumExpiry == null) premiumExpiry = "";
+                    if (purchaseDate == null) purchaseDate = "";
+                    if (planType == null) planType = PLAN_NONE;
+
+                    saveToLocal(context, existingName, email, existingImage, uid,
+                            isPremium, premiumPlan, premiumExpiry, purchaseDate, planType);
 
                     callback.onGoogleLoginSuccess(existingName, email);
                 } else {
-                    Map<String, String> userData = new HashMap<>();
+                    Map<String, Object> userData = new HashMap<>();
                     userData.put(USERNAME, userName != null ? userName : "");
                     userData.put(EMAIL, email);
                     userData.put(IMAGE, base64Image);
                     userData.put(PASSWORD, "");
                     userData.put(USER_ID, uid);
 
+                    // Set default premium values
+                    userData.put(IS_PREMIUM, false);
+                    userData.put(PREMIUM_PLAN, PLAN_NONE);
+                    userData.put(PREMIUM_EXPIRY, "");
+                    userData.put(PURCHASE_DATE, "");
+                    userData.put(PLAN_TYPE, PLAN_NONE);
+
                     databaseReference.child(uid).setValue(userData).addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
-                            saveToLocal(context, userName, email, base64Image, uid);
+                            saveToLocal(context, userName, email, base64Image, uid,
+                                    false, PLAN_NONE, "", "", PLAN_NONE);
                             callback.onGoogleLoginSuccess(userName, email);
                         }
                     });
@@ -152,7 +188,22 @@ public class FirebaseHelper {
                             String userEmail = snapshot.child(EMAIL).getValue(String.class);
                             String userImage = snapshot.child(IMAGE).getValue(String.class);
 
-                            saveToLocal(context, userName, userEmail, userImage, uid);
+                            // Get premium data
+                            Boolean isPremium = snapshot.child(IS_PREMIUM).getValue(Boolean.class);
+                            String premiumPlan = snapshot.child(PREMIUM_PLAN).getValue(String.class);
+                            String premiumExpiry = snapshot.child(PREMIUM_EXPIRY).getValue(String.class);
+                            String purchaseDate = snapshot.child(PURCHASE_DATE).getValue(String.class);
+                            String planType = snapshot.child(PLAN_TYPE).getValue(String.class);
+
+                            // Set defaults if null
+                            if (isPremium == null) isPremium = false;
+                            if (premiumPlan == null) premiumPlan = PLAN_NONE;
+                            if (premiumExpiry == null) premiumExpiry = "";
+                            if (purchaseDate == null) purchaseDate = "";
+                            if (planType == null) planType = PLAN_NONE;
+
+                            saveToLocal(context, userName, userEmail, userImage, uid,
+                                    isPremium, premiumPlan, premiumExpiry, purchaseDate, planType);
                             callback.onLoginSuccess();
                         } else {
                             callback.onLoginFailure("User data missing");
@@ -184,18 +235,26 @@ public class FirebaseHelper {
             if (task.isSuccessful()) {
                 String uid = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
 
-                Map<String, String> userData = new HashMap<>();
+                Map<String, Object> userData = new HashMap<>();
                 userData.put(USERNAME, userName);
                 userData.put(EMAIL, email);
                 userData.put(PASSWORD, password);
                 userData.put(IMAGE, imageBase64);
                 userData.put(USER_ID, uid);
 
+                // Set default premium values
+                userData.put(IS_PREMIUM, false);
+                userData.put(PREMIUM_PLAN, PLAN_NONE);
+                userData.put(PREMIUM_EXPIRY, "");
+                userData.put(PURCHASE_DATE, "");
+                userData.put(PLAN_TYPE, PLAN_NONE);
+
                 databaseReference.child(uid).setValue(userData).addOnCompleteListener(dbTask -> {
                     if (dbTask.isSuccessful()) {
+                        saveToLocal(context, userName, email, imageBase64, uid,
+                                false, PLAN_NONE, "", "", PLAN_NONE);
                         callback.onSignupSuccess(userName, email);
                     } else {
-                        // failure
                         String error = task.getException() != null ?
                                 task.getException().getMessage() : "Signup failed";
                         callback.onFailure(error);
@@ -205,7 +264,7 @@ public class FirebaseHelper {
         });
     }
 
-    // Update Data
+    // Update User Data
     public void updateUserData(String uid, String userName, String imageBase64,
                                Context context, UpdateCallback callback) {
 
@@ -217,6 +276,138 @@ public class FirebaseHelper {
         databaseReference.child(uid).updateChildren(updates).addOnCompleteListener(task -> {
             if (task.isSuccessful()) callback.onUpdateSuccess();
         });
+    }
+
+    // Update Premium Plan
+    public void updatePremiumPlan(Context context, String planType, PremiumUpdateCallback callback) {
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser == null) {
+            callback.onPremiumUpdateFailure("User not logged in");
+            return;
+        }
+
+        String uid = currentUser.getUid();
+        Map<String, Object> updates = new HashMap<>();
+        String currentDate = getCurrentDateTime();
+        String expiryDate = calculateExpiryDate(planType);
+
+        updates.put(IS_PREMIUM, true);
+        updates.put(PREMIUM_PLAN, planType);
+        updates.put(PLAN_TYPE, planType);
+        updates.put(PURCHASE_DATE, currentDate);
+        updates.put(PREMIUM_EXPIRY, expiryDate);
+
+        databaseReference.child(uid).updateChildren(updates)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        // Update local SharedPreferences
+                        SharedPreferenceUtil sp = new SharedPreferenceUtil(context);
+                        sp.setIsPremium(true);
+                        sp.setPremiumPlan(planType);
+                        sp.setPlanType(planType);
+                        sp.setPurchaseDate(currentDate);
+                        sp.setPremiumExpiryDate(expiryDate);
+
+                        callback.onPremiumUpdateSuccess(planType, expiryDate);
+                    } else {
+                        callback.onPremiumUpdateFailure("Failed to update premium plan");
+                    }
+                });
+    }
+
+    // Cancel Premium (Downgrade to free)
+    public void cancelPremiumPlan(PremiumUpdateCallback callback, Context context) {
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser == null) {
+            callback.onPremiumUpdateFailure("User not logged in");
+            return;
+        }
+
+        String uid = currentUser.getUid();
+        Map<String, Object> updates = new HashMap<>();
+
+        updates.put(IS_PREMIUM, false);
+        updates.put(PREMIUM_PLAN, PLAN_NONE);
+        updates.put(PLAN_TYPE, PLAN_NONE);
+        updates.put(PREMIUM_EXPIRY, "");
+
+        databaseReference.child(uid).updateChildren(updates)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        // Update local SharedPreferences
+                        SharedPreferenceUtil sp = new SharedPreferenceUtil(context);
+                        sp.setIsPremium(false);
+                        sp.setPremiumPlan(PLAN_NONE);
+                        sp.setPlanType(PLAN_NONE);
+                        sp.setPremiumExpiryDate("");
+
+                        callback.onPremiumUpdateSuccess(PLAN_NONE, "");
+                    } else {
+                        callback.onPremiumUpdateFailure("Failed to cancel premium");
+                    }
+                });
+    }
+
+    // Check premium status in Firebase (for sync)
+    public void checkPremiumStatus(PremiumCheckCallback callback) {
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser == null) {
+            callback.onPremiumCheck(false, PLAN_NONE, "");
+            return;
+        }
+
+        String uid = currentUser.getUid();
+        databaseReference.child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    Boolean isPremium = snapshot.child(IS_PREMIUM).getValue(Boolean.class);
+                    String planType = snapshot.child(PLAN_TYPE).getValue(String.class);
+                    String expiryDate = snapshot.child(PREMIUM_EXPIRY).getValue(String.class);
+
+                    if (isPremium == null) isPremium = false;
+                    if (planType == null) planType = PLAN_NONE;
+                    if (expiryDate == null) expiryDate = "";
+
+                    callback.onPremiumCheck(isPremium, planType, expiryDate);
+                } else {
+                    callback.onPremiumCheck(false, PLAN_NONE, "");
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                callback.onPremiumCheck(false, PLAN_NONE, "");
+            }
+        });
+    }
+
+    private String calculateExpiryDate(String planType) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        Date currentDate = new Date();
+
+        switch (planType) {
+            case PLAN_MONTHLY:
+                long monthlyMillis = 30L * 24 * 60 * 60 * 1000; // 30 days
+                return sdf.format(new Date(currentDate.getTime() + monthlyMillis));
+
+            case PLAN_YEARLY:
+                long yearlyMillis = 365L * 24 * 60 * 60 * 1000; // 365 days
+                return sdf.format(new Date(currentDate.getTime() + yearlyMillis));
+
+            case PLAN_LIFETIME:
+                // Set to a far future date (50 years from now)
+                long lifetimeMillis = 50L * 365 * 24 * 60 * 60 * 1000;
+                return sdf.format(new Date(currentDate.getTime() + lifetimeMillis));
+
+            default:
+                return "";
+        }
+    }
+
+    private String getCurrentDateTime() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        return sdf.format(new Date());
     }
 
     // Reset Password
@@ -259,13 +450,22 @@ public class FirebaseHelper {
         });
     }
 
-    private void saveToLocal(Context context, String name, String email, String image, String uid) {
+    private void saveToLocal(Context context, String name, String email, String image, String uid,
+                             boolean isPremium, String premiumPlan, String premiumExpiry,
+                             String purchaseDate, String planType) {
         SharedPreferenceUtil sp = new SharedPreferenceUtil(context);
         sp.setUserName(name);
         sp.setUserEmail(email);
         sp.setUserImage(image);
         sp.setUserId(uid);
         sp.setKeyLogin(true);
+
+        // Save premium data
+        sp.setIsPremium(isPremium);
+        sp.setPremiumPlan(premiumPlan);
+        sp.setPremiumExpiryDate(premiumExpiry);
+        sp.setPurchaseDate(purchaseDate);
+        sp.setPlanType(planType);
     }
 
     // Interfaces
@@ -294,10 +494,19 @@ public class FirebaseHelper {
         void onSignupSuccess(String userName, String email);
 
         void onFailure(String errorMessage);
-
     }
 
     public interface UpdateCallback {
         void onUpdateSuccess();
+    }
+
+    public interface PremiumUpdateCallback {
+        void onPremiumUpdateSuccess(String planType, String expiryDate);
+
+        void onPremiumUpdateFailure(String error);
+    }
+
+    public interface PremiumCheckCallback {
+        void onPremiumCheck(boolean isPremium, String planType, String expiryDate);
     }
 }
