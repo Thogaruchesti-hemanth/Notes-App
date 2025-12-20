@@ -14,6 +14,7 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -54,11 +55,8 @@ import java.util.Objects;
 
 public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeListener {
 
-    //state
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
-    // Add these variables
     private final Map<String, Integer> categoryNoteCounts = new HashMap<>();
-    // UI
     private RecyclerView recyclerView;
     private NoteAdapter adapter;
     private EditText searchEditText;
@@ -66,19 +64,15 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
     private TabLayout tabLayout;
     private Button createButton;
     private TextView titleTextView;
-    // ViewModels
     private NoteViewModel noteViewModel;
     private CategoryViewModel categoryViewModel;
     private Runnable searchRunnable;
     private String selectedCategory = "All";
     private List<CategoryEntity> categoryList = new ArrayList<>();
     private int unselectedTabColor = -1;
-    // LiveData observer reference so we can remove when switching queries
     private Observer<List<NoteEntity>> currentNotesObserver;
     private ActivityResultLauncher<Intent> addEditNoteLauncher;
     private String currentUserId = null;
-    private LayoutToggleViewModel layoutToggleViewModel;
-
 
     public NotesFragment() { /* Required empty constructor */ }
 
@@ -90,7 +84,6 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
 
         View view = inflater.inflate(R.layout.fragment_notes, container, false);
 
-        //find views
         tabLayout = view.findViewById(R.id.tabLayout);
         ImageButton manageCategoryButton = view.findViewById(R.id.manage_category_button);
         createButton = view.findViewById(R.id.createButton);
@@ -98,7 +91,6 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         titleTextView = view.findViewById(R.id.title_text_view);
         searchEditText = view.findViewById(R.id.searchEditText);
         clearSearchBtn = view.findViewById(R.id.clearSearchBtn);
-        currentUserId = new SharedPreferenceUtil(getContext()).getUserId();
 
         currentUserId = new SharedPreferenceUtil(getContext()).getUserId();
 
@@ -168,7 +160,7 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
 
         // observe layout toggle from activity
-        layoutToggleViewModel = new ViewModelProvider(requireActivity()).get(LayoutToggleViewModel.class);
+        LayoutToggleViewModel layoutToggleViewModel = new ViewModelProvider(requireActivity()).get(LayoutToggleViewModel.class);
 
         layoutToggleViewModel.getLayoutType().observe(getViewLifecycleOwner(), isGrid -> {
             if (isGrid) {
@@ -216,8 +208,20 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
 
         clearSearchBtn.setOnClickListener(v -> {
             searchEditText.setText("");
+
+            // Remove focus
+            searchEditText.clearFocus();
+
+            // Hide keyboard
+            InputMethodManager imm = (InputMethodManager) searchEditText.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+
+            if (imm != null) {
+                imm.hideSoftInputFromWindow(searchEditText.getWindowToken(), 0);
+            }
+
             runSearch("");
         });
+
     }
 
     private void observeCategories() {
@@ -314,7 +318,11 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         // Set count if available and tab is selected
         Integer noteCount = categoryNoteCounts.get(title);
         if (selected && noteCount != null && noteCount > 0) {
-            count.setText(String.valueOf(noteCount));
+            if (noteCount > 99) {
+                count.setText(R.string.text_99);
+            } else {
+                count.setText(String.valueOf(noteCount));
+            }
             count.setVisibility(View.VISIBLE);
         } else {
             count.setVisibility(View.GONE);
@@ -334,7 +342,11 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         String categoryName = extractTabName(tab);
         Integer noteCount = categoryNoteCounts.get(categoryName);
         if (noteCount != null && noteCount > 0) {
-            count.setText(String.valueOf(noteCount));
+            if (noteCount > 99) {
+                count.setText(R.string.text_99);
+            } else {
+                count.setText(String.valueOf(noteCount));
+            }
             count.setVisibility(View.VISIBLE);
         } else {
             count.setVisibility(View.GONE);
@@ -444,6 +456,20 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         updateAllTabCounts();
         AnalyticsHelper.logScreenView("Notes", "NotesFragment");
 
+        String layoutType = new SharedPreferenceUtil(getContext()).getKeyNoteLayout();
+        boolean isGrid = layoutType.equals("Grid");
+
+        if (isGrid) {
+            recyclerView.setLayoutManager(
+                    new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
+            );
+        } else {
+            recyclerView.setLayoutManager(
+                    new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL)
+            );
+        }
+
+
     }
 
 
@@ -482,7 +508,11 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
                     TextView countView = customView.findViewById(R.id.tabCount);
                     if (countView != null) {
                         if (count > 0 && categoryName.equals(selectedCategory)) {
-                            countView.setText(String.valueOf(count));
+                            if (count > 99) {
+                                countView.setText(R.string.text_99);
+                            } else {
+                                countView.setText(String.valueOf(count));
+                            }
                             countView.setVisibility(View.VISIBLE);
                         } else {
                             countView.setVisibility(View.GONE);

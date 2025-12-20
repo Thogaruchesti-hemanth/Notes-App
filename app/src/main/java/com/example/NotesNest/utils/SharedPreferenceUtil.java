@@ -14,6 +14,7 @@ public class SharedPreferenceUtil {
     private static final String KEY_SYSTEM_THEME = "system_theme";
     private static final String ONBOARDING_KEY = "completed";
     private static final String WIDGET_PREF_NAME = "note_widgets";
+    private static final String KEY_NOTE_LAYOUT = "note_layout";
 
 
     private static final String KEY_THEME = "theme"; // light / dark
@@ -110,5 +111,17 @@ public class SharedPreferenceUtil {
     public int getWidgetNoteId(Context context, int appWidgetId) {
         SharedPreferences prefs = context.getSharedPreferences(WIDGET_PREF_NAME, Context.MODE_PRIVATE);
         return prefs.getInt("widget_note_" + appWidgetId, -1);
+    }
+
+    public String getKeyNoteLayout() {
+        return sharedPreferences.getString(KEY_NOTE_LAYOUT, "Linear");
+    }
+
+    public void setKeyNoteLayout(String layout) {
+        sharedPreferences.edit().putString(KEY_NOTE_LAYOUT, layout).apply();
+    }
+
+    public boolean isUserPremium() {
+        return sharedPreferences.getBoolean("is_premium", false);
     }
 }

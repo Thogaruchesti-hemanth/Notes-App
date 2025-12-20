@@ -123,5 +123,12 @@
     <string name="text_working">Working...</string>
     <string name="text_enter_password">Enter password</string>
     <string name="text_layout_toggle_icon">layout toggle icon</string>
+    <string name="text_premium_access">Premium Access</string>
+    <string name="text_help_amp_support"><![CDATA[Help & Support]]></string>
+    <string name="text_backup_sync"><![CDATA[Backup & Sync]]></string>
+    <string name="text_general">General</string>
+    <string name="text_not_connected_to_drive">Not connected to Drive</string>
+    <string name="text_99">99+</string>
+    <string name="text_cancel">Cancel</string>
 
 </resources>

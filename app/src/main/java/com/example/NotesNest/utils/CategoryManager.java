@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,16 +31,20 @@ public class CategoryManager extends BottomSheetDialogFragment {
 
     private final CategoryViewModel categoryViewModel;
     private final NoteViewModel noteViewModel;
-    private final List<CategoryEntity> categories = new ArrayList<>();
-    private final OnCategoryUpdateListener listener;
     private final String currentUserId;
-    private CategoryAdapter categoryAdapter;
+    private final OnCategoryUpdateListener listener;
 
-    public CategoryManager(CategoryViewModel categoryViewModel, NoteViewModel noteViewModel, String currentUserId, OnCategoryUpdateListener listener) {
+    private final List<CategoryEntity> categories = new ArrayList<>();
+    private CategoryAdapter adapter;
+
+    public CategoryManager(CategoryViewModel categoryViewModel,
+                           NoteViewModel noteViewModel,
+                           String currentUserId,
+                           OnCategoryUpdateListener listener) {
         this.categoryViewModel = categoryViewModel;
-        this.listener = listener;
         this.noteViewModel = noteViewModel;
         this.currentUserId = currentUserId;
+        this.listener = listener;
     }
 
     @NonNull
@@ -55,103 +60,85 @@ public class CategoryManager extends BottomSheetDialogFragment {
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
-        RecyclerView categoriesRecyclerView = view.findViewById(R.id.categories_recycler_view);
+        RecyclerView recyclerView = view.findViewById(R.id.categories_recycler_view);
         View addCategoryLayout = view.findViewById(R.id.add_new_categories_layout);
         TextView doneButton = view.findViewById(R.id.done_button);
 
-        // Setup RecyclerView
-        categoryAdapter = new CategoryAdapter(categories);
-        categoriesRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        categoriesRecyclerView.setAdapter(categoryAdapter);
+        adapter = new CategoryAdapter();
+        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        recyclerView.setAdapter(adapter);
 
-        // Setup drag and drop for reordering
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.Callback() {
-            @Override
-            public int getMovementFlags(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
-                int dragFlags = ItemTouchHelper.UP | ItemTouchHelper.DOWN;
-                return makeMovementFlags(dragFlags, 0);
-            }
+        attachDragAndDrop(recyclerView);
+        observeCategories();
 
-            @Override
-            public boolean onMove(@NonNull RecyclerView recyclerView,
-                                  @NonNull RecyclerView.ViewHolder viewHolder,
-                                  @NonNull RecyclerView.ViewHolder target) {
-                int fromPosition = viewHolder.getAbsoluteAdapterPosition();
-                int toPosition = target.getAbsoluteAdapterPosition();
-
-                // Don't allow moving "All" category
-                CategoryEntity fromCategory = categories.get(fromPosition);
-                CategoryEntity toCategory = categories.get(toPosition);
-
-                if (fromCategory.id == 0 || toCategory.id == 0) {
-                    return false; // Can't move "All" category
-                }
-
-                // Update the order in our list
-                if (fromPosition < toPosition) {
-                    for (int i = fromPosition; i < toPosition; i++) {
-                        Collections.swap(categories, i, i + 1);
-                    }
-                } else {
-                    for (int i = fromPosition; i > toPosition; i--) {
-                        Collections.swap(categories, i, i - 1);
-                    }
-                }
-                categoryAdapter.notifyItemMoved(fromPosition, toPosition);
-
-                // Update order values
-                updateOrderValues();
-                return true;
-
-            }
-
-            @Override
-            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-                // Not used for drag and drop
-            }
-        });
-
-        itemTouchHelper.attachToRecyclerView(categoriesRecyclerView);
-
-        // Load categories
-        loadCategories();
-
-        // Set up add category button
         addCategoryLayout.setOnClickListener(v -> showAddCategoryDialog());
-
-        // Set up done button
         doneButton.setOnClickListener(v -> {
             saveCategoryOrder();
             dismiss();
         });
     }
 
-    private void loadCategories() {
-        categoryViewModel.getAllCategories().observe(getViewLifecycleOwner(), categoryList -> {
+    // -----------------------------------------
+    // LiveData observer (SAFE)
+    // -----------------------------------------
+    private void observeCategories() {
+        categoryViewModel.getAllCategories().observe(getViewLifecycleOwner(), list -> {
             categories.clear();
-            if (categoryList != null) {
-
-                // Add all user categories sorted by order
-                List<CategoryEntity> sortedList = new ArrayList<>(categoryList);
-                sortedList.sort(Comparator.comparingInt(c -> c.order));
-                categories.addAll(sortedList);
-                categoryAdapter.notifyItemRangeInserted(0, categories.size());
+            if (list != null) {
+                List<CategoryEntity> sorted = new ArrayList<>(list);
+                sorted.sort(Comparator.comparingInt(c -> c.order));
+                categories.addAll(sorted);
             }
+            adapter.notifyDataSetChanged(); // ✅ SAFE
         });
     }
 
-    private void updateOrderValues() {
-        // Update order values starting from 0 (excluding "All" which has order -1)
-        int order = 0;
-        for (CategoryEntity category : categories) {
-            if (category.id != 0) { // Skip "All" category
-                category.order = order++;
+    // -----------------------------------------
+    // Drag & Drop
+    // -----------------------------------------
+    private void attachDragAndDrop(RecyclerView recyclerView) {
+        ItemTouchHelper helper = new ItemTouchHelper(new ItemTouchHelper.Callback() {
+            @Override
+            public int getMovementFlags(@NonNull RecyclerView rv, @NonNull RecyclerView.ViewHolder vh) {
+                return makeMovementFlags(ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0);
             }
+
+            @Override
+            public boolean onMove(@NonNull RecyclerView rv,
+                                  @NonNull RecyclerView.ViewHolder from,
+                                  @NonNull RecyclerView.ViewHolder to) {
+
+                int fromPos = from.getBindingAdapterPosition();
+                int toPos = to.getBindingAdapterPosition();
+
+                CategoryEntity fromCat = categories.get(fromPos);
+                CategoryEntity toCat = categories.get(toPos);
+
+                if (fromCat.id == 0 || toCat.id == 0) return false;
+
+                Collections.swap(categories, fromPos, toPos);
+                adapter.notifyItemMoved(fromPos, toPos);
+                updateOrderValues();
+                return true;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder vh, int dir) {}
+        });
+
+        helper.attachToRecyclerView(recyclerView);
+    }
+
+    private void updateOrderValues() {
+        int order = 0;
+        for (CategoryEntity c : categories) {
+            if (c.id != 0) c.order = order++;
         }
     }
 
+    // -----------------------------------------
+    // Add / Delete / Save
+    // -----------------------------------------
     private void showAddCategoryDialog() {
         CommonDialogs.showInputDialog(requireContext(),
                 "Add Category",
@@ -160,119 +147,95 @@ public class CategoryManager extends BottomSheetDialogFragment {
                 "Cancel",
                 name -> {
                     if (name == null || name.trim().isEmpty()) {
-                        Toast.makeText(requireContext(), "Category name cannot be empty", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "Category name cannot be empty", Toast.LENGTH_SHORT).show();
                         return;
                     }
 
-                    // Check if category already exists
-                    for (CategoryEntity category : categories) {
-                        if (category.name.equalsIgnoreCase(name.trim())) {
-                            Toast.makeText(requireContext(), "Category already exists", Toast.LENGTH_SHORT).show();
+                    for (CategoryEntity c : categories) {
+                        if (c.name.equalsIgnoreCase(name.trim())) {
+                            Toast.makeText(getContext(), "Category already exists", Toast.LENGTH_SHORT).show();
                             return;
                         }
                     }
 
                     CategoryEntity entity = new CategoryEntity();
                     entity.name = name.trim();
-                    entity.order = categories.size(); // Add at the end
+                    entity.order = categories.size();
                     categoryViewModel.insertCategory(entity);
                 });
     }
 
     private void saveCategoryOrder() {
-        // Save order for all categories except "All"
-        for (CategoryEntity category : categories) {
-            if (category.id != 0) { // Skip "All" category
-                categoryViewModel.updateCategory(category);
-            }
+        for (CategoryEntity c : categories) {
+            if (c.id != 0) categoryViewModel.updateCategory(c);
         }
-
-        if (listener != null) {
-            listener.onCategoriesUpdated();
-        }
-
-        Toast.makeText(requireContext(), "Categories order saved", Toast.LENGTH_SHORT).show();
+        if (listener != null) listener.onCategoriesUpdated();
+        Toast.makeText(getContext(), "Categories order saved", Toast.LENGTH_SHORT).show();
     }
 
     private void showDeleteCategoryDialog(CategoryEntity category, int position) {
-        String message = "Are you sure you want to delete the category '" + category.name + "'? " +
-                "All notes under this category will be moved to 'All'.";
-
         CommonDialogs.showConfirmDialog(requireContext(),
                 "Delete Category",
-                message,
+                "All notes will move to 'All'",
                 "Delete",
                 "Cancel",
                 () -> {
-
                     noteViewModel.resetCategoryNotes(currentUserId, category.id);
-
-                    // Then delete the category
                     categoryViewModel.deleteCategoryByName(category.name);
 
-                    // Remove from local list
                     categories.remove(position);
-                    categoryAdapter.notifyItemRemoved(position);
-
-                    Toast.makeText(getContext(), "Category deleted", Toast.LENGTH_SHORT).show();
+                    adapter.notifyItemRemoved(position);
                 });
     }
 
-    public interface OnCategoryUpdateListener {
-        void onCategoriesUpdated();
-    }
-
-    // Adapter class
-    private class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHolder> {
-        private final List<CategoryEntity> categoryList;
-
-        public CategoryAdapter(List<CategoryEntity> categoryList) {
-            this.categoryList = categoryList;
-        }
+    // -----------------------------------------
+    // Adapter
+    // -----------------------------------------
+    private class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.VH> {
 
         @NonNull
         @Override
-        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.item_category_manage, parent, false);
-            return new ViewHolder(view);
+        public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            return new VH(LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.item_category_manage, parent, false));
         }
 
         @Override
-        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            CategoryEntity category = categoryList.get(position);
-            holder.categoryName.setText(category.name);
+        public void onBindViewHolder(@NonNull VH holder, int position) {
+            CategoryEntity category = categories.get(position);
+            holder.name.setText(category.name);
 
-            holder.dragHandle.setVisibility(View.VISIBLE);
-            holder.deleteButton.setVisibility(View.VISIBLE);
-            holder.categoryName.setAlpha(1f);
+            holder.delete.setOnClickListener(v -> {
+                int pos = holder.getBindingAdapterPosition();
+                if (pos == RecyclerView.NO_POSITION) return;
 
-
-            holder.deleteButton.setOnClickListener(v -> {
-                if (category.id == 0) {
-                    Toast.makeText(getContext(), "Cannot delete 'All' category", Toast.LENGTH_SHORT).show();
-                    return;
+                CategoryEntity cat = categories.get(pos);
+                if (cat.id == 0) {
+                    Toast.makeText(getContext(), "Cannot delete 'All'", Toast.LENGTH_SHORT).show();
+                } else {
+                    showDeleteCategoryDialog(cat, pos);
                 }
-                showDeleteCategoryDialog(category, position);
             });
         }
 
         @Override
         public int getItemCount() {
-            return categoryList.size();
+            return categories.size();
         }
 
-        public class ViewHolder extends RecyclerView.ViewHolder {
-            ImageButton dragHandle;
-            TextView categoryName;
-            ImageButton deleteButton;
+        class VH extends RecyclerView.ViewHolder {
+            TextView name;
+            ImageView delete;
 
-            public ViewHolder(@NonNull View itemView) {
-                super(itemView);
-                dragHandle = itemView.findViewById(R.id.drag_handle);
-                categoryName = itemView.findViewById(R.id.category_name);
-                deleteButton = itemView.findViewById(R.id.delete_button);
+            VH(View v) {
+                super(v);
+                name = v.findViewById(R.id.category_name);
+                delete = v.findViewById(R.id.delete_button);
             }
         }
+    }
+
+    public interface OnCategoryUpdateListener {
+        void onCategoriesUpdated();
     }
 }

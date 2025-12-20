@@ -6,85 +6,36 @@
     android:background="?attr/colorSecondary"
     android:orientation="vertical">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:padding="@dimen/padding_16">
-
-        <ImageView
-            android:id="@+id/iv_back_arrow"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="@dimen/padding_4"
-            android:src="@drawable/ic_arrow_right" />
-
-        <TextView
-            android:id="@+id/tvTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/margin_12"
-            android:text="Settings"
-            android:textSize="@dimen/text_20"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <!-- 🔍 Search Bar -->
     <androidx.cardview.widget.CardView
-        android:id="@+id/searchLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="@dimen/margin_20"
-        android:layout_marginVertical="@dimen/margin_10"
-        app:cardCornerRadius="@dimen/radius_12"
-        app:cardElevation="@dimen/elevation_4">
+        app:cardElevation="2dp">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="@dimen/size_48"
-            android:background="@android:color/white"
+            android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingVertical="@dimen/padding_12">
+            android:paddingHorizontal="@dimen/padding_24"
+            android:paddingTop="@dimen/padding_32"
+            android:paddingBottom="@dimen/padding_12">
 
-            <!-- Search Icon -->
             <ImageView
-                android:id="@+id/searchIcon"
-                android:layout_width="@dimen/size_24"
-                android:layout_height="@dimen/size_24"
-                android:layout_marginStart="@dimen/margin_10"
-                android:contentDescription="@string/text_search_icon"
-                android:src="@drawable/ic_search" />
+                android:id="@+id/iv_back_arrow"
+                android:layout_width="@dimen/size_32"
+                android:layout_height="@dimen/size_32"
+                android:contentDescription="@string/text_back_button"
+                android:src="@drawable/ic_back_arrow" />
 
-            <!-- Editable Search Field -->
-            <EditText
-                android:id="@+id/searchEditText"
-                android:layout_width="0dp"
+            <TextView
+                android:id="@+id/tvTitle"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/margin_8"
-                android:layout_weight="1"
-                android:background="@android:color/transparent"
-                android:cursorVisible="true"
-                android:hint="@string/text_search_settings"
-                android:imeOptions="actionSearch"
-                android:importantForAutofill="no"
-                android:inputType="text"
-                android:maxLines="1"
-                android:textColor="@color/black"
-                android:textColorHint="@color/grey_400"
-                android:textCursorDrawable="@drawable/search_cursor"
-                android:textSize="@dimen/text_16" />
-
-            <!-- Clear (X) Button -->
-            <ImageButton
-                android:id="@+id/clearSearchBtn"
-                android:layout_width="@dimen/size_24"
-                android:layout_height="@dimen/size_24"
-                android:layout_marginEnd="@dimen/margin_10"
-                android:backgroundTint="@android:color/transparent"
-                android:contentDescription="@string/text_close"
-                android:src="@drawable/ic_close"
-                android:visibility="gone" />
+                android:layout_marginStart="@dimen/size_32"
+                android:text="@string/text_settings"
+                android:textColor="?attr/colorPrimary"
+                android:textSize="@dimen/text_22"
+                android:textStyle="bold" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
@@ -94,135 +45,216 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:fillViewport="true">
+        android:fillViewport="true"
+        android:padding="@dimen/padding_20"
+        android:scrollbars="none">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="@dimen/padding_16">
+            android:layout_marginTop="@dimen/margin_10"
+            android:orientation="vertical">
 
-            <!-- ⭐ FAQ Section -->
+            <!-- ⭐ General Settings -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="@dimen/margin_10"
-                android:text="@string/text_faqs"
+                android:text="Appearance"
+                android:textAllCaps="true"
+                android:textColor="@color/tabSelectedTextColorLight"
                 android:textSize="@dimen/text_16"
                 android:textStyle="bold" />
 
-            <!-- FAQ Item 1 -->
-            <include
-                android:id="@+id/faq_container_1"
-                layout="@layout/item_faq" />
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="@dimen/radius_12"
+                app:cardElevation="2dp"
+                app:cardUseCompatPadding="true">
 
-            <!-- FAQ Item 2 -->
-            <include
-                android:id="@+id/faq_container_2"
-                layout="@layout/item_faq" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
 
-            <!-- FAQ Item 3 -->
-            <include
-                android:id="@+id/faq_container_3"
-                layout="@layout/item_faq" />
+                    <!-- Note Font -->
+                    <include
+                        android:id="@+id/notes_layout"
+                        layout="@layout/item_settings_option" />
+
+                    <!-- Divider (optional but recommended) -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/grey_200" />
+
+                    <!-- Theme Color -->
+                    <include
+                        android:id="@+id/theme_layout"
+                        layout="@layout/item_settings_option" />
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/margin_30"
+                android:layout_marginTop="@dimen/margin_20"
                 android:layout_marginBottom="@dimen/margin_10"
-                android:text="@string/text_backup_settings"
+                android:text="@string/text_backup_sync"
+                android:textAllCaps="true"
+                android:textColor="@color/tabSelectedTextColorLight"
                 android:textSize="@dimen/text_16"
                 android:textStyle="bold" />
 
-            <include
-                android:id="@+id/option_local_backup"
-                layout="@layout/item_support_option"
-                android:tag="local_backup" />
-
-            <include
-                android:id="@+id/option_drive_backup"
-                layout="@layout/item_support_option"
-                android:tag="drive_backup" />
-
-            <include
-                android:id="@+id/option_import_data"
-                layout="@layout/item_support_option"
-                android:tag="import_data" />
-
-            <!-- ⭐ GET IN TOUCH -->
-            <TextView
-                android:layout_width="wrap_content"
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/margin_30"
-                android:layout_marginBottom="@dimen/margin_10"
-                android:text="@string/text_get_in_touch"
-                android:textSize="@dimen/text_16"
-                android:textStyle="bold" />
+                app:cardCornerRadius="@dimen/radius_12"
+                app:cardElevation="2dp"
+                app:cardUseCompatPadding="true">
 
-            <include
-                android:id="@+id/option_email"
-                layout="@layout/item_support_option"
-                android:tag="email_support" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
 
-            <include
-                android:id="@+id/option_report_bug"
-                layout="@layout/item_support_option"
-                android:tag="report_bug" />
+                    <include
+                        android:id="@+id/option_local_backup"
+                        layout="@layout/item_support_option"
+                        android:tag="local_backup" />
 
-            <include
-                android:id="@+id/option_feedback"
-                layout="@layout/item_support_option"
-                android:tag="feedback" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/grey_200" />
 
-            <!-- ⭐ RESOURCES -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/margin_30"
-                android:layout_marginBottom="@dimen/margin_10"
-                android:text="@string/text_resources"
-                android:textSize="@dimen/text_16"
-                android:textStyle="bold" />
+                    <include
+                        android:id="@+id/option_drive_backup"
+                        layout="@layout/item_support_option"
+                        android:tag="drive_backup" />
 
-            <include
-                android:id="@+id/option_user_guide"
-                layout="@layout/item_support_option"
-                android:tag="user_guide" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/grey_200" />
 
-            <include
-                android:id="@+id/option_video_tutorials"
-                layout="@layout/item_support_option"
-                android:tag="video_tutorials" />
+                    <include
+                        android:id="@+id/option_import_data"
+                        layout="@layout/item_support_option"
+                        android:tag="import_data" />
 
-            <include
-                android:id="@+id/option_whats_new"
-                layout="@layout/item_support_option"
-                android:tag="whats_new" />
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/margin_30"
+                android:layout_marginTop="@dimen/margin_20"
                 android:layout_marginBottom="@dimen/margin_10"
-                android:text="@string/text_about"
+                android:text="Account"
+                android:textAllCaps="true"
+                android:textColor="@color/tabSelectedTextColorLight"
                 android:textSize="@dimen/text_16"
                 android:textStyle="bold" />
 
-            <include
-                android:id="@+id/option_about_app"
-                layout="@layout/item_support_option"
-                android:tag="about_app" />
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="@dimen/radius_12"
+                app:cardElevation="2dp"
+                app:cardUseCompatPadding="true">
 
-            <include
-                android:id="@+id/option_privacy_policy"
-                layout="@layout/item_support_option"
-                android:tag="privacy_policy" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
 
-            <include
-                android:id="@+id/option_terms_service"
-                layout="@layout/item_support_option"
-                android:tag="terms_service" />
+                    <include
+                        android:id="@+id/manage_account_layout"
+                        layout="@layout/item_support_option"
+                        android:tag="local_backup" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/grey_200" />
+
+                    <include
+                        android:id="@+id/change_password_layout"
+                        layout="@layout/item_support_option"
+                        android:tag="drive_backup" />
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_20"
+                android:layout_marginBottom="@dimen/margin_10"
+                android:text="About"
+                android:textAllCaps="true"
+                android:textColor="@color/tabSelectedTextColorLight"
+                android:textSize="@dimen/text_16"
+                android:textStyle="bold" />
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/margin_10"
+                app:cardCornerRadius="@dimen/radius_12"
+                app:cardElevation="2dp"
+                app:cardUseCompatPadding="true">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:id="@+id/app_version_layout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/margin_10"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="@dimen/padding_10">
+
+                        <ImageView
+                            android:id="@+id/ivIcon"
+                            android:layout_width="@dimen/size_24"
+                            android:layout_height="@dimen/size_24"
+                            android:src="@drawable/ic_about_app" />
+
+                        <TextView
+                            android:id="@+id/tvText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="@dimen/margin_12"
+                            android:layout_weight="1"
+                            android:text="App Version"
+                            android:textColor="?attr/colorPrimary"
+                            android:textSize="@dimen/text_16" />
+
+
+                        <TextView
+                            android:id="@+id/tvVersion"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="@dimen/margin_12"
+                            android:textColor="?attr/colorPrimary"
+                            android:textSize="@dimen/text_12" />
+                    </LinearLayout>
+
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
 
         </LinearLayout>
     </ScrollView>

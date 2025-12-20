@@ -35,8 +35,7 @@ public class SplashScreenActivity extends AppCompatActivity {
         DBSeedUtil.seedDefaultCategories(this);
         AnalyticsHelper.init(this);
 
-        new Handler(Looper.getMainLooper())
-                .postDelayed(this::goToNextScreen, SPLASH_DELAY_MS);
+        new Handler(Looper.getMainLooper()).postDelayed(this::goToNextScreen, SPLASH_DELAY_MS);
     }
 
     private void updateLogo() {
@@ -53,9 +52,7 @@ public class SplashScreenActivity extends AppCompatActivity {
      * Navigate to login or main screen
      */
     private void goToNextScreen() {
-        Class<?> nextActivity = prefs.getLogin()
-                ? MainActivity.class
-                : OnboardingActivity.class;
+        Class<?> nextActivity = prefs.getLogin() ? MainActivity.class : OnboardingActivity.class;
 
         Intent intent = new Intent(this, nextActivity);
         startActivity(intent);

@@ -6,15 +6,25 @@
     android:background="?attr/colorSecondary"
     android:padding="@dimen/padding_20">
 
+    <ImageView
+        android:id="@+id/edit_header_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_20"
+        android:contentDescription="@string/text_edit_icon"
+        android:src="@drawable/ic_edit"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/header_profile_image"
-        android:layout_width="@dimen/size_90"
-        android:layout_height="@dimen/size_90"
-        android:layout_marginTop="@dimen/margin_20"
+        android:layout_width="@dimen/size_72"
+        android:layout_height="@dimen/size_72"
+        android:layout_marginTop="@dimen/margin_50"
         android:scaleType="centerCrop"
         android:src="@drawable/ic_profile"
+        app:layout_constraintTop_toBottomOf="@+id/edit_header_button"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
         app:shapeAppearanceOverlay="@style/RoundedImageStyle" />
 
     <LinearLayout
@@ -50,53 +60,23 @@
 
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/edit_header_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin_20"
-        android:background="@drawable/btn_rounded"
-        android:backgroundTint="?attr/colorPrimary"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:padding="@dimen/padding_12"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/header_profile_image">
-
-        <ImageView
-            android:layout_width="@dimen/size_20"
-            android:layout_height="@dimen/size_20"
-            android:contentDescription="@string/text_edit_icon"
-            android:src="@drawable/ic_edit_white" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="@dimen/padding_10"
-            android:text="@string/text_edit_profile"
-            android:textColor="?attr/colorSecondary"
-            android:textSize="18sp" />
-    </LinearLayout>
-
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/get_pro_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin_10"
+        android:layout_marginTop="@dimen/margin_16"
         android:background="@drawable/bg_rounded_yellow_gradient"
         android:drawableStart="@drawable/ic_pro"
         android:drawablePadding="@dimen/padding_20"
         android:gravity="start"
         android:paddingHorizontal="@dimen/padding_20"
         android:paddingVertical="@dimen/padding_12"
-        android:text="@string/text_go_pro"
+        android:text="@string/text_premium_access"
+        android:textAllCaps="false"
         android:textColor="@color/black"
-        android:textSize="@dimen/text_20"
+        android:textSize="@dimen/text_18"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/edit_header_button" />
+        app:layout_constraintTop_toBottomOf="@id/header_profile_image" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

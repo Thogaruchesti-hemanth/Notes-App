@@ -17,8 +17,9 @@ public class LayoutToggleViewModel extends ViewModel {
         isGridLayout.setValue(current == null || !current);
     }
 
-    public LiveData<Boolean> isGrid() {
-        return isGridLayout;
+
+    public void setLayout(boolean isGrid) {
+        isGridLayout.setValue(isGrid);
     }
 
 }
