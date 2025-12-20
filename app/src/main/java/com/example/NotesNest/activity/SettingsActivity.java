@@ -5,59 +5,93 @@ import static com.example.NotesNest.utils.CommonDialogs.showPasswordDialog;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.EditText;
-import android.widget.ImageButton;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.content.res.AppCompatResources;
 
 import com.example.NotesNest.R;
-import com.example.NotesNest.backups.BackupManager;
 import com.example.NotesNest.backups.ImportManager;
 import com.example.NotesNest.backups.LocalBackupManager;
-import com.example.NotesNest.utils.CryptoUtils;
+import com.example.NotesNest.utils.CommonDialogs;
+import com.example.NotesNest.utils.SharedPreferenceUtil;
+import com.example.NotesNest.utils.ThemeManager;
+import com.google.firebase.BuildConfig;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException;
+import com.google.firebase.auth.FirebaseUser;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class SettingsActivity extends AppCompatActivity {
 
-    // --- DB / backup constants (from your confirmation)
-    private static final String EXPORT_FILE_NAME = "appdatabase.enc";
-    // --- Crypto constants
-    // AES-GCM recommended 12 bytes
-    // --- concurrency & UI handler
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler uiHandler = new Handler(Looper.getMainLooper());
-    // --- UI
-    EditText searchEditText;
-    ImageButton clearSearchBtn;
-    LinearLayout faq1, faq2, faq3;
-    TextView faqAns1, faqAns2, faqAns3;
-    ScrollView scrollView;
-    LinearLayout localBackupLayout, driveBackupLayout, importDataLayout, emailLayout, reportBugLayout,
-            feedbackLayout, userGuideLayout, videoTutorialLayout, whatsNewLayout, aboutAppLayout,
-            privacyPolicyLayout, termServiceLayout;
-    // --- SAF launchers
-    private ActivityResultLauncher<Intent> createDocumentLauncher;
-    private ActivityResultLauncher<Intent> openDocumentLauncher;
-    private char[] pendingPasswordForCreate = null;
+    private LinearLayout notesLayout;
+    private LinearLayout themeLayout;
+    private LinearLayout localBackupLayout;
+    private LinearLayout driveBackupLayout;
+    private LinearLayout importDataLayout;
+    private LinearLayout manageAccountLayout;
+    private LinearLayout changePasswordAccount;
+    private  TextView versionTextView;
     private AlertDialog progressDialog;
+
+    private ActivityResultLauncher<Intent> openDocumentLauncher;
+    private boolean isChangingTheme = false;
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        // Apply theme before super.onCreate to avoid flicker
+        ThemeManager.applyTheme(this);
+
+        // Check if we're returning from a theme change
+        if (savedInstanceState != null) {
+            isChangingTheme = savedInstanceState.getBoolean("isChangingTheme", false);
+        }
+
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_settings);
+
+        initViews();
+        setupOptions();
+        setupActivityResultLaunchers();
+        setupClickListeners();
+        setupNotesSpinner();
+        setupThemeSpinner();
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean("isChangingTheme", isChangingTheme);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        ThemeManager.applyTheme(this);
+    }
 
     @Override
     protected void onDestroy() {
@@ -65,37 +99,78 @@ public class SettingsActivity extends AppCompatActivity {
         executor.shutdownNow();
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_settings);
+    private void setupThemeSpinner() {
+        Spinner spinner = themeLayout.findViewById(R.id.spinnerOptions);
 
-        initViews();
-        setupOptions();
-        setupSearchFunction();
-        setupFaqs();
-        setStaticTexts();
-        setupActivityResultLaunchers();
-        setupClickListeners();
+        String[] options = {"System", "Light", "Dark"};
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_dropdown_item,
+                options
+        );
+        spinner.setAdapter(adapter);
+
+        String saved = ThemeManager.getCurrentThemeMode(this);
+        spinner.setSelection(
+                "light".equals(saved) ? 1 :
+                        "dark".equals(saved) ? 2 : 0
+        );
+
+        spinner.setOnItemSelectedListener(new SimpleItemSelectedListener() {
+            @Override
+            public void onItemSelected(int position) {
+
+                String selectedTheme =
+                        position == 1 ? "light" :
+                                position == 2 ? "dark" :
+                                        "system";
+
+                String currentTheme = ThemeManager.getCurrentThemeMode(SettingsActivity.this);
+
+                // ✅ Only change theme if user actually changed it
+                if (selectedTheme.equals(currentTheme)) {
+                    return;
+                }
+
+                // 🔥 Apply theme with animation
+                ThemeManager.updateTheme(
+                        SettingsActivity.this,
+                        selectedTheme,
+                        SettingsActivity.this
+                );
+
+                // Recreate activity immediately for theme to take effect
+                recreate();
+
+            }
+        });
+    }
+
+    private void setupNotesSpinner() {
+        String[] options = {"Linear", "Grid"};
+        Spinner spinner = notesLayout.findViewById(R.id.spinnerOptions);
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_dropdown_item,
+                options
+        );
+        spinner.setAdapter(adapter);
+
+        String saved = new SharedPreferenceUtil(SettingsActivity.this).getKeyNoteLayout();
+        spinner.setSelection(saved.equals("Grid") ? 1 : 0);
+
+        spinner.setOnItemSelectedListener(new SimpleItemSelectedListener() {
+            @Override
+            public void onItemSelected(int position) {
+
+                new SharedPreferenceUtil(SettingsActivity.this).setKeyNoteLayout(options[position]);
+            }
+        });
     }
 
     private void setupActivityResultLaunchers() {
-        createDocumentLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                        Uri uri = result.getData().getData();
-                        if (uri != null && pendingPasswordForCreate != null) {
-                            final char[] pw = pendingPasswordForCreate;
-                            pendingPasswordForCreate = null;
-                            startEncryptAndWriteToUri(uri, pw);
-                        } else {
-                            CryptoUtils.clearPassword(pendingPasswordForCreate);
-                        }
-                    } else {
-                        CryptoUtils.clearPassword(pendingPasswordForCreate);
-                    }
-                });
 
         openDocumentLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -165,29 +240,27 @@ public class SettingsActivity extends AppCompatActivity {
             openDocumentLauncher.launch(intent);
         });
 
-    }
-
-
-    // BACKUP -> SAF create document (Drive or other provider)
-    private void startEncryptAndWriteToUri(Uri destUri, char[] password) {
-        BackupManager backupManager = new BackupManager(this);
-
-        backupManager.startEncryptAndWriteToUri(destUri, password, new BackupManager.BackupCallback() {
-            @Override
-            public void showProgress(String message) {
-                SettingsActivity.this.showProgress(message);
-            }
-
-            @Override
-            public void hideProgress() {
-                SettingsActivity.this.hideProgress();
-            }
-
-            @Override
-            public void postToast(String message) {
-                SettingsActivity.this.postToast(message);
-            }
+        manageAccountLayout.setOnClickListener(view -> {
+            Intent intent = new Intent(SettingsActivity.this, ManageAccountActivity.class);
+            startActivity(intent);
         });
+
+        changePasswordAccount.setOnClickListener(v ->
+                CommonDialogs.showChangePasswordDialog(
+                        this,
+                        new CommonDialogs.PasswordUpdateCallback() {
+                            @Override
+                            public void onPasswordValidatedAndConfirmed(String newPassword) {
+                                updateFirebasePassword(newPassword);
+                            }
+
+                            @Override
+                            public void onCancelled() {
+                                // optional
+                            }
+                        }
+                )
+        );
     }
 
     // IMPORT -> decrypt, unzip, validate, replace
@@ -260,15 +333,10 @@ public class SettingsActivity extends AppCompatActivity {
         setupOptionsData(localBackupLayout, R.drawable.ic_local_backup, "Local Backup");
         setupOptionsData(driveBackupLayout, R.drawable.ic_drive_backup, "Drive Backup");
         setupOptionsData(importDataLayout, R.drawable.ic_import_data, "Import");
-        setupOptionsData(emailLayout, R.drawable.ic_email, "Email Support");
-        setupOptionsData(reportBugLayout, R.drawable.ic_report_bug, "Report a Bug");
-        setupOptionsData(feedbackLayout, R.drawable.ic_feedback, "Send Feedback");
-        setupOptionsData(userGuideLayout, R.drawable.ic_user_guide, "User Guide");
-        setupOptionsData(videoTutorialLayout, R.drawable.ic_video_tutorial, "Video Tutorials");
-        setupOptionsData(whatsNewLayout, R.drawable.ic_whats_new, "What's New");
-        setupOptionsData(aboutAppLayout, R.drawable.ic_about_app, "About NotesNest");
-        setupOptionsData(privacyPolicyLayout, R.drawable.ic_privacy, "Privacy Policy");
-        setupOptionsData(termServiceLayout, R.drawable.ic_terms_and_service, "Terms of Service");
+        setupOptionsData(notesLayout, R.drawable.ic_layout, "Notes Layout");
+        setupOptionsData(themeLayout, R.drawable.ic_theme, "App Theme");
+        setupOptionsData(manageAccountLayout, R.drawable.ic_manage_account, "Manage Account");
+        setupOptionsData(changePasswordAccount, R.drawable.ic_change_password, "Change Password");
     }
 
     private void setupOptionsData(LinearLayout layout, int iconResId, String title) {
@@ -279,133 +347,71 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        searchEditText = findViewById(R.id.searchEditText);
-        clearSearchBtn = findViewById(R.id.clearSearchBtn);
-        scrollView = findViewById(R.id.scrollView);
-
-        faq1 = findViewById(R.id.faq_container_1);
-        faq2 = findViewById(R.id.faq_container_2);
-        faq3 = findViewById(R.id.faq_container_3);
-
-        faqAns1 = faq1.findViewById(R.id.tvAnswer);
-        faqAns2 = faq2.findViewById(R.id.tvAnswer);
-        faqAns3 = faq3.findViewById(R.id.tvAnswer);
-
         localBackupLayout = findViewById(R.id.option_local_backup);
         driveBackupLayout = findViewById(R.id.option_drive_backup);
         importDataLayout = findViewById(R.id.option_import_data);
-
-        emailLayout = findViewById(R.id.option_email);
-        reportBugLayout = findViewById(R.id.option_report_bug);
-        feedbackLayout = findViewById(R.id.option_feedback);
-
-        userGuideLayout = findViewById(R.id.option_user_guide);
-        videoTutorialLayout = findViewById(R.id.option_video_tutorials);
-        whatsNewLayout = findViewById(R.id.option_whats_new);
-
-        aboutAppLayout = findViewById(R.id.option_about_app);
-        privacyPolicyLayout = findViewById(R.id.option_privacy_policy);
-        termServiceLayout = findViewById(R.id.option_terms_service);
+        notesLayout = findViewById(R.id.notes_layout);
+        themeLayout = findViewById(R.id.theme_layout);
+        manageAccountLayout = findViewById(R.id.manage_account_layout);
+        changePasswordAccount = findViewById(R.id.change_password_layout);
+        versionTextView = findViewById(R.id.tvVersion);
 
         findViewById(R.id.iv_back_arrow).setOnClickListener(view -> finish());
-    }
+        changePasswordAccount.setVisibility(View.GONE);
 
-    private void setupSearchFunction() {
-        clearSearchBtn.setOnClickListener(v -> {
-            searchEditText.setText("");
-            clearSearchBtn.setVisibility(View.GONE);
-            scrollToTop();
-        });
+        PackageInfo pInfo = null;
+        try {
+            pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+        } catch (PackageManager.NameNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        versionTextView.setText(pInfo.versionName);    }
 
-        searchEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
+    private void updateFirebasePassword(String newPassword) {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
+        if (user == null) {
+            Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-            @Override
-            public void afterTextChanged(Editable s) {
-                clearSearchBtn.setVisibility(s.length() > 0 ? View.VISIBLE : View.GONE);
-                String query = s.toString().trim().toLowerCase();
-                if (!query.isEmpty()) scrollToMatchingOption(query);
-            }
-        });
-    }
+        // Re-authenticate user before updating password
+        CommonDialogs.showReAuthDialog(this, (email, oldPassword,updatePassword) -> {
+            // Re-authenticate
+            com.google.firebase.auth.AuthCredential credential =
+                    com.google.firebase.auth.EmailAuthProvider.getCredential(email, oldPassword);
 
-    private void scrollToTop() {
-        scrollView.scrollTo(0, 0);
-    }
-
-    private void setupFaqs() {
-        setupOneFaq(faq1);
-        setupOneFaq(faq2);
-        setupOneFaq(faq3);
-    }
-
-    private void setupOneFaq(View faqView) {
-        TextView answer = faqView.findViewById(R.id.tvAnswer);
-        ImageView arrowView = faqView.findViewById(R.id.iv_arrow);
-
-        answer.setVisibility(View.GONE);
-        arrowView.setRotation(0f);
-
-        faqView.setOnClickListener(v -> {
-            if (answer.getVisibility() == View.GONE) {
-                answer.setVisibility(View.VISIBLE);
-                arrowView.animate().rotation(180f).setDuration(200).start();
-            } else {
-                answer.setVisibility(View.GONE);
-                arrowView.animate().rotation(0f).setDuration(200).start();
-            }
+            user.reauthenticate(credential).addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    // Now update password
+                    user.updatePassword(newPassword)
+                            .addOnCompleteListener(updateTask -> {
+                                if (updateTask.isSuccessful()) {
+                                    Toast.makeText(this, "Password updated successfully", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Exception e = updateTask.getException();
+                                    Toast.makeText(this, e != null ? e.getMessage() : "Password update failed", Toast.LENGTH_LONG).show();
+                                }
+                            });
+                } else {
+                    Toast.makeText(this, "Re-login failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
         });
     }
 
-    private void setStaticTexts() {
+    abstract static class SimpleItemSelectedListener implements android.widget.AdapterView.OnItemSelectedListener {
+        @Override
+        public void onNothingSelected(android.widget.AdapterView<?> parent) {
+        }
 
-        // FAQ text
-        ((TextView) faq1.findViewById(R.id.tvQuestion)).setText("How do I format notes?");
-        faqAns1.setText("You can use Markdown to format your notes...");
+        public abstract void onItemSelected(int position);
 
-        ((TextView) faq2.findViewById(R.id.tvQuestion)).setText("How do I sync across devices?");
-        faqAns2.setText("Sign in with your account to enable cloud sync...");
-
-        ((TextView) faq3.findViewById(R.id.tvQuestion)).setText("Can I recover a deleted note?");
-        faqAns3.setText("Deleted notes remain in Trash for 30 days...");
-    }
-
-    private void scrollToMatchingOption(String query) {
-        clearHighlights();
-
-        LinearLayout[] allOptions = {
-                emailLayout, reportBugLayout, feedbackLayout,
-                userGuideLayout, videoTutorialLayout, whatsNewLayout,
-                aboutAppLayout, privacyPolicyLayout, termServiceLayout
-        };
-
-        for (LinearLayout option : allOptions) {
-            TextView titleView = option.findViewById(R.id.tvText);
-            String title = titleView.getText().toString().toLowerCase();
-            if (title.contains(query)) {
-                scrollView.post(() -> scrollView.smoothScrollTo(0, option.getTop()));
-                option.setBackgroundColor(getColor(R.color.light_gray_edf));
-                return;
-            }
+        @Override
+        public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
+            onItemSelected(position);
         }
     }
 
-    private void clearHighlights() {
-        LinearLayout[] allOptions = {
-                emailLayout, reportBugLayout, feedbackLayout,
-                userGuideLayout, videoTutorialLayout, whatsNewLayout,
-                aboutAppLayout, privacyPolicyLayout, termServiceLayout
-        };
-
-        for (LinearLayout option : allOptions) {
-            option.setBackgroundColor(getColor(R.color.light_gray_edf));
-        }
-    }
 
 }

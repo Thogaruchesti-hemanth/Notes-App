@@ -1,0 +1,124 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorSecondary"
+    android:padding="16dp">
+
+<!--    <LinearLayout-->
+<!--        android:orientation="vertical"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content">-->
+
+<!--        &lt;!&ndash; Title &ndash;&gt;-->
+<!--        <TextView-->
+<!--            android:text="Unlock Your Full\nPotential"-->
+<!--            android:textSize="22sp"-->
+<!--            android:textStyle="bold"-->
+<!--            android:gravity="center"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"/>-->
+
+<!--        <TextView-->
+<!--            android:text="Get access to exclusive features to supercharge your note-taking."-->
+<!--            android:textSize="14sp"-->
+<!--            android:textColor="@color/gray_text"-->
+<!--            android:gravity="center"-->
+<!--            android:layout_marginTop="8dp"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"/>-->
+
+<!--        &lt;!&ndash; FEATURES &ndash;&gt;-->
+<!--        <LinearLayout-->
+<!--            android:orientation="vertical"-->
+<!--            android:layout_marginTop="16dp"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content">-->
+
+<!--            <TextView android:text="• Unlimited Cloud Sync"/>-->
+<!--            <TextView android:text="• Advanced Formatting"/>-->
+<!--            <TextView android:text="• Ad-Free Experience"/>-->
+<!--            <TextView android:text="• Priority Support"/>-->
+<!--        </LinearLayout>-->
+
+<!--        &lt;!&ndash; MONTHLY &ndash;&gt;-->
+<!--        <LinearLayout-->
+<!--            android:id="@+id/planMonthly"-->
+<!--            android:background="@drawable/bg_plan_normal"-->
+<!--            android:padding="16dp"-->
+<!--            android:layout_marginTop="20dp"-->
+<!--            android:orientation="horizontal"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content">-->
+
+<!--            <RadioButton-->
+<!--                android:id="@+id/radioMonthly"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"/>-->
+
+<!--            <TextView-->
+<!--                android:text="Monthly\n₹50 / month"-->
+<!--                android:layout_marginStart="12dp"-->
+<!--                android:textStyle="bold"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"/>-->
+<!--        </LinearLayout>-->
+
+<!--        &lt;!&ndash; YEARLY &ndash;&gt;-->
+<!--        <LinearLayout-->
+<!--            android:id="@+id/planYearly"-->
+<!--            android:background="@drawable/bg_plan_selected"-->
+<!--            android:padding="16dp"-->
+<!--            android:layout_marginTop="12dp"-->
+<!--            android:orientation="horizontal"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content">-->
+
+<!--            <RadioButton-->
+<!--                android:id="@+id/radioYearly"-->
+<!--                android:checked="true"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"/>-->
+
+<!--            <TextView-->
+<!--                android:text="Yearly\n₹299 / year"-->
+<!--                android:layout_marginStart="12dp"-->
+<!--                android:textStyle="bold"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"/>-->
+<!--        </LinearLayout>-->
+
+<!--        &lt;!&ndash; LIFETIME &ndash;&gt;-->
+<!--        <LinearLayout-->
+<!--            android:id="@+id/planLifetime"-->
+<!--            android:background="@drawable/bg_plan_normal"-->
+<!--            android:padding="16dp"-->
+<!--            android:layout_marginTop="12dp"-->
+<!--            android:orientation="horizontal"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content">-->
+
+<!--            <RadioButton-->
+<!--                android:id="@+id/radioLifetime"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"/>-->
+
+<!--            <TextView-->
+<!--                android:text="Lifetime\n₹499 one-time"-->
+<!--                android:layout_marginStart="12dp"-->
+<!--                android:textStyle="bold"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"/>-->
+<!--        </LinearLayout>-->
+
+<!--        &lt;!&ndash; CTA &ndash;&gt;-->
+<!--        <Button-->
+<!--            android:id="@+id/btnUnlock"-->
+<!--            android:text="Unlock Premium"-->
+<!--            android:backgroundTint="@color/blue_primary"-->
+<!--            android:textColor="@color/white"-->
+<!--            android:layout_marginTop="24dp"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"/>-->
+
+<!--    </LinearLayout>-->
+</ScrollView>

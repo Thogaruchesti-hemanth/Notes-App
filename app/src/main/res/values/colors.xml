@@ -74,6 +74,10 @@
 
     <color name="light_gray_edf">#EDEFF2</color>
 
+    <color name="google_blue_light">#E8F0FE</color>
+    <color name="google_green_light">#E6F4EA</color>
+
+
 
 
     <color name="background">#F5F5F5</color>

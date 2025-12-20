@@ -6,15 +6,17 @@
     android:orientation="horizontal"
     android:padding="@dimen/padding_10">
 
+    <!-- Icon -->
     <ImageView
         android:id="@+id/ivIcon"
         android:layout_width="@dimen/size_24"
         android:layout_height="@dimen/size_24"
         android:src="@drawable/ic_email" />
 
+    <!-- Text -->
     <TextView
         android:id="@+id/tvText"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/margin_12"
         android:layout_weight="1"
@@ -22,6 +24,18 @@
         android:textColor="?attr/colorPrimary"
         android:textSize="@dimen/text_16"/>
 
+
+    <!-- Spinner -->
+    <Spinner
+        android:id="@+id/spinnerOptions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@null"
+        android:paddingEnd="@dimen/padding_8"
+        android:popupBackground="@drawable/bg_round_12"
+        android:spinnerMode="dropdown" />
+
+    <!-- Arrow -->
     <ImageView
         android:id="@+id/ic_right_arrow"
         android:layout_width="@dimen/size_24"

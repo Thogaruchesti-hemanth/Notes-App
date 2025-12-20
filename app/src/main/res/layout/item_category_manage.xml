@@ -11,14 +11,14 @@
         android:orientation="horizontal"
         android:paddingVertical="@dimen/padding_8">
 
-        <ImageButton
+        <ImageView
             android:id="@+id/drag_handle"
             android:layout_width="@dimen/size_48"
             android:layout_height="@dimen/size_48"
+            android:padding="@dimen/padding_8"
             android:layout_gravity="center_vertical"
-            android:backgroundTint="@android:color/transparent"
             android:contentDescription="@string/text_reorder_categories_icon"
-            android:src="@drawable/ic_drag" />
+            android:src="@drawable/ic_drag"/>
 
         <TextView
             android:id="@+id/category_name"
@@ -29,13 +29,13 @@
             android:layout_weight="1"
             android:textSize="@dimen/text_18" />
 
-        <ImageButton
+        <ImageView
             android:id="@+id/delete_button"
             android:layout_width="@dimen/size_48"
             android:layout_height="@dimen/size_48"
-            android:backgroundTint="@android:color/transparent"
+            android:padding="@dimen/padding_12"
             android:contentDescription="@string/text_delete_category_icon"
-            android:src="@drawable/ic_delete" />
+            android:src="@drawable/ic_delete"/>
     </LinearLayout>
 
     <View

@@ -3,42 +3,42 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="24dp"
-    app:cardElevation="8dp"
-    app:cardCornerRadius="20dp"
+    android:layout_margin="@dimen/margin_24"
     app:cardBackgroundColor="?attr/colorSecondary"
-    app:strokeWidth="0dp">
+    app:cardCornerRadius="@dimen/radius_20"
+    app:cardElevation="@dimen/elevation_8">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="@dimen/padding_24">
 
         <TextView
             android:id="@+id/tvTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Add Category"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="?attr/colorOnSurface" />
+            android:text="@string/text_add_category"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="@dimen/text_20"
+            android:textStyle="bold" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/margin_16"
             app:boxBackgroundColor="?attr/colorSecondary"
-            app:boxCornerRadiusTopStart="12dp"
-            app:boxCornerRadiusTopEnd="12dp"
-            app:boxCornerRadiusBottomStart="12dp"
-            app:boxCornerRadiusBottomEnd="12dp">
+            app:boxCornerRadiusBottomEnd="@dimen/radius_12"
+            app:boxCornerRadiusBottomStart="@dimen/radius_12"
+            app:boxCornerRadiusTopEnd="@dimen/radius_12"
+            app:boxCornerRadiusTopStart="@dimen/radius_12">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:maxLength="15"
                 android:textColor="?attr/colorOnSurface"
                 android:textColorHint="?attr/colorOnSurfaceVariant" />
 
@@ -47,26 +47,24 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_24"
             android:gravity="end"
-            android:orientation="horizontal"
-            android:layout_marginTop="24dp">
+            android:orientation="horizontal">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnCancel"
                 style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Cancel" />
+                android:text="@string/text_cancel" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnAdd"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Add"
-                android:layout_marginStart="12dp" />
-
+                android:layout_marginStart="@dimen/margin_12"
+                android:text="@string/text_add" />
         </LinearLayout>
-
     </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>

@@ -120,15 +120,18 @@
 
     <TextView
         android:id="@+id/title_text_view"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginVertical="@dimen/margin_10"
-        android:layout_marginStart="@dimen/margin_20"
+        android:layout_marginHorizontal="@dimen/margin_20"
         android:textColor="?attr/colorPrimary"
         android:textSize="@dimen/text_36"
         android:textStyle="bold"
+        android:maxLines="1"
+        android:ellipsize="end"
         app:layout_constraintBottom_toTopOf="@+id/recyclerView"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/createButton"
         app:layout_constraintTop_toBottomOf="@id/tabContainer" />
 
     <Button

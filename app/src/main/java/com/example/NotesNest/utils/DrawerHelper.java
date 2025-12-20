@@ -60,6 +60,7 @@ public class DrawerHelper {
         this.pref = new SharedPreferenceUtil(activity);
         this.firebaseHelper = new FirebaseHelper();
 
+        setDrawerWidth();
         setupHeaderViews();
         setupMenuButton();
         setupGalleryLauncher();
@@ -113,9 +114,9 @@ public class DrawerHelper {
         });
 
         reminders.setOnClickListener(v -> {
+            drawerLayout.closeDrawer(GravityCompat.START);
             setTopMenuSelected(reminders);
             changePage(1);
-            drawerLayout.closeDrawer(GravityCompat.START);
         });
     }
 
@@ -366,4 +367,19 @@ public class DrawerHelper {
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         galleryLauncher.launch(intent);
     }
+
+    private void setDrawerWidth() {
+        int screenWidth = activity.getResources()
+                .getDisplayMetrics()
+                .widthPixels;
+
+        int drawerWidth = (int) (screenWidth * 0.8); // 80%
+
+        DrawerLayout.LayoutParams params =
+                (DrawerLayout.LayoutParams) navigationView.getLayoutParams();
+
+        params.width = drawerWidth;
+        navigationView.setLayoutParams(params);
+    }
+
 }

@@ -9,22 +9,21 @@
         android:id="@+id/tabText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingStart="16dp"
-        android:paddingTop="8dp"
-        android:paddingEnd="8dp"
-        android:paddingBottom="8dp"
-        android:text="Tab"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:padding="@dimen/padding_8"
         android:textSize="16sp" />
 
     <TextView
         android:id="@+id/tabCount"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="22dp"
+        android:minWidth="@dimen/size_22"
         android:layout_marginEnd="16dp"
         android:background="@drawable/badge_background"
         android:gravity="center"
         android:textColor="?attr/colorSecondary"
-        android:textSize="10sp"
+        android:textSize="@dimen/text_10"
         android:visibility="gone" />
 
 </LinearLayout>

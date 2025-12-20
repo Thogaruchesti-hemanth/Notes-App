@@ -2,6 +2,7 @@ package com.example.NotesNest.utils;
 
 import static com.example.NotesNest.utils.Constants.DEFAULT_COLORS;
 import static com.example.NotesNest.utils.Constants.professionalGradients;
+import static com.example.NotesNest.utils.ValidationUtils.isValidPassword;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
@@ -13,6 +14,8 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
@@ -41,7 +44,12 @@ import com.example.NotesNest.databases.ViewModels.CategoryViewModel;
 import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.databases.entities.ReminderEntity;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import java.util.List;
 import java.util.Objects;
@@ -120,32 +128,61 @@ public class CommonDialogs {
                 .inflate(R.layout.dialog_add_category, null);
 
         TextView tvTitle = view.findViewById(R.id.tvTitle);
-        EditText etName = view.findViewById(R.id.etName);
-        Button btnAdd = view.findViewById(R.id.btnAdd);
-        Button btnCancel = view.findViewById(R.id.btnCancel);
+        TextInputLayout tilName = view.findViewById(R.id.tilName);
+        TextInputEditText etName = view.findViewById(R.id.etName);
+        MaterialButton btnAdd = view.findViewById(R.id.btnAdd);
+        MaterialButton btnCancel = view.findViewById(R.id.btnCancel);
 
         tvTitle.setText(title);
         etName.setHint(hint);
         btnAdd.setText(positiveBtn);
         btnCancel.setText(negativeBtn);
 
+        // Text length watcher
+        etName.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (s.length() == 15) {
+                    tilName.setError("Maximum 15 characters allowed");
+                } else {
+                    tilName.setError(null);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) { }
+        });
+
         AlertDialog dialog = new AlertDialog.Builder(context)
                 .setView(view)
                 .setCancelable(false)
                 .create();
+
         btnAdd.setOnClickListener(v -> {
-            String text = etName.getText().toString().trim();
-            if (text.isEmpty()) {
-                etName.setError("Required");
-            } else {
-                callback.onSubmit(text);
-                dialog.dismiss();
+            String input = etName.getText().toString().trim();
+
+            if (input.isEmpty()) {
+                tilName.setError("Required");
+                return;
             }
+
+            if (input.length() > 15) {
+                tilName.setError("Maximum 15 characters allowed");
+                return;
+            }
+
+            tilName.setError(null);
+            callback.onSubmit(input);
+            dialog.dismiss();
         });
 
         btnCancel.setOnClickListener(v -> dialog.dismiss());
 
         dialog.show();
+
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             int width = (int) (context.getResources().getDisplayMetrics().widthPixels * 0.8);
@@ -153,6 +190,7 @@ public class CommonDialogs {
             dialog.getWindow().setLayout(width, height);
         }
     }
+
 
     public static void showConfirmDialog(
             Context context,
@@ -505,33 +543,155 @@ public class CommonDialogs {
         });
     }
 
-    public static void showPasswordDialog(
-            Activity activity,
-            String title,
-            PasswordCallback callback
-    ) {
-        View view = LayoutInflater.from(activity).inflate(R.layout.dialog_enter_password, null);
-        EditText passwordEdit = view.findViewById(R.id.passwordEdit);
+    public static void showPasswordDialog(Activity activity, String title, PasswordCallback callback) {
 
-        AlertDialog dialog = new AlertDialog.Builder(activity)
+        View view = LayoutInflater.from(activity)
+                .inflate(R.layout.dialog_enter_password, null);
+
+        TextInputLayout passwordLayout = view.findViewById(R.id.passwordLayout);
+        TextInputEditText passwordEdit = view.findViewById(R.id.passwordEdit);
+
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(
+                activity,
+                com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog
+        )
                 .setTitle(title)
                 .setView(view)
                 .setCancelable(true)
-                .setPositiveButton("OK", null) // We override later
-                .setNegativeButton("Cancel", (d, w) -> d.dismiss())
+                .setPositiveButton("OK", null)   // override later
+                .setNegativeButton("Cancel", (d, w) -> d.dismiss());
+
+        androidx.appcompat.app.AlertDialog dialog = builder.create();
+
+        dialog.setOnShowListener(dlg -> dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE)
+                .setOnClickListener(v -> {
+
+                    String pw = passwordEdit.getText() != null
+                            ? passwordEdit.getText().toString().trim()
+                            : "";
+
+                    if (pw.length() < 4) {
+                        passwordLayout.setError("Minimum 4 characters required");
+                        return;
+                    }
+
+                    passwordLayout.setError(null);
+                    callback.onPasswordEntered(pw.toCharArray());
+                    dialog.dismiss();
+                }));
+
+        dialog.show();
+    }
+
+    public static void showChangePasswordDialog(
+            @NonNull Activity activity,
+            @NonNull PasswordUpdateCallback callback
+    ) {
+        View view = LayoutInflater.from(activity)
+                .inflate(R.layout.dialog_change_password, null);
+
+        TextInputLayout tilNew = view.findViewById(R.id.tilNewPassword);
+        TextInputLayout tilConfirm = view.findViewById(R.id.tilConfirmPassword);
+        TextInputEditText etNew = view.findViewById(R.id.etNewPassword);
+        TextInputEditText etConfirm = view.findViewById(R.id.etConfirmPassword);
+
+        Button btnCancel = view.findViewById(R.id.btnCancel);
+        Button btnUpdate = view.findViewById(R.id.btnUpdate);
+
+        AlertDialog dialog = new AlertDialog.Builder(activity)
+                .setView(view)
+                .setCancelable(false)
                 .create();
 
-        dialog.setOnShowListener(dlg -> {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-                String pw = passwordEdit.getText().toString().trim();
+        dialog.show();
 
-                if (pw.length() < 4) {
-                    Toast.makeText(activity, "Choose a stronger password (min 4 chars)", Toast.LENGTH_SHORT).show();
+        Objects.requireNonNull(dialog.getWindow()).setLayout(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+
+        btnCancel.setOnClickListener(v -> {
+            dialog.dismiss();
+            callback.onCancelled();
+        });
+
+        btnUpdate.setOnClickListener(v -> {
+            String newPass = etNew.getText() != null ? etNew.getText().toString().trim() : "";
+            String confirmPass = etConfirm.getText() != null ? etConfirm.getText().toString().trim() : "";
+
+            tilNew.setError(null);
+            tilConfirm.setError(null);
+
+            if (!isValidPassword(newPass)) {
+                tilNew.setError("Min 8 chars, 1 upper, 1 lower, 1 number & 1 special");
+                return;
+            }
+
+            if (!newPass.equals(confirmPass)) {
+                tilConfirm.setError("Passwords do not match");
+                return;
+            }
+
+            dialog.dismiss();
+            callback.onPasswordValidatedAndConfirmed(newPass);
+        });
+    }
+
+    public static void showReAuthDialog(@NonNull Activity activity, ReAuthCallback callback) {
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(activity);
+        builder.setTitle("Change Password");
+
+        // Inflate custom layout
+        View view = LayoutInflater.from(activity).inflate(R.layout.dialog_reauth_password, null);
+        TextInputLayout tilEmail = view.findViewById(R.id.tilEmail);
+        TextInputLayout tilCurrent = view.findViewById(R.id.tilCurrentPassword);
+        TextInputLayout tilNew = view.findViewById(R.id.tilNewPassword);
+
+        TextInputEditText etEmail = view.findViewById(R.id.etEmail);
+        TextInputEditText etCurrent = view.findViewById(R.id.etCurrentPassword);
+        TextInputEditText etNew = view.findViewById(R.id.etNewPassword);
+
+        // Prefill email if user logged in
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null && user.getEmail() != null) {
+            etEmail.setText(user.getEmail());
+            etEmail.setEnabled(false); // Optional, user cannot change
+        }
+
+        builder.setView(view);
+
+        builder.setPositiveButton("Update", null); // Override later for validation
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+
+        androidx.appcompat.app.AlertDialog dialog = builder.create();
+        dialog.setOnShowListener(d -> {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+                String email = etEmail.getText() != null ? etEmail.getText().toString().trim() : "";
+                String currentPass = etCurrent.getText() != null ? etCurrent.getText().toString() : "";
+                String newPass = etNew.getText() != null ? etNew.getText().toString() : "";
+
+                if (email.isEmpty()) {
+                    tilEmail.setError("Email required");
                     return;
+                } else {
+                    tilEmail.setError(null);
                 }
 
-                // Pass value to callback
-                callback.onPasswordEntered(pw.toCharArray());
+                if (currentPass.isEmpty()) {
+                    tilCurrent.setError("Current password required");
+                    return;
+                } else {
+                    tilCurrent.setError(null);
+                }
+
+                if (newPass.isEmpty() || newPass.length() < 6) {
+                    tilNew.setError("New password must be at least 6 characters");
+                    return;
+                } else {
+                    tilNew.setError(null);
+                }
+
+                callback.onReAuth(email, currentPass, newPass);
                 dialog.dismiss();
             });
         });
@@ -539,6 +699,10 @@ public class CommonDialogs {
         dialog.show();
     }
 
+    // Callback interface
+    public interface ReAuthCallback {
+        void onReAuth(String email, String currentPassword, String newPassword);
+    }
 
     public interface ThemeSelectionListener {
         void onThemeSelected(int theme);
@@ -579,5 +743,11 @@ public class CommonDialogs {
     public interface PasswordCallback {
         void onPasswordEntered(char[] password);
     }
+
+    public interface PasswordUpdateCallback {
+        void onPasswordValidatedAndConfirmed(String newPassword);
+        void onCancelled();
+    }
+
 
 }

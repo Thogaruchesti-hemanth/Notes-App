@@ -13,14 +13,25 @@
         android:targetSdkVersion="33" />
 
     <application
+        android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:exported="true"
+        android:fullBackupContent="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Notes"
         tools:targetApi="31">
+        <activity
+            android:name=".activity.ManageAccountActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.PremiumActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.DriveBackupActivity2"
+            android:exported="false" />
         <activity
             android:name=".activity.DriveBackupActivity"
             android:exported="false" />

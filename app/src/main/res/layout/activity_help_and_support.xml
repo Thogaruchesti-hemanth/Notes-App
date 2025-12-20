@@ -1,9 +1,263 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?attr/colorSecondary"
+    android:orientation="vertical"
     tools:context=".activity.HelpAndSupportActivity">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardElevation="2dp">
+
+        <LinearLayout
+            android:id="@+id/appbar_root"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="@dimen/padding_24"
+            android:paddingTop="@dimen/padding_32"
+            android:paddingBottom="@dimen/padding_12">
+
+            <ImageView
+                android:id="@+id/back_arrow_icon"
+                android:layout_width="@dimen/size_32"
+                android:layout_height="@dimen/size_32"
+                android:contentDescription="@string/text_back_button"
+                android:src="@drawable/ic_back_arrow" />
+
+            <TextView
+                android:id="@+id/title_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/size_32"
+                android:text="@string/text_help_amp_support"
+                android:textColor="?attr/colorPrimary"
+                android:textSize="@dimen/text_22"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <ScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:padding="@dimen/padding_20"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_10"
+            android:orientation="vertical">
+
+            <!-- ⭐ GET IN TOUCH -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/margin_10"
+                android:text="@string/text_get_in_touch"
+                android:textAllCaps="true"
+                android:textColor="@color/tabSelectedTextColorLight"
+                android:textSize="@dimen/text_16"
+                android:textStyle="bold" />
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="@dimen/radius_12"
+                app:cardElevation="2dp"
+                app:cardUseCompatPadding="true">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <include
+                        android:id="@+id/option_email"
+                        layout="@layout/item_support_option"
+                        android:tag="email_support" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/grey_200" />
+
+                    <include
+                        android:id="@+id/option_report_bug"
+                        layout="@layout/item_support_option"
+                        android:tag="report_bug" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/grey_200" />
+
+                    <include
+                        android:id="@+id/option_feedback"
+                        layout="@layout/item_support_option"
+                        android:tag="feedback" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- ⭐ RESOURCES -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_30"
+                android:layout_marginBottom="@dimen/margin_10"
+                android:text="@string/text_resources"
+                android:textAllCaps="true"
+                android:textColor="@color/tabSelectedTextColorLight"
+                android:textSize="@dimen/text_16"
+                android:textStyle="bold" />
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="@dimen/radius_12"
+                app:cardElevation="2dp"
+                app:cardUseCompatPadding="true">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <include
+                        android:id="@+id/option_user_guide"
+                        layout="@layout/item_support_option"
+                        android:tag="user_guide" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/grey_200" />
+
+                    <include
+                        android:id="@+id/option_video_tutorials"
+                        layout="@layout/item_support_option"
+                        android:tag="video_tutorials" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/grey_200" />
+
+                    <include
+                        android:id="@+id/option_whats_new"
+                        layout="@layout/item_support_option"
+                        android:tag="whats_new" />
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_30"
+                android:layout_marginBottom="@dimen/margin_10"
+                android:text="@string/text_about"
+                android:textAllCaps="true"
+                android:textColor="@color/tabSelectedTextColorLight"
+                android:textSize="@dimen/text_16"
+                android:textStyle="bold" />
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="@dimen/radius_12"
+                app:cardElevation="2dp"
+                app:cardUseCompatPadding="true">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <include
+                        android:id="@+id/option_about_app"
+                        layout="@layout/item_support_option"
+                        android:tag="about_app" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/grey_200" />
+
+                    <include
+                        android:id="@+id/option_privacy_policy"
+                        layout="@layout/item_support_option"
+                        android:tag="privacy_policy" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/grey_200" />
+
+                    <include
+                        android:id="@+id/option_terms_service"
+                        layout="@layout/item_support_option"
+                        android:tag="terms_service" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/margin_10"
+                android:text="@string/text_faqs"
+                android:textSize="@dimen/text_16"
+                android:textAllCaps="true"
+                android:textColor="@color/tabSelectedTextColorLight"
+                android:textStyle="bold" />
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="@dimen/radius_12"
+                app:cardElevation="2dp"
+                android:layout_marginBottom="@dimen/margin_10"
+                app:cardUseCompatPadding="true">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+                    <!-- FAQ Item 1 -->
+                    <include
+                        android:id="@+id/faq_container_1"
+                        layout="@layout/item_faq" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/grey_200" />
+                    <!-- FAQ Item 2 -->
+                    <include
+                        android:id="@+id/faq_container_2"
+                        layout="@layout/item_faq" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/grey_200" />
+
+                    <!-- FAQ Item 3 -->
+                    <include
+                        android:id="@+id/faq_container_3"
+                        layout="@layout/item_faq" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>
