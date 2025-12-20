@@ -23,6 +23,7 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.viewpager2.widget.ViewPager2;
@@ -30,6 +31,7 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.example.NotesNest.FirebaseHelper;
 import com.example.NotesNest.R;
 import com.example.NotesNest.activity.HelpAndSupportActivity;
+import com.example.NotesNest.activity.PremiumActivity;
 import com.example.NotesNest.activity.SettingsActivity;
 import com.example.NotesNest.adapter.MainPagerAdapter;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -52,6 +54,8 @@ public class DrawerHelper {
     private TextView userNameTextView, emailTextView;
     private ActivityResultLauncher<Intent> galleryLauncher;
     private ImageView currentDialogImageView;
+
+    private AppCompatButton premiumButton;
 
     public DrawerHelper(AppCompatActivity activity) {
         this.activity = activity;
@@ -166,6 +170,7 @@ public class DrawerHelper {
         userNameTextView = profileHeader.findViewById(R.id.header_user_name);
         emailTextView = profileHeader.findViewById(R.id.header_user_email);
         profileImageView = profileHeader.findViewById(R.id.header_profile_image);
+        premiumButton = profileHeader.findViewById(R.id.get_pro_button);
 
         profileHeader.findViewById(R.id.edit_header_button)
                 .setOnClickListener(v -> openEditDialog());
@@ -173,6 +178,12 @@ public class DrawerHelper {
 
         profileHeader.findViewById(R.id.edit_header_button)
                 .setOnClickListener(v -> openEditDialog());
+
+        premiumButton.setOnClickListener(view -> {
+            Intent intent = new Intent(activity, PremiumActivity.class);
+            activity.startActivity(intent);
+            drawerLayout.closeDrawer(GravityCompat.START);
+        });
     }
 
 

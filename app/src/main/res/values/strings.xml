@@ -130,5 +130,14 @@
     <string name="text_not_connected_to_drive">Not connected to Drive</string>
     <string name="text_99">99+</string>
     <string name="text_cancel">Cancel</string>
+    <string name="text_unlock_your_full_potential">Unlock Your Full\nPotential</string>
+    <string name="text_get_access_to_exclusive_features_to_supercharge_your_note_taking">Get access to exclusive features to supercharge your note-taking.</string>
+    <string name="text_continue_with_limited_version">Continue With Limited Version</string>
+    <string name="text_privacy_policy">Privacy Policy</string>
+    <string name="text_terms_of_service">Terms of Service</string>
+    <string name="text_unlock_premium">Unlock Premium</string>
+    <string name="text_lifetime_499_one_time">Lifetime\n₹499 one-time</string>
+    <string name="text_yearly_299_year">Yearly\n₹299 / year</string>
+    <string name="text_monthly_50_month">Monthly\n₹50 / month</string>
 
 </resources>

@@ -1,0 +1,13 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Light yellow fill (same family as your color) -->
+    <solid android:color="#FFFFF3CC" />
+
+    <corners android:radius="16dp" />
+
+    <!-- Darker yellow border -->
+    <stroke
+        android:width="2dp"
+        android:color="#FFF3B64D" />
+
+</shape>

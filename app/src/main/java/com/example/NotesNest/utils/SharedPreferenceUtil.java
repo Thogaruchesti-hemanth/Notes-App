@@ -3,8 +3,17 @@ package com.example.NotesNest.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 public class SharedPreferenceUtil {
 
+    // Premium plans
+    public static final String PLAN_NONE = "none";
+    public static final String PLAN_MONTHLY = "monthly";
+    public static final String PLAN_YEARLY = "yearly";
+    public static final String PLAN_LIFETIME = "lifetime";
     private static final String PREF_NAME = "UserPreferences";
     private static final String KEY_USERNAME = "user_name";
     private static final String KEY_EMAIL = "user_email";
@@ -15,8 +24,12 @@ public class SharedPreferenceUtil {
     private static final String ONBOARDING_KEY = "completed";
     private static final String WIDGET_PREF_NAME = "note_widgets";
     private static final String KEY_NOTE_LAYOUT = "note_layout";
-
-
+    // Premium plan constants
+    private static final String PREMIUM_PLAN = "premium_plan";
+    private static final String IS_PREMIUM = "is_premium";
+    private static final String PREMIUM_EXPIRY_DATE = "premium_expiry_date";
+    private static final String PURCHASE_DATE = "purchase_date";
+    private static final String PLAN_TYPE = "plan_type";
     private static final String KEY_THEME = "theme"; // light / dark
     private static SharedPreferences sharedPreferences;
 
@@ -123,5 +136,79 @@ public class SharedPreferenceUtil {
 
     public boolean isUserPremium() {
         return sharedPreferences.getBoolean("is_premium", false);
+    }
+
+    public void setIsPremium(boolean isPremium) {
+        sharedPreferences.edit().putBoolean(IS_PREMIUM, isPremium).apply();
+    }
+
+    // Getters
+    public String getPremiumPlan() {
+        return sharedPreferences.getString(PREMIUM_PLAN, PLAN_NONE);
+    }
+
+    // Setters
+    public void setPremiumPlan(String plan) {
+        sharedPreferences.edit().putString(PREMIUM_PLAN, plan).apply();
+    }
+
+    public boolean isPremium() {
+        return sharedPreferences.getBoolean(IS_PREMIUM, false);
+    }
+
+    public String getPremiumExpiryDate() {
+        return sharedPreferences.getString(PREMIUM_EXPIRY_DATE, "");
+    }
+
+    public void setPremiumExpiryDate(String expiryDate) {
+        sharedPreferences.edit().putString(PREMIUM_EXPIRY_DATE, expiryDate).apply();
+    }
+
+    public String getPurchaseDate() {
+        return sharedPreferences.getString(PURCHASE_DATE, "");
+    }
+
+    public void setPurchaseDate(String purchaseDate) {
+        sharedPreferences.edit().putString(PURCHASE_DATE, purchaseDate).apply();
+    }
+
+    public String getPlanType() {
+        return sharedPreferences.getString(PLAN_TYPE, PLAN_NONE);
+    }
+
+    public void setPlanType(String planType) {
+        sharedPreferences.edit().putString(PLAN_TYPE, planType).apply();
+    }
+
+    // Check if premium is active
+    public boolean isPremiumActive() {
+        if (!isPremium()) return false;
+
+        String planType = getPlanType();
+        if (PLAN_LIFETIME.equals(planType)) {
+            return true; // Lifetime is always active
+        }
+
+        String expiryDate = getPremiumExpiryDate();
+        if (expiryDate.isEmpty()) return false;
+
+        // Check if expiry date is in future
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+            Date expiry = sdf.parse(expiryDate);
+            Date current = new Date();
+            return current.before(expiry);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // Clear premium data
+    public void clearPremiumData() {
+        sharedPreferences.edit().remove(PREMIUM_PLAN).apply();
+        sharedPreferences.edit().remove(IS_PREMIUM).apply();
+        sharedPreferences.edit().remove(PREMIUM_EXPIRY_DATE).apply();
+        sharedPreferences.edit().remove(PURCHASE_DATE).apply();
+        sharedPreferences.edit().remove(PLAN_TYPE).apply();
     }
 }
