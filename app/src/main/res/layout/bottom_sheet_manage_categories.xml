@@ -52,7 +52,8 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/categories_recycler_view"
         android:layout_width="match_parent"
-        android:layout_height="400dp"
+        android:layout_height="wrap_content"
+        android:maxHeight="400dp"
         android:layout_margin="@dimen/margin_10"
         android:scrollbars="vertical"
         app:layout_constraintBottom_toTopOf="@id/add_card"

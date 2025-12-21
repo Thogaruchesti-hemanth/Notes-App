@@ -9,6 +9,7 @@ import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
@@ -38,6 +39,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.NotesNest.R;
+import com.example.NotesNest.activity.PremiumActivity;
 import com.example.NotesNest.adapter.CategoryAdapter;
 import com.example.NotesNest.adapter.ColorAdapter;
 import com.example.NotesNest.databases.ViewModels.CategoryViewModel;
@@ -141,7 +143,8 @@ public class CommonDialogs {
         // Text length watcher
         etName.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -153,7 +156,8 @@ public class CommonDialogs {
             }
 
             @Override
-            public void afterTextChanged(Editable s) { }
+            public void afterTextChanged(Editable s) {
+            }
         });
 
         AlertDialog dialog = new AlertDialog.Builder(context)
@@ -699,6 +703,20 @@ public class CommonDialogs {
         dialog.show();
     }
 
+    public static void showPremiumRequiredDialog(Context context, String message) {
+        if (context == null) return;
+
+        new androidx.appcompat.app.AlertDialog.Builder(context)
+                .setTitle("Premium Required")
+                .setMessage(message)
+                .setPositiveButton("Go Premium", (dialog, which) -> {
+                     context.startActivity(new Intent(context, PremiumActivity.class));
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+
     // Callback interface
     public interface ReAuthCallback {
         void onReAuth(String email, String currentPassword, String newPassword);
@@ -746,6 +764,7 @@ public class CommonDialogs {
 
     public interface PasswordUpdateCallback {
         void onPasswordValidatedAndConfirmed(String newPassword);
+
         void onCancelled();
     }
 
