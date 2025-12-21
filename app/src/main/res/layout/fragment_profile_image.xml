@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:minHeight="250dp"
     android:background="?attr/colorSecondary"
     android:padding="@dimen/padding_20">
 
@@ -21,8 +22,8 @@
         android:id="@+id/profile_container"
         android:layout_width="@dimen/size_80"
         android:layout_height="@dimen/size_80"
-        android:layout_marginTop="@dimen/margin_50"
-        app:layout_constraintTop_toBottomOf="@+id/edit_header_button"
+        android:layout_marginBottom="@dimen/margin_16"
+        app:layout_constraintBottom_toTopOf="@id/get_pro_button"
         app:layout_constraintStart_toStartOf="parent">
 
         <!-- Premium ring (hidden by default) -->
@@ -94,7 +95,6 @@
         android:id="@+id/get_pro_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin_16"
         android:background="@drawable/bg_rounded_yellow_gradient"
         android:drawableStart="@drawable/ic_pro"
         android:drawablePadding="@dimen/padding_20"
@@ -107,6 +107,6 @@
         android:textSize="@dimen/text_18"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/profile_container" />
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
