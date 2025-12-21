@@ -41,6 +41,7 @@ import com.example.NotesNest.databases.entities.CategoryEntity;
 import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.utils.CategoryManager;
 import com.example.NotesNest.utils.AnalyticsHelper;
+import com.example.NotesNest.utils.CommonDialogs;
 import com.example.NotesNest.utils.LayoutToggleViewModel;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
 import com.example.NotesNest.utils.ThemeManager;
@@ -73,6 +74,13 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
     private Observer<List<NoteEntity>> currentNotesObserver;
     private ActivityResultLauncher<Intent> addEditNoteLauncher;
     private String currentUserId = null;
+    private SharedPreferenceUtil preferenceUtil;
+
+    private static final int FREE_NOTES_LIMIT = 30;
+    private boolean isPremiumUser = false;
+    private int currentNotesCount = 0;
+    private Context context;
+
 
     public NotesFragment() { /* Required empty constructor */ }
 
@@ -92,15 +100,18 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         searchEditText = view.findViewById(R.id.searchEditText);
         clearSearchBtn = view.findViewById(R.id.clearSearchBtn);
 
-        currentUserId = new SharedPreferenceUtil(getContext()).getUserId();
+        // initialise context
+        context = getContext();
 
-        Context context = getContext();
+        // sharedPreferences
+        preferenceUtil = new SharedPreferenceUtil(context);
+        currentUserId = preferenceUtil.getUserId();
+        isPremiumUser = preferenceUtil.isUserPremium();
 
         addEditNoteLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if (result.getResultCode() == Activity.RESULT_OK) {
-                        // Refresh notes list after add/edit
                         String query = searchEditText.getText().toString().trim();
                         if (!query.isEmpty()) {
                             runSearch(query);
@@ -132,13 +143,14 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
 
         // Register for theme changes
         ThemeManager.registerListener(this);
+        observePremiumNoteLimit();
 
         return view;
     }
 
     private void showCategoryManager() {
         if (categoryViewModel == null || noteViewModel == null) {
-            Toast.makeText(getContext(), "Error loading categories", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "Error loading categories", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -177,11 +189,19 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
 
 
     private void setupCreateButton() {
-        createButton.setOnClickListener(v -> openCreateItem());
+        createButton.setOnClickListener(v -> {
+
+            if (!isPremiumUser && currentNotesCount >= FREE_NOTES_LIMIT) {
+                CommonDialogs.showPremiumRequiredDialog(context,"You have reached the free limit of 30 notes.\\nUpgrade to Premium to create unlimited notes.");
+                return;
+            }
+
+            openCreateItem();
+        });
     }
 
     private void openCreateItem() {
-        Intent intent = new Intent(getContext(), EditNoteActivity.class);
+        Intent intent = new Intent(context, EditNoteActivity.class);
         addEditNoteLauncher.launch(intent);
     }
 
@@ -307,7 +327,7 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
     }
 
     private View createCustomTab(String title, boolean selected) {
-        LayoutInflater inflater = LayoutInflater.from(getContext());
+        LayoutInflater inflater = LayoutInflater.from(context);
         View view = inflater.inflate(R.layout.custom_tab, tabLayout, false);
         TextView text = view.findViewById(R.id.tabText);
         TextView count = view.findViewById(R.id.tabCount);
@@ -456,7 +476,7 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         updateAllTabCounts();
         AnalyticsHelper.logScreenView("Notes", "NotesFragment");
 
-        String layoutType = new SharedPreferenceUtil(getContext()).getKeyNoteLayout();
+        String layoutType = preferenceUtil.getKeyNoteLayout();
         boolean isGrid = layoutType.equals("Grid");
 
         if (isGrid) {
@@ -541,4 +561,29 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         buildTabs();
         runSearch(searchEditText.getText().toString().trim());
     }
+
+    private void observePremiumNoteLimit() {
+        noteViewModel.getNotesCount(currentUserId)
+                .observe(getViewLifecycleOwner(), count -> {
+                    if (count == null) return;
+
+                    currentNotesCount = count;
+
+                    if (!isPremiumUser && currentNotesCount >= FREE_NOTES_LIMIT) {
+                        disableCreateButton();
+                    } else {
+                        enableCreateButton();
+                    }
+                });
+    }
+
+    private void disableCreateButton() {
+        createButton.setAlpha(0.5f);
+    }
+
+    private void enableCreateButton() {
+        createButton.setEnabled(true);
+        createButton.setAlpha(1f);
+    }
+
 }

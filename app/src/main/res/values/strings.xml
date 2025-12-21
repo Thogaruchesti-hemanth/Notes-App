@@ -139,5 +139,6 @@
     <string name="text_lifetime_499_one_time">Lifetime\n₹499 one-time</string>
     <string name="text_yearly_299_year">Yearly\n₹299 / year</string>
     <string name="text_monthly_50_month">Monthly\n₹50 / month</string>
+    <string name="text_premium_required">Premium required</string>
 
 </resources>

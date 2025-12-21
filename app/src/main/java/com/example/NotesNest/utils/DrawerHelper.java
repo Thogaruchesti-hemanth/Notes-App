@@ -56,6 +56,7 @@ public class DrawerHelper {
     private ImageView currentDialogImageView;
 
     private AppCompatButton premiumButton;
+    private boolean isPremiumUser;
 
     public DrawerHelper(AppCompatActivity activity) {
         this.activity = activity;
@@ -63,6 +64,9 @@ public class DrawerHelper {
         this.navigationView = activity.findViewById(R.id.nav_view);
         this.pref = new SharedPreferenceUtil(activity);
         this.firebaseHelper = new FirebaseHelper();
+
+        this.isPremiumUser = pref.isUserPremium();
+
 
         setDrawerWidth();
         setupHeaderViews();
@@ -171,6 +175,8 @@ public class DrawerHelper {
         emailTextView = profileHeader.findViewById(R.id.header_user_email);
         profileImageView = profileHeader.findViewById(R.id.header_profile_image);
         premiumButton = profileHeader.findViewById(R.id.get_pro_button);
+        View premiumRing = profileHeader.findViewById(R.id.premium_ring);
+        ImageView premiumBadge = profileHeader.findViewById(R.id.premium_badge);
 
         profileHeader.findViewById(R.id.edit_header_button)
                 .setOnClickListener(v -> openEditDialog());
@@ -179,11 +185,18 @@ public class DrawerHelper {
         profileHeader.findViewById(R.id.edit_header_button)
                 .setOnClickListener(v -> openEditDialog());
 
-        premiumButton.setOnClickListener(view -> {
-            Intent intent = new Intent(activity, PremiumActivity.class);
-            activity.startActivity(intent);
-            drawerLayout.closeDrawer(GravityCompat.START);
-        });
+        if (isPremiumUser) {
+            premiumButton.setVisibility(View.GONE);
+            premiumRing.setVisibility(View.VISIBLE);
+            premiumBadge.setVisibility(View.VISIBLE);
+        } else {
+            premiumButton.setOnClickListener(view -> {
+                activity.startActivity(new Intent(activity, PremiumActivity.class));
+                drawerLayout.closeDrawer(GravityCompat.START);
+            });
+            premiumRing.setVisibility(View.GONE);
+            premiumBadge.setVisibility(View.GONE);
+        }
     }
 
 

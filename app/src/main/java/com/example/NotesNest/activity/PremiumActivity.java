@@ -27,7 +27,6 @@ public class PremiumActivity extends AppCompatActivity {
     LinearLayout planMonthly, planYearly, planLifetime;
     RadioButton radioMonthly, radioYearly, radioLifetime;
     RecyclerView recyclerView;
-
     FirebaseHelper firebaseHelper;
     SharedPreferenceUtil sharedPreferenceUtil;
 

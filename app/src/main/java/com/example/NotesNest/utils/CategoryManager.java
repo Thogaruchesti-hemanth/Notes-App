@@ -5,8 +5,8 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,10 +29,13 @@ import java.util.List;
 
 public class CategoryManager extends BottomSheetDialogFragment {
 
+    private static final int FREE_CATEGORY_LIMIT = 8;
+
     private final CategoryViewModel categoryViewModel;
     private final NoteViewModel noteViewModel;
     private final String currentUserId;
     private final OnCategoryUpdateListener listener;
+    private LinearLayout addCategoryLayout;
 
     private final List<CategoryEntity> categories = new ArrayList<>();
     private CategoryAdapter adapter;
@@ -61,7 +64,7 @@ public class CategoryManager extends BottomSheetDialogFragment {
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         RecyclerView recyclerView = view.findViewById(R.id.categories_recycler_view);
-        View addCategoryLayout = view.findViewById(R.id.add_new_categories_layout);
+        addCategoryLayout = view.findViewById(R.id.add_new_categories_layout);
         TextView doneButton = view.findViewById(R.id.done_button);
 
         adapter = new CategoryAdapter();
@@ -89,7 +92,7 @@ public class CategoryManager extends BottomSheetDialogFragment {
                 sorted.sort(Comparator.comparingInt(c -> c.order));
                 categories.addAll(sorted);
             }
-            adapter.notifyDataSetChanged(); // ✅ SAFE
+            adapter.notifyDataSetChanged();
         });
     }
 
@@ -137,9 +140,27 @@ public class CategoryManager extends BottomSheetDialogFragment {
     }
 
     // -----------------------------------------
+    // Premium Logic
+    // -----------------------------------------
+    private boolean isCategoryLimitReached() {
+        int count = 0;
+        for (CategoryEntity c : categories) {
+            if (c.id != 0) count++;
+        }
+        return count >= FREE_CATEGORY_LIMIT;
+    }
+
+    // -----------------------------------------
     // Add / Delete / Save
     // -----------------------------------------
     private void showAddCategoryDialog() {
+
+        if (isCategoryLimitReached()) {
+            addCategoryLayout.setAlpha(0.5f);
+            CommonDialogs.showPremiumRequiredDialog(requireContext(),"Free users can create up to 8 categories.\\nUpgrade to Premium for unlimited categories.");
+            return;
+        }
+
         CommonDialogs.showInputDialog(requireContext(),
                 "Add Category",
                 "Enter category name",
