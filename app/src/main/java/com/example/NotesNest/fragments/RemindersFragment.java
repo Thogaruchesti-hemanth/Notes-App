@@ -49,6 +49,9 @@ public class RemindersFragment extends Fragment {
     private ReminderViewModel reminderViewModel;
     private List<ReminderEntity> currentReminders = new ArrayList<>();
     private String currentUserId = null;
+    boolean isPremium;
+    private static final int FREE_REMINDER_LIMIT = 30;
+
 
     @Nullable
     @Override
@@ -68,6 +71,7 @@ public class RemindersFragment extends Fragment {
         Button createButton = view.findViewById(R.id.createButton);
 
         currentUserId = new SharedPreferenceUtil(getContext()).getUserId();
+        isPremium = new SharedPreferenceUtil(requireContext()).isUserPremium();
 
         setupCalendar();
         updateSelectedDateText();
@@ -78,10 +82,20 @@ public class RemindersFragment extends Fragment {
         selectedDateTv.setOnClickListener(v -> showDatePicker());
 
         createButton.setOnClickListener(v -> {
+
+            if (!isPremium && currentReminders.size() >= FREE_REMINDER_LIMIT) {
+                CommonDialogs.showPremiumRequiredDialog(requireContext(),"Free users can create up to 30 reminders.\\nUpgrade to Premium for unlimited reminders.");
+                return;
+            }
+
             Intent intent = new Intent(requireContext(), EditReminderActivity.class);
             intent.putExtra("selected_date", selectedDate.toString());
             startActivity(intent);
         });
+
+        if(!isPremium && currentReminders.size() >= FREE_REMINDER_LIMIT){
+            createButton.setAlpha(0.5f);
+        }
 
         return view;
     }

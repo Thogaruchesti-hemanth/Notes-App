@@ -11,7 +11,7 @@
         android:layout_width="@dimen/size_50"
         android:layout_height="@dimen/size_5"
         android:layout_marginTop="@dimen/margin_10"
-        android:background="@color/grey_900"
+        android:background="?attr/colorPrimary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -52,8 +52,7 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/categories_recycler_view"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:maxHeight="400dp"
+        android:layout_height="300dp"
         android:layout_margin="@dimen/margin_10"
         android:scrollbars="vertical"
         app:layout_constraintBottom_toTopOf="@id/add_card"
@@ -66,10 +65,10 @@
         android:id="@+id/add_card"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:cardCornerRadius="@dimen/radius_24"
-        app:cardElevation="4dp"
         android:layout_marginHorizontal="@dimen/margin_10"
         android:layout_marginBottom="@dimen/margin_16"
+        app:cardCornerRadius="@dimen/radius_24"
+        app:cardElevation="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
@@ -78,8 +77,8 @@
             android:id="@+id/add_new_categories_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:background="@drawable/btn_rounded"
+            android:orientation="horizontal"
             android:paddingHorizontal="@dimen/padding_8">
 
             <ImageButton
@@ -89,13 +88,14 @@
                 android:backgroundTint="@android:color/transparent"
                 android:contentDescription="@string/text_add_category"
                 android:src="@drawable/ic_add"
-                app:tint="@color/grey_900" />
+                app:tint="@color/black" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:text="@string/text_add_new_category"
+                android:textColor="@color/black"
                 android:textSize="@dimen/text_18"
                 android:textStyle="bold" />
         </LinearLayout>

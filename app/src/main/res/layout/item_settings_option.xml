@@ -1,6 +1,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_marginBottom="@dimen/margin_10"
     android:gravity="center_vertical"
     android:orientation="horizontal"
@@ -11,7 +12,8 @@
         android:id="@+id/ivIcon"
         android:layout_width="@dimen/size_24"
         android:layout_height="@dimen/size_24"
-        android:src="@drawable/ic_email" />
+        android:src="@drawable/ic_email"
+        app:tint="?attr/colorPrimary"/>
 
     <!-- Text -->
     <LinearLayout
@@ -50,7 +52,6 @@
         android:layout_height="wrap_content"
         android:background="@null"
         android:paddingEnd="@dimen/padding_8"
-        android:popupBackground="@drawable/bg_round_12"
         android:spinnerMode="dropdown" />
 
     <!-- Arrow -->
@@ -58,6 +59,8 @@
         android:id="@+id/ic_right_arrow"
         android:layout_width="@dimen/size_24"
         android:layout_height="@dimen/size_24"
-        android:src="@drawable/ic_chevron_right_black" />
+        android:src="@drawable/ic_chevron_right_black"
+        android:contentDescription="@string/text_forward_arrow"
+        app:tint="?attr/colorPrimary"/>
 
 </LinearLayout>

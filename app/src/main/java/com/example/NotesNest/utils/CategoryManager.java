@@ -226,6 +226,9 @@ public class CategoryManager extends BottomSheetDialogFragment {
             CategoryEntity category = categories.get(position);
             holder.name.setText(category.name);
 
+            holder.delete.setColorFilter(ThemeManager.getThemeColor(requireContext(), R.color.black, R.color.white));
+            holder.dragHandle.setColorFilter(ThemeManager.getThemeColor(requireContext(), R.color.black, R.color.white));
+
             holder.delete.setOnClickListener(v -> {
                 int pos = holder.getBindingAdapterPosition();
                 if (pos == RecyclerView.NO_POSITION) return;
@@ -239,6 +242,7 @@ public class CategoryManager extends BottomSheetDialogFragment {
             });
         }
 
+
         @Override
         public int getItemCount() {
             return categories.size();
@@ -246,12 +250,13 @@ public class CategoryManager extends BottomSheetDialogFragment {
 
         class VH extends RecyclerView.ViewHolder {
             TextView name;
-            ImageView delete;
+            ImageView delete, dragHandle;
 
             VH(View v) {
                 super(v);
                 name = v.findViewById(R.id.category_name);
                 delete = v.findViewById(R.id.delete_button);
+                dragHandle = v.findViewById(R.id.drag_handle);
             }
         }
     }

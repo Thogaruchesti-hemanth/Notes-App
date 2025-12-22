@@ -140,5 +140,7 @@
     <string name="text_yearly_299_year">Yearly\n₹299 / year</string>
     <string name="text_monthly_50_month">Monthly\n₹50 / month</string>
     <string name="text_premium_required">Premium required</string>
+    <string name="text_forward_arrow">Forward arrow</string>
+    <string name="text_about_app_icon">about app icon</string>
 
 </resources>

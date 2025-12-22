@@ -20,10 +20,14 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.content.res.AppCompatResources;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.example.NotesNest.R;
 import com.example.NotesNest.backups.ImportManager;
@@ -63,9 +67,14 @@ public class SettingsActivity extends AppCompatActivity {
         if (savedInstanceState != null) {
             isChangingTheme = savedInstanceState.getBoolean("isChangingTheme", false);
         }
-
+        EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.settings_layout), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
 
         isPremiumUser = new SharedPreferenceUtil(this).isUserPremium();
 
@@ -277,6 +286,9 @@ public class SettingsActivity extends AppCompatActivity {
         themeLayout = findViewById(R.id.theme_layout);
         manageAccountLayout = findViewById(R.id.manage_account_layout);
         versionTextView = findViewById(R.id.tvVersion);
+
+        // TODO need to implement for future versions
+        findViewById(R.id.change_password_layout).setVisibility(View.GONE);
 
         findViewById(R.id.iv_back_arrow).setOnClickListener(v -> finish());
 

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/settings_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSecondary"
@@ -229,7 +230,9 @@
                             android:id="@+id/ivIcon"
                             android:layout_width="@dimen/size_24"
                             android:layout_height="@dimen/size_24"
-                            android:src="@drawable/ic_about_app" />
+                            android:src="@drawable/ic_about_app"
+                            android:contentDescription="@string/text_about_app_icon"
+                            app:tint="?attr/colorPrimary"/>
 
                         <TextView
                             android:id="@+id/tvText"
