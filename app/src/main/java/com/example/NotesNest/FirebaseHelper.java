@@ -80,10 +80,7 @@ public class FirebaseHelper {
 
     public void signInWithGoogle(ActivityResultLauncher<Intent> launcher, Activity activity) {
         GoogleSignInClient client = getGoogleSignInClient(activity);
-        client.signOut().addOnCompleteListener(task -> {
-            Intent signInIntent = client.getSignInIntent();
-            launcher.launch(signInIntent);
-        });
+        launcher.launch(client.getSignInIntent());
     }
 
     public void handleGoogleSignInResult(Intent data, Context context, GoogleLoginCallback callback) {
@@ -132,7 +129,7 @@ public class FirebaseHelper {
                     String planType = snapshot.child(PLAN_TYPE).getValue(String.class);
 
                     // Set defaults if null
-                    if (isPremium == null) isPremium = false;
+                    if (isPremium == null) isPremium = true;
                     if (premiumPlan == null) premiumPlan = PLAN_NONE;
                     if (premiumExpiry == null) premiumExpiry = "";
                     if (purchaseDate == null) purchaseDate = "";
@@ -159,8 +156,10 @@ public class FirebaseHelper {
 
                     databaseReference.child(uid).setValue(userData).addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
+                            String purchaseDate = getCurrentDateTime();
+                            String expiryDate = calculateOneYearFreeExpiry();
                             saveToLocal(context, userName, email, base64Image, uid,
-                                    false, PLAN_NONE, "", "", PLAN_NONE);
+                                    true, PLAN_YEARLY, expiryDate, purchaseDate, PLAN_YEARLY);
                             callback.onGoogleLoginSuccess(userName, email);
                         }
                     });
@@ -173,6 +172,13 @@ public class FirebaseHelper {
             }
         }));
     }
+
+    private String calculateOneYearFreeExpiry() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        long oneYearMillis = 365L * 24 * 60 * 60 * 1000;
+        return sdf.format(new Date(System.currentTimeMillis() + oneYearMillis));
+    }
+
 
     // Email & Password Login
     public void loginUser(String email, String password, Context context, LoginCallback callback) {
@@ -466,6 +472,15 @@ public class FirebaseHelper {
         sp.setPremiumExpiryDate(premiumExpiry);
         sp.setPurchaseDate(purchaseDate);
         sp.setPlanType(planType);
+    }
+
+    public void signOut(Context context) {
+        // Firebase sign out
+        FirebaseAuth.getInstance().signOut();
+
+        // Google sign out
+        GoogleSignInClient googleClient = getGoogleSignInClient(context);
+        googleClient.signOut();
     }
 
     // Interfaces

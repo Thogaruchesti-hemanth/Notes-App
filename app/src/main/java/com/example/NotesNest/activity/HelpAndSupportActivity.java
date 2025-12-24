@@ -1,10 +1,13 @@
 package com.example.NotesNest.activity;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.content.res.AppCompatResources;
@@ -26,7 +29,60 @@ public class HelpAndSupportActivity extends AppCompatActivity {
         setupOptions();
         setupFaqs();
         setStaticTexts();
+        setupListeners();
+    }
 
+    private void setupListeners() {
+        emailLayout.setOnClickListener(view -> {
+            Intent intent = new Intent(Intent.ACTION_SENDTO);
+            intent.setData(Uri.parse("mailto:")); // ensures only email apps open
+            intent.putExtra(Intent.EXTRA_EMAIL, new String[]{"support@yourapp.com"});
+            intent.putExtra(Intent.EXTRA_SUBJECT, "Support Request");
+            intent.putExtra(Intent.EXTRA_TEXT, "Hi Team,\n\nI need help with...");
+
+            try {
+                startActivity(Intent.createChooser(intent, "Send email using"));
+            } catch (Exception e) {
+                Toast.makeText(this, "No email app found", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        reportBugLayout.setOnClickListener(view -> {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse("https://notesnest-app.web.app/bug-report.html"));
+            view.getContext().startActivity(intent);
+        });
+
+
+        feedbackLayout.setOnClickListener(view -> {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse("https://notesnest-app.web.app/feedback.html"));
+            view.getContext().startActivity(intent);
+        });
+
+        userGuideLayout.setOnClickListener(view -> {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse("https://notesnest-app.web.app/index.html"));
+            view.getContext().startActivity(intent);
+        });
+
+        aboutAppLayout.setOnClickListener(view -> {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse("https://notesnest-app.web.app/index.html"));
+            view.getContext().startActivity(intent);
+        });
+
+        privacyPolicyLayout.setOnClickListener(view -> {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse("https://notesnest-app.web.app/privacy.html"));
+            view.getContext().startActivity(intent);
+        });
+
+        termServiceLayout.setOnClickListener(view -> {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse("https://notesnest-app.web.app/terms.html"));
+            view.getContext().startActivity(intent);
+        });
     }
 
     private void initViews() {

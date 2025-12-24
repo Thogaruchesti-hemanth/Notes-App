@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.NotesNest.FirebaseHelper;
 import com.example.NotesNest.R;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -71,6 +72,7 @@ public class ManageAccountActivity extends AppCompatActivity {
                 .setMessage("Are you sure you want to logout?")
                 .setPositiveButton("Yes", (dialog, which) -> {
                     new SharedPreferenceUtil(this).setKeyLogin(false);
+                    new FirebaseHelper().signOut(this);
                     Intent intent = new Intent(this, LoginActivity.class);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(intent);

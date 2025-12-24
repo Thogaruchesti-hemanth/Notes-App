@@ -35,7 +35,7 @@ android {
 
     defaultConfig {
         applicationId "com.hemanth.NotesNest"
-        minSdk 31
+        minSdk 29
         targetSdk 35
 
         versionCode 5

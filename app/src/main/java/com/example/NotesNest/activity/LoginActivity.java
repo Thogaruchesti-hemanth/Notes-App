@@ -132,7 +132,7 @@ public class LoginActivity extends AppCompatActivity {
     private void registerLaunchers() {
         // Google Sign-In launcher already used in your original code -- keep same callback shape
         googleLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-            if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+            if (result.getData() != null) {
                 googleBorder.startLoading();
                 firebaseHelper.handleGoogleSignInResult(result.getData(), this, (userName, email) -> {
                     googleBorder.stopLoading();
