@@ -91,7 +91,7 @@ public class FirebaseHelper {
                 firebaseAuthWithGoogle(account, context, callback);
             }
         } catch (ApiException e) {
-            Toast.makeText(context, "Google sign in failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
         }
     }
 

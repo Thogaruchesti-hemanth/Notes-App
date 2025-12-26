@@ -1,5 +1,6 @@
 package com.example.NotesNest.utils;
 
+import static android.view.View.GONE;
 import static com.example.NotesNest.utils.Constants.DEFAULT_COLORS;
 import static com.example.NotesNest.utils.Constants.professionalGradients;
 import static com.example.NotesNest.utils.ValidationUtils.isValidPassword;
@@ -514,34 +515,61 @@ public class CommonDialogs {
         dialogView.findViewById(R.id.closeButton).setOnClickListener(view -> dialog.dismiss());
     }
 
-    public static void showShareBottomSheet(NoteEntity note, CategoryViewModel categoryViewModel, Context context, View noteView) {
+    public static void showShareBottomSheet(
+            NoteEntity note,
+            CategoryViewModel categoryViewModel,
+            Context context,
+            View noteView
+    ) {
 
         View sheetView = LayoutInflater.from(context)
                 .inflate(R.layout.share_bottom_sheet, null);
 
         BottomSheetDialog sheet = new BottomSheetDialog(context);
         sheet.setContentView(sheetView);
+        SharedPreferenceUtil prefs = new SharedPreferenceUtil(context);
 
         TextView shareText = sheetView.findViewById(R.id.share_text);
-        TextView shareImage = sheetView.findViewById(R.id.share_image);
-        TextView sharePdf = sheetView.findViewById(R.id.share_pdf);
+
+        LinearLayout shareImage = sheetView.findViewById(R.id.layout_share_image);
+        LinearLayout sharePdf = sheetView.findViewById(R.id.layout_share_pdf);
+
+        if (!prefs.isPremium()) {
+            shareImage.setAlpha(0.5f);
+            sharePdf.setAlpha(0.5f);
+        } else {
+            sharePdf.findViewById(R.id.icon_premium_pdf).setVisibility(GONE);
+            shareImage.findViewById(R.id.icon_premium_image).setVisibility(GONE);
+        }
 
         sheet.show();
 
-        // ⭐ SHARE AS TEXT
+        // ⭐ SHARE AS TEXT (FREE)
         shareText.setOnClickListener(v -> {
             sheet.dismiss();
             new NoteShareManager(context).shareAsText(note, categoryViewModel);
         });
 
-        // ⭐ SHARE AS IMAGE
+        // ⭐ SHARE AS IMAGE (PREMIUM)
         shareImage.setOnClickListener(v -> {
+            if (!new SharedPreferenceUtil(context).isPremium()) {
+                sheet.dismiss();
+                showPremiumRequiredDialog(context,"Premium required to share as Image");
+                return;
+            }
+
             sheet.dismiss();
             new NoteShareManager(context).shareAsImage(note, noteView);
         });
 
-        // ⭐ SHARE AS PDF
+        // ⭐ SHARE AS PDF (PREMIUM)
         sharePdf.setOnClickListener(v -> {
+            if (!new SharedPreferenceUtil(context).isPremium()) {
+                sheet.dismiss();
+                showPremiumRequiredDialog(context,"Premium required to share as PDF");
+                return;
+            }
+
             sheet.dismiss();
             new NoteShareManager(context).shareAsPdf(note, noteView);
         });
