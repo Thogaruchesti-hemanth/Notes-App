@@ -40,9 +40,9 @@ public class OnboardingActivity extends AppCompatActivity {
             return;
         }
 
-        onboardingViewPager = findViewById(R.id.vp_onboarding);
-        indicatorsLayout = findViewById(R.id.indicators_layout);
-        buttonNext = findViewById(R.id.buttonNext);
+        onboardingViewPager = findViewById(R.id.vpOnboarding);
+        indicatorsLayout = findViewById(R.id.layoutIndicators);
+        buttonNext = findViewById(R.id.btnNext);
 
         setupOnBoardingItems();
         setupIndicators();

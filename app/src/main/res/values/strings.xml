@@ -16,7 +16,6 @@
     <string name="app_name">NotesNest</string>
     <string name="default_web_client_id">787609574642-ri3pfeqei3mcoboka870jfms2e97grn3.apps.googleusercontent.com</string>
     <string name="text_splash_screen_logo">Splash Screen Logo</string>
-    <string name="text_notes_nest">NotesNest</string>
     <string name="text_nest_your_ideas_let_them_take_flight">Nest your ideas, let them take flight.</string>
     <string name="text_continue_with_google">Continue with Google</string>
     <string name="text_login">Login</string>
@@ -31,8 +30,6 @@
     <string name="text_hey_login_now">Hey,\nLogin Now!</string>
     <string name="text_upload_image">Upload Image</string>
     <string name="text_profile_image">Profile Image</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="edit_reminder_title_placeholder">Reminder Title\n</string>
     <string name="text_edit_reminder">Edit Reminder</string>
     <string name="create_an_account">Create an Account</string>
@@ -113,20 +110,16 @@
     <string name="text_help_and_support_icon">help and support icon</string>
     <string name="text_settings_icon">settings icon</string>
     <string name="text_down_arrow_icon">arrow icon</string>
-    <string name="text_search_settings">Search Settings</string>
     <string name="text_email_support">Email Support</string>
     <string name="text_faqs">FAQs</string>
     <string name="text_get_in_touch">Get in Touch</string>
     <string name="text_resources">Resources</string>
     <string name="text_about">About</string>
-    <string name="text_backup_settings">Backup Settings</string>
     <string name="text_working">Working...</string>
     <string name="text_enter_password">Enter password</string>
-    <string name="text_layout_toggle_icon">layout toggle icon</string>
     <string name="text_premium_access">Premium Access</string>
     <string name="text_help_amp_support"><![CDATA[Help & Support]]></string>
     <string name="text_backup_sync"><![CDATA[Backup & Sync]]></string>
-    <string name="text_general">General</string>
     <string name="text_not_connected_to_drive">Not connected to Drive</string>
     <string name="text_99">99+</string>
     <string name="text_cancel">Cancel</string>
@@ -142,5 +135,23 @@
     <string name="text_premium_required">Premium required</string>
     <string name="text_forward_arrow">Forward arrow</string>
     <string name="text_about_app_icon">about app icon</string>
+    <string name="text_no_note_selected">No note selected</string>
+    <string name="text_tap_to_configure_widget_and_select_a_note">Tap to configure widget and select a note</string>
+    <string name="text_share_as_text">Share as Text</string>
+    <string name="text_premium_required_to_share_as_image">Premium required to share as Image</string>
+    <string name="text_premium_required_to_share_as_pdf">Premium required to share as PDF</string>
+    <string name="text_premium_badge">Premium Badge</string>
+    <string name="text_delete">Delete</string>
+    <string name="text_edit">Edit</string>
+    <string name="text_confirm">Confirm</string>
+    <string name="text_pdf_icon">PDF icon</string>
+    <string name="text_image_icon">image icon</string>
+    <string name="text_select_gradient">Select Gradient</string>
+    <string name="text_appearance">Appearance</string>
+    <string name="text_account">Account</string>
+    <string name="text_app_version">App Version</string>
+    <string name="text_logout">Logout</string>
+    <string name="text_free_user">Free User</string>
+    <string name="text_menu_button">menu button</string>
 
 </resources>

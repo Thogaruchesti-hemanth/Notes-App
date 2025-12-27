@@ -15,7 +15,7 @@
         app:cardElevation="2dp">
 
         <LinearLayout
-            android:id="@+id/appbar_root"
+            android:id="@+id/layoutHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
@@ -25,14 +25,14 @@
             android:paddingBottom="@dimen/padding_12">
 
             <ImageView
-                android:id="@+id/back_arrow_icon"
+                android:id="@+id/ivBackArrow"
                 android:layout_width="@dimen/size_32"
                 android:layout_height="@dimen/size_32"
                 android:contentDescription="@string/text_back_button"
                 android:src="@drawable/ic_back_arrow" />
 
             <TextView
-                android:id="@+id/title_text"
+                android:id="@+id/tvTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/size_32"
@@ -58,7 +58,6 @@
             android:layout_marginTop="@dimen/margin_10"
             android:orientation="vertical">
 
-            <!-- ⭐ GET IN TOUCH -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -82,7 +81,7 @@
                     android:orientation="vertical">
 
                     <include
-                        android:id="@+id/option_email"
+                        android:id="@+id/layoutEmailSupport"
                         layout="@layout/item_support_option"
                         android:tag="email_support" />
 
@@ -92,7 +91,7 @@
                         android:background="@color/grey_200" />
 
                     <include
-                        android:id="@+id/option_report_bug"
+                        android:id="@+id/layoutReportBug"
                         layout="@layout/item_support_option"
                         android:tag="report_bug" />
 
@@ -102,13 +101,12 @@
                         android:background="@color/grey_200" />
 
                     <include
-                        android:id="@+id/option_feedback"
+                        android:id="@+id/layoutFeedback"
                         layout="@layout/item_support_option"
                         android:tag="feedback" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- ⭐ RESOURCES -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -133,7 +131,7 @@
                     android:orientation="vertical">
 
                     <include
-                        android:id="@+id/option_user_guide"
+                        android:id="@+id/layoutUserGuide"
                         layout="@layout/item_support_option"
                         android:tag="user_guide" />
 
@@ -143,7 +141,7 @@
                         android:background="@color/grey_200" />
 
                     <include
-                        android:id="@+id/option_video_tutorials"
+                        android:id="@+id/layoutVideoTutorial"
                         layout="@layout/item_support_option"
                         android:tag="video_tutorials" />
 
@@ -153,7 +151,7 @@
                         android:background="@color/grey_200" />
 
                     <include
-                        android:id="@+id/option_whats_new"
+                        android:id="@+id/layoutWhatsNew"
                         layout="@layout/item_support_option"
                         android:tag="whats_new" />
 
@@ -184,7 +182,7 @@
                     android:orientation="vertical">
 
                     <include
-                        android:id="@+id/option_about_app"
+                        android:id="@+id/layoutAboutApp"
                         layout="@layout/item_support_option"
                         android:tag="about_app" />
 
@@ -194,7 +192,7 @@
                         android:background="@color/grey_200" />
 
                     <include
-                        android:id="@+id/option_privacy_policy"
+                        android:id="@+id/layoutPrivacyPolicy"
                         layout="@layout/item_support_option"
                         android:tag="privacy_policy" />
 
@@ -204,7 +202,7 @@
                         android:background="@color/grey_200" />
 
                     <include
-                        android:id="@+id/option_terms_service"
+                        android:id="@+id/layoutTermsOfService"
                         layout="@layout/item_support_option"
                         android:tag="terms_service" />
                 </LinearLayout>
@@ -215,17 +213,17 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/margin_10"
                 android:text="@string/text_faqs"
-                android:textSize="@dimen/text_16"
                 android:textAllCaps="true"
                 android:textColor="@color/tabSelectedTextColorLight"
+                android:textSize="@dimen/text_16"
                 android:textStyle="bold" />
 
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/margin_10"
                 app:cardCornerRadius="@dimen/radius_12"
                 app:cardElevation="2dp"
-                android:layout_marginBottom="@dimen/margin_10"
                 app:cardUseCompatPadding="true">
 
                 <LinearLayout
@@ -234,16 +232,7 @@
                     android:orientation="vertical">
                     <!-- FAQ Item 1 -->
                     <include
-                        android:id="@+id/faq_container_1"
-                        layout="@layout/item_faq" />
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="@color/grey_200" />
-                    <!-- FAQ Item 2 -->
-                    <include
-                        android:id="@+id/faq_container_2"
+                        android:id="@+id/layoutFAQ1"
                         layout="@layout/item_faq" />
 
                     <View
@@ -251,9 +240,17 @@
                         android:layout_height="1dp"
                         android:background="@color/grey_200" />
 
-                    <!-- FAQ Item 3 -->
                     <include
-                        android:id="@+id/faq_container_3"
+                        android:id="@+id/layoutFAQ2"
+                        layout="@layout/item_faq" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/grey_200" />
+
+                    <include
+                        android:id="@+id/layoutFAQ3"
                         layout="@layout/item_faq" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>

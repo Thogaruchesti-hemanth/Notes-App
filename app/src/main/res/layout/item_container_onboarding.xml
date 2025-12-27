@@ -4,18 +4,18 @@
     android:layout_height="match_parent"
     android:gravity="center"
     android:orientation="vertical"
-    android:padding="24dp">
+    android:padding="@dimen/padding_24">
 
     <ImageView
-        android:id="@+id/iv_onboarding"
-        android:layout_width="250dp"
-        android:layout_height="250dp"
+        android:id="@+id/ivOnboarding"
+        android:layout_width="@dimen/size_250"
+        android:layout_height="@dimen/size_250"
         android:layout_gravity="center"
         android:contentDescription="@string/text_on_boarding_image"
         android:scaleType="fitCenter" />
 
     <TextView
-        android:id="@+id/tv_title"
+        android:id="@+id/tvTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/size_48"
@@ -24,7 +24,7 @@
         android:textStyle="bold" />
 
     <TextView
-        android:id="@+id/tv_description"
+        android:id="@+id/tvDescription"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/size_20"

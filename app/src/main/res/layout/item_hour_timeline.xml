@@ -1,21 +1,18 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
     android:gravity="center"
-    android:padding="6dp">
+    android:orientation="horizontal"
+    android:padding="@dimen/padding_6">
 
-    <!-- Hour Label -->
     <TextView
         android:id="@+id/tvHour"
-        android:layout_width="60dp"
+        android:layout_width="@dimen/size_60"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="09:00"
-        android:textSize="14sp"
+        android:textSize="@dimen/text_14"
         android:textStyle="bold" />
 
-    <!-- 60 minutes -->
     <HorizontalScrollView
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -25,9 +22,9 @@
         <LinearLayout
             android:id="@+id/minuteContainer"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="@dimen/size_40"
             android:gravity="center_vertical"
-            android:orientation="horizontal"/>
+            android:orientation="horizontal" />
     </HorizontalScrollView>
 
 </LinearLayout>

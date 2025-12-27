@@ -72,7 +72,7 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Holder
 
                 int stackOffset = 0;
                 for (Task task : taskList) {
-                    View taskView = inflater.inflate(R.layout.item_task_enhanced, minuteFrame, false);
+                    View taskView = inflater.inflate(R.layout.item_reminder_task, minuteFrame, false);
 
                     TextView tvTime = taskView.findViewById(R.id.tvTime);
                     TextView tvTitle = taskView.findViewById(R.id.tvTitle);

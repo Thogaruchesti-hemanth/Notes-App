@@ -24,9 +24,7 @@ public class NoteConfigAdapter extends RecyclerView.Adapter<NoteConfigAdapter.No
 
     private final List<NoteEntity> noteList;
     private final Context context;
-
     private NoteEntity selectedNote = null;
-
     private NoteWidgetConfigureActivity parentActivity;
 
     public NoteConfigAdapter(List<NoteEntity> list, Context ctx) {
@@ -48,21 +46,18 @@ public class NoteConfigAdapter extends RecyclerView.Adapter<NoteConfigAdapter.No
     @Override
     public void onBindViewHolder(@NonNull NoteViewHolder holder, int position) {
         NoteEntity note = noteList.get(position);
+        String plainContent = note.content == null ? "" : note.content.replaceAll("<[^>]*>", "").trim();
 
-        holder.txtTitle.setText(note.title);
-
-        String plainContent = note.content == null ? "" :
-                note.content.replaceAll("<[^>]*>", "").trim();
-        holder.txtSubtitle.setText(plainContent);
-
-        holder.txtTime.setText(DateTimeUtils.getReadableDate(note.createdAt));
+        holder.tvTitle.setText(note.title);
+        holder.tvMessage.setText(plainContent);
+        holder.tvTime.setText(DateTimeUtils.getReadableDate(note.createdAt));
 
         if (selectedNote != null && selectedNote.id == note.id) {
-            holder.imgCheck.setVisibility(View.VISIBLE);
-            holder.imgCheck.setImageResource(R.drawable.ic_black_tick);
+            holder.ivCheck.setVisibility(View.VISIBLE);
+            holder.ivCheck.setImageResource(R.drawable.ic_black_tick);
         } else {
-            holder.imgCheck.setVisibility(View.VISIBLE);
-            holder.imgCheck.setImageResource(R.drawable.ic_empty_circle);
+            holder.ivCheck.setVisibility(View.VISIBLE);
+            holder.ivCheck.setImageResource(R.drawable.ic_empty_circle);
         }
 
         holder.itemView.setOnClickListener(v -> setSelectedNote(note));
@@ -108,16 +103,18 @@ public class NoteConfigAdapter extends RecyclerView.Adapter<NoteConfigAdapter.No
     }
 
     public static class NoteViewHolder extends RecyclerView.ViewHolder {
-        ImageView imgCheck;
-        TextView txtTitle, txtTime, txtSubtitle;
+        ImageView ivCheck;
+        TextView tvTitle;
+        TextView tvTime;
+        TextView tvMessage;
         ConstraintLayout layout;
 
         public NoteViewHolder(@NonNull View itemView) {
             super(itemView);
-            imgCheck = itemView.findViewById(R.id.imgCheck);
-            txtTitle = itemView.findViewById(R.id.txtTitle);
-            txtTime = itemView.findViewById(R.id.txtTime);
-            txtSubtitle = itemView.findViewById(R.id.txtSubtitle);
+            ivCheck = itemView.findViewById(R.id.ivCheck);
+            tvTitle = itemView.findViewById(R.id.tvTitle);
+            tvTime = itemView.findViewById(R.id.tvTime);
+            tvMessage = itemView.findViewById(R.id.tvMessage);
             layout = itemView.findViewById(R.id.constraintLayout);
         }
     }

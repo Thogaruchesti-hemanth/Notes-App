@@ -3,7 +3,6 @@ package com.example.NotesNest.utils;
 import static android.view.View.GONE;
 import static com.example.NotesNest.utils.Constants.DEFAULT_COLORS;
 import static com.example.NotesNest.utils.Constants.professionalGradients;
-import static com.example.NotesNest.utils.ValidationUtils.isValidPassword;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
@@ -17,21 +16,18 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
+import android.text.Html;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.WebView;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
@@ -51,8 +47,6 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 
 import java.util.List;
 import java.util.Objects;
@@ -84,8 +78,8 @@ public class CommonDialogs {
         builder.setView(dialogView);
 
         ListView listView = dialogView.findViewById(R.id.cardTypeList);
-        ImageView cancelIcon = dialogView.findViewById(R.id.cancel_image_view);
-        TextView titleTextView = dialogView.findViewById(R.id.title_text_view);
+        ImageView cancelIcon = dialogView.findViewById(R.id.ivCancel);
+        TextView titleTextView = dialogView.findViewById(R.id.tvTitle);
         titleTextView.setText(title);
 
         CategoryAdapter adapter = new CategoryAdapter(context, categoryNames);
@@ -210,8 +204,8 @@ public class CommonDialogs {
 
         TextView tvTitle = view.findViewById(R.id.tvTitle);
         TextView tvMessage = view.findViewById(R.id.tvMessage);
-        Button btnPositive = view.findViewById(R.id.btnPositive);
-        Button btnNegative = view.findViewById(R.id.btnNegative);
+        Button btnPositive = view.findViewById(R.id.btnDelete);
+        Button btnNegative = view.findViewById(R.id.btnCancel);
 
         tvTitle.setText(title);
         tvMessage.setText(message);
@@ -243,19 +237,21 @@ public class CommonDialogs {
 
         View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_note_full_content, null);
 
-        TextView dialogTitle = dialogView.findViewById(R.id.dialog_title);
-        WebView dialogContent = dialogView.findViewById(R.id.dialog_content);
-        TextView dialogDate = dialogView.findViewById(R.id.dialog_date);
-        TextView dialogTime = dialogView.findViewById(R.id.dialog_time);
-        TextView dialogCategory = dialogView.findViewById(R.id.dialog_category);
-        CardView dialogCard = dialogView.findViewById(R.id.dialog_card);
-        ImageButton shareButton = dialogView.findViewById(R.id.share_button);
+        TextView dialogTitle = dialogView.findViewById(R.id.tvTitle);
+        TextView dialogDate = dialogView.findViewById(R.id.tvDate);
+        TextView dialogContent = dialogView.findViewById(R.id.tvMessage);
+        TextView dialogTime = dialogView.findViewById(R.id.tvTime);
+        TextView dialogCategory = dialogView.findViewById(R.id.tvCategory);
+        CardView dialogCard = dialogView.findViewById(R.id.dialogNote);
+        ImageButton shareButton = dialogView.findViewById(R.id.btnShare);
+
+        String content = HtmlListConverter.convertHtmlLists(note.content);
 
         // Set data
         dialogTitle.setText(note.title);
-
-        dialogContent.getSettings().setJavaScriptEnabled(false);
-        dialogContent.loadDataWithBaseURL(null, note.content, "text/html", "UTF-8", null);
+        dialogContent.setText(
+                Html.fromHtml(content, Html.FROM_HTML_MODE_LEGACY)
+        );
 
         // Format date/time - callback provided for flexibility
         callback.setDateTime(note.createdAt, dialogDate, dialogTime);
@@ -347,61 +343,6 @@ public class CommonDialogs {
         dialog.show();
     }
 
-    public static void showThemeSelectionDialog(
-            Context context,
-            int selectedTheme,
-            ThemeSelectionListener listener
-    ) {
-
-        View view = LayoutInflater.from(context)
-                .inflate(R.layout.dialog_theme_selector, null);
-
-        RadioGroup radioGroup = view.findViewById(R.id.radioGroup);
-        RadioButton radioLight = view.findViewById(R.id.radioLight);
-        RadioButton radioDark = view.findViewById(R.id.radioDark);
-        RadioButton radioSystem = view.findViewById(R.id.radioSystemDefault);
-        // Pre-select
-        switch (selectedTheme) {
-            case 1:
-                radioLight.setChecked(true);
-                break;
-            case 2:
-                radioDark.setChecked(true);
-                break;
-            default:
-                radioSystem.setChecked(true);
-        }
-
-        AlertDialog dialog = new AlertDialog.Builder(context)
-                .setView(view)
-                .create();
-
-
-        radioGroup.setOnCheckedChangeListener((group, checkedId) -> {
-            int theme;
-            if (checkedId == R.id.radioLight) {
-                theme = 1;
-            } else if (checkedId == R.id.radioDark) {
-                theme = 2;
-            } else {
-                theme = 3;
-            }
-            listener.onThemeSelected(theme);
-            dialog.dismiss();
-        });
-
-        dialog.show();
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
-            lp.copyFrom(dialog.getWindow().getAttributes());
-            lp.width = (int) (context.getResources().getDisplayMetrics().widthPixels * 0.8);
-            lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
-            dialog.getWindow().setAttributes(lp);
-        }
-    }
-
-
     public static void showGradientPicker(@NonNull Context context,
                                           int selectedStartColor,
                                           int selectedEndColor,
@@ -466,10 +407,10 @@ public class CommonDialogs {
     ) {
         View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_reminder_options, null);
 
-        TextView dialogTitle = dialogView.findViewById(R.id.dialog_title);
-        TextView dialogMessage = dialogView.findViewById(R.id.dialog_message);
-        Button btnEdit = dialogView.findViewById(R.id.btn_edit);
-        Button btnDelete = dialogView.findViewById(R.id.btn_delete);
+        TextView dialogTitle = dialogView.findViewById(R.id.tvTitle);
+        TextView dialogMessage = dialogView.findViewById(R.id.tvMessage);
+        Button btnEdit = dialogView.findViewById(R.id.btnEdit);
+        Button btnDelete = dialogView.findViewById(R.id.btnDelete);
         LinearLayout reminderLayout = dialogView.findViewById(R.id.reminderLayout);
 
         dialogTitle.setText(reminder.title);
@@ -512,34 +453,25 @@ public class CommonDialogs {
             dialog.dismiss();
             if (negativeAction != null) negativeAction.run();
         });
-        dialogView.findViewById(R.id.closeButton).setOnClickListener(view -> dialog.dismiss());
+        dialogView.findViewById(R.id.btnClose).setOnClickListener(view -> dialog.dismiss());
     }
 
-    public static void showShareBottomSheet(
-            NoteEntity note,
-            CategoryViewModel categoryViewModel,
-            Context context,
-            View noteView
-    ) {
-
-        View sheetView = LayoutInflater.from(context)
-                .inflate(R.layout.share_bottom_sheet, null);
+    public static void showShareBottomSheet(NoteEntity note, CategoryViewModel categoryViewModel, Context context, View noteView) {
+        View sheetView = LayoutInflater.from(context).inflate(R.layout.bottom_sheet_share_menu, null);
 
         BottomSheetDialog sheet = new BottomSheetDialog(context);
         sheet.setContentView(sheetView);
         SharedPreferenceUtil prefs = new SharedPreferenceUtil(context);
-
-        TextView shareText = sheetView.findViewById(R.id.share_text);
-
-        LinearLayout shareImage = sheetView.findViewById(R.id.layout_share_image);
-        LinearLayout sharePdf = sheetView.findViewById(R.id.layout_share_pdf);
+        TextView shareText = sheetView.findViewById(R.id.tvShareText);
+        LinearLayout shareImage = sheetView.findViewById(R.id.layoutShareImage);
+        LinearLayout sharePdf = sheetView.findViewById(R.id.layoutSharePDF);
 
         if (!prefs.isPremium()) {
             shareImage.setAlpha(0.5f);
             sharePdf.setAlpha(0.5f);
         } else {
-            sharePdf.findViewById(R.id.icon_premium_pdf).setVisibility(GONE);
-            shareImage.findViewById(R.id.icon_premium_image).setVisibility(GONE);
+            sharePdf.findViewById(R.id.ivPremiumPDF).setVisibility(GONE);
+            shareImage.findViewById(R.id.ivPremiumImage).setVisibility(GONE);
         }
 
         sheet.show();
@@ -554,7 +486,7 @@ public class CommonDialogs {
         shareImage.setOnClickListener(v -> {
             if (!new SharedPreferenceUtil(context).isPremium()) {
                 sheet.dismiss();
-                showPremiumRequiredDialog(context,"Premium required to share as Image");
+                showPremiumRequiredDialog(context, context.getString(R.string.text_premium_required_to_share_as_image));
                 return;
             }
 
@@ -566,7 +498,7 @@ public class CommonDialogs {
         sharePdf.setOnClickListener(v -> {
             if (!new SharedPreferenceUtil(context).isPremium()) {
                 sheet.dismiss();
-                showPremiumRequiredDialog(context,"Premium required to share as PDF");
+                showPremiumRequiredDialog(context, context.getString(R.string.text_premium_required_to_share_as_pdf));
                 return;
             }
 
@@ -615,143 +547,15 @@ public class CommonDialogs {
         dialog.show();
     }
 
-    public static void showChangePasswordDialog(
-            @NonNull Activity activity,
-            @NonNull PasswordUpdateCallback callback
-    ) {
-        View view = LayoutInflater.from(activity)
-                .inflate(R.layout.dialog_change_password, null);
-
-        TextInputLayout tilNew = view.findViewById(R.id.tilNewPassword);
-        TextInputLayout tilConfirm = view.findViewById(R.id.tilConfirmPassword);
-        TextInputEditText etNew = view.findViewById(R.id.etNewPassword);
-        TextInputEditText etConfirm = view.findViewById(R.id.etConfirmPassword);
-
-        Button btnCancel = view.findViewById(R.id.btnCancel);
-        Button btnUpdate = view.findViewById(R.id.btnUpdate);
-
-        AlertDialog dialog = new AlertDialog.Builder(activity)
-                .setView(view)
-                .setCancelable(false)
-                .create();
-
-        dialog.show();
-
-        Objects.requireNonNull(dialog.getWindow()).setLayout(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-
-        btnCancel.setOnClickListener(v -> {
-            dialog.dismiss();
-            callback.onCancelled();
-        });
-
-        btnUpdate.setOnClickListener(v -> {
-            String newPass = etNew.getText() != null ? etNew.getText().toString().trim() : "";
-            String confirmPass = etConfirm.getText() != null ? etConfirm.getText().toString().trim() : "";
-
-            tilNew.setError(null);
-            tilConfirm.setError(null);
-
-            if (!isValidPassword(newPass)) {
-                tilNew.setError("Min 8 chars, 1 upper, 1 lower, 1 number & 1 special");
-                return;
-            }
-
-            if (!newPass.equals(confirmPass)) {
-                tilConfirm.setError("Passwords do not match");
-                return;
-            }
-
-            dialog.dismiss();
-            callback.onPasswordValidatedAndConfirmed(newPass);
-        });
-    }
-
-    public static void showReAuthDialog(@NonNull Activity activity, ReAuthCallback callback) {
-        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(activity);
-        builder.setTitle("Change Password");
-
-        // Inflate custom layout
-        View view = LayoutInflater.from(activity).inflate(R.layout.dialog_reauth_password, null);
-        TextInputLayout tilEmail = view.findViewById(R.id.tilEmail);
-        TextInputLayout tilCurrent = view.findViewById(R.id.tilCurrentPassword);
-        TextInputLayout tilNew = view.findViewById(R.id.tilNewPassword);
-
-        TextInputEditText etEmail = view.findViewById(R.id.etEmail);
-        TextInputEditText etCurrent = view.findViewById(R.id.etCurrentPassword);
-        TextInputEditText etNew = view.findViewById(R.id.etNewPassword);
-
-        // Prefill email if user logged in
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user != null && user.getEmail() != null) {
-            etEmail.setText(user.getEmail());
-            etEmail.setEnabled(false); // Optional, user cannot change
-        }
-
-        builder.setView(view);
-
-        builder.setPositiveButton("Update", null); // Override later for validation
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
-
-        androidx.appcompat.app.AlertDialog dialog = builder.create();
-        dialog.setOnShowListener(d -> {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-                String email = etEmail.getText() != null ? etEmail.getText().toString().trim() : "";
-                String currentPass = etCurrent.getText() != null ? etCurrent.getText().toString() : "";
-                String newPass = etNew.getText() != null ? etNew.getText().toString() : "";
-
-                if (email.isEmpty()) {
-                    tilEmail.setError("Email required");
-                    return;
-                } else {
-                    tilEmail.setError(null);
-                }
-
-                if (currentPass.isEmpty()) {
-                    tilCurrent.setError("Current password required");
-                    return;
-                } else {
-                    tilCurrent.setError(null);
-                }
-
-                if (newPass.isEmpty() || newPass.length() < 6) {
-                    tilNew.setError("New password must be at least 6 characters");
-                    return;
-                } else {
-                    tilNew.setError(null);
-                }
-
-                callback.onReAuth(email, currentPass, newPass);
-                dialog.dismiss();
-            });
-        });
-
-        dialog.show();
-    }
-
     public static void showPremiumRequiredDialog(Context context, String message) {
         if (context == null) return;
 
         new androidx.appcompat.app.AlertDialog.Builder(context)
                 .setTitle("Premium Required")
                 .setMessage(message)
-                .setPositiveButton("Go Premium", (dialog, which) -> {
-                     context.startActivity(new Intent(context, PremiumActivity.class));
-                })
+                .setPositiveButton("Go Premium", (dialog, which) -> context.startActivity(new Intent(context, PremiumActivity.class)))
                 .setNegativeButton("Cancel", null)
                 .show();
-    }
-
-
-    // Callback interface
-    public interface ReAuthCallback {
-        void onReAuth(String email, String currentPassword, String newPassword);
-    }
-
-    public interface ThemeSelectionListener {
-        void onThemeSelected(int theme);
     }
 
     public interface NoteDialogCallback {
@@ -788,12 +592,6 @@ public class CommonDialogs {
 
     public interface PasswordCallback {
         void onPasswordEntered(char[] password);
-    }
-
-    public interface PasswordUpdateCallback {
-        void onPasswordValidatedAndConfirmed(String newPassword);
-
-        void onCancelled();
     }
 
 

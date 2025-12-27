@@ -39,4 +39,11 @@ public class Constants {
             {0xFF6A11CB, 0xFF2575FC}  // Purple Ocean
     };
 
+
+
+
+    //For Widgets
+    public static final String ACTION_CREATE_NOTE = "ACTION_CREATE_NOTE_FROM_WIDGET";
+
+
 }

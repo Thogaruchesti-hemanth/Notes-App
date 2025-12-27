@@ -35,7 +35,7 @@ public class NoteShimmerAdapter extends RecyclerView.Adapter<NoteShimmerAdapter.
         return itemCount;
     }
 
-    static class ShimmerViewHolder extends RecyclerView.ViewHolder {
+    public static class ShimmerViewHolder extends RecyclerView.ViewHolder {
         ShimmerFrameLayout shimmerLayout;
 
         ShimmerViewHolder(@NonNull View itemView) {

@@ -50,7 +50,6 @@ public class SettingsActivity extends AppCompatActivity {
     private LinearLayout driveBackupLayout;
     private LinearLayout importDataLayout;
     private LinearLayout manageAccountLayout;
-    private LinearLayout changePasswordAccount;
     private TextView versionTextView;
     private AlertDialog progressDialog;
 
@@ -241,19 +240,6 @@ public class SettingsActivity extends AppCompatActivity {
                 Toast.makeText(this, msg, Toast.LENGTH_LONG).show());
     }
 
-    private void showProgress(String message) {
-        uiHandler.post(() -> {
-            if (progressDialog == null) {
-                View view = LayoutInflater.from(this)
-                        .inflate(R.layout.progress_dialog, null);
-                ((TextView) view.findViewById(R.id.progress_message)).setText(message);
-                progressDialog = new AlertDialog.Builder(this)
-                        .setView(view).setCancelable(false).create();
-                progressDialog.show();
-            }
-        });
-    }
-
     private void hideProgress() {
         uiHandler.post(() -> {
             if (progressDialog != null) {
@@ -279,18 +265,18 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        localBackupLayout = findViewById(R.id.option_local_backup);
-        driveBackupLayout = findViewById(R.id.option_drive_backup);
-        importDataLayout = findViewById(R.id.option_import_data);
-        notesLayout = findViewById(R.id.notes_layout);
-        themeLayout = findViewById(R.id.theme_layout);
-        manageAccountLayout = findViewById(R.id.manage_account_layout);
+        localBackupLayout = findViewById(R.id.layoutLocalBackup);
+        driveBackupLayout = findViewById(R.id.layoutDiveBackup);
+        importDataLayout = findViewById(R.id.layoutImportData);
+        notesLayout = findViewById(R.id.layoutNote);
+        themeLayout = findViewById(R.id.layoutTheme);
+        manageAccountLayout = findViewById(R.id.layoutManageAccount);
         versionTextView = findViewById(R.id.tvVersion);
 
         // TODO need to implement for future versions
-        findViewById(R.id.change_password_layout).setVisibility(View.GONE);
+        findViewById(R.id.layoutChangePassword).setVisibility(View.GONE);
 
-        findViewById(R.id.iv_back_arrow).setOnClickListener(v -> finish());
+        findViewById(R.id.ivBackArrow).setOnClickListener(v -> finish());
 
         try {
             PackageInfo p = getPackageManager().getPackageInfo(getPackageName(), 0);

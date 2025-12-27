@@ -31,13 +31,6 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.ViewHo
         this.listener = listener;
     }
 
-    public CalendarItem getSelectedItem() {
-        if (selectedPosition >= 0 && selectedPosition < list.size()) {
-            return list.get(selectedPosition);
-        }
-        return null;
-    }
-
     public void setSelectedPosition(int pos) {
         int oldPos = selectedPosition;
         selectedPosition = pos;
@@ -49,16 +42,6 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.ViewHo
         int start = list.size();
         list.addAll(next);
         notifyItemRangeInserted(start, next.size());
-    }
-
-    public void addPrevious(List<CalendarItem> previous) {
-        list.addAll(0, previous);
-        notifyItemRangeInserted(0, previous.size());
-
-        // shift selection when prepending
-        if (selectedPosition >= 0) {
-            selectedPosition += previous.size();
-        }
     }
 
     @NonNull
@@ -100,7 +83,7 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.ViewHo
 
         holder.itemView.setOnClickListener(v -> {
             int oldPos = selectedPosition;
-            selectedPosition = holder.getAdapterPosition();
+            selectedPosition = holder.getAbsoluteAdapterPosition();
 
             // Refresh highlight only for affected items
             if (oldPos != -1) notifyItemChanged(oldPos);
@@ -120,16 +103,16 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.ViewHo
         void onDateClick(int position, CalendarItem item);
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView dateText, dayText;
-
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        TextView dateText;
+        TextView dayText;
         LinearLayout dateLayout;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            dateText = itemView.findViewById(R.id.date_text);
-            dayText = itemView.findViewById(R.id.day_text);
-            dateLayout = itemView.findViewById(R.id.dateLayout);
+            dateText = itemView.findViewById(R.id.tvDate);
+            dayText = itemView.findViewById(R.id.tvDay);
+            dateLayout = itemView.findViewById(R.id.layoutDate);
         }
     }
 }

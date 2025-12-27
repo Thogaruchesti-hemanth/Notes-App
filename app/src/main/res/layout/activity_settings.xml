@@ -10,7 +10,7 @@
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:cardElevation="2dp">
+        app:cardElevation="@dimen/elevation_2">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -22,7 +22,7 @@
             android:paddingBottom="@dimen/padding_12">
 
             <ImageView
-                android:id="@+id/iv_back_arrow"
+                android:id="@+id/ivBackArrow"
                 android:layout_width="@dimen/size_32"
                 android:layout_height="@dimen/size_32"
                 android:contentDescription="@string/text_back_button"
@@ -40,7 +40,6 @@
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
-    <!-- 🔽 Scrollable Content -->
     <ScrollView
         android:id="@+id/scrollView"
         android:layout_width="match_parent"
@@ -56,11 +55,10 @@
             android:layout_marginTop="@dimen/margin_10"
             android:orientation="vertical">
 
-            <!-- ⭐ General Settings -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Appearance"
+                android:text="@string/text_appearance"
                 android:textAllCaps="true"
                 android:textColor="@color/tabSelectedTextColorLight"
                 android:textSize="@dimen/text_16"
@@ -78,20 +76,17 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
-                    <!-- Note Font -->
                     <include
-                        android:id="@+id/notes_layout"
+                        android:id="@+id/layoutNote"
                         layout="@layout/item_settings_option" />
 
-                    <!-- Divider (optional but recommended) -->
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:background="@color/grey_200" />
 
-                    <!-- Theme Color -->
                     <include
-                        android:id="@+id/theme_layout"
+                        android:id="@+id/layoutTheme"
                         layout="@layout/item_settings_option" />
 
                 </LinearLayout>
@@ -114,7 +109,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="@dimen/radius_12"
-                app:cardElevation="2dp"
+                app:cardElevation="@dimen/elevation_2"
                 app:cardUseCompatPadding="true">
 
                 <LinearLayout
@@ -123,7 +118,7 @@
                     android:orientation="vertical">
 
                     <include
-                        android:id="@+id/option_local_backup"
+                        android:id="@+id/layoutLocalBackup"
                         layout="@layout/item_support_option"
                         android:tag="local_backup" />
 
@@ -133,7 +128,7 @@
                         android:background="@color/grey_200" />
 
                     <include
-                        android:id="@+id/option_drive_backup"
+                        android:id="@+id/layoutDiveBackup"
                         layout="@layout/item_support_option"
                         android:tag="drive_backup" />
 
@@ -143,7 +138,7 @@
                         android:background="@color/grey_200" />
 
                     <include
-                        android:id="@+id/option_import_data"
+                        android:id="@+id/layoutImportData"
                         layout="@layout/item_support_option"
                         android:tag="import_data" />
 
@@ -156,7 +151,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/margin_20"
                 android:layout_marginBottom="@dimen/margin_10"
-                android:text="Account"
+                android:text="@string/text_account"
                 android:textAllCaps="true"
                 android:textColor="@color/tabSelectedTextColorLight"
                 android:textSize="@dimen/text_16"
@@ -175,7 +170,7 @@
                     android:orientation="vertical">
 
                     <include
-                        android:id="@+id/manage_account_layout"
+                        android:id="@+id/layoutManageAccount"
                         layout="@layout/item_support_option"
                         android:tag="local_backup" />
 
@@ -185,7 +180,7 @@
                         android:background="@color/grey_200" />
 
                     <include
-                        android:id="@+id/change_password_layout"
+                        android:id="@+id/layoutChangePassword"
                         layout="@layout/item_support_option"
                         android:tag="drive_backup" />
 
@@ -198,7 +193,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/margin_20"
                 android:layout_marginBottom="@dimen/margin_10"
-                android:text="About"
+                android:text="@string/text_about"
                 android:textAllCaps="true"
                 android:textColor="@color/tabSelectedTextColorLight"
                 android:textSize="@dimen/text_16"
@@ -230,17 +225,17 @@
                             android:id="@+id/ivIcon"
                             android:layout_width="@dimen/size_24"
                             android:layout_height="@dimen/size_24"
-                            android:src="@drawable/ic_about_app"
                             android:contentDescription="@string/text_about_app_icon"
-                            app:tint="?attr/colorPrimary"/>
+                            android:src="@drawable/ic_about_app"
+                            app:tint="?attr/colorPrimary" />
 
                         <TextView
                             android:id="@+id/tvText"
-                            android:layout_width="wrap_content"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_margin="@dimen/margin_12"
                             android:layout_weight="1"
-                            android:text="App Version"
+                            android:text="@string/text_app_version"
                             android:textColor="?attr/colorPrimary"
                             android:textSize="@dimen/text_16" />
 

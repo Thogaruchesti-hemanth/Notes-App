@@ -9,7 +9,7 @@
     tools:context=".fragments.RemindersFragment">
 
     <TextView
-        android:id="@+id/selected_date_text_view"
+        android:id="@+id/tvSelectedDate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_10"
@@ -21,13 +21,13 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/prompt_text_view"
+        android:id="@+id/tvPrompt"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_6"
         android:textColor="@color/textColor"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/selected_date_text_view" />
+        app:layout_constraintTop_toBottomOf="@+id/tvSelectedDate" />
 
     <Button
         android:id="@+id/createButton"
@@ -47,10 +47,10 @@
         android:layout_marginTop="@dimen/margin_20"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/prompt_text_view" />
+        app:layout_constraintTop_toBottomOf="@+id/tvPrompt" />
 
     <TextView
-        android:id="@+id/timeline_text_view"
+        android:id="@+id/tvTimeLine"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_10"
@@ -69,6 +69,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/timeline_text_view" />
+        app:layout_constraintTop_toBottomOf="@+id/tvTimeLine" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

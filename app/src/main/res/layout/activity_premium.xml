@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSecondary"
-    android:padding="16dp"
+    android:padding="@dimen/padding_16"
     android:scrollbars="none">
 
     <LinearLayout
@@ -29,7 +29,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="@dimen/margin_8"
             android:gravity="center"
             android:paddingHorizontal="@dimen/padding_16"
             android:text="@string/text_get_access_to_exclusive_features_to_supercharge_your_note_taking"
@@ -48,10 +48,10 @@
             android:id="@+id/planMonthly"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="@dimen/margin_20"
             android:background="@drawable/bg_plan_unselected"
             android:orientation="horizontal"
-            android:padding="16dp">
+            android:padding="@dimen/padding_16">
 
             <RadioButton
                 android:id="@+id/radioMonthly"
@@ -64,7 +64,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="@dimen/margin_12"
                 android:text="@string/text_monthly_50_month"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -74,10 +74,10 @@
             android:id="@+id/planYearly"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="@dimen/margin_12"
             android:background="@drawable/bg_plan_selected"
             android:orientation="horizontal"
-            android:padding="16dp">
+            android:padding="@dimen/padding_16">
 
             <RadioButton
                 android:id="@+id/radioYearly"
@@ -91,7 +91,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="@dimen/margin_12"
                 android:text="@string/text_yearly_299_year"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -101,10 +101,10 @@
             android:id="@+id/planLifetime"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="@dimen/margin_12"
             android:background="@drawable/bg_plan_unselected"
             android:orientation="horizontal"
-            android:padding="16dp">
+            android:padding="@dimen/padding_16">
 
             <RadioButton
                 android:id="@+id/radioLifetime"
@@ -117,7 +117,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="@dimen/margin_12"
                 android:text="@string/text_lifetime_499_one_time"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -127,7 +127,7 @@
             android:id="@+id/btnUnlock"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="@dimen/margin_24"
             android:backgroundTint="@color/tabSelectedTextColor"
             android:text="@string/text_unlock_premium"
             android:textColor="@color/black" />
@@ -135,7 +135,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="16dp">
+            android:padding="@dimen/padding_16">
 
             <TextView
                 android:id="@+id/tvTermsAndConditions"

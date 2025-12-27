@@ -76,6 +76,8 @@
 
     <color name="google_blue_light">#E8F0FE</color>
     <color name="google_green_light">#E6F4EA</color>
+    <color name="google_red_light">#FCE8E6</color>
+    <color name="google_orange_light">#FEF3E0</color>
 
 
 

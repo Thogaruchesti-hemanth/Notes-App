@@ -25,92 +25,63 @@ import java.util.Locale;
 
 public class NoteWidgetUpdateService extends Worker {
 
-    public NoteWidgetUpdateService(
-            @NonNull Context context,
-            @NonNull WorkerParameters params) {
+    public NoteWidgetUpdateService(@NonNull Context context, @NonNull WorkerParameters params) {
         super(context, params);
     }
 
     public static void updateAllWidgets(Context context) {
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
 
-        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(
-                new android.content.ComponentName(context, NoteWidget.class));
+        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(new android.content.ComponentName(context, NoteWidget.class));
 
         for (int widgetId : appWidgetIds) {
             updateWidget(context, appWidgetManager, widgetId);
         }
     }
 
-    public static void updateWidget(Context context,
-                                    AppWidgetManager appWidgetManager,
-                                    int widgetId) {
-
+    public static void updateWidget(Context context, AppWidgetManager appWidgetManager, int widgetId) {
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
 
         // 👇 Load note for this widget
         NoteEntity note = getNoteForWidget(context, widgetId);
 
         if (note != null) {
-            views.setTextViewText(R.id.widget_note_title, note.title);
-
-
             String content = HtmlListConverter.convertHtmlLists(note.content);
+            String formattedDate = new SimpleDateFormat("MMM dd", Locale.getDefault()).format(new Date(note.createdAt)); // Format date
 
-
-            views.setTextViewText(R.id.widget_note_content, Html.fromHtml(content, Html.FROM_HTML_MODE_LEGACY));
-
-
-            // Format date
-            String formattedDate =
-                    new SimpleDateFormat("MMM dd", Locale.getDefault())
-                            .format(new Date(note.createdAt));
-            views.setTextViewText(R.id.widget_note_date, formattedDate);
+            views.setTextViewText(R.id.tvTitle, note.title);
+            views.setTextViewText(R.id.tvMessage, Html.fromHtml(content, Html.FROM_HTML_MODE_LEGACY));
+            views.setTextViewText(R.id.tvTime, formattedDate);
 
             // Colors
             try {
                 int bg = android.graphics.Color.parseColor(note.colorHex);
                 views.setInt(R.id.widget_root, "setBackgroundColor", bg);
 
-                double brightness =
-                        android.graphics.Color.red(bg) * 0.299 +
-                                android.graphics.Color.green(bg) * 0.587 +
-                                android.graphics.Color.blue(bg) * 0.114;
+                double brightness = android.graphics.Color.red(bg) * 0.299 + android.graphics.Color.green(bg) * 0.587 + android.graphics.Color.blue(bg) * 0.114;
+                int textColor = (brightness > 186) ? android.graphics.Color.BLACK : android.graphics.Color.WHITE;
 
-                int textColor = (brightness > 186)
-                        ? android.graphics.Color.BLACK
-                        : android.graphics.Color.WHITE;
-
-                views.setTextColor(R.id.widget_note_title, textColor);
-                views.setTextColor(R.id.widget_note_content, textColor);
-                views.setTextColor(R.id.widget_note_date, textColor);
+                views.setTextColor(R.id.tvTitle, textColor);
+                views.setTextColor(R.id.tvMessage, textColor);
+                views.setTextColor(R.id.tvTime, textColor);
 
             } catch (Exception e) {
-                views.setInt(R.id.widget_root, "setBackgroundColor",
-                        android.graphics.Color.WHITE);
+                views.setInt(R.id.widget_root, "setBackgroundColor", android.graphics.Color.WHITE);
             }
 
         } else {
             // No note selected
-            views.setTextViewText(R.id.widget_note_title, "No note selected");
-            views.setTextViewText(R.id.widget_note_content,
-                    "Tap to configure widget and select a note");
-            views.setTextViewText(R.id.widget_note_date, "");
-            views.setInt(R.id.widget_root, "setBackgroundColor",
-                    android.graphics.Color.WHITE);
+            views.setTextViewText(R.id.tvTitle, context.getString(R.string.text_no_note_selected));
+            views.setTextViewText(R.id.tvMessage, context.getString(R.string.text_tap_to_configure_widget_and_select_a_note));
+            views.setTextViewText(R.id.tvTime, "");
+            views.setInt(R.id.widget_root, "setBackgroundColor", android.graphics.Color.WHITE);
         }
 
         // Open main app when widget clicked
         Intent intent = new Intent(context, MainActivity.class);
         intent.putExtra("widget_id", widgetId);
 
-        android.app.PendingIntent pendingIntent =
-                android.app.PendingIntent.getActivity(
-                        context,
-                        widgetId,
-                        intent,
-                        android.app.PendingIntent.FLAG_UPDATE_CURRENT |
-                                android.app.PendingIntent.FLAG_IMMUTABLE);
+        android.app.PendingIntent pendingIntent = android.app.PendingIntent.getActivity(context, widgetId, intent, android.app.PendingIntent.FLAG_UPDATE_CURRENT | android.app.PendingIntent.FLAG_IMMUTABLE);
 
         views.setOnClickPendingIntent(R.id.widget_root, pendingIntent);
 

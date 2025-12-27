@@ -50,10 +50,10 @@ public class NoteWidgetConfigureActivity extends AppCompatActivity {
 
         noteViewModel = new ViewModelProvider(this).get(NoteViewModel.class);
 
-        recyclerView = findViewById(R.id.notes_recycler_view);
-        emptyStateLayout = findViewById(R.id.empty_state_layout);
-        searchEditText = findViewById(R.id.searchEditText);
-        clearSearchBtn = findViewById(R.id.clearSearchBtn);
+        recyclerView = findViewById(R.id.recyclerViewNotes);
+        emptyStateLayout = findViewById(R.id.layoutEmptyState);
+        searchEditText = findViewById(R.id.etSearch);
+        clearSearchBtn = findViewById(R.id.btnClearSearch);
 
         setupSearch();
 
@@ -62,14 +62,14 @@ public class NoteWidgetConfigureActivity extends AppCompatActivity {
         adapter.setParent(this);
         recyclerView.setAdapter(adapter);
 
-        findViewById(R.id.back_button).setOnClickListener(v -> {
+        findViewById(R.id.btnBackArrow).setOnClickListener(v -> {
             Intent cancelValue = new Intent();
             cancelValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
             setResult(RESULT_CANCELED, cancelValue);
             finish();
         });
 
-        findViewById(R.id.done_button).setOnClickListener(v -> {
+        findViewById(R.id.tvDone).setOnClickListener(v -> {
             if (selectedNote != null) {
                 saveNoteSelectionAndFinish();
             } else {

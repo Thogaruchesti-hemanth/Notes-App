@@ -14,7 +14,7 @@
         android:padding="@dimen/padding_20">
 
         <ImageButton
-            android:id="@+id/back_button"
+            android:id="@+id/btnBackArrow"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@null"
@@ -31,7 +31,7 @@
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/done_button"
+            android:id="@+id/tvDone"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/text_done"
@@ -61,7 +61,6 @@
             android:orientation="horizontal"
             android:paddingVertical="@dimen/padding_12">
 
-            <!-- Search Icon -->
             <ImageView
                 android:id="@+id/searchIcon"
                 android:layout_width="@dimen/size_24"
@@ -70,9 +69,8 @@
                 android:contentDescription="@string/text_search_icon"
                 android:src="@drawable/ic_search" />
 
-            <!-- Editable Search Field -->
             <EditText
-                android:id="@+id/searchEditText"
+                android:id="@+id/etSearch"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/margin_8"
@@ -87,11 +85,10 @@
                 android:textColor="@color/black"
                 android:textColorHint="@color/grey_400"
                 android:textCursorDrawable="@drawable/search_cursor"
-                android:textSize="16sp" />
+                android:textSize="@dimen/text_16" />
 
-            <!-- Clear (X) Button -->
             <ImageButton
-                android:id="@+id/clearSearchBtn"
+                android:id="@+id/btnClearSearch"
                 android:layout_width="@dimen/size_24"
                 android:layout_height="@dimen/size_24"
                 android:layout_marginEnd="@dimen/margin_10"
@@ -102,9 +99,8 @@
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
-    <!-- Empty state -->
     <LinearLayout
-        android:id="@+id/empty_state_layout"
+        android:id="@+id/layoutEmptyState"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
@@ -130,9 +126,8 @@
             android:textSize="@dimen/text_14" />
     </LinearLayout>
 
-    <!-- Notes List -->
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/notes_recycler_view"
+        android:id="@+id/recyclerViewNotes"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"

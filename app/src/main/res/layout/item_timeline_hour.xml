@@ -2,8 +2,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
     android:gravity="center_vertical"
+    android:orientation="horizontal"
     android:padding="8dp">
 
     <!-- Hour Label -->
@@ -11,10 +11,10 @@
         android:id="@+id/tvHour"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="00:00"
         android:layout_marginEnd="20dp"
-        android:textSize="14sp"
-        android:textColor="?colorPrimary"/>
+        android:text="00:00"
+        android:textColor="?colorPrimary"
+        android:textSize="14sp" />
 
     <!-- Scrollable minute container -->
     <HorizontalScrollView
@@ -27,7 +27,7 @@
             android:id="@+id/tasksContainer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"/>
+            android:gravity="center_vertical"
+            android:orientation="horizontal" />
     </HorizontalScrollView>
 </LinearLayout>

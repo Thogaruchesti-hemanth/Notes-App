@@ -6,7 +6,7 @@
     android:padding="@dimen/padding_20">
 
     <LinearLayout
-        android:id="@+id/notes_layout"
+        android:id="@+id/layoutNotes"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/nav_item_selector"
@@ -14,7 +14,7 @@
         android:padding="@dimen/padding_12">
 
         <ImageView
-            android:id="@+id/iv_notes"
+            android:id="@+id/ivNotes"
             android:layout_width="@dimen/padding_20"
             android:layout_height="@dimen/padding_20"
             android:contentDescription="@string/text_notes_icon"
@@ -23,14 +23,14 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingStart="@dimen/padding_16"
+            android:paddingHorizontal="@dimen/padding_16"
             android:text="@string/text_all_notes"
             android:textColor="?attr/colorSecondary"
             android:textSize="@dimen/text_18" />
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/reminders_layout"
+        android:id="@+id/layoutReminders"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/nav_item_selector"
@@ -38,16 +38,16 @@
         android:padding="@dimen/padding_12">
 
         <ImageView
-            android:id="@+id/iv_reminders"
+            android:id="@+id/ivReminders"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_reminders_black"
-            android:contentDescription="@string/text_reminder_icon"/>
+            android:contentDescription="@string/text_reminder_icon"
+            android:src="@drawable/ic_reminders_black" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingStart="@dimen/padding_16"
+            android:paddingHorizontal="@dimen/padding_16"
             android:text="@string/text_reminders"
             android:textColor="?attr/colorSecondary"
             android:textSize="@dimen/text_18" />

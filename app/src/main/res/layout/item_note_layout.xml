@@ -1,6 +1,6 @@
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/main_layout"
+    android:id="@+id/layoutNoteItem"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginEnd="@dimen/margin_10"
@@ -10,12 +10,12 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="@dimen/padding_10">
 
         <TextView
-            android:id="@+id/note_title"
+            android:id="@+id/tvNoteTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:ellipsize="end"
@@ -24,33 +24,27 @@
             android:textSize="@dimen/text_22"
             android:textStyle="bold" />
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/content_layout"
+        <TextView
+            android:id="@+id/tvNoteMessage"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:maxHeight="200dp">
-
-            <WebView
-                android:id="@+id/note_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="8"
-                android:scrollbars="none"
-                android:textColor="@color/black"
-                android:textSize="@dimen/text_16"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxHeight="@dimen/size_200"
+            android:maxLines="8"
+            android:textColor="@color/black"
+            android:textSize="@dimen/text_16"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
-            android:id="@+id/read_more_view"
+            android:id="@+id/ivReadMoreView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingStart="@dimen/padding_8"
-            android:src="@drawable/ic_read_more" />
+            android:src="@drawable/ic_read_more"
+            android:visibility="gone" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -58,26 +52,22 @@
             android:gravity="end">
 
             <TextView
-                android:id="@+id/note_date"
+                android:id="@+id/tvNoteDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLength="6"
-                android:maxLines="1"
                 android:textColor="@color/black"
                 android:textSize="@dimen/text_10"
                 android:textStyle="italic" />
 
             <TextView
-                android:id="@+id/note_time"
+                android:id="@+id/tvNoteTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/margin_6"
-                android:ellipsize="end"
-                android:maxLines="1"
                 android:textColor="@color/black"
                 android:textSize="@dimen/text_10"
                 android:textStyle="italic" />
         </LinearLayout>
+
     </LinearLayout>
 </androidx.cardview.widget.CardView>

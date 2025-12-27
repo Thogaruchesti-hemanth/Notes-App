@@ -5,9 +5,8 @@
     android:layout_height="wrap_content"
     android:background="@drawable/bg_dialog_rounded">
 
-    <!-- Drag Handle -->
     <View
-        android:id="@+id/drag_handle"
+        android:id="@+id/dragHandleView"
         android:layout_width="@dimen/size_50"
         android:layout_height="@dimen/size_5"
         android:layout_marginTop="@dimen/margin_10"
@@ -16,9 +15,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Header -->
     <LinearLayout
-        android:id="@+id/header_layout"
+        android:id="@+id/layoutHeader"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_10"
@@ -26,7 +24,7 @@
         android:paddingHorizontal="@dimen/padding_10"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/drag_handle">
+        app:layout_constraintTop_toBottomOf="@id/dragHandleView">
 
         <TextView
             android:layout_width="0dp"
@@ -38,7 +36,7 @@
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/done_button"
+            android:id="@+id/tvDone"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="@dimen/margin_10"
@@ -48,33 +46,31 @@
             android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- Categories List (Scrollable) -->
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/categories_recycler_view"
+        android:id="@+id/recyclerViewCategories"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
+        android:layout_height="@dimen/size_300"
         android:layout_margin="@dimen/margin_10"
         android:scrollbars="vertical"
-        app:layout_constraintBottom_toTopOf="@id/add_card"
+        app:layout_constraintBottom_toTopOf="@id/addCategoryView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/header_layout" />
+        app:layout_constraintTop_toBottomOf="@id/layoutHeader" />
 
-    <!-- Add Category (Pinned Bottom) -->
     <androidx.cardview.widget.CardView
-        android:id="@+id/add_card"
+        android:id="@+id/addCategoryView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="@dimen/margin_10"
         android:layout_marginBottom="@dimen/margin_16"
         app:cardCornerRadius="@dimen/radius_24"
-        app:cardElevation="4dp"
+        app:cardElevation="@dimen/elevation_4"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
         <LinearLayout
-            android:id="@+id/add_new_categories_layout"
+            android:id="@+id/layoutAddCategory"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/btn_rounded"

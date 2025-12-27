@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/cardView"
-    android:layout_width="300dp"
-    android:layout_height="100dp"
-    app:cardCornerRadius="50dp"
-    app:cardElevation="4dp"
+    android:layout_width="@dimen/size_300"
+    android:layout_height="@dimen/size_100"
+    app:cardCornerRadius="@dimen/radius_50"
+    app:cardElevation="@dimen/elevation_4"
     app:cardUseCompatPadding="true">
 
     <LinearLayout
@@ -14,10 +13,8 @@
         android:layout_height="match_parent"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingStart="10dp"
-        android:paddingEnd="10dp">
+        android:paddingHorizontal="@dimen/padding_10">
 
-        <!-- Time with icon -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -25,33 +22,30 @@
             android:gravity="center_vertical">
 
             <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
+                android:layout_width="@dimen/size_16"
+                android:layout_height="@dimen/size_16"
+                android:contentDescription="@string/text_reminder_icon"
                 android:src="@drawable/ic_reminders"/>
 
             <TextView
                 android:id="@+id/tvTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="10:00 AM"
-                android:textSize="12sp"
+                android:layout_marginStart="@dimen/margin_8"
+                android:textSize="@dimen/text_12"
                 android:textStyle="bold"
-                android:textColor="@android:color/white" />
+                android:textColor="@color/white" />
         </LinearLayout>
 
-        <!-- Vertical Divider -->
         <View
-            android:layout_width="1dp"
-            android:layout_height="24dp"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp"
+            android:layout_width="@dimen/size_1"
+            android:layout_height="@dimen/size_24"
+            android:layout_marginHorizontal="@dimen/margin_10"
             android:background="@android:color/white"
             android:alpha="0.3" />
 
-        <!-- Title with type indicator -->
         <LinearLayout
-            android:layout_width="130dp"
+            android:layout_width="@dimen/size_130"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
@@ -59,10 +53,9 @@
                 android:id="@+id/tvTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Meeting with team about project updates"
-                android:textSize="14sp"
+                android:textSize="@dimen/text_14"
                 android:textStyle="bold"
-                android:textColor="@android:color/white"
+                android:textColor="@color/white"
                 android:maxLines="1"
                 android:ellipsize="end" />
 
@@ -70,24 +63,22 @@
                 android:id="@+id/tvType"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="Reminder"
-                android:textSize="10sp"
-                android:textColor="@android:color/white"
+                android:layout_marginTop="@dimen/margin_2"
+                android:textSize="@dimen/text_10"
+                android:textColor="@color/white"
                 android:alpha="0.8"
                 android:background="@drawable/bg_transparent_white_12dp"
-                android:paddingHorizontal="8dp"
-                android:paddingVertical="2dp" />
+                android:paddingHorizontal="@dimen/padding_8"
+                android:paddingVertical="@dimen/padding_2" />
 
         </LinearLayout>
 
-        <!-- Chevron icon -->
         <ImageView
-            android:layout_width="16dp"
-            android:layout_height="16dp"
-            android:layout_marginStart="8dp"
+            android:layout_width="@dimen/size_16"
+            android:layout_height="@dimen/size_16"
+            android:layout_marginStart="@dimen/margin_8"
+            android:contentDescription="@string/text_forward_arrow"
             android:src="@drawable/ic_chevron_right"/>
-
     </LinearLayout>
 
 </androidx.cardview.widget.CardView>

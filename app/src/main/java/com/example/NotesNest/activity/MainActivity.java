@@ -11,7 +11,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.NotesNest.R;
 import com.example.NotesNest.databases.AppDatabase;
 import com.example.NotesNest.utils.AnalyticsHelper;
-import com.example.NotesNest.utils.CommonDialogs;
 import com.example.NotesNest.utils.DrawerHelper;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
 import com.google.firebase.FirebaseApp;
@@ -38,22 +37,14 @@ public class MainActivity extends AppCompatActivity {
         AppDatabase.getInstance(this);
         pref = new SharedPreferenceUtil(this);
 
-        initViews();
         initGreeting();
     }
 
-    private void initViews() {
-        greetingText = findViewById(R.id.name_text_view);
-
-    }
-
     private void initGreeting() {
+        greetingText = findViewById(R.id.tvName);
         String[] greetings = {"Hi", "Hello", "Hey", "Welcome"};
         String greeting = greetings[new Random().nextInt(greetings.length)];
         greetingText.setText(String.format("%s, %s", greeting, pref.getUserName()));
-        greetingText.setOnClickListener(view -> CommonDialogs.showThemeSelectionDialog(peekAvailableContext(), 1, theme -> {
-
-        }));
     }
 
     @Override

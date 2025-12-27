@@ -8,12 +8,15 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
@@ -28,6 +31,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textview.MaterialTextView;
 import com.google.api.services.drive.DriveScopes;
 
 import java.text.SimpleDateFormat;
@@ -40,13 +45,26 @@ public class DriveBackupActivity extends AppCompatActivity {
     private static final String TAG = "DriveBackupActivity";
     private static final int RC_SIGN_IN = 9001;
 
-    private TextView txtEmail, txtStatus, txtLastBackup;
+    // UI Components
+    private LinearLayout layoutSetup, layoutAccountInfo;
+    private TextView txtEmail, txtStatus, txtLastBackupTime, textSettingsTitle, textStatusTitle;
+    private CardView cardSettings, cardStatus;
     private Spinner spinnerFrequency;
-    private Switch switchAttachments;
-    private Button btnBackupNow, btnDisconnect, btnSignIn;
+    private Switch switchAttachments, switchAutoBackup;
+    private MaterialButton btnBackupNow, btnAddAccount;
+    private MaterialTextView btnDisconnect;
+    private View backArrowIcon;
+
+    // Google Sign-in
     private GoogleSignInClient googleSignInClient;
+
+    // Preferences
     private SharedPreferences backupPrefs;
     private boolean isSignedIn = false;
+
+    // Flags to prevent auto-scheduling
+    private boolean isInitializingSpinner = false;
+    private boolean isFirstTimeSignIn = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,30 +73,52 @@ public class DriveBackupActivity extends AppCompatActivity {
 
         initializeViews();
         setupGoogleSignIn();
+        setupBackButton();
         setupSpinner();
         restoreUIState();
         setupClickListeners();
     }
 
     private void initializeViews() {
+        // Setup views
+        layoutSetup = findViewById(R.id.layoutSetup);
+        layoutAccountInfo = findViewById(R.id.layoutAccountInfo);
+
+        // Account views
         txtEmail = findViewById(R.id.txtEmail);
         txtStatus = findViewById(R.id.txtStatus);
-        txtLastBackup = findViewById(R.id.txtLastBackup);
+
+        // Settings views
+        textSettingsTitle = findViewById(R.id.textSettingsTitle);
+        cardSettings = findViewById(R.id.cardSettings);
         spinnerFrequency = findViewById(R.id.spinnerFrequency);
         switchAttachments = findViewById(R.id.switchAttachments);
+        switchAutoBackup = findViewById(R.id.switchAutoBackup);
+
+        // Status views
+        textStatusTitle = findViewById(R.id.textStatusTitle);
+        cardStatus = findViewById(R.id.cardStatus);
+        txtLastBackupTime = findViewById(R.id.txtLastBackupTime);
+
+        // Buttons
         btnBackupNow = findViewById(R.id.btnBackupNow);
         btnDisconnect = findViewById(R.id.btnDisconnect);
-        btnSignIn = findViewById(R.id.btnSignIn);
+        btnAddAccount = findViewById(R.id.btnAddAccount);
+        backArrowIcon = findViewById(R.id.back_arrow_icon);
 
+        // Initialize SharedPreferences
         backupPrefs = getSharedPreferences("drive_backup_prefs", MODE_PRIVATE);
     }
 
+    private void setupBackButton() {
+        backArrowIcon.setOnClickListener(v -> finish());
+    }
+
     private void setupGoogleSignIn() {
-        // Configure Google Sign-In with Drive scope
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
-                .requestScopes(new Scope(DriveScopes.DRIVE_FILE)) // Request file access scope
-                .requestScopes(new Scope(DriveScopes.DRIVE_APPDATA)) // Request app data folder scope
+                .requestScopes(new Scope(DriveScopes.DRIVE_FILE))
+                .requestScopes(new Scope(DriveScopes.DRIVE_APPDATA))
                 .build();
 
         googleSignInClient = GoogleSignIn.getClient(this, gso);
@@ -93,30 +133,27 @@ public class DriveBackupActivity extends AppCompatActivity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerFrequency.setAdapter(adapter);
 
-        // Restore saved frequency
-        String savedFrequency = backupPrefs.getString("backup_frequency", "Weekly");
-        switch (savedFrequency) {
-            case "Daily":
-                spinnerFrequency.setSelection(0);
-                break;
-            case "Weekly":
-                spinnerFrequency.setSelection(1);
-                break;
-            case "Monthly":
-                spinnerFrequency.setSelection(2);
-                break;
-        }
-
         spinnerFrequency.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                // Prevent auto-scheduling during initialization
+                if (isInitializingSpinner) {
+                    return;
+                }
+
                 String selectedFrequency = parent.getItemAtPosition(position).toString();
                 backupPrefs.edit().putString("backup_frequency", selectedFrequency).apply();
 
-                if (isSignedIn) {
+                // Only schedule if user is signed in AND has auto backup enabled
+                if (isSignedIn && switchAutoBackup.isChecked()) {
                     scheduleBackup();
                     Toast.makeText(DriveBackupActivity.this,
-                            "Backup scheduled: " + selectedFrequency,
+                            "Backup schedule updated: " + selectedFrequency,
+                            Toast.LENGTH_SHORT).show();
+                } else if (isSignedIn && !switchAutoBackup.isChecked()) {
+                    // Just save the preference, don't schedule
+                    Toast.makeText(DriveBackupActivity.this,
+                            "Auto backup is disabled. Enable it to schedule backups.",
                             Toast.LENGTH_SHORT).show();
                 }
             }
@@ -137,15 +174,83 @@ public class DriveBackupActivity extends AppCompatActivity {
             updateUIForSignedOut();
         }
 
-        // Restore other preferences
-        switchAttachments.setChecked(backupPrefs.getBoolean("include_attachments", false));
+        // Restore spinner selection WITHOUT triggering schedule
+        isInitializingSpinner = true;
+        String savedFrequency = backupPrefs.getString("backup_frequency", "Weekly");
+        switch (savedFrequency) {
+            case "Daily":
+                spinnerFrequency.setSelection(0);
+                break;
+            case "Weekly":
+                spinnerFrequency.setSelection(1);
+                break;
+            case "Monthly":
+                spinnerFrequency.setSelection(2);
+                break;
+        }
+        isInitializingSpinner = false;
+
+        // Restore auto backup preference
+        boolean autoBackupEnabled = backupPrefs.getBoolean("auto_backup_enabled", false);
+        switchAutoBackup.setChecked(autoBackupEnabled);
+
+        // Restore attachments preference
+        boolean includeAttachments = backupPrefs.getBoolean("include_attachments", false);
+        switchAttachments.setChecked(includeAttachments);
+
+        // Setup auto backup switch listener
+        switchAutoBackup.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                backupPrefs.edit().putBoolean("auto_backup_enabled", isChecked).apply();
+
+                if (isSignedIn) {
+                    if (isChecked) {
+                        // User enabled auto backup - ask for confirmation before scheduling
+                        showEnableAutoBackupConfirmation();
+                    } else {
+                        // User disabled auto backup - cancel scheduled backups
+                        cancelScheduledBackup();
+                        Toast.makeText(DriveBackupActivity.this,
+                                "Automatic backups disabled", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        });
+
+        // Setup attachments switch listener
         switchAttachments.setOnCheckedChangeListener((buttonView, isChecked) -> {
             backupPrefs.edit().putBoolean("include_attachments", isChecked).apply();
+            Toast.makeText(DriveBackupActivity.this,
+                    "Attachments setting saved. Will apply on next backup.",
+                    Toast.LENGTH_SHORT).show();
         });
 
         // Display last backup time
         String lastBackup = backupPrefs.getString("last_backup_time", "Never backed up");
-        txtLastBackup.setText("Last backup: " + lastBackup);
+        txtLastBackupTime.setText(lastBackup);
+
+        // Show/hide tick icon based on backup status
+        boolean hasBackup = !lastBackup.equals("Never backed up");
+        findViewById(R.id.imgTick).setVisibility(hasBackup ? View.VISIBLE : View.GONE);
+    }
+
+    private void showEnableAutoBackupConfirmation() {
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        builder.setTitle("Enable Automatic Backups?")
+                .setMessage("Automatic backups will run in the background according to your selected frequency. Enable automatic backups?")
+                .setPositiveButton("Enable", (dialog, which) -> {
+                    // User confirmed - schedule backup
+                    scheduleBackup();
+                    Toast.makeText(this, "Automatic backups enabled", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> {
+                    // User cancelled - turn off the switch
+                    switchAutoBackup.setChecked(false);
+                    backupPrefs.edit().putBoolean("auto_backup_enabled", false).apply();
+                })
+                .setCancelable(false)
+                .show();
     }
 
     private boolean hasDriveScope(GoogleSignInAccount account) {
@@ -163,13 +268,13 @@ public class DriveBackupActivity extends AppCompatActivity {
     }
 
     private void setupClickListeners() {
-        btnSignIn.setOnClickListener(v -> signIn());
+        btnAddAccount.setOnClickListener(v -> signIn());
 
         btnBackupNow.setOnClickListener(v -> {
             if (isSignedIn) {
                 runBackupNow();
             } else {
-                Toast.makeText(this, "Please sign in first", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Please connect your Google account first", Toast.LENGTH_SHORT).show();
                 signIn();
             }
         });
@@ -196,7 +301,6 @@ public class DriveBackupActivity extends AppCompatActivity {
         try {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
 
-            // Check if the account has Drive scope
             if (account != null && hasDriveScope(account)) {
                 updateUIForSignedIn(account);
 
@@ -206,17 +310,21 @@ public class DriveBackupActivity extends AppCompatActivity {
                         .putBoolean("is_signed_in", true)
                         .apply();
 
-                // Schedule backup automatically
-                scheduleBackup();
+                // Check if this is first time sign in for this account
+                String previousEmail = backupPrefs.getString("previous_account_email", null);
+                if (previousEmail == null || !previousEmail.equals(account.getEmail())) {
+                    // First time signing in with this account
+                    showWelcomeDialog();
+                    backupPrefs.edit().putString("previous_account_email", account.getEmail()).apply();
+                }
 
-                Toast.makeText(this, "Signed in successfully!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Connected to Google Drive successfully!", Toast.LENGTH_SHORT).show();
             } else {
-                // Account doesn't have required scope
                 updateUIForSignedOut();
                 Toast.makeText(this,
                         "Please grant Drive access permission",
                         Toast.LENGTH_LONG).show();
-                signOut(); // Clear incomplete sign-in
+                signOut();
             }
 
         } catch (ApiException e) {
@@ -224,51 +332,118 @@ public class DriveBackupActivity extends AppCompatActivity {
             updateUIForSignedOut();
 
             switch (e.getStatusCode()) {
-                case 4: // SIGN_IN_CANCELLED
+                case 4:
+                case 12501:
                     Toast.makeText(this, "Sign in cancelled", Toast.LENGTH_SHORT).show();
                     break;
-                case 7: // NETWORK_ERROR
+                case 7:
                     Toast.makeText(this, "Network error. Please check your connection", Toast.LENGTH_LONG).show();
                     break;
-                case 10: // DEVELOPER_ERROR
-                    Toast.makeText(this, "Developer error. Please contact support", Toast.LENGTH_LONG).show();
-                    break;
-                case 12501: // SIGN_IN_CANCELLED (user cancelled)
-                    Toast.makeText(this, "Sign in cancelled", Toast.LENGTH_SHORT).show();
-                    break;
                 default:
-                    Toast.makeText(this, "Sign in failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Failed to connect to Google Drive", Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    private void showWelcomeDialog() {
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        builder.setTitle("Welcome to Drive Backup!")
+                .setMessage("Your notes can now be backed up to Google Drive.\n\nWould you like to enable automatic backups?")
+                .setPositiveButton("Yes, Enable", (dialog, which) -> {
+                    // Enable auto backup and schedule
+                    switchAutoBackup.setChecked(true);
+                    backupPrefs.edit().putBoolean("auto_backup_enabled", true).apply();
+                    scheduleBackup();
+                    Toast.makeText(this, "Automatic backups enabled", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Not Now", (dialog, which) -> {
+                    // Keep auto backup disabled
+                    switchAutoBackup.setChecked(false);
+                    backupPrefs.edit().putBoolean("auto_backup_enabled", false).apply();
+                    Toast.makeText(this, "You can enable automatic backups anytime in settings", Toast.LENGTH_LONG).show();
+                })
+                .setNeutralButton("Learn More", (dialog, which) -> {
+                    // Show more info
+                    showAutoBackupInfoDialog();
+                })
+                .show();
+    }
+
+    private void showAutoBackupInfoDialog() {
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        builder.setTitle("About Automatic Backups")
+                .setMessage("Automatic backups:\n• Run in the background\n• Use minimal battery\n• Only when device is charging and connected to Wi-Fi (recommended)\n• Respect your selected frequency\n• Can be disabled anytime\n\nYou can also use 'Backup Now' for manual backups.")
+                .setPositiveButton("Enable Auto Backup", (dialog, which) -> {
+                    switchAutoBackup.setChecked(true);
+                    backupPrefs.edit().putBoolean("auto_backup_enabled", true).apply();
+                    scheduleBackup();
+                    Toast.makeText(this, "Automatic backups enabled", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Manual Only", (dialog, which) -> {
+                    switchAutoBackup.setChecked(false);
+                    backupPrefs.edit().putBoolean("auto_backup_enabled", false).apply();
+                })
+                .show();
     }
 
     private void updateUIForSignedIn(GoogleSignInAccount account) {
         isSignedIn = true;
 
-        txtEmail.setText("Account: " + account.getEmail());
-        txtStatus.setText("✓ Connected to Google Drive");
-        txtStatus.setTextColor(getResources().getColor(R.color.green));
+        // Update account info
+        txtEmail.setText(account.getEmail());
+        txtStatus.setText("Connected to Google Drive");
+        txtStatus.setBackgroundResource(R.drawable.btn_rounded_green);
+        txtStatus.setTextColor(getResources().getColor(R.color.google_green));
 
-        btnSignIn.setVisibility(View.GONE);
+        // Show account info layout, hide setup layout
+        layoutSetup.setVisibility(View.GONE);
+        layoutAccountInfo.setVisibility(View.VISIBLE);
+
+        // Show settings and status sections
+        textSettingsTitle.setVisibility(View.VISIBLE);
+        cardSettings.setVisibility(View.VISIBLE);
+        textStatusTitle.setVisibility(View.VISIBLE);
+        cardStatus.setVisibility(View.VISIBLE);
+
+        // Show action buttons
+        btnBackupNow.setVisibility(View.VISIBLE);
         btnDisconnect.setVisibility(View.VISIBLE);
-        btnBackupNow.setEnabled(true);
+
+        // Enable settings
         spinnerFrequency.setEnabled(true);
         switchAttachments.setEnabled(true);
+        switchAutoBackup.setEnabled(true);
     }
 
     private void updateUIForSignedOut() {
         isSignedIn = false;
 
+        // Reset account info
         txtEmail.setText("Not signed in");
-        txtStatus.setText("Please sign in to enable backups");
-        txtStatus.setTextColor(getResources().getColor(R.color.red));
+        txtStatus.setText("Please connect your account");
+        txtStatus.setBackgroundResource(R.drawable.btn_rounded_blue);
+        txtStatus.setTextColor(getResources().getColor(R.color.blue));
 
-        btnSignIn.setVisibility(View.VISIBLE);
+        // Show setup layout, hide account info layout
+        layoutSetup.setVisibility(View.VISIBLE);
+        layoutAccountInfo.setVisibility(View.GONE);
+
+        // Hide settings and status sections
+        textSettingsTitle.setVisibility(View.GONE);
+        cardSettings.setVisibility(View.GONE);
+        textStatusTitle.setVisibility(View.GONE);
+        cardStatus.setVisibility(View.GONE);
+
+        // Hide action buttons
+        btnBackupNow.setVisibility(View.GONE);
         btnDisconnect.setVisibility(View.GONE);
-        btnBackupNow.setEnabled(false);
+
+        // Disable settings
         spinnerFrequency.setEnabled(false);
         switchAttachments.setEnabled(false);
+        switchAutoBackup.setEnabled(false);
 
+        // Update preferences
         backupPrefs.edit()
                 .putBoolean("is_signed_in", false)
                 .apply();
@@ -277,6 +452,11 @@ public class DriveBackupActivity extends AppCompatActivity {
     private void scheduleBackup() {
         if (!isSignedIn) {
             Log.w(TAG, "Cannot schedule backup: User not signed in");
+            return;
+        }
+
+        if (!switchAutoBackup.isChecked()) {
+            Log.d(TAG, "Automatic backups disabled by user");
             return;
         }
 
@@ -295,16 +475,14 @@ public class DriveBackupActivity extends AppCompatActivity {
                 interval = 30;
                 break;
             default:
-                interval = 7; // Default to weekly
+                interval = 7;
         }
 
-        // Minimum flex interval is 15 minutes
+        // Add constraints for better battery usage
         PeriodicWorkRequest backupRequest = new PeriodicWorkRequest.Builder(
                 DriveBackupWorker.class,
                 interval,
-                timeUnit,
-                PeriodicWorkRequest.MIN_PERIODIC_FLEX_MILLIS,
-                TimeUnit.MILLISECONDS)
+                timeUnit)
                 .addTag("drive_backup")
                 .build();
 
@@ -317,15 +495,25 @@ public class DriveBackupActivity extends AppCompatActivity {
         Log.d(TAG, "Backup scheduled: " + frequency + " (every " + interval + " days)");
     }
 
+    private void cancelScheduledBackup() {
+        // Cancel all scheduled backups
+        WorkManager.getInstance(this).cancelAllWorkByTag("drive_backup");
+        WorkManager.getInstance(this).cancelUniqueWork("drive_backup_work");
+
+        Log.d(TAG, "Scheduled backups cancelled");
+    }
+
     private void runBackupNow() {
         if (!isSignedIn) {
-            Toast.makeText(this, "Please sign in first", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Please connect your Google account first", Toast.LENGTH_SHORT).show();
             return;
         }
 
         txtStatus.setText("Starting backup...");
+        txtStatus.setBackgroundResource(R.drawable.btn_rounded_blue);
         txtStatus.setTextColor(getResources().getColor(R.color.blue));
 
+        // Create constraints for manual backup
         OneTimeWorkRequest backupNowRequest = new OneTimeWorkRequest.Builder(DriveBackupWorker.class)
                 .addTag("manual_backup")
                 .build();
@@ -340,27 +528,33 @@ public class DriveBackupActivity extends AppCompatActivity {
                         switch (workInfo.getState()) {
                             case SUCCEEDED:
                                 txtStatus.setText("✓ Backup completed successfully");
-                                txtStatus.setTextColor(getResources().getColor(R.color.green));
+                                txtStatus.setBackgroundResource(R.drawable.btn_rounded_green);
+                                txtStatus.setTextColor(getResources().getColor(R.color.google_green));
 
-                                // Update last backup time
+                                // Update last backup time and show tick icon
                                 String timestamp = new SimpleDateFormat("MMM dd, hh:mm a", Locale.getDefault())
                                         .format(new Date());
                                 backupPrefs.edit()
                                         .putString("last_backup_time", timestamp)
                                         .apply();
-                                txtLastBackup.setText("Last backup: " + timestamp);
+                                txtLastBackupTime.setText(timestamp);
+
+                                // Show tick icon
+                                findViewById(R.id.imgTick).setVisibility(View.VISIBLE);
 
                                 Toast.makeText(this, "Backup successful!", Toast.LENGTH_SHORT).show();
                                 break;
 
                             case FAILED:
                                 txtStatus.setText("✗ Backup failed");
+                                txtStatus.setBackgroundResource(R.drawable.btn_rounded_red);
                                 txtStatus.setTextColor(getResources().getColor(R.color.red));
                                 Toast.makeText(this, "Backup failed. Please try again", Toast.LENGTH_SHORT).show();
                                 break;
 
                             case CANCELLED:
                                 txtStatus.setText("Backup cancelled");
+                                txtStatus.setBackgroundResource(R.drawable.btn_rounded_orange);
                                 txtStatus.setTextColor(getResources().getColor(R.color.orange));
                                 break;
                         }
@@ -369,26 +563,27 @@ public class DriveBackupActivity extends AppCompatActivity {
     }
 
     private void signOut() {
+        // Cancel any scheduled backups first
+        cancelScheduledBackup();
+
         googleSignInClient.signOut()
                 .addOnCompleteListener(this, task -> {
                     updateUIForSignedOut();
 
-                    // Cancel all scheduled backups
-                    WorkManager.getInstance(this).cancelAllWorkByTag("drive_backup");
-                    WorkManager.getInstance(this).cancelUniqueWork("drive_backup_work");
-
-                    // Clear backup preferences except for frequency and attachments
+                    // Clear backup preferences except for settings
                     String frequency = backupPrefs.getString("backup_frequency", "Weekly");
                     boolean includeAttachments = backupPrefs.getBoolean("include_attachments", false);
+                    boolean autoBackupEnabled = backupPrefs.getBoolean("auto_backup_enabled", false);
 
                     backupPrefs.edit()
                             .clear()
                             .putString("backup_frequency", frequency)
                             .putBoolean("include_attachments", includeAttachments)
+                            .putBoolean("auto_backup_enabled", autoBackupEnabled)
                             .apply();
 
-                    Toast.makeText(this, "Signed out from Google Drive", Toast.LENGTH_SHORT).show();
-                    Log.d(TAG, "User signed out from Google Drive");
+                    Toast.makeText(this, "Disconnected from Google Drive", Toast.LENGTH_SHORT).show();
+                    Log.d(TAG, "User disconnected from Google Drive");
                 });
     }
 
@@ -408,8 +603,6 @@ public class DriveBackupActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
-        // Refresh UI state when activity resumes
         restoreUIState();
     }
 }

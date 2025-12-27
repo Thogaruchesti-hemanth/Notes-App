@@ -1,48 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="160dp"
-    android:layout_height="160dp"
+    android:layout_width="@dimen/size_160"
+    android:layout_height="@dimen/size_160"
     android:layout_margin="@dimen/margin_10"
-    android:layout_marginEnd="12dp"
+    android:layout_marginEnd="@dimen/margin_12"
     app:cardBackgroundColor="?attr/colorSecondary"
-    app:cardCornerRadius="20dp"
-    app:cardElevation="4dp"
+    app:cardCornerRadius="@dimen/radius_20"
+    app:cardElevation="@dimen/elevation_4"
     app:strokeColor="?attr/colorOutline"
-    app:strokeWidth="1dp">
+    app:strokeWidth="@dimen/size_1">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:padding="@dimen/padding_20">
 
         <ImageView
             android:id="@+id/iconImage"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="@dimen/size_32"
+            android:layout_height="@dimen/size_32"
             android:contentDescription="@null"
             app:tint="?attr/colorPrimary" />
 
         <View
             android:layout_width="0dp"
-            android:layout_height="16dp" />
+            android:layout_height="@dimen/size_16" />
 
         <TextView
-            android:id="@+id/titleText"
+            android:id="@+id/tvTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?attr/textAppearanceTitleMedium"
-            android:textColor="?attr/colorOnSurface"
+            android:textColor="?attr/colorPrimary"
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/subtitleText"
+            android:id="@+id/tvSubtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="@dimen/margin_4"
             android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            android:textColor="?attr/colorPrimary" />
 
     </LinearLayout>
 

@@ -295,6 +295,7 @@ public class EditNoteActivity extends AppCompatActivity {
             noteId = intent.getIntExtra(EXTRA_ITEM_ID, -1);
             if (noteId != -1) {
                 // we set isEditing when the note LiveData emits
+                isEditing = true; // ✅ SET EARLY
                 // call getNoteById() so LiveData is created and observed by observeViewModels()
                 noteViewModel.getNoteById(noteId);
             }
@@ -348,7 +349,7 @@ public class EditNoteActivity extends AppCompatActivity {
 
     // Draft handling
     private void restoreDraftIfNeeded() {
-        if (isEditing) return;
+        if (isEditing || noteId != -1) return;
         if (!draftManager.hasValidDraft()) return;
 
         etTitle.setText(draftManager.getDraftTitle());
@@ -401,11 +402,12 @@ public class EditNoteActivity extends AppCompatActivity {
         btnNumber.setSelected(false);
     }
 
-    // Lifecycle
     @Override
     protected void onPause() {
         super.onPause();
-        saveDraftSilently();
+        if (!isEditing && noteId == -1) {
+            saveDraftSilently();
+        }
     }
 
     @Override

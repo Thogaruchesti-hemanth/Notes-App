@@ -5,33 +5,31 @@
     android:layout_height="wrap_content"
     android:backgroundTint="@color/lightGray"
     android:padding="0dp"
-    card_view:cardCornerRadius="8dp"
+    card_view:cardCornerRadius="@dimen/radius_8"
     android:elevation="0dp"
     card_view:cardUseCompatPadding="true">
 
     <LinearLayout
-        android:id="@+id/dateLayout"
+        android:id="@+id/layoutDate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="10dp">
+        android:padding="@dimen/padding_10">
 
         <TextView
-            android:id="@+id/date_text"
+            android:id="@+id/tvDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            android:text="08"
+            android:layout_margin="@dimen/margin_10"
             android:textColor="?attr/colorPrimary"
-            android:textSize="22sp" />
+            android:textSize="@dimen/text_22" />
 
         <TextView
-            android:id="@+id/day_text"
+            android:id="@+id/tvDay"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="sat"
-            android:textSize="18sp" />
+            android:textSize="@dimen/text_18" />
 
     </LinearLayout>
 

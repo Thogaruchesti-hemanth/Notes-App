@@ -64,8 +64,8 @@ public class RemindersFragment extends Fragment {
         // Initialize ViewModel
         reminderViewModel = new ViewModelProvider(this).get(ReminderViewModel.class);
 
-        selectedDateTv = view.findViewById(R.id.selected_date_text_view);
-        promptTextView = view.findViewById(R.id.prompt_text_view);
+        selectedDateTv = view.findViewById(R.id.tvSelectedDate);
+        promptTextView = view.findViewById(R.id.tvPrompt);
         calendarRv = view.findViewById(R.id.calendarRecyclerView);
         hourRecyclerView = view.findViewById(R.id.hourRecyclerView);
         Button createButton = view.findViewById(R.id.createButton);

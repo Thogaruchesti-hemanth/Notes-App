@@ -6,22 +6,22 @@
     android:orientation="horizontal">
 
     <TextView
-        android:id="@+id/tabText"
+        android:id="@+id/tvName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:ellipsize="end"
         android:maxLines="1"
         android:padding="@dimen/padding_8"
-        android:textSize="16sp" />
+        android:textSize="@dimen/text_16" />
 
     <TextView
-        android:id="@+id/tabCount"
+        android:id="@+id/tvCount"
         android:layout_width="wrap_content"
-        android:layout_height="22dp"
-        android:minWidth="@dimen/size_22"
-        android:layout_marginEnd="16dp"
+        android:layout_height="@dimen/size_22"
+        android:layout_marginEnd="@dimen/margin_16"
         android:background="@drawable/badge_background"
         android:gravity="center"
+        android:minWidth="@dimen/size_22"
         android:textColor="?attr/colorSecondary"
         android:textSize="@dimen/text_10"
         android:visibility="gone" />

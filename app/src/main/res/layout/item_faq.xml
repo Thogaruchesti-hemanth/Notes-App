@@ -17,7 +17,7 @@
             android:textSize="@dimen/text_16" />
 
         <ImageView
-            android:id="@+id/iv_arrow"
+            android:id="@+id/ivArrow"
             android:layout_width="@dimen/size_24"
             android:layout_height="@dimen/size_24"
             android:contentDescription="@string/text_down_arrow_icon"

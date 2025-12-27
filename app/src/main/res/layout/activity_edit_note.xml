@@ -7,7 +7,6 @@
     android:contentDescription="@string/text_note_add_and_edit_screen"
     android:padding="@dimen/padding_16">
 
-    <!-- Toolbar -->
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="0dp"
@@ -20,7 +19,6 @@
         app:title="@string/text_edit_note"
         app:titleTextColor="?attr/colorPrimary" />
 
-    <!-- Save Button  -->
     <Button
         android:id="@+id/btnSave"
         android:layout_width="wrap_content"
@@ -33,7 +31,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/toolbar" />
 
-    <!-- Title Input -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/titleTextInputLayout"
         android:layout_width="0dp"
@@ -62,7 +59,6 @@
     </com.google.android.material.textfield.TextInputLayout>
 
 
-    <!--Category Layout -->
     <LinearLayout
         android:id="@+id/categoryLayout"
         android:layout_width="0dp"
@@ -101,7 +97,6 @@
             android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- Note Input -->
     <WebView
         android:id="@+id/etNote"
         android:layout_width="0dp"
@@ -116,7 +111,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/categoryLayout" />
 
-    <!-- Floating CKEditor Toolbar -->
     <LinearLayout
         android:id="@+id/ckeditor_toolbar"
         android:layout_width="match_parent"

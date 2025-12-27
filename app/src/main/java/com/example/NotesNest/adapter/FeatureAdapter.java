@@ -43,15 +43,16 @@ public class FeatureAdapter extends RecyclerView.Adapter<FeatureAdapter.ViewHold
         return list.size();
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView icon;
-        TextView title, subtitle;
+        TextView title;
+        TextView subtitle;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
             icon = itemView.findViewById(R.id.iconImage);
-            title = itemView.findViewById(R.id.titleText);
-            subtitle = itemView.findViewById(R.id.subtitleText);
+            title = itemView.findViewById(R.id.tvTitle);
+            subtitle = itemView.findViewById(R.id.tvSubtitle);
         }
     }
 }

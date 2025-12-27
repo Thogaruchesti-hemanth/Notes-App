@@ -6,24 +6,25 @@
     android:background="@android:color/transparent"
     android:gravity="center"
     android:orientation="vertical"
-    android:padding="30dp">
+    android:padding="@dimen/padding_30">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraintLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="100dp"
+        android:layout_marginTop="@dimen/margin_100"
         android:background="@drawable/bg_dialog_rounded"
-        android:paddingBottom="30dp"
+        android:paddingBottom="@dimen/padding_30"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
-            android:id="@+id/cancel_view"
+            android:id="@+id/ivCancel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="20dp"
+            android:layout_margin="@dimen/margin_20"
+            android:contentDescription="@string/text_cancel"
             android:src="@drawable/ic_close"
             app:layout_constraintRight_toRightOf="@id/constraintLayout"
             app:layout_constraintTop_toTopOf="@id/constraintLayout" />
@@ -33,19 +34,19 @@
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="20dp"
-            android:layout_marginTop="70dp"
+            android:layout_marginHorizontal="@dimen/margin_20"
+            android:layout_marginTop="@dimen/margin_70"
             app:boxBackgroundMode="outline"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/user_name_edit_text"
+                android:id="@+id/etUserName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="User Name"
-                android:textSize="20dp" />
+                android:hint="@string/text_user_name"
+                android:textSize="@dimen/text_20" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -53,31 +54,31 @@
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="20dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginHorizontal="@dimen/margin_20"
+            android:layout_marginTop="@dimen/margin_10"
             app:boxBackgroundMode="outline"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@id/userNameTextField">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/email_edit_text"
+                android:id="@+id/etEmail"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:enabled="false"
-                android:hint="Email"
+                android:hint="@string/text_email"
                 android:inputType="textEmailAddress"
-                android:textSize="20dp" />
+                android:textSize="@dimen/text_20" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <Button
-            android:id="@+id/save_button"
+            android:id="@+id/btnSave"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="20dp"
-            android:layout_marginTop="50dp"
-            android:text="Save"
-            android:textSize="20sp"
+            android:layout_marginHorizontal="@dimen/margin_20"
+            android:layout_marginTop="@dimen/margin_50"
+            android:text="@string/text_save"
+            android:textSize="@dimen/text_20"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintTop_toBottomOf="@id/EmailTextField" />
 
@@ -85,16 +86,16 @@
 
 
     <FrameLayout
-        android:id="@+id/profile_frame"
+        android:id="@+id/frameProfile"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="50dp"
+        android:layout_marginTop="@dimen/margin_50"
         app:layout_constraintLeft_toLeftOf="@+id/constraintLayout"
         app:layout_constraintRight_toRightOf="@+id/constraintLayout"
         app:layout_constraintTop_toTopOf="parent">
 
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/profile_layout"
+            android:id="@+id/layoutProfile"
             android:layout_width="@dimen/size_100"
             android:layout_height="@dimen/size_100"
             android:layout_gravity="center"
@@ -103,7 +104,7 @@
             app:cardElevation="@dimen/elevation_4">
 
             <ImageView
-                android:id="@+id/profile_image_view"
+                android:id="@+id/ivProfile"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:contentDescription="@string/text_profile_image"
@@ -112,7 +113,7 @@
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/upload_image_button"
+            android:id="@+id/btnUploadImage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|end"

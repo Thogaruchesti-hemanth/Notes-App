@@ -3,12 +3,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:minHeight="250dp"
     android:background="?attr/colorSecondary"
+    android:minHeight="@dimen/size_250"
     android:padding="@dimen/padding_20">
 
     <ImageView
-        android:id="@+id/edit_header_button"
+        android:id="@+id/btnEdit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_20"
@@ -17,26 +17,23 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- PROFILE IMAGE WITH PREMIUM INDICATOR -->
     <FrameLayout
-        android:id="@+id/profile_container"
+        android:id="@+id/layoutProfile"
         android:layout_width="@dimen/size_80"
         android:layout_height="@dimen/size_80"
         android:layout_marginBottom="@dimen/margin_16"
-        app:layout_constraintBottom_toTopOf="@id/get_pro_button"
+        app:layout_constraintBottom_toTopOf="@id/btnGetPro"
         app:layout_constraintStart_toStartOf="parent">
 
-        <!-- Premium ring (hidden by default) -->
         <View
-            android:id="@+id/premium_ring"
+            android:id="@+id/premiumRing"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@drawable/bg_premium_ring"
             android:visibility="gone" />
 
-        <!-- Profile Image -->
         <com.google.android.material.imageview.ShapeableImageView
-            android:id="@+id/header_profile_image"
+            android:id="@+id/ivProfileImage"
             android:layout_width="@dimen/size_72"
             android:layout_height="@dimen/size_72"
             android:layout_gravity="center"
@@ -44,34 +41,33 @@
             android:src="@drawable/ic_profile"
             app:shapeAppearanceOverlay="@style/RoundedImageStyle" />
 
-        <!-- Premium badge -->
         <ImageView
-            android:id="@+id/premium_badge"
+            android:id="@+id/ivPremiumBadge"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_gravity="bottom|end"
             android:layout_margin="2dp"
+            android:contentDescription="@string/text_premium_badge"
             android:src="@drawable/ic_pro"
-            app:tint="@color/red"
-            android:visibility="gone" />
-
+            android:visibility="gone"
+            app:tint="@color/red" />
     </FrameLayout>
 
 
     <LinearLayout
-        android:id="@+id/header_info_container"
+        android:id="@+id/layoutHeaderInfo"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/margin_20"
         android:gravity="center_vertical"
         android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="@id/profile_container"
+        app:layout_constraintBottom_toBottomOf="@id/layoutProfile"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/profile_container"
-        app:layout_constraintTop_toTopOf="@id/profile_container">
+        app:layout_constraintStart_toEndOf="@id/layoutProfile"
+        app:layout_constraintTop_toTopOf="@id/layoutProfile">
 
         <TextView
-            android:id="@+id/header_user_name"
+            android:id="@+id/tvUserName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:ellipsize="end"
@@ -81,7 +77,7 @@
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/header_user_email"
+            android:id="@+id/tvUserEmail"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:ellipsize="end"
@@ -92,7 +88,7 @@
     </LinearLayout>
 
     <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/get_pro_button"
+        android:id="@+id/btnGetPro"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/bg_rounded_yellow_gradient"
@@ -105,8 +101,8 @@
         android:textAllCaps="false"
         android:textColor="@color/black"
         android:textSize="@dimen/text_18"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

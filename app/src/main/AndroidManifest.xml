@@ -16,7 +16,7 @@
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:exported="true"
-        android:fullBackupContent="false"
+        android:fullBackupContent="@xml/full_backup_content"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -28,9 +28,6 @@
             android:exported="false" />
         <activity
             android:name=".activity.PremiumActivity"
-            android:exported="false" />
-        <activity
-            android:name=".activity.DriveBackupActivity2"
             android:exported="false" />
         <activity
             android:name=".activity.DriveBackupActivity"
@@ -49,9 +46,6 @@
             android:exported="false" />
         <activity
             android:name=".activity.EditNoteActivity"
-            android:exported="false" />
-        <activity
-            android:name=".activity.ProfileActivity"
             android:exported="false" />
         <activity
             android:name=".activity.SplashScreenActivity"

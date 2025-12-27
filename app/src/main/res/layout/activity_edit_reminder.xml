@@ -12,7 +12,6 @@
         android:background="?attr/colorSecondary"
         android:paddingHorizontal="@dimen/padding_20">
 
-        <!-- Toolbar Row -->
         <androidx.appcompat.widget.LinearLayoutCompat
             android:id="@+id/headerLayout"
             android:layout_width="0dp"
@@ -127,7 +126,6 @@
 
         </com.google.android.material.button.MaterialButtonToggleGroup>
 
-        <!-- Date Layout -->
         <LinearLayout
             android:id="@+id/dateLayout"
             android:layout_width="0dp"
@@ -167,7 +165,6 @@
                 android:textStyle="bold" />
         </LinearLayout>
 
-        <!--Time Layout-->
         <LinearLayout
             android:id="@+id/timeLayout"
             android:layout_width="0dp"
@@ -207,7 +204,6 @@
                 android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- Repeat Layout -->
         <LinearLayout
             android:id="@+id/repeatLayout"
             android:layout_width="0dp"
@@ -255,7 +251,6 @@
                 android:src="@drawable/ic_chevron_down" />
         </LinearLayout>
 
-        <!-- Notify Layout -->
         <LinearLayout
             android:id="@+id/notifyLayout"
             android:layout_width="0dp"

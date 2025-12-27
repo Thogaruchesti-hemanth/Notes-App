@@ -8,7 +8,6 @@
     android:padding="@dimen/padding_8">
 
     <ImageView
-        android:id="@+id/iv_icon"
         android:layout_width="@dimen/size_48"
         android:layout_height="@dimen/size_48"
         android:contentDescription="@string/text_add"
@@ -16,7 +15,6 @@
         android:tintMode="@color/black" />
 
     <TextView
-        android:id="@+id/tv_button"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/margin_4"

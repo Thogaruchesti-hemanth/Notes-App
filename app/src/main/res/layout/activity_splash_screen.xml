@@ -9,7 +9,7 @@
     tools:context=".activity.SplashScreenActivity">
 
     <ImageView
-        android:id="@+id/splash_logo"
+        android:id="@+id/ivLogo"
         android:layout_width="@dimen/size_200"
         android:layout_height="@dimen/size_200"
         android:contentDescription="@string/text_splash_screen_logo"
@@ -17,7 +17,6 @@
         android:src="@drawable/splash_logo_light" />
 
     <TextView
-        android:id="@+id/splash_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/size_16"
@@ -28,7 +27,6 @@
         android:textStyle="bold" />
 
     <TextView
-        android:id="@+id/splash_tagline"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_6"

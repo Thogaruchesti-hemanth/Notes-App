@@ -27,7 +27,7 @@ public class ColorAdapter extends RecyclerView.Adapter<ColorAdapter.ColorViewHol
     @Override
     public ColorViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_color, parent, false);
+                .inflate(R.layout.item_background_color, parent, false);
         return new ColorViewHolder(view);
     }
 
@@ -64,7 +64,7 @@ public class ColorAdapter extends RecyclerView.Adapter<ColorAdapter.ColorViewHol
         void onSelected(String color);
     }
 
-    static class ColorViewHolder extends RecyclerView.ViewHolder {
+    public static class ColorViewHolder extends RecyclerView.ViewHolder {
         View fillView,borderView;
         ImageView checkIcon;
 

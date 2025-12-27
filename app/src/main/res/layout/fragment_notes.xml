@@ -26,7 +26,6 @@
             android:orientation="horizontal"
             android:paddingVertical="@dimen/padding_12">
 
-            <!-- Search Icon -->
             <ImageView
                 android:id="@+id/searchIcon"
                 android:layout_width="@dimen/size_24"
@@ -35,7 +34,6 @@
                 android:contentDescription="@string/text_search_icon"
                 android:src="@drawable/ic_search" />
 
-            <!-- Editable Search Field -->
             <EditText
                 android:id="@+id/searchEditText"
                 android:layout_width="0dp"
@@ -43,6 +41,7 @@
                 android:layout_marginStart="@dimen/margin_8"
                 android:layout_weight="1"
                 android:background="@android:color/transparent"
+                android:cursorVisible="true"
                 android:hint="@string/text_search_your_notes"
                 android:imeOptions="actionSearch"
                 android:importantForAutofill="no"
@@ -50,11 +49,9 @@
                 android:maxLines="1"
                 android:textColor="@color/black"
                 android:textColorHint="@color/grey_400"
-                android:textSize="16sp"
                 android:textCursorDrawable="@drawable/search_cursor"
-                android:cursorVisible="true"/>
+                android:textSize="16sp" />
 
-            <!-- Clear (X) Button -->
             <ImageButton
                 android:id="@+id/clearSearchBtn"
                 android:layout_width="@dimen/size_24"
@@ -78,7 +75,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/searchLayout">
 
-        <!-- Tabs Section -->
         <FrameLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -95,7 +91,6 @@
                 app:tabMode="scrollable"
                 app:tabRippleColor="@android:color/transparent" />
 
-            <!-- Fading overlay on the right side -->
             <View
                 android:id="@+id/fadeOverlay"
                 android:layout_width="@dimen/size_48"
@@ -104,9 +99,8 @@
                 android:background="@drawable/bg_gradient_fade_right" />
         </FrameLayout>
 
-        <!-- Add (+) Button -->
         <ImageButton
-            android:id="@+id/manage_category_button"
+            android:id="@+id/btnManageCategory"
             android:layout_width="@dimen/size_40"
             android:layout_height="@dimen/size_40"
             android:layout_gravity="center_vertical"
@@ -119,23 +113,23 @@
     </androidx.appcompat.widget.LinearLayoutCompat>
 
     <TextView
-        android:id="@+id/title_text_view"
+        android:id="@+id/tvTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginVertical="@dimen/margin_10"
         android:layout_marginHorizontal="@dimen/margin_20"
+        android:layout_marginVertical="@dimen/margin_10"
+        android:ellipsize="end"
+        android:maxLines="1"
         android:textColor="?attr/colorPrimary"
         android:textSize="@dimen/text_36"
         android:textStyle="bold"
-        android:maxLines="1"
-        android:ellipsize="end"
         app:layout_constraintBottom_toTopOf="@+id/recyclerView"
+        app:layout_constraintEnd_toStartOf="@+id/btnCreate"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/createButton"
         app:layout_constraintTop_toBottomOf="@id/tabContainer" />
 
     <Button
-        android:id="@+id/createButton"
+        android:id="@+id/btnCreate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="@dimen/margin_30"
@@ -144,7 +138,7 @@
         android:textColor="@color/black"
         app:layout_constraintBottom_toTopOf="@id/recyclerView"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintLeft_toRightOf="@+id/title_text_view"
+        app:layout_constraintLeft_toRightOf="@+id/tvTitle"
         app:layout_constraintTop_toBottomOf="@id/tabContainer" />
 
     <androidx.recyclerview.widget.RecyclerView
@@ -155,7 +149,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/title_text_view" />
+        app:layout_constraintTop_toBottomOf="@id/tvTitle" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

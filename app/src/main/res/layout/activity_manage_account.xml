@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSecondary"
-    android:padding="24dp">
+    android:padding="@dimen/padding_24">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -26,6 +26,7 @@
                 android:id="@+id/ivProfile"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:contentDescription="@string/text_profile_image"
                 android:scaleType="centerCrop"
                 android:src="@drawable/ic_profile" />
         </com.google.android.material.card.MaterialCardView>
@@ -34,17 +35,15 @@
             android:id="@+id/tvUserName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp"
-            android:text="User Name"
-            android:textSize="20sp"
+            android:layout_marginBottom="@dimen/margin_4"
+            android:textSize="@dimen/text_20"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tvUserEmail"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:text="user@email.com"
+            android:layout_marginBottom="@dimen/margin_12"
             android:textColor="@android:color/darker_gray"
             android:textSize="14sp" />
 
@@ -52,9 +51,8 @@
             android:id="@+id/tvPremiumStatus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="32dp"
-            android:text="Free User"
-            android:textSize="16sp" />
+            android:layout_marginBottom="@dimen/margin_32"
+            android:textSize="@dimen/text_16" />
 
         <Button
             android:id="@+id/btnLogout"
@@ -62,7 +60,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="@dimen/margin_30"
             android:backgroundTint="@color/red"
-            android:text="Logout"
+            android:text="@string/text_logout"
             android:textColor="@android:color/white" />
 
     </LinearLayout>

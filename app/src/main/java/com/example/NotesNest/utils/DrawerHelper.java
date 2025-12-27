@@ -61,7 +61,7 @@ public class DrawerHelper {
     public DrawerHelper(AppCompatActivity activity) {
         this.activity = activity;
         this.drawerLayout = activity.findViewById(R.id.main);
-        this.navigationView = activity.findViewById(R.id.nav_view);
+        this.navigationView = activity.findViewById(R.id.navigationView);
         this.pref = new SharedPreferenceUtil(activity);
         this.firebaseHelper = new FirebaseHelper();
 
@@ -79,21 +79,18 @@ public class DrawerHelper {
     }
 
     private void setupFooterMenu() {
-        View footerView = navigationView.findViewById(R.id.footer_menu);
+        View footerView = navigationView.findViewById(R.id.layoutFooterMenu);
 
-        footerView.findViewById(R.id.settings_layout).setOnClickListener(view -> {
+        footerView.findViewById(R.id.layoutSettings).setOnClickListener(view -> {
             Intent intent = new Intent(activity, SettingsActivity.class);
             activity.startActivity(intent);
             drawerLayout.closeDrawer(GravityCompat.START);
         });
 
-        footerView.findViewById(R.id.help_and_support_layout).setOnClickListener(view -> {
+        footerView.findViewById(R.id.layoutHelpAndSupport).setOnClickListener(view -> {
             Intent intent = new Intent(activity, HelpAndSupportActivity.class);
             activity.startActivity(intent);
             drawerLayout.closeDrawer(GravityCompat.START);
-
-            /*openWebLink(activity, activity.getString(R.string.text_https_notesnest_app_web_app));
-            drawerLayout.closeDrawer(GravityCompat.START);*/
         });
 
 
@@ -107,10 +104,10 @@ public class DrawerHelper {
     }
 
     private void setupTopMenu() {
-        View header = navigationView.findViewById(R.id.top_menu);
+        View header = navigationView.findViewById(R.id.layoutTopMenu);
 
-        LinearLayout notes = header.findViewById(R.id.notes_layout);
-        LinearLayout reminders = header.findViewById(R.id.reminders_layout);
+        LinearLayout notes = header.findViewById(R.id.layoutNotes);
+        LinearLayout reminders = header.findViewById(R.id.layoutReminders);
 
         // DEFAULT SELECTED
         setTopMenuSelected(notes);
@@ -169,20 +166,16 @@ public class DrawerHelper {
     }
 
     private void setupHeaderViews() {
-        View profileHeader = navigationView.findViewById(R.id.fragment_profile_image);
+        View profileHeader = navigationView.findViewById(R.id.fragmentProfile);
 
-        userNameTextView = profileHeader.findViewById(R.id.header_user_name);
-        emailTextView = profileHeader.findViewById(R.id.header_user_email);
-        profileImageView = profileHeader.findViewById(R.id.header_profile_image);
-        premiumButton = profileHeader.findViewById(R.id.get_pro_button);
-        View premiumRing = profileHeader.findViewById(R.id.premium_ring);
-        ImageView premiumBadge = profileHeader.findViewById(R.id.premium_badge);
+        userNameTextView = profileHeader.findViewById(R.id.tvUserName);
+        emailTextView = profileHeader.findViewById(R.id.tvUserEmail);
+        profileImageView = profileHeader.findViewById(R.id.ivProfileImage);
+        premiumButton = profileHeader.findViewById(R.id.btnGetPro);
+        View premiumRing = profileHeader.findViewById(R.id.premiumRing);
+        ImageView premiumBadge = profileHeader.findViewById(R.id.ivPremiumBadge);
 
-        profileHeader.findViewById(R.id.edit_header_button)
-                .setOnClickListener(v -> openEditDialog());
-
-
-        profileHeader.findViewById(R.id.edit_header_button)
+        profileHeader.findViewById(R.id.btnEdit)
                 .setOnClickListener(v -> openEditDialog());
 
         if (isPremiumUser) {
@@ -201,7 +194,7 @@ public class DrawerHelper {
 
 
     private void setupMenuButton() {
-        activity.findViewById(R.id.menubutton)
+        activity.findViewById(R.id.btnMenu)
                 .setOnClickListener(v -> toggleDrawer());
     }
 
@@ -242,10 +235,10 @@ public class DrawerHelper {
 
         dialog.show();
 
-        EditText userNameEdit = dialogView.findViewById(R.id.user_name_edit_text);
-        EditText emailEdit = dialogView.findViewById(R.id.email_edit_text);
-        profileImage = dialogView.findViewById(R.id.profile_image_view);
-        FloatingActionButton profileUpdateButton = dialogView.findViewById(R.id.upload_image_button);
+        EditText userNameEdit = dialogView.findViewById(R.id.etUserName);
+        EditText emailEdit = dialogView.findViewById(R.id.etEmail);
+        profileImage = dialogView.findViewById(R.id.ivProfile);
+        FloatingActionButton profileUpdateButton = dialogView.findViewById(R.id.btnUploadImage);
 
         userNameEdit.setText(userNameTextView.getText());
         emailEdit.setText(emailTextView.getText());
@@ -261,10 +254,10 @@ public class DrawerHelper {
 
         profileUpdateButton.setOnClickListener(v -> openGalleryForDialog(profileImage));
 
-        dialogView.findViewById(R.id.cancel_view)
+        dialogView.findViewById(R.id.ivCancel)
                 .setOnClickListener(v -> dialog.dismiss());
 
-        dialogView.findViewById(R.id.save_button)
+        dialogView.findViewById(R.id.btnSave)
                 .setOnClickListener(v -> {
                     String name = userNameEdit.getText().toString().trim();
                     String mail = emailEdit.getText().toString().trim();

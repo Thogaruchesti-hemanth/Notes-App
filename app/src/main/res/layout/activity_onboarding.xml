@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSecondary"
@@ -9,13 +8,13 @@
     tools:context=".activity.OnboardingActivity">
 
     <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/vp_onboarding"
+        android:id="@+id/vpOnboarding"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1" />
 
     <LinearLayout
-        android:id="@+id/indicators_layout"
+        android:id="@+id/layoutIndicators"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
@@ -24,13 +23,13 @@
         android:orientation="horizontal" />
 
     <Button
-        android:id="@+id/buttonNext"
+        android:id="@+id/btnNext"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/size_24"
         android:backgroundTint="@color/tabSelectedTextColorLight"
+        android:text="@string/text_next"
         android:textColor="@color/black"
-        android:textStyle="bold"
-        android:text="@string/text_next" />
+        android:textStyle="bold" />
 
 </LinearLayout>

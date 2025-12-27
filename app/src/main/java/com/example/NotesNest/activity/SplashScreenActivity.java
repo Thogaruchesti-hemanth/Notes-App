@@ -39,7 +39,7 @@ public class SplashScreenActivity extends AppCompatActivity {
     }
 
     private void updateLogo() {
-        ImageView logo = findViewById(R.id.splash_logo);
+        ImageView logo = findViewById(R.id.ivLogo);
         boolean isDark = "dark".equalsIgnoreCase(prefs.getTheme());
 
         logo.setImageResource(isDark

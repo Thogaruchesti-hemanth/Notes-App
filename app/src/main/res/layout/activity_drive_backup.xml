@@ -1,178 +1,338 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
+    android:background="?attr/colorSecondary"
+    android:orientation="vertical"
     android:padding="16dp">
 
+    <!-- App Bar -->
     <LinearLayout
+        android:id="@+id/appbar_root"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_marginVertical="@dimen/margin_20"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
-        <!-- Header -->
+        <ImageView
+            android:id="@+id/back_arrow_icon"
+            android:layout_width="@dimen/size_32"
+            android:layout_height="@dimen/size_32"
+            android:contentDescription="@string/text_back_button"
+            android:src="@drawable/ic_back_arrow" />
+
         <TextView
-            android:layout_width="match_parent"
+            android:id="@+id/title_text"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
-            android:text="Google Drive Backup"
-            android:textColor="@color/textColor"
-            android:textSize="24sp"
+            android:layout_marginStart="@dimen/size_32"
+            android:text="Drive Backup"
+            android:textColor="?attr/colorPrimary"
+            android:textSize="@dimen/text_22"
             android:textStyle="bold" />
+    </LinearLayout>
 
-        <!-- Status Card -->
-        <com.google.android.material.card.MaterialCardView
+    <ScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:scrollbars="none">
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardElevation="4dp">
+            android:orientation="vertical">
 
+            <!-- Initial Setup View (Visible when not signed in) -->
             <LinearLayout
+                android:id="@+id/layoutSetup"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_30"
+                android:gravity="center"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="@dimen/size_120"
+                    android:layout_height="@dimen/size_120"
+                    android:layout_marginBottom="@dimen/margin_20"
+                    android:src="@drawable/ic_profile"
+                    android:tint="@color/google_blue" />
 
                 <TextView
-                    android:id="@+id/txtEmail"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:text="Not signed in"
-                    android:textColor="@color/textColor"
-                    android:textSize="16sp" />
-
-                <TextView
-                    android:id="@+id/txtStatus"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    android:text="Please sign in to enable backups"
-                    android:textSize="14sp" />
-
-                <Button
-                    android:id="@+id/btnSignIn"
-                    style="@style/Widget.Material3.Button"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:backgroundTint="@color/blue"
-                    android:text="Sign in with Google"
-                    android:textColor="@color/white" />
-
-                <Button
-                    android:id="@+id/btnDisconnect"
-                    style="@style/Widget.Material3.Button"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:backgroundTint="@color/red"
-                    android:text="Disconnect"
-                    android:textColor="@color/white"
-                    android:visibility="gone" />
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Backup Settings Card -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardElevation="4dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    android:text="Backup Settings"
-                    android:textColor="@color/textColor"
-                    android:textSize="18sp"
+                    android:layout_marginBottom="@dimen/margin_8"
+                    android:text="Google Drive Backup"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="@dimen/text_24"
                     android:textStyle="bold" />
 
-                <!-- Backup Frequency -->
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:text="Backup Frequency"
-                    android:textColor="@color/textSecondary"
-                    android:textSize="14sp" />
+                    android:layout_marginHorizontal="@dimen/margin_24"
+                    android:layout_marginBottom="@dimen/margin_24"
+                    android:gravity="center"
+                    android:lineSpacingExtra="4dp"
+                    android:text="Securely backup your notes and attachments to Google Drive. Your data will be encrypted and stored safely."
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="@dimen/text_14" />
 
-                <Spinner
-                    android:id="@+id/spinnerFrequency"
+                <Button
+                    android:id="@+id/btnAddAccount"
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:backgroundTint="@color/blue"
-                    android:enabled="false" />
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/margin_40"
+                    android:layout_marginTop="@dimen/margin_16"
+                    android:backgroundTint="@color/google_blue"
+                    android:drawableStart="@drawable/ic_google"
+                    android:drawablePadding="@dimen/padding_8"
+                    android:padding="@dimen/padding_12"
+                    android:text="Connect Google Account"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/text_16" />
 
-                <!-- Include Attachments -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/margin_16"
+                    android:gravity="center"
+                    android:text="Your notes will be backed up automatically based on your settings"
+                    android:textColor="@color/grey"
+                    android:textSize="@dimen/text_12" />
+            </LinearLayout>
+
+            <!-- Account Info View (Visible when signed in) -->
+            <LinearLayout
+                android:id="@+id/layoutAccountInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_30"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:visibility="gone">
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:gravity="center"
+                    android:orientation="vertical">
 
-                    <Switch
-                        android:id="@+id/switchAttachments"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:enabled="false" />
+                    <ImageView
+                        android:layout_width="@dimen/size_80"
+                        android:layout_height="@dimen/size_80"
+                        android:src="@drawable/ic_profile"
+                        android:tint="@color/tabSelectedTextColorLight" />
 
                     <TextView
-                        android:layout_width="0dp"
+                        android:id="@+id/txtEmail"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:layout_weight="1"
-                        android:text="Include attachments"
-                        android:textColor="@color/textColor"
-                        android:textSize="14sp" />
+                        android:layout_marginTop="8dp"
+                        android:text="Not signed in"
+                        android:textSize="@dimen/text_18"
+                        android:textStyle="bold" />
 
+                    <TextView
+                        android:id="@+id/txtStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/margin_4"
+                        android:background="@drawable/btn_rounded_blue"
+                        android:drawablePadding="@dimen/padding_12"
+                        android:gravity="center_vertical"
+                        android:padding="@dimen/padding_8"
+                        android:text="@string/text_not_connected_to_drive"
+                        android:textColor="@color/blue"
+                        android:textSize="12sp" />
                 </LinearLayout>
+            </LinearLayout>
 
-                <!-- Last Backup Info -->
-                <TextView
-                    android:id="@+id/txtLastBackup"
+            <!-- Settings Section -->
+            <TextView
+                android:id="@+id/textSettingsTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:paddingHorizontal="@dimen/padding_12"
+                android:text="SETTINGS"
+                android:textColor="@color/tabSelectedTextColorLight"
+                android:textSize="@dimen/text_16"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardSettings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="@dimen/radius_12"
+                app:cardElevation="2dp"
+                app:cardUseCompatPadding="true"
+                android:visibility="gone">
+
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="Last backup: Never"
-                    android:textColor="@color/textSecondary"
-                    android:textSize="13sp" />
+                    android:orientation="vertical">
 
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+                    <!-- Enable Automatic Backups -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="12dp">
 
-        <!-- Action Buttons -->
-        <Button
-            android:id="@+id/btnBackupNow"
-            style="@style/Widget.Material3.Button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:backgroundTint="@color/green"
-            android:enabled="false"
-            android:text="Backup Now"
-            android:textColor="@color/white" />
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Enable Automatic Backups" />
 
-        <!-- Info Text -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:background="@color/infoBackground"
-            android:drawableStart="@drawable/ic_info_add"
-            android:drawablePadding="8dp"
-            android:padding="8dp"
-            android:text="Note: Backups are stored in your Google Drive under 'Apps/NotesNest Backup' folder"
-            android:textColor="@color/textSecondary"
-            android:textSize="12sp" />
+                        <Switch
+                            android:id="@+id/switchAutoBackup"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
 
-    </LinearLayout>
-</ScrollView>
+                    <!-- Frequency -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="12dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Backup Frequency" />
+
+                        <Spinner
+                            android:id="@+id/spinnerFrequency"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <!-- Attachments -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="12dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Include Attachments" />
+
+                        <Switch
+                            android:id="@+id/switchAttachments"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Status Section -->
+            <TextView
+                android:id="@+id/textStatusTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:paddingHorizontal="@dimen/padding_12"
+                android:text="STATUS"
+                android:textColor="@color/tabSelectedTextColorLight"
+                android:textSize="@dimen/text_16"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="@dimen/radius_12"
+                app:cardElevation="2dp"
+                app:cardUseCompatPadding="true"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:paddingVertical="@dimen/padding_8">
+
+                    <ImageView
+                        android:id="@+id/imgStatusIcon"
+                        android:layout_width="@dimen/size_32"
+                        android:layout_height="@dimen/size_32"
+                        android:layout_margin="@dimen/margin_8"
+                        android:background="@drawable/btn_rounded_green"
+                        android:src="@drawable/ic_sync"
+                        android:tint="@color/google_green" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_4"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/lastBackupTextView"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Last Backup"
+                            android:textColor="?attr/colorPrimary"
+                            android:textSize="@dimen/text_14"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/txtLastBackupTime"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Never backed up"
+                            android:textColor="@color/grey"
+                            android:textSize="@dimen/text_12" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/imgTick"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/margin_8"
+                        android:src="@drawable/ic_tick_done"
+                        android:tint="@color/google_green"
+                        android:visibility="gone" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Backup Now Button -->
+            <Button
+                android:id="@+id/btnBackupNow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Backup Now"
+                android:visibility="gone" />
+
+            <!-- Disconnect Button -->
+            <TextView
+                android:id="@+id/btnDisconnect"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_8"
+                android:gravity="center"
+                android:text="Disconnect Google Account"
+                android:textColor="@color/red"
+                android:visibility="gone" />
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

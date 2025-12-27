@@ -35,9 +35,8 @@ public class CategoryManager extends BottomSheetDialogFragment {
     private final NoteViewModel noteViewModel;
     private final String currentUserId;
     private final OnCategoryUpdateListener listener;
-    private LinearLayout addCategoryLayout;
-
     private final List<CategoryEntity> categories = new ArrayList<>();
+    private LinearLayout addCategoryLayout;
     private CategoryAdapter adapter;
 
     public CategoryManager(CategoryViewModel categoryViewModel,
@@ -63,9 +62,9 @@ public class CategoryManager extends BottomSheetDialogFragment {
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-        RecyclerView recyclerView = view.findViewById(R.id.categories_recycler_view);
-        addCategoryLayout = view.findViewById(R.id.add_new_categories_layout);
-        TextView doneButton = view.findViewById(R.id.done_button);
+        RecyclerView recyclerView = view.findViewById(R.id.recyclerViewCategories);
+        addCategoryLayout = view.findViewById(R.id.layoutAddCategory);
+        TextView doneButton = view.findViewById(R.id.tvDone);
 
         adapter = new CategoryAdapter();
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -126,7 +125,8 @@ public class CategoryManager extends BottomSheetDialogFragment {
             }
 
             @Override
-            public void onSwiped(@NonNull RecyclerView.ViewHolder vh, int dir) {}
+            public void onSwiped(@NonNull RecyclerView.ViewHolder vh, int dir) {
+            }
         });
 
         helper.attachToRecyclerView(recyclerView);
@@ -157,7 +157,7 @@ public class CategoryManager extends BottomSheetDialogFragment {
 
         if (isCategoryLimitReached()) {
             addCategoryLayout.setAlpha(0.5f);
-            CommonDialogs.showPremiumRequiredDialog(requireContext(),"Free users can create up to 8 categories.\\nUpgrade to Premium for unlimited categories.");
+            CommonDialogs.showPremiumRequiredDialog(requireContext(), "Free users can create up to 8 categories.\\nUpgrade to Premium for unlimited categories.");
             return;
         }
 
@@ -209,6 +209,10 @@ public class CategoryManager extends BottomSheetDialogFragment {
                 });
     }
 
+    public interface OnCategoryUpdateListener {
+        void onCategoriesUpdated();
+    }
+
     // -----------------------------------------
     // Adapter
     // -----------------------------------------
@@ -250,18 +254,15 @@ public class CategoryManager extends BottomSheetDialogFragment {
 
         class VH extends RecyclerView.ViewHolder {
             TextView name;
-            ImageView delete, dragHandle;
+            ImageView delete;
+            ImageView dragHandle;
 
             VH(View v) {
                 super(v);
-                name = v.findViewById(R.id.category_name);
-                delete = v.findViewById(R.id.delete_button);
-                dragHandle = v.findViewById(R.id.drag_handle);
+                name = v.findViewById(R.id.tvCategoryName);
+                delete = v.findViewById(R.id.ivDelete);
+                dragHandle = v.findViewById(R.id.ivDragHandle);
             }
         }
-    }
-
-    public interface OnCategoryUpdateListener {
-        void onCategoriesUpdated();
     }
 }

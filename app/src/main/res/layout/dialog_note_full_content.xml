@@ -6,7 +6,7 @@
     android:orientation="vertical">
 
     <androidx.cardview.widget.CardView
-        android:id="@+id/dialog_card"
+        android:id="@+id/dialogNote"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:cardCornerRadius="@dimen/radius_12"
@@ -18,7 +18,6 @@
             android:orientation="vertical"
             android:padding="@dimen/padding_20">
 
-            <!-- Header -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -26,7 +25,7 @@
                 android:orientation="horizontal">
 
                 <TextView
-                    android:id="@+id/dialog_title"
+                    android:id="@+id/tvTitle"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -37,7 +36,7 @@
                     android:textStyle="bold" />
 
                 <ImageButton
-                    android:id="@+id/share_button"
+                    android:id="@+id/btnShare"
                     android:layout_width="@dimen/size_48"
                     android:layout_height="@dimen/size_48"
                     android:background="@android:color/transparent"
@@ -45,28 +44,27 @@
                     android:src="@drawable/ic_share" />
             </LinearLayout>
 
-            <!-- Content -->
             <ScrollView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
                 android:scrollbars="vertical">
 
-                <WebView
-                    android:id="@+id/dialog_content"
+                <TextView
+                    android:id="@+id/tvMessage"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:lineSpacingExtra="4dp"
-                    android:scrollbars="none" />
+                    android:textColor="@color/black"
+                    android:textSize="@dimen/text_14" />
             </ScrollView>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <!-- Category -->
                 <TextView
-                    android:id="@+id/dialog_category"
+                    android:id="@+id/tvCategory"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/margin_4"
@@ -91,7 +89,7 @@
                     android:orientation="horizontal">
 
                     <TextView
-                        android:id="@+id/dialog_date"
+                        android:id="@+id/tvDate"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textColor="@color/black"
@@ -99,7 +97,7 @@
                         android:textStyle="italic" />
 
                     <TextView
-                        android:id="@+id/dialog_time"
+                        android:id="@+id/tvTime"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/margin_8"

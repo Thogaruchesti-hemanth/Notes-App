@@ -86,27 +86,27 @@ public class HelpAndSupportActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        faq1 = findViewById(R.id.faq_container_1);
-        faq2 = findViewById(R.id.faq_container_2);
-        faq3 = findViewById(R.id.faq_container_3);
+        faq1 = findViewById(R.id.layoutFAQ1);
+        faq2 = findViewById(R.id.layoutFAQ2);
+        faq3 = findViewById(R.id.layoutFAQ3);
 
         faqAns1 = faq1.findViewById(R.id.tvAnswer);
         faqAns2 = faq2.findViewById(R.id.tvAnswer);
         faqAns3 = faq3.findViewById(R.id.tvAnswer);
 
-        emailLayout = findViewById(R.id.option_email);
-        reportBugLayout = findViewById(R.id.option_report_bug);
-        feedbackLayout = findViewById(R.id.option_feedback);
+        emailLayout = findViewById(R.id.layoutEmailSupport);
+        reportBugLayout = findViewById(R.id.layoutReportBug);
+        feedbackLayout = findViewById(R.id.layoutFeedback);
 
-        userGuideLayout = findViewById(R.id.option_user_guide);
-        videoTutorialLayout = findViewById(R.id.option_video_tutorials);
-        whatsNewLayout = findViewById(R.id.option_whats_new);
+        userGuideLayout = findViewById(R.id.layoutUserGuide);
+        videoTutorialLayout = findViewById(R.id.layoutVideoTutorial);
+        whatsNewLayout = findViewById(R.id.layoutWhatsNew);
 
-        aboutAppLayout = findViewById(R.id.option_about_app);
-        privacyPolicyLayout = findViewById(R.id.option_privacy_policy);
-        termServiceLayout = findViewById(R.id.option_terms_service);
+        aboutAppLayout = findViewById(R.id.layoutAboutApp);
+        privacyPolicyLayout = findViewById(R.id.layoutPrivacyPolicy);
+        termServiceLayout = findViewById(R.id.layoutTermsOfService);
 
-        findViewById(R.id.back_arrow_icon).setOnClickListener(view -> finish());
+        findViewById(R.id.ivBackArrow).setOnClickListener(view -> finish());
     }
 
     private void setupOptions() {
@@ -137,7 +137,7 @@ public class HelpAndSupportActivity extends AppCompatActivity {
 
     private void setupOneFaq(View faqView) {
         TextView answer = faqView.findViewById(R.id.tvAnswer);
-        ImageView arrowView = faqView.findViewById(R.id.iv_arrow);
+        ImageView arrowView = faqView.findViewById(R.id.ivArrow);
 
         answer.setVisibility(View.GONE);
         arrowView.setRotation(0f);

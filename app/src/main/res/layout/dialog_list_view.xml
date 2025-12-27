@@ -14,7 +14,7 @@
         android:padding="@dimen/padding_16">
 
         <TextView
-            android:id="@+id/title_text_view"
+            android:id="@+id/tvTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -24,7 +24,7 @@
             android:textStyle="bold" />
 
         <ImageView
-            android:id="@+id/cancel_image_view"
+            android:id="@+id/ivCancel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:clickable="true"

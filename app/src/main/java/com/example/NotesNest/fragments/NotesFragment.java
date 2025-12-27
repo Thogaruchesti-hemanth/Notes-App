@@ -35,6 +35,7 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 import com.example.NotesNest.R;
 import com.example.NotesNest.activity.EditNoteActivity;
 import com.example.NotesNest.adapter.NoteAdapter;
+import com.example.NotesNest.adapter.NoteShimmerAdapter;
 import com.example.NotesNest.databases.ViewModels.CategoryViewModel;
 import com.example.NotesNest.databases.ViewModels.NoteViewModel;
 import com.example.NotesNest.databases.entities.CategoryEntity;
@@ -56,6 +57,7 @@ import java.util.Objects;
 
 public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeListener {
 
+    private static final int FREE_NOTES_LIMIT = 30;
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
     private final Map<String, Integer> categoryNoteCounts = new HashMap<>();
     private RecyclerView recyclerView;
@@ -75,11 +77,11 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
     private ActivityResultLauncher<Intent> addEditNoteLauncher;
     private String currentUserId = null;
     private SharedPreferenceUtil preferenceUtil;
-
-    private static final int FREE_NOTES_LIMIT = 30;
     private boolean isPremiumUser = false;
     private int currentNotesCount = 0;
     private Context context;
+    private NoteShimmerAdapter shimmerAdapter;
+    private boolean isLoading = false;
 
 
     public NotesFragment() { /* Required empty constructor */ }
@@ -93,10 +95,10 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         View view = inflater.inflate(R.layout.fragment_notes, container, false);
 
         tabLayout = view.findViewById(R.id.tabLayout);
-        ImageButton manageCategoryButton = view.findViewById(R.id.manage_category_button);
-        createButton = view.findViewById(R.id.createButton);
+        ImageButton manageCategoryButton = view.findViewById(R.id.btnManageCategory);
+        createButton = view.findViewById(R.id.btnCreate);
         recyclerView = view.findViewById(R.id.recyclerView);
-        titleTextView = view.findViewById(R.id.title_text_view);
+        titleTextView = view.findViewById(R.id.tvTitle);
         searchEditText = view.findViewById(R.id.searchEditText);
         clearSearchBtn = view.findViewById(R.id.clearSearchBtn);
 
@@ -166,6 +168,15 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
 
     private void setupRecycler() {
         adapter = new NoteAdapter(new ArrayList<>(), requireContext(), categoryViewModel, noteViewModel);
+        shimmerAdapter = new NoteShimmerAdapter(10);
+
+        recyclerView.setLayoutManager(
+                new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
+        );
+
+        // Load shimmer initially
+        recyclerView.setAdapter(shimmerAdapter);
+
         recyclerView.setAdapter(adapter);
 
         // default layout
@@ -192,7 +203,7 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         createButton.setOnClickListener(v -> {
 
             if (!isPremiumUser && currentNotesCount >= FREE_NOTES_LIMIT) {
-                CommonDialogs.showPremiumRequiredDialog(context,"You have reached the free limit of 30 notes.\\nUpgrade to Premium to create unlimited notes.");
+                CommonDialogs.showPremiumRequiredDialog(context, "You have reached the free limit of 30 notes.\\nUpgrade to Premium to create unlimited notes.");
                 return;
             }
 
@@ -322,15 +333,15 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
 
     private String extractTabName(TabLayout.Tab tab) {
         if (tab == null || tab.getCustomView() == null) return null;
-        TextView txt = tab.getCustomView().findViewById(R.id.tabText);
+        TextView txt = tab.getCustomView().findViewById(R.id.tvName);
         return txt == null ? null : txt.getText().toString();
     }
 
     private View createCustomTab(String title, boolean selected) {
         LayoutInflater inflater = LayoutInflater.from(context);
         View view = inflater.inflate(R.layout.custom_tab, tabLayout, false);
-        TextView text = view.findViewById(R.id.tabText);
-        TextView count = view.findViewById(R.id.tabCount);
+        TextView text = view.findViewById(R.id.tvName);
+        TextView count = view.findViewById(R.id.tvCount);
         text.setText(title);
         text.setTypeface(null, selected ? Typeface.BOLD : Typeface.NORMAL);
         text.setTextColor(selected ? ContextCompat.getColor(requireContext(), R.color.tabSelectedTextColor) : unselectedTabColor);
@@ -352,8 +363,8 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
 
     private void setTabSelected(@Nullable TabLayout.Tab tab) {
         if (tab == null || tab.getCustomView() == null) return;
-        TextView text = tab.getCustomView().findViewById(R.id.tabText);
-        TextView count = tab.getCustomView().findViewById(R.id.tabCount);
+        TextView text = tab.getCustomView().findViewById(R.id.tvName);
+        TextView count = tab.getCustomView().findViewById(R.id.tvCount);
         if (text == null) return;
         text.setTypeface(null, Typeface.BOLD);
         text.setTextColor(ContextCompat.getColor(requireContext(), R.color.tabSelectedTextColor));
@@ -375,8 +386,8 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
 
     private void setTabUnselected(@Nullable TabLayout.Tab tab) {
         if (tab == null || tab.getCustomView() == null) return;
-        TextView text = tab.getCustomView().findViewById(R.id.tabText);
-        TextView count = tab.getCustomView().findViewById(R.id.tabCount);
+        TextView text = tab.getCustomView().findViewById(R.id.tvName);
+        TextView count = tab.getCustomView().findViewById(R.id.tvCount);
         if (text == null) return;
         text.setTypeface(null, Typeface.NORMAL);
         text.setTextColor(unselectedTabColor);
@@ -388,7 +399,7 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         for (int i = 0; i < tabLayout.getTabCount(); i++) {
             TabLayout.Tab t = tabLayout.getTabAt(i);
             if (t == null || t.getCustomView() == null) continue;
-            TextView txt = t.getCustomView().findViewById(R.id.tabText);
+            TextView txt = t.getCustomView().findViewById(R.id.tvName);
             if (txt != null && txt.getText().toString().equals(categoryName)) {
                 tabLayout.selectTab(t);
                 setTabSelected(t);
@@ -402,7 +413,7 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
             if (first != null) {
                 tabLayout.selectTab(first);
                 setTabSelected(first);
-                TextView txt = Objects.requireNonNull(first.getCustomView()).findViewById(R.id.tabText);
+                TextView txt = Objects.requireNonNull(first.getCustomView()).findViewById(R.id.tvName);
                 if (txt != null) selectedCategory = txt.getText().toString();
             }
         }
@@ -411,6 +422,8 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
 
     // ----- Search / Notes loading using ViewModel (no direct DB calls) -----
     private void runSearch(String query) {
+
+        showShimmerAdapter();
         // remove previous observer
         try {
             if (currentNotesObserver != null) {
@@ -458,6 +471,15 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
     }
 
     private void updateRecycler(List<NoteEntity> notes) {
+        if (isLoading) {
+            isLoading = false;
+
+            // Attach real adapter once
+            if (recyclerView.getAdapter() != adapter) {
+                recyclerView.setAdapter(adapter);
+            }
+        }
+
         adapter.updateData(notes);
     }
 
@@ -525,7 +547,7 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
             if (tab != null && categoryName.equals(extractTabName(tab))) {
                 View customView = tab.getCustomView();
                 if (customView != null) {
-                    TextView countView = customView.findViewById(R.id.tabCount);
+                    TextView countView = customView.findViewById(R.id.tvCount);
                     if (countView != null) {
                         if (count > 0 && categoryName.equals(selectedCategory)) {
                             if (count > 99) {
@@ -543,6 +565,14 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
             }
         }
     }
+
+    private void showShimmerAdapter() {
+        if (!isLoading) {
+            isLoading = true;
+            recyclerView.setAdapter(shimmerAdapter);
+        }
+    }
+
 
     @Override
     public void onDestroyView() {

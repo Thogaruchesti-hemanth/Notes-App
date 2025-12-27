@@ -127,7 +127,7 @@ public class SharedPreferenceUtil {
     }
 
     public String getKeyNoteLayout() {
-        return sharedPreferences.getString(KEY_NOTE_LAYOUT, "Linear");
+        return sharedPreferences.getString(KEY_NOTE_LAYOUT, "Grid");
     }
 
     public void setKeyNoteLayout(String layout) {
