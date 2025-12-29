@@ -15,8 +15,12 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.FirebaseNetworkException;
+import com.google.firebase.FirebaseTooManyRequestsException;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
+import com.google.firebase.auth.FirebaseAuthInvalidUserException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.database.DataSnapshot;
@@ -222,10 +226,33 @@ public class FirebaseHelper {
                     }
                 });
             } else {
-                callback.onLoginFailure("Login failed");
+                String errorMessage = getLoginErrorMessage(task.getException());
+                callback.onLoginFailure(errorMessage);
             }
         });
     }
+
+    private String getLoginErrorMessage(Exception exception) {
+
+        if (exception instanceof FirebaseAuthInvalidCredentialsException) {
+            return "Invalid email or password";
+
+        } else if (exception instanceof FirebaseAuthInvalidUserException) {
+            return "No account found with this email";
+
+        } else if (exception instanceof FirebaseNetworkException) {
+            return "No internet connection. Please try again";
+
+        } else if (exception instanceof FirebaseTooManyRequestsException) {
+            return "Too many attempts. Please try again later";
+
+        } else if (exception != null) {
+            return exception.getMessage(); // fallback
+        }
+
+        return "Login failed. Please try again";
+    }
+
 
     // Signup new user
     public void signupUser(String userName, String email, String password,
