@@ -4,14 +4,14 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?attr/colorSecondary"
-    android:minHeight="@dimen/size_250"
+    android:minHeight="@dimen/size_300"
     android:padding="@dimen/padding_20">
 
     <ImageView
         android:id="@+id/btnEdit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin_20"
+        android:layout_marginTop="@dimen/margin_40"
         android:contentDescription="@string/text_edit_icon"
         android:src="@drawable/ic_edit"
         app:layout_constraintEnd_toEndOf="parent"

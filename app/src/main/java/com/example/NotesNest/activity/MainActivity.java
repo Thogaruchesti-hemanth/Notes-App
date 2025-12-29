@@ -6,7 +6,11 @@ import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.widget.TextView;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.example.NotesNest.R;
 import com.example.NotesNest.databases.AppDatabase;
@@ -19,7 +23,6 @@ import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TextView greetingText;
     private SharedPreferenceUtil pref;
 
 
@@ -28,9 +31,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         // Apply theme before inflating layout
         applyTheme(this);
-
+        EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.navigationView), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left,0, systemBars.right, systemBars.bottom);
+            return insets;
+        });
 
         new DrawerHelper(this);
         FirebaseApp.initializeApp(this);
@@ -41,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initGreeting() {
-        greetingText = findViewById(R.id.tvName);
+        TextView greetingText = findViewById(R.id.tvName);
         String[] greetings = {"Hi", "Hello", "Hey", "Welcome"};
         String greeting = greetings[new Random().nextInt(greetings.length)];
         greetingText.setText(String.format("%s, %s", greeting, pref.getUserName()));

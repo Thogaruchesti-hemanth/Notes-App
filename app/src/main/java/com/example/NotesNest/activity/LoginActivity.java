@@ -543,13 +543,13 @@ public class LoginActivity extends AppCompatActivity {
 
     private void openTermsAndConditions() {
         // Open your Terms & Conditions (could be a WebView or browser)
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://notesnest-app.web.app/"));
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://notesnest-app.web.app/terms.html"));
         startActivity(intent);
     }
 
     private void openPrivacyPolicy() {
         // Open your Privacy Policy (could be a WebView or browser)
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://notesnest-app.web.app/"));
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://notesnest-app.web.app/privacy.html"));
         startActivity(intent);
     }
 

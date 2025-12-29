@@ -21,6 +21,8 @@ public class ManageAccountActivity extends AppCompatActivity {
     private ImageView ivProfile;
     private TextView tvName, tvEmail, tvPremiumStatus;
     private Button btnLogout;
+    private TextView tvGoBack;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +40,10 @@ public class ManageAccountActivity extends AppCompatActivity {
         tvEmail = findViewById(R.id.tvUserEmail);
         tvPremiumStatus = findViewById(R.id.tvPremiumStatus);
         btnLogout = findViewById(R.id.btnLogout);
+        tvGoBack = findViewById(R.id.tvGoBack);
+
+        tvGoBack.setOnClickListener(v -> finish());
+
     }
 
     private void loadUserData() {

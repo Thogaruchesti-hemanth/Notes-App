@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/main"
+    android:id="@+id/mainLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSecondary">
@@ -14,7 +14,7 @@
             android:id="@+id/layoutMenu"
             android:layout_width="match_parent"
             android:layout_height="@dimen/size_60"
-            android:layout_marginTop="@dimen/margin_8"
+            android:layout_marginTop="@dimen/margin_40"
             android:gravity="center_vertical"
             android:paddingHorizontal="@dimen/padding_10"
             app:layout_constraintEnd_toEndOf="parent"

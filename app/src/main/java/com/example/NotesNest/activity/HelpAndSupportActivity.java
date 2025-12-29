@@ -9,8 +9,12 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.content.res.AppCompatResources;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.example.NotesNest.R;
 
@@ -23,7 +27,13 @@ public class HelpAndSupportActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_help_and_support);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.help_and_support_activity), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
 
         initViews();
         setupOptions();
@@ -36,7 +46,7 @@ public class HelpAndSupportActivity extends AppCompatActivity {
         emailLayout.setOnClickListener(view -> {
             Intent intent = new Intent(Intent.ACTION_SENDTO);
             intent.setData(Uri.parse("mailto:")); // ensures only email apps open
-            intent.putExtra(Intent.EXTRA_EMAIL, new String[]{"support@yourapp.com"});
+            intent.putExtra(Intent.EXTRA_EMAIL, new String[]{"saihemanthhs@gmail.com"});
             intent.putExtra(Intent.EXTRA_SUBJECT, "Support Request");
             intent.putExtra(Intent.EXTRA_TEXT, "Hi Team,\n\nI need help with...");
 
@@ -62,7 +72,7 @@ public class HelpAndSupportActivity extends AppCompatActivity {
 
         userGuideLayout.setOnClickListener(view -> {
             Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse("https://notesnest-app.web.app/index.html"));
+            intent.setData(Uri.parse("https://notesnest-app.web.app/user-guide.html"));
             view.getContext().startActivity(intent);
         });
 

@@ -63,6 +63,19 @@
             android:text="@string/text_logout"
             android:textColor="@android:color/white" />
 
+        <TextView
+            android:id="@+id/tvGoBack"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_24"
+            android:text="← Go back"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="?attr/colorPrimary"
+            android:clickable="true"
+            android:focusable="true" />
+
+
     </LinearLayout>
 
 </ScrollView>

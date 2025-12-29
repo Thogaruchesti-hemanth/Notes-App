@@ -228,7 +228,12 @@ public class CategoryManager extends BottomSheetDialogFragment {
         @Override
         public void onBindViewHolder(@NonNull VH holder, int position) {
             CategoryEntity category = categories.get(position);
-            holder.name.setText(category.name);
+            if (category.id == 1) {
+                holder.name.setText(category.name + " (Default)");
+                holder.delete.setVisibility(View.GONE);
+            } else {
+                holder.name.setText(category.name);
+            }
 
             holder.delete.setColorFilter(ThemeManager.getThemeColor(requireContext(), R.color.black, R.color.white));
             holder.dragHandle.setColorFilter(ThemeManager.getThemeColor(requireContext(), R.color.black, R.color.white));
@@ -238,7 +243,7 @@ public class CategoryManager extends BottomSheetDialogFragment {
                 if (pos == RecyclerView.NO_POSITION) return;
 
                 CategoryEntity cat = categories.get(pos);
-                if (cat.id == 0) {
+                if (cat.id == 1) {
                     Toast.makeText(getContext(), "Cannot delete 'All'", Toast.LENGTH_SHORT).show();
                 } else {
                     showDeleteCategoryDialog(cat, pos);

@@ -62,7 +62,7 @@
                     android:layout_height="@dimen/size_120"
                     android:layout_marginBottom="@dimen/margin_20"
                     android:src="@drawable/ic_profile"
-                    android:tint="@color/google_blue" />
+                    android:tint="@color/tabSelectedTextColorLight" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -90,12 +90,12 @@
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="@dimen/margin_40"
                     android:layout_marginTop="@dimen/margin_16"
-                    android:backgroundTint="@color/google_blue"
+                    android:backgroundTint="?attr/colorPrimary"
                     android:drawableStart="@drawable/ic_google"
                     android:drawablePadding="@dimen/padding_8"
                     android:padding="@dimen/padding_12"
                     android:text="Connect Google Account"
-                    android:textColor="@color/white"
+                    android:textColor="?attr/colorSecondary"
                     android:textSize="@dimen/text_16" />
 
                 <TextView
@@ -103,7 +103,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/margin_16"
                     android:gravity="center"
-                    android:text="Your notes will be backed up automatically based on your settings"
+                    android:text="Your notes will be backed up based on your selected mode"
                     android:textColor="@color/grey"
                     android:textSize="@dimen/text_12" />
             </LinearLayout>
@@ -135,22 +135,24 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
+                        android:maxWidth="300dp"
+                        android:ellipsize="middle"
                         android:text="Not signed in"
-                        android:textSize="@dimen/text_18"
-                        android:textStyle="bold" />
+                        android:textColor="?attr/colorPrimary"
+                        android:textSize="@dimen/text_16" />
 
                     <TextView
                         android:id="@+id/txtStatus"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_margin="@dimen/margin_4"
+                        android:layout_marginTop="8dp"
                         android:background="@drawable/btn_rounded_blue"
-                        android:drawablePadding="@dimen/padding_12"
-                        android:gravity="center_vertical"
-                        android:padding="@dimen/padding_8"
+                        android:gravity="center"
+                        android:paddingHorizontal="16dp"
+                        android:paddingVertical="8dp"
                         android:text="@string/text_not_connected_to_drive"
-                        android:textColor="@color/blue"
-                        android:textSize="12sp" />
+                        android:textColor="@color/white"
+                        android:textSize="@dimen/text_12" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -161,60 +163,69 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:paddingHorizontal="@dimen/padding_12"
-                android:text="SETTINGS"
+                android:text="BACKUP SETTINGS"
                 android:textColor="@color/tabSelectedTextColorLight"
                 android:textSize="@dimen/text_16"
                 android:textStyle="bold"
                 android:visibility="gone" />
 
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardSettings"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="@dimen/radius_12"
                 app:cardElevation="2dp"
+                app:cardBackgroundColor="?attr/colorSecondary"
                 app:cardUseCompatPadding="true"
                 android:visibility="gone">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:padding="8dp">
+
+                    <!-- Backup Mode -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingVertical="12dp"
+                        android:paddingHorizontal="8dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Backup Mode"
+                            android:textColor="?attr/colorPrimary"
+                            android:textSize="@dimen/text_14" />
+
+                        <Spinner
+                            android:id="@+id/spinnerFrequency"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:minWidth="150dp" />
+                    </LinearLayout>
 
                     <!-- Enable Automatic Backups -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:padding="12dp">
+                        android:paddingVertical="12dp"
+                        android:paddingHorizontal="8dp">
 
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Enable Automatic Backups" />
+                            android:text="Enable Automatic Backups"
+                            android:textColor="?attr/colorPrimary"
+                            android:textSize="@dimen/text_14" />
 
                         <Switch
                             android:id="@+id/switchAutoBackup"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
-                    </LinearLayout>
-
-                    <!-- Frequency -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:padding="12dp">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Backup Frequency" />
-
-                        <Spinner
-                            android:id="@+id/spinnerFrequency"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content" />
                     </LinearLayout>
@@ -224,13 +235,16 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:padding="12dp">
+                        android:paddingVertical="12dp"
+                        android:paddingHorizontal="8dp">
 
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Include Attachments" />
+                            android:text="Include Attachments"
+                            android:textColor="?attr/colorPrimary"
+                            android:textSize="@dimen/text_14" />
 
                         <Switch
                             android:id="@+id/switchAttachments"
@@ -238,7 +252,7 @@
                             android:layout_height="wrap_content" />
                     </LinearLayout>
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
             <!-- Status Section -->
             <TextView
@@ -247,18 +261,19 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:paddingHorizontal="@dimen/padding_12"
-                android:text="STATUS"
+                android:text="BACKUP STATUS"
                 android:textColor="@color/tabSelectedTextColorLight"
                 android:textSize="@dimen/text_16"
                 android:textStyle="bold"
                 android:visibility="gone" />
 
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardStatus"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="@dimen/radius_12"
                 app:cardElevation="2dp"
+                app:cardBackgroundColor="?attr/colorSecondary"
                 app:cardUseCompatPadding="true"
                 android:visibility="gone">
 
@@ -273,9 +288,8 @@
                         android:layout_width="@dimen/size_32"
                         android:layout_height="@dimen/size_32"
                         android:layout_margin="@dimen/margin_8"
-                        android:background="@drawable/btn_rounded_green"
                         android:src="@drawable/ic_sync"
-                        android:tint="@color/google_green" />
+                        android:tint="@color/google_blue" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -298,7 +312,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Never backed up"
-                            android:textColor="@color/grey"
+                            android:textColor="?attr/colorPrimary"
                             android:textSize="@dimen/text_12" />
                     </LinearLayout>
 
@@ -311,7 +325,7 @@
                         android:tint="@color/google_green"
                         android:visibility="gone" />
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
             <!-- Backup Now Button -->
             <Button
@@ -319,7 +333,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
+                android:layout_marginHorizontal="40dp"
+                android:backgroundTint="?attr/colorPrimary"
                 android:text="Backup Now"
+                android:textColor="?attr/colorSecondary"
+                android:textSize="@dimen/text_16"
                 android:visibility="gone" />
 
             <!-- Disconnect Button -->
@@ -328,9 +346,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/margin_8"
+                android:layout_marginHorizontal="40dp"
                 android:gravity="center"
+                android:paddingVertical="12dp"
                 android:text="Disconnect Google Account"
                 android:textColor="@color/red"
+                android:textSize="@dimen/text_14"
                 android:visibility="gone" />
 
         </LinearLayout>

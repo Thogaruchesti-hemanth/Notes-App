@@ -17,9 +17,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
-import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
-import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
 import com.example.NotesNest.R;
@@ -38,7 +36,6 @@ import com.google.api.services.drive.DriveScopes;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 
 public class DriveBackupActivity extends AppCompatActivity {
 
@@ -62,9 +59,9 @@ public class DriveBackupActivity extends AppCompatActivity {
     private SharedPreferences backupPrefs;
     private boolean isSignedIn = false;
 
-    // Flags to prevent auto-scheduling
-    private boolean isInitializingSpinner = false;
-    private boolean isFirstTimeSignIn = false;
+    // Control variables
+    private boolean isInitializing = true;
+    private boolean isRestoringUI = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -136,25 +133,18 @@ public class DriveBackupActivity extends AppCompatActivity {
         spinnerFrequency.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                // Prevent auto-scheduling during initialization
-                if (isInitializingSpinner) {
+                // Don't process during initialization
+                if (isInitializing) {
                     return;
                 }
 
-                String selectedFrequency = parent.getItemAtPosition(position).toString();
-                backupPrefs.edit().putString("backup_frequency", selectedFrequency).apply();
+                String selectedOption = parent.getItemAtPosition(position).toString();
+                String previousMode = backupPrefs.getString("backup_mode", "On when click backup");
 
-                // Only schedule if user is signed in AND has auto backup enabled
-                if (isSignedIn && switchAutoBackup.isChecked()) {
-                    scheduleBackup();
-                    Toast.makeText(DriveBackupActivity.this,
-                            "Backup schedule updated: " + selectedFrequency,
-                            Toast.LENGTH_SHORT).show();
-                } else if (isSignedIn && !switchAutoBackup.isChecked()) {
-                    // Just save the preference, don't schedule
-                    Toast.makeText(DriveBackupActivity.this,
-                            "Auto backup is disabled. Enable it to schedule backups.",
-                            Toast.LENGTH_SHORT).show();
+                // Only update if mode actually changed
+                if (!selectedOption.equals(previousMode)) {
+                    backupPrefs.edit().putString("backup_mode", selectedOption).apply();
+                    updateBackupSettings(true); // true = show toast
                 }
             }
 
@@ -165,7 +155,47 @@ public class DriveBackupActivity extends AppCompatActivity {
         });
     }
 
+    private void updateBackupSettings(boolean showToast) {
+        String backupMode = backupPrefs.getString("backup_mode", "On when click backup");
+
+        switch (backupMode) {
+            case "On when click backup":
+                // Enable manual backup only
+                switchAutoBackup.setEnabled(false);
+                switchAutoBackup.setChecked(false);
+                backupPrefs.edit().putBoolean("auto_backup_enabled", false).apply();
+                if (showToast && !isRestoringUI) {
+                    Toast.makeText(this, "Manual backup mode enabled", Toast.LENGTH_SHORT).show();
+                }
+                break;
+
+            case "Off":
+                // Disable all backups
+                switchAutoBackup.setEnabled(false);
+                switchAutoBackup.setChecked(false);
+                backupPrefs.edit().putBoolean("auto_backup_enabled", false).apply();
+                if (showToast && !isRestoringUI) {
+                    Toast.makeText(this, "Backup disabled", Toast.LENGTH_SHORT).show();
+                }
+                break;
+
+            case "Daily":
+            case "Weekly":
+            case "Monthly":
+                // Enable auto backup switch for these options
+                switchAutoBackup.setEnabled(true);
+                boolean autoBackup = backupPrefs.getBoolean("auto_backup_enabled", false);
+                switchAutoBackup.setChecked(autoBackup);
+                if (showToast && !isRestoringUI && !isInitializing) {
+                    Toast.makeText(this, backupMode + " backup mode selected", Toast.LENGTH_SHORT).show();
+                }
+                break;
+        }
+    }
+
     private void restoreUIState() {
+        isRestoringUI = true;
+
         // Check if user is already signed in
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
         if (account != null && hasDriveScope(account)) {
@@ -174,25 +204,20 @@ public class DriveBackupActivity extends AppCompatActivity {
             updateUIForSignedOut();
         }
 
-        // Restore spinner selection WITHOUT triggering schedule
-        isInitializingSpinner = true;
-        String savedFrequency = backupPrefs.getString("backup_frequency", "Weekly");
-        switch (savedFrequency) {
-            case "Daily":
-                spinnerFrequency.setSelection(0);
+        // Restore spinner selection without triggering listener
+        isInitializing = true;
+        String savedMode = backupPrefs.getString("backup_mode", "On when click backup");
+        String[] modes = getResources().getStringArray(R.array.backup_frequency_options);
+        for (int i = 0; i < modes.length; i++) {
+            if (modes[i].equals(savedMode)) {
+                spinnerFrequency.setSelection(i, false); // false = don't trigger listener
                 break;
-            case "Weekly":
-                spinnerFrequency.setSelection(1);
-                break;
-            case "Monthly":
-                spinnerFrequency.setSelection(2);
-                break;
+            }
         }
-        isInitializingSpinner = false;
+        isInitializing = false;
 
-        // Restore auto backup preference
-        boolean autoBackupEnabled = backupPrefs.getBoolean("auto_backup_enabled", false);
-        switchAutoBackup.setChecked(autoBackupEnabled);
+        // Update settings based on saved mode (without toast)
+        updateBackupSettings(false);
 
         // Restore attachments preference
         boolean includeAttachments = backupPrefs.getBoolean("include_attachments", false);
@@ -202,15 +227,18 @@ public class DriveBackupActivity extends AppCompatActivity {
         switchAutoBackup.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (!switchAutoBackup.isEnabled()) {
+                    return; // Don't handle if switch is disabled
+                }
+
                 backupPrefs.edit().putBoolean("auto_backup_enabled", isChecked).apply();
 
                 if (isSignedIn) {
                     if (isChecked) {
-                        // User enabled auto backup - ask for confirmation before scheduling
-                        showEnableAutoBackupConfirmation();
+                        // Show confirmation before enabling auto backup
+                        showAutoBackupConfirmation();
                     } else {
-                        // User disabled auto backup - cancel scheduled backups
-                        cancelScheduledBackup();
+                        // Disable auto backup
                         Toast.makeText(DriveBackupActivity.this,
                                 "Automatic backups disabled", Toast.LENGTH_SHORT).show();
                     }
@@ -233,15 +261,17 @@ public class DriveBackupActivity extends AppCompatActivity {
         // Show/hide tick icon based on backup status
         boolean hasBackup = !lastBackup.equals("Never backed up");
         findViewById(R.id.imgTick).setVisibility(hasBackup ? View.VISIBLE : View.GONE);
+
+        isRestoringUI = false;
     }
 
-    private void showEnableAutoBackupConfirmation() {
+    private void showAutoBackupConfirmation() {
+        String frequency = backupPrefs.getString("backup_mode", "Weekly");
+
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
         builder.setTitle("Enable Automatic Backups?")
-                .setMessage("Automatic backups will run in the background according to your selected frequency. Enable automatic backups?")
+                .setMessage("Automatic backups will run " + frequency.toLowerCase() + " in the background. Enable automatic backups?")
                 .setPositiveButton("Enable", (dialog, which) -> {
-                    // User confirmed - schedule backup
-                    scheduleBackup();
                     Toast.makeText(this, "Automatic backups enabled", Toast.LENGTH_SHORT).show();
                 })
                 .setNegativeButton("Cancel", (dialog, which) -> {
@@ -272,7 +302,12 @@ public class DriveBackupActivity extends AppCompatActivity {
 
         btnBackupNow.setOnClickListener(v -> {
             if (isSignedIn) {
-                runBackupNow();
+                String backupMode = backupPrefs.getString("backup_mode", "On when click backup");
+                if (backupMode.equals("Off")) {
+                    Toast.makeText(this, "Backup is currently disabled. Change backup mode to enable.", Toast.LENGTH_SHORT).show();
+                } else {
+                    runBackupNow();
+                }
             } else {
                 Toast.makeText(this, "Please connect your Google account first", Toast.LENGTH_SHORT).show();
                 signIn();
@@ -310,15 +345,14 @@ public class DriveBackupActivity extends AppCompatActivity {
                         .putBoolean("is_signed_in", true)
                         .apply();
 
-                // Check if this is first time sign in for this account
-                String previousEmail = backupPrefs.getString("previous_account_email", null);
-                if (previousEmail == null || !previousEmail.equals(account.getEmail())) {
-                    // First time signing in with this account
+                Toast.makeText(this, "Connected to Google Drive successfully!", Toast.LENGTH_SHORT).show();
+
+                // Show welcome dialog for new users
+                if (!backupPrefs.getBoolean("has_shown_welcome", false)) {
                     showWelcomeDialog();
-                    backupPrefs.edit().putString("previous_account_email", account.getEmail()).apply();
+                    backupPrefs.edit().putBoolean("has_shown_welcome", true).apply();
                 }
 
-                Toast.makeText(this, "Connected to Google Drive successfully!", Toast.LENGTH_SHORT).show();
             } else {
                 updateUIForSignedOut();
                 Toast.makeText(this,
@@ -348,41 +382,35 @@ public class DriveBackupActivity extends AppCompatActivity {
     private void showWelcomeDialog() {
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
         builder.setTitle("Welcome to Drive Backup!")
-                .setMessage("Your notes can now be backed up to Google Drive.\n\nWould you like to enable automatic backups?")
-                .setPositiveButton("Yes, Enable", (dialog, which) -> {
-                    // Enable auto backup and schedule
-                    switchAutoBackup.setChecked(true);
-                    backupPrefs.edit().putBoolean("auto_backup_enabled", true).apply();
-                    scheduleBackup();
-                    Toast.makeText(this, "Automatic backups enabled", Toast.LENGTH_SHORT).show();
+                .setMessage("Your notes can now be backed up to Google Drive.\n\nSelect your preferred backup mode:")
+                .setPositiveButton("Manual Backup", (dialog, which) -> {
+                    // Set to manual backup mode
+                    spinnerFrequency.setSelection(0); // "On when click backup"
+                    backupPrefs.edit().putString("backup_mode", "On when click backup").apply();
+                    updateBackupSettings(false); // Don't show toast
+                    Toast.makeText(this, "Manual backup mode selected", Toast.LENGTH_SHORT).show();
                 })
-                .setNegativeButton("Not Now", (dialog, which) -> {
-                    // Keep auto backup disabled
-                    switchAutoBackup.setChecked(false);
-                    backupPrefs.edit().putBoolean("auto_backup_enabled", false).apply();
-                    Toast.makeText(this, "You can enable automatic backups anytime in settings", Toast.LENGTH_LONG).show();
+                .setNegativeButton("Automatic Backup", (dialog, which) -> {
+                    // Set to weekly auto backup
+                    spinnerFrequency.setSelection(2); // "Weekly"
+                    backupPrefs.edit().putString("backup_mode", "Weekly").apply();
+                    updateBackupSettings(false); // Don't show toast
+                    showAutoBackupConfirmation();
                 })
                 .setNeutralButton("Learn More", (dialog, which) -> {
-                    // Show more info
-                    showAutoBackupInfoDialog();
+                    showBackupInfoDialog();
                 })
                 .show();
     }
 
-    private void showAutoBackupInfoDialog() {
+    private void showBackupInfoDialog() {
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
-        builder.setTitle("About Automatic Backups")
-                .setMessage("Automatic backups:\n• Run in the background\n• Use minimal battery\n• Only when device is charging and connected to Wi-Fi (recommended)\n• Respect your selected frequency\n• Can be disabled anytime\n\nYou can also use 'Backup Now' for manual backups.")
-                .setPositiveButton("Enable Auto Backup", (dialog, which) -> {
-                    switchAutoBackup.setChecked(true);
-                    backupPrefs.edit().putBoolean("auto_backup_enabled", true).apply();
-                    scheduleBackup();
-                    Toast.makeText(this, "Automatic backups enabled", Toast.LENGTH_SHORT).show();
-                })
-                .setNegativeButton("Manual Only", (dialog, which) -> {
-                    switchAutoBackup.setChecked(false);
-                    backupPrefs.edit().putBoolean("auto_backup_enabled", false).apply();
-                })
+        builder.setTitle("About Backup Modes")
+                .setMessage("• On when click backup: Backup only when you click 'Backup Now'\n" +
+                        "• Off: No backups will be created\n" +
+                        "• Daily/Weekly/Monthly: Automatic backups on schedule (when enabled)\n\n" +
+                        "You can change the mode anytime in settings.")
+                .setPositiveButton("OK", null)
                 .show();
     }
 
@@ -412,7 +440,7 @@ public class DriveBackupActivity extends AppCompatActivity {
         // Enable settings
         spinnerFrequency.setEnabled(true);
         switchAttachments.setEnabled(true);
-        switchAutoBackup.setEnabled(true);
+        updateBackupSettings(false); // Don't show toast on UI update
     }
 
     private void updateUIForSignedOut() {
@@ -449,60 +477,6 @@ public class DriveBackupActivity extends AppCompatActivity {
                 .apply();
     }
 
-    private void scheduleBackup() {
-        if (!isSignedIn) {
-            Log.w(TAG, "Cannot schedule backup: User not signed in");
-            return;
-        }
-
-        if (!switchAutoBackup.isChecked()) {
-            Log.d(TAG, "Automatic backups disabled by user");
-            return;
-        }
-
-        String frequency = backupPrefs.getString("backup_frequency", "Weekly");
-        long interval;
-        TimeUnit timeUnit = TimeUnit.DAYS;
-
-        switch (frequency) {
-            case "Daily":
-                interval = 1;
-                break;
-            case "Weekly":
-                interval = 7;
-                break;
-            case "Monthly":
-                interval = 30;
-                break;
-            default:
-                interval = 7;
-        }
-
-        // Add constraints for better battery usage
-        PeriodicWorkRequest backupRequest = new PeriodicWorkRequest.Builder(
-                DriveBackupWorker.class,
-                interval,
-                timeUnit)
-                .addTag("drive_backup")
-                .build();
-
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-                "drive_backup_work",
-                ExistingPeriodicWorkPolicy.UPDATE,
-                backupRequest
-        );
-
-        Log.d(TAG, "Backup scheduled: " + frequency + " (every " + interval + " days)");
-    }
-
-    private void cancelScheduledBackup() {
-        // Cancel all scheduled backups
-        WorkManager.getInstance(this).cancelAllWorkByTag("drive_backup");
-        WorkManager.getInstance(this).cancelUniqueWork("drive_backup_work");
-
-        Log.d(TAG, "Scheduled backups cancelled");
-    }
-
     private void runBackupNow() {
         if (!isSignedIn) {
             Toast.makeText(this, "Please connect your Google account first", Toast.LENGTH_SHORT).show();
@@ -513,7 +487,7 @@ public class DriveBackupActivity extends AppCompatActivity {
         txtStatus.setBackgroundResource(R.drawable.btn_rounded_blue);
         txtStatus.setTextColor(getResources().getColor(R.color.blue));
 
-        // Create constraints for manual backup
+        // Create one-time work request for manual backup
         OneTimeWorkRequest backupNowRequest = new OneTimeWorkRequest.Builder(DriveBackupWorker.class)
                 .addTag("manual_backup")
                 .build();
@@ -563,24 +537,19 @@ public class DriveBackupActivity extends AppCompatActivity {
     }
 
     private void signOut() {
-        // Cancel any scheduled backups first
-        cancelScheduledBackup();
-
         googleSignInClient.signOut()
                 .addOnCompleteListener(this, task -> {
                     updateUIForSignedOut();
 
-                    // Clear backup preferences except for settings
-                    String frequency = backupPrefs.getString("backup_frequency", "Weekly");
-                    boolean includeAttachments = backupPrefs.getBoolean("include_attachments", false);
-                    boolean autoBackupEnabled = backupPrefs.getBoolean("auto_backup_enabled", false);
-
+                    // Clear account-specific preferences
                     backupPrefs.edit()
-                            .clear()
-                            .putString("backup_frequency", frequency)
-                            .putBoolean("include_attachments", includeAttachments)
-                            .putBoolean("auto_backup_enabled", autoBackupEnabled)
+                            .remove("backup_account_email")
+                            .remove("is_signed_in")
+                            .remove("last_backup_time")
                             .apply();
+
+                    // Hide tick icon
+                    findViewById(R.id.imgTick).setVisibility(View.GONE);
 
                     Toast.makeText(this, "Disconnected from Google Drive", Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "User disconnected from Google Drive");
@@ -604,5 +573,11 @@ public class DriveBackupActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         restoreUIState();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        isInitializing = true; // Reset for next time activity opens
     }
 }

@@ -7,6 +7,8 @@
 
     //back-up array
     <string-array name="backup_frequency_options">
+        <item>On when click backup</item>
+        <item>Off</item>
         <item>Daily</item>
         <item>Weekly</item>
         <item>Monthly</item>

@@ -2,17 +2,12 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
+    android:id="@+id/help_and_support_activity"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSecondary"
     android:orientation="vertical"
     tools:context=".activity.HelpAndSupportActivity">
-
-    <androidx.cardview.widget.CardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:cardElevation="2dp">
 
         <LinearLayout
             android:id="@+id/layoutHeader"
@@ -41,7 +36,6 @@
                 android:textSize="@dimen/text_22"
                 android:textStyle="bold" />
         </LinearLayout>
-    </androidx.cardview.widget.CardView>
 
     <ScrollView
         android:id="@+id/scrollView"
@@ -68,11 +62,12 @@
                 android:textSize="@dimen/text_16"
                 android:textStyle="bold" />
 
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="@dimen/radius_12"
                 app:cardElevation="2dp"
+                app:cardBackgroundColor="?attr/colorSecondary"
                 app:cardUseCompatPadding="true">
 
                 <LinearLayout
@@ -105,7 +100,7 @@
                         layout="@layout/item_support_option"
                         android:tag="feedback" />
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -118,11 +113,12 @@
                 android:textSize="@dimen/text_16"
                 android:textStyle="bold" />
 
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="@dimen/radius_12"
                 app:cardElevation="2dp"
+                app:cardBackgroundColor="?attr/colorSecondary"
                 app:cardUseCompatPadding="true">
 
                 <LinearLayout
@@ -156,7 +152,7 @@
                         android:tag="whats_new" />
 
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -169,11 +165,12 @@
                 android:textSize="@dimen/text_16"
                 android:textStyle="bold" />
 
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="@dimen/radius_12"
                 app:cardElevation="2dp"
+                app:cardBackgroundColor="?attr/colorSecondary"
                 app:cardUseCompatPadding="true">
 
                 <LinearLayout
@@ -206,7 +203,7 @@
                         layout="@layout/item_support_option"
                         android:tag="terms_service" />
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -218,12 +215,13 @@
                 android:textSize="@dimen/text_16"
                 android:textStyle="bold" />
 
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/margin_10"
                 app:cardCornerRadius="@dimen/radius_12"
                 app:cardElevation="2dp"
+                app:cardBackgroundColor="?attr/colorSecondary"
                 app:cardUseCompatPadding="true">
 
                 <LinearLayout
@@ -253,7 +251,7 @@
                         android:id="@+id/layoutFAQ3"
                         layout="@layout/item_faq" />
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
     </ScrollView>
 

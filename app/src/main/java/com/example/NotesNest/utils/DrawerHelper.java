@@ -60,7 +60,7 @@ public class DrawerHelper {
 
     public DrawerHelper(AppCompatActivity activity) {
         this.activity = activity;
-        this.drawerLayout = activity.findViewById(R.id.main);
+        this.drawerLayout = activity.findViewById(R.id.mainLayout);
         this.navigationView = activity.findViewById(R.id.navigationView);
         this.pref = new SharedPreferenceUtil(activity);
         this.firebaseHelper = new FirebaseHelper();
