@@ -18,19 +18,25 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
+import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.security.crypto.EncryptedSharedPreferences;
 import androidx.security.crypto.MasterKey;
 
 import com.example.NotesNest.AnimatedRunningBorderLayout;
 import com.example.NotesNest.FirebaseHelper;
 import com.example.NotesNest.R;
+import com.example.NotesNest.SingleColorRunningBorderLayout;
 import com.example.NotesNest.databinding.ActivityLoginBinding;
 import com.example.NotesNest.utils.AnalyticsHelper;
+import com.example.NotesNest.utils.ThemeManager;
 import com.example.NotesNest.utils.ValidationUtils;
 import com.example.NotesNest.utils.formaters.ValidationTextWatcher;
 import com.google.android.material.textfield.TextInputLayout;
@@ -55,26 +61,28 @@ import java.io.InputStream;
  */
 public class LoginActivity extends AppCompatActivity {
     private static final String TAG = LoginActivity.class.getSimpleName();
-
     private ActivityLoginBinding binding;
     private FirebaseHelper firebaseHelper;
-
     // Launchers
     private ActivityResultLauncher<Intent> googleLauncher;
     private ActivityResultLauncher<Intent> imagePickerLauncher;
-
     // In-memory selection
     private String selectedImageBase64 = "";
-
     // Animated borders (small UI flourish in your original app)
-    private AnimatedRunningBorderLayout loginBorder;
+    private SingleColorRunningBorderLayout loginBorder;
     private AnimatedRunningBorderLayout googleBorder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
         binding = ActivityLoginBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.loginLayout), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
 
         firebaseHelper = new FirebaseHelper();
 
@@ -132,15 +140,21 @@ public class LoginActivity extends AppCompatActivity {
     private void registerLaunchers() {
         // Google Sign-In launcher already used in your original code -- keep same callback shape
         googleLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-            if (result.getData() != null) {
+            if (result.getData() != null && result.getResultCode() != RESULT_CANCELED) {
                 googleBorder.startLoading();
+                binding.googleSignInButton.setTextColor(ThemeManager.getThemeColor(this,R.color.black,R.color.white));
+                binding.googleSignInButton.setBackgroundColor(ThemeManager.getThemeColor(this,R.color.backgroundLight,R.color.black));
                 firebaseHelper.handleGoogleSignInResult(result.getData(), this, (userName, email) -> {
                     googleBorder.stopLoading();
+                    binding.googleSignInButton.setTextColor(ThemeManager.getThemeColor(this,R.color.white,R.color.black));
+                    binding.googleSignInButton.setBackgroundColor(ThemeManager.getThemeColor(this,R.color.black,R.color.black));
                     saveSession();
                     navigateToMain();
                 });
             } else {
-                showError("Google sign-in cancelled");
+                googleBorder.stopLoading();
+                binding.googleSignInButton.setTextColor(ThemeManager.getThemeColor(this,R.color.white,R.color.black));
+                binding.googleSignInButton.setBackgroundColor(ThemeManager.getThemeColor(this,R.color.black,R.color.white));
             }
         });
 
@@ -163,6 +177,7 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         binding.loginButton.setOnClickListener(v -> {
+            clearFocusAndHideKeyboard();
             if (isLoginMode()) loginUser();
             else signupUser();
         });
@@ -171,7 +186,10 @@ public class LoginActivity extends AppCompatActivity {
 
         binding.uploadImageButton.setOnClickListener(v -> openImageSelector());
 
-        binding.googleSignInButton.setOnClickListener(v -> firebaseHelper.signInWithGoogle(googleLauncher, this));
+        binding.googleSignInButton.setOnClickListener(v -> {
+            clearFocusAndHideKeyboard();
+            firebaseHelper.signInWithGoogle(googleLauncher, this);
+        });
 
         binding.termsCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> clearError());
 
@@ -226,44 +244,56 @@ public class LoginActivity extends AppCompatActivity {
         clearError();
 
         // Start the loading animation
-        loginBorder.startLoading();
+        startLoadingAnimation();
 
         if (!ValidationUtils.isValidEmail(email)) {
             showError("Invalid email");
-            loginBorder.stopLoading(); // stop animation on failure
+            stopLoadingAnimation();
             return;
         }
 
         if (!ValidationUtils.isValidPassword(password)) {
             showError("Enter your password");
-            loginBorder.stopLoading(); // stop animation on failure
+            stopLoadingAnimation();
             return;
         }
 
         // Check terms acceptance for login
         if (!binding.termsCheckbox.isChecked()) {
             showError(getString(R.string.error_terms_required));
-            loginBorder.stopLoading(); // stop animation on failure
+            stopLoadingAnimation();
             return;
         }
 
-        loginBorder.startLoading();
         // Firebase login
         firebaseHelper.loginUser(email, password, this, new FirebaseHelper.LoginCallback() {
             @Override
             public void onLoginSuccess() {
-                loginBorder.stopLoading();
+                stopLoadingAnimation();
                 saveSession();
                 navigateToMain();
             }
 
             @Override
             public void onLoginFailure(@NonNull String message) {
-                loginBorder.stopLoading();
+                stopLoadingAnimation();
                 showError(message);
             }
         });
     }
+
+    private void startLoadingAnimation() {
+        loginBorder.startLoading();
+        binding.loginButton.setTextColor(ThemeManager.getThemeColor(this,R.color.black,R.color.white));
+        binding.loginButton.setBackgroundColor(ThemeManager.getThemeColor(this,R.color.backgroundLight,R.color.black));
+    }
+
+    private void stopLoadingAnimation() {
+        loginBorder.stopLoading();
+        binding.loginButton.setTextColor(ThemeManager.getThemeColor(this,R.color.white,R.color.black));
+        binding.loginButton.setBackgroundColor(ThemeManager.getThemeColor(this,R.color.black,R.color.white));
+    }
+
 
     private void signupUser() {
         final String username = binding.userNameEditText.getText() == null ? "" : binding.userNameEditText.getText().toString().trim();
@@ -274,23 +304,29 @@ public class LoginActivity extends AppCompatActivity {
         // Clear previous errors
         clearError();
 
+        startLoadingAnimation();
+
         if (!ValidationUtils.isValidUsername(username)) {
             showError("Username must be 3–15 characters long and contain only letters, numbers, or underscores");
+            stopLoadingAnimation();
             return;
         }
 
         if (!ValidationUtils.isValidEmail(email)) {
             showError("Invalid email");
+            stopLoadingAnimation();
             return;
         }
 
         if (!ValidationUtils.isValidPassword(password)) {
             showError("Password must be 8+ chars, contain upper & lower case letters, a number, and a symbol");
+            stopLoadingAnimation();
             return;
         }
 
         if (!ValidationUtils.doPasswordsMatch(password, confirm)) {
             showError("Passwords do not match");
+            stopLoadingAnimation();
             return;
         }
 
@@ -301,12 +337,14 @@ public class LoginActivity extends AppCompatActivity {
             public void onSignupSuccess(String userName, String email) {
                 binding.loginButton.setEnabled(true);
                 saveSession();
+                stopLoadingAnimation();
                 navigateToMain();
             }
 
             @Override
             public void onFailure(String errorMessage) {
                 binding.loginButton.setEnabled(true);
+                stopLoadingAnimation();
                 showError(errorMessage);
             }
         });
@@ -566,6 +604,25 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
+    private void clearFocusAndHideKeyboard() {
+        View currentFocus = getCurrentFocus();
+
+        // Clear focus from all EditTexts
+        binding.loginEmail.clearFocus();
+        binding.loginPassword.clearFocus();
+        binding.userNameEditText.clearFocus();
+        binding.confirmPassword.clearFocus();
+
+        if (currentFocus != null) {
+            InputMethodManager imm =
+                    (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.hideSoftInputFromWindow(currentFocus.getWindowToken(), 0);
+            }
+        }
+    }
+
+
     // Helper: disables animations completely before clearing errors
     private void disableErrorAnimations(@NonNull TextInputLayout layout) {
         layout.setErrorEnabled(false);
@@ -577,6 +634,5 @@ public class LoginActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         AnalyticsHelper.logScreenView(getClass().getSimpleName(), getClass().getSimpleName());
-
     }
 }

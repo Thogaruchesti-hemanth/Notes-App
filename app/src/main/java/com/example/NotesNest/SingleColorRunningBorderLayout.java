@@ -10,7 +10,7 @@ import android.widget.FrameLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-public class AnimatedRunningBorderLayout extends FrameLayout {
+public class SingleColorRunningBorderLayout extends FrameLayout {
 
     private Paint borderPaint;
     private RectF rect;
@@ -20,8 +20,14 @@ public class AnimatedRunningBorderLayout extends FrameLayout {
     private boolean isLoading = false;
 
     private final float strokeWidth = 10f;
+    private final int themeColor = Color.parseColor("#FFF3B64D"); // Your app color
 
-    public AnimatedRunningBorderLayout(Context context, @Nullable AttributeSet attrs) {
+    public SingleColorRunningBorderLayout(Context context) {
+        super(context);
+        init();
+    }
+
+    public SingleColorRunningBorderLayout(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         init();
     }
@@ -37,7 +43,7 @@ public class AnimatedRunningBorderLayout extends FrameLayout {
         borderPaint.setStrokeCap(Paint.Cap.ROUND);
 
         animator = ValueAnimator.ofFloat(0, 360);
-        animator.setDuration(1500); // 2 seconds for a full loop
+        animator.setDuration(1500); // Full rotation in 1.5 seconds
         animator.setRepeatCount(ValueAnimator.INFINITE);
         animator.setInterpolator(new LinearInterpolator());
         animator.addUpdateListener(animation -> {
@@ -54,31 +60,16 @@ public class AnimatedRunningBorderLayout extends FrameLayout {
         float inset = strokeWidth / 2f;
         rect.set(inset, inset, getWidth() - inset, getHeight() - inset);
 
-        // Google Colors
-        int blue = Color.parseColor("#4285F4");
-        int green = Color.parseColor("#34A853");
-        int yellow = Color.parseColor("#FBBC05");
-        int red = Color.parseColor("#EA4335");
+        // Single-color glow with fade to transparent
+        int[] colors = new int[]{themeColor, Color.TRANSPARENT};
+        float[] positions = new float[]{0f, 1f};
 
-        // The "Short Glow" Logic:
-        // Colors are packed between 0.0 and 0.4 for a shorter tail.
-        // The rest of the 360 circle (0.4 to 1.0) is transparent.
-        int[] colors = new int[]{
-                blue, green, yellow, red, Color.TRANSPARENT, Color.TRANSPARENT
-        };
-
-        // This mapping controls the length. 0.0 to 0.35 is the visible part.
-        float[] positions = new float[]{0f, 0.1f, 0.2f, 0.3f, 0.35f, 1f};
-
-        // Create or update gradient based on current center
         SweepGradient sweepGradient = new SweepGradient(getWidth() / 2f, getHeight() / 2f, colors, positions);
         borderPaint.setShader(sweepGradient);
 
-        // Rotate the matrix
         matrix.setRotate(rotation, getWidth() / 2f, getHeight() / 2f);
         sweepGradient.setLocalMatrix(matrix);
 
-        // Draw the rounded rectangle border
         float cornerRadius = 50f;
         canvas.drawRoundRect(rect, cornerRadius, cornerRadius, borderPaint);
     }
