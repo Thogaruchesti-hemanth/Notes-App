@@ -203,6 +203,12 @@ public class SharedPreferenceUtil {
         }
     }
 
+    public void clearAllPreferences() {
+        if (sharedPreferences != null) {
+            sharedPreferences.edit().clear().apply();
+        }
+    }
+
     // Clear premium data
     public void clearPremiumData() {
         sharedPreferences.edit().remove(PREMIUM_PLAN).apply();

@@ -282,7 +282,6 @@ public class DrawerHelper {
                     userId,
                     name,
                     base64Image,
-                    activity,
                     () -> Toast.makeText(activity, "Details Updated SuccessFully", Toast.LENGTH_SHORT).show()
             );
         }
@@ -313,7 +312,6 @@ public class DrawerHelper {
                     userId,
                     pref.getUserName(),
                     base64Image,
-                    activity,
                     () -> Toast.makeText(activity, "Profile image updated in Firebase", Toast.LENGTH_SHORT).show()
             );
         }
