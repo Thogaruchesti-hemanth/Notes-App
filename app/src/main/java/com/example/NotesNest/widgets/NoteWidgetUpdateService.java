@@ -1,8 +1,9 @@
 package com.example.NotesNest.widgets;
 
-
 import android.app.Application;
+import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.text.Html;
@@ -25,87 +26,185 @@ import java.util.Locale;
 
 public class NoteWidgetUpdateService extends Worker {
 
-    public NoteWidgetUpdateService(@NonNull Context context, @NonNull WorkerParameters params) {
+    public NoteWidgetUpdateService(
+            @NonNull Context context,
+            @NonNull WorkerParameters params
+    ) {
         super(context, params);
     }
 
+    /* -----------------------------------------
+       PUBLIC API – CALLED FROM PURCHASE / APP
+       ----------------------------------------- */
+
     public static void updateAllWidgets(Context context) {
-        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+        AppWidgetManager appWidgetManager =
+                AppWidgetManager.getInstance(context);
 
-        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(new android.content.ComponentName(context, NoteWidget.class));
+        int[] widgetIds = appWidgetManager.getAppWidgetIds(
+                new ComponentName(context, NoteWidget.class)
+        );
 
-        for (int widgetId : appWidgetIds) {
+        for (int widgetId : widgetIds) {
             updateWidget(context, appWidgetManager, widgetId);
         }
     }
 
-    public static void updateWidget(Context context, AppWidgetManager appWidgetManager, int widgetId) {
-        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
+    /* -----------------------------------------
+       CORE WIDGET UPDATE LOGIC
+       ----------------------------------------- */
 
-        // 👇 Load note for this widget
+    public static void updateWidget(
+            Context context,
+            AppWidgetManager appWidgetManager,
+            int widgetId
+    ) {
+        SharedPreferenceUtil pref =
+                new SharedPreferenceUtil(context);
+
+        boolean isPremium = pref.isUserPremium();
+
+        RemoteViews views = new RemoteViews(
+                context.getPackageName(),
+                R.layout.widget_layout
+        );
+
+        // 🚫 NON-PREMIUM USER → SHOW UPGRADE MESSAGE
+        if (!isPremium) {
+            views.setTextViewText(R.id.tvTitle, context.getString(R.string.upgrade_to_premium));
+            views.setTextViewText(R.id.tvMessage, "");
+            views.setTextViewText(R.id.tvTime, "");
+            views.setInt(R.id.widget_root, "setBackgroundColor", android.graphics.Color.WHITE);
+
+            // Click opens upgrade/purchase flow
+            Intent intent = new Intent(context, MainActivity.class);
+            intent.putExtra("show_upgrade", true);
+            PendingIntent pendingIntent = PendingIntent.getActivity(
+                    context,
+                    widgetId,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            );
+            views.setOnClickPendingIntent(R.id.widget_root, pendingIntent);
+
+            appWidgetManager.updateAppWidget(widgetId, views);
+            return;
+        }
+
+        // ✅ PREMIUM USER → FULL WIDGET
         NoteEntity note = getNoteForWidget(context, widgetId);
 
         if (note != null) {
-            String content = HtmlListConverter.convertHtmlLists(note.content);
-            String formattedDate = new SimpleDateFormat("MMM dd", Locale.getDefault()).format(new Date(note.createdAt)); // Format date
+            String content =
+                    HtmlListConverter.convertHtmlLists(note.content);
+
+            String dateText = new SimpleDateFormat(
+                    "MMM dd", Locale.getDefault()
+            ).format(new Date(note.createdAt));
 
             views.setTextViewText(R.id.tvTitle, note.title);
-            views.setTextViewText(R.id.tvMessage, Html.fromHtml(content, Html.FROM_HTML_MODE_LEGACY));
-            views.setTextViewText(R.id.tvTime, formattedDate);
+            views.setTextViewText(
+                    R.id.tvMessage,
+                    Html.fromHtml(content, Html.FROM_HTML_MODE_LEGACY)
+            );
+            views.setTextViewText(R.id.tvTime, dateText);
 
-            // Colors
-            try {
-                int bg = android.graphics.Color.parseColor(note.colorHex);
-                views.setInt(R.id.widget_root, "setBackgroundColor", bg);
-
-                double brightness = android.graphics.Color.red(bg) * 0.299 + android.graphics.Color.green(bg) * 0.587 + android.graphics.Color.blue(bg) * 0.114;
-                int textColor = (brightness > 186) ? android.graphics.Color.BLACK : android.graphics.Color.WHITE;
-
-                views.setTextColor(R.id.tvTitle, textColor);
-                views.setTextColor(R.id.tvMessage, textColor);
-                views.setTextColor(R.id.tvTime, textColor);
-
-            } catch (Exception e) {
-                views.setInt(R.id.widget_root, "setBackgroundColor", android.graphics.Color.WHITE);
-            }
+            applyColors(views, note.colorHex);
 
         } else {
-            // No note selected
-            views.setTextViewText(R.id.tvTitle, context.getString(R.string.text_no_note_selected));
-            views.setTextViewText(R.id.tvMessage, context.getString(R.string.text_tap_to_configure_widget_and_select_a_note));
+            views.setTextViewText(
+                    R.id.tvTitle,
+                    context.getString(R.string.text_no_note_selected)
+            );
+            views.setTextViewText(
+                    R.id.tvMessage,
+                    context.getString(
+                            R.string.text_tap_to_configure_widget_and_select_a_note
+                    )
+            );
             views.setTextViewText(R.id.tvTime, "");
             views.setInt(R.id.widget_root, "setBackgroundColor", android.graphics.Color.WHITE);
         }
 
-        // Open main app when widget clicked
+        // Open app on click (PREMIUM ONLY)
         Intent intent = new Intent(context, MainActivity.class);
         intent.putExtra("widget_id", widgetId);
 
-        android.app.PendingIntent pendingIntent = android.app.PendingIntent.getActivity(context, widgetId, intent, android.app.PendingIntent.FLAG_UPDATE_CURRENT | android.app.PendingIntent.FLAG_IMMUTABLE);
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                context,
+                widgetId,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
 
         views.setOnClickPendingIntent(R.id.widget_root, pendingIntent);
-
         appWidgetManager.updateAppWidget(widgetId, views);
     }
 
-    /**
-     * Load the note selected for this widget from SharedPreferences + Room DB
-     */
-    private static NoteEntity getNoteForWidget(Context context, int widgetId) {
+    /* -----------------------------------------
+       NOTE LOADING
+       ----------------------------------------- */
 
-        SharedPreferenceUtil pref = new SharedPreferenceUtil(context);
+    private static NoteEntity getNoteForWidget(
+            Context context,
+            int widgetId
+    ) {
+        SharedPreferenceUtil pref =
+                new SharedPreferenceUtil(context);
+
+        if (!pref.isUserPremium()) {
+            return null; // HARD BLOCK
+        }
 
         int noteId = pref.getWidgetNoteId(context, widgetId);
-
         if (noteId == -1) return null;
 
         try {
-            NoteRepository repository = new NoteRepository((Application) context.getApplicationContext());
+            NoteRepository repository =
+                    new NoteRepository(
+                            (Application) context.getApplicationContext()
+                    );
             return repository.getNoteByIdSync(noteId);
         } catch (Exception e) {
             return null;
         }
     }
+
+    /* -----------------------------------------
+       COLOR / CONTRAST HANDLING
+       ----------------------------------------- */
+
+    private static void applyColors(RemoteViews views, String colorHex) {
+        try {
+            int bg = android.graphics.Color.parseColor(colorHex);
+            views.setInt(R.id.widget_root, "setBackgroundColor", bg);
+
+            double brightness =
+                    android.graphics.Color.red(bg) * 0.299 +
+                            android.graphics.Color.green(bg) * 0.587 +
+                            android.graphics.Color.blue(bg) * 0.114;
+
+            int textColor =
+                    brightness > 186 ?
+                            android.graphics.Color.BLACK :
+                            android.graphics.Color.WHITE;
+
+            views.setTextColor(R.id.tvTitle, textColor);
+            views.setTextColor(R.id.tvMessage, textColor);
+            views.setTextColor(R.id.tvTime, textColor);
+
+        } catch (Exception e) {
+            views.setInt(
+                    R.id.widget_root,
+                    "setBackgroundColor",
+                    android.graphics.Color.WHITE
+            );
+        }
+    }
+
+    /* -----------------------------------------
+       WORKER ENTRY POINT
+       ----------------------------------------- */
 
     @NonNull
     @Override
@@ -113,5 +212,4 @@ public class NoteWidgetUpdateService extends Worker {
         updateAllWidgets(getApplicationContext());
         return Result.success();
     }
-
 }

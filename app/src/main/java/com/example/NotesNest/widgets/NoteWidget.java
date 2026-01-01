@@ -4,6 +4,7 @@ import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Bundle;
 
 import androidx.work.Constraints;
 import androidx.work.ExistingPeriodicWorkPolicy;
@@ -15,33 +16,35 @@ import java.util.concurrent.TimeUnit;
 
 public class NoteWidget extends AppWidgetProvider {
 
+    private static final String WIDGET_PREFS = "note_widgets";
+    private static final String WIDGET_WORK_NAME = "note_widget_update";
+
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         // Update all widgets immediately
         NoteWidgetUpdateService.updateAllWidgets(context);
 
-        // Schedule periodic updates (every 30 minutes - minimum for widgets)
+        // Schedule periodic updates
         scheduleWidgetUpdates(context);
     }
 
     @Override
     public void onEnabled(Context context) {
-        // When first widget is added
+        // First widget added
         scheduleWidgetUpdates(context);
     }
 
     @Override
     public void onDisabled(Context context) {
-        // When last widget is removed
-        WorkManager.getInstance(context).cancelUniqueWork("note_widget_update");
+        // Last widget removed, cancel periodic updates
+        WorkManager.getInstance(context).cancelUniqueWork(WIDGET_WORK_NAME);
     }
 
     @Override
     public void onDeleted(Context context, int[] appWidgetIds) {
-        // Remove widget preferences when widget is deleted
-        SharedPreferences prefs = context.getSharedPreferences("note_widgets", Context.MODE_PRIVATE);
+        // Remove widget-specific preferences
+        SharedPreferences prefs = context.getSharedPreferences(WIDGET_PREFS, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
-
         for (int widgetId : appWidgetIds) {
             editor.remove("widget_note_" + widgetId);
         }
@@ -50,8 +53,8 @@ public class NoteWidget extends AppWidgetProvider {
 
     @Override
     public void onAppWidgetOptionsChanged(Context context, AppWidgetManager appWidgetManager,
-                                          int appWidgetId, android.os.Bundle newOptions) {
-        // Widget size changed - update content to fit new size
+                                          int appWidgetId, Bundle newOptions) {
+        // Widget size changed – update content
         NoteWidgetUpdateService.updateAllWidgets(context);
     }
 
@@ -67,8 +70,9 @@ public class NoteWidget extends AppWidgetProvider {
                 .build();
 
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-                "note_widget_update",
+                WIDGET_WORK_NAME,
                 ExistingPeriodicWorkPolicy.KEEP,
-                workRequest);
+                workRequest
+        );
     }
 }

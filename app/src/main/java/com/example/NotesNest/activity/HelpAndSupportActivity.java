@@ -1,5 +1,7 @@
 package com.example.NotesNest.activity;
 
+import static com.example.NotesNest.utils.CommonDialogs.showWhatsNewDialog;
+
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -21,8 +23,8 @@ import com.example.NotesNest.R;
 public class HelpAndSupportActivity extends AppCompatActivity {
 
     private LinearLayout emailLayout, reportBugLayout, feedbackLayout, userGuideLayout, videoTutorialLayout, whatsNewLayout, aboutAppLayout, privacyPolicyLayout, termServiceLayout;
-    private LinearLayout faq1, faq2, faq3;
-    private TextView faqAns1, faqAns2, faqAns3;
+    private LinearLayout faq1, faq2, faq3, faq4, faq5;
+    private TextView faqAns1, faqAns2, faqAns3, faqAns4, faqAns5;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,16 +95,25 @@ public class HelpAndSupportActivity extends AppCompatActivity {
             intent.setData(Uri.parse("https://notesnest-app.web.app/terms.html"));
             view.getContext().startActivity(intent);
         });
+
+        whatsNewLayout.setOnClickListener(view -> {
+            String updateMessage = "efdfdfdsdfd";
+            showWhatsNewDialog(this, updateMessage);
+        });
     }
 
     private void initViews() {
         faq1 = findViewById(R.id.layoutFAQ1);
         faq2 = findViewById(R.id.layoutFAQ2);
         faq3 = findViewById(R.id.layoutFAQ3);
+        faq4 = findViewById(R.id.layoutFAQ4);
+        faq5 = findViewById(R.id.layoutFAQ5);
 
         faqAns1 = faq1.findViewById(R.id.tvAnswer);
         faqAns2 = faq2.findViewById(R.id.tvAnswer);
         faqAns3 = faq3.findViewById(R.id.tvAnswer);
+        faqAns4 = faq4.findViewById(R.id.tvAnswer);
+        faqAns5 = faq5.findViewById(R.id.tvAnswer);
 
         emailLayout = findViewById(R.id.layoutEmailSupport);
         reportBugLayout = findViewById(R.id.layoutReportBug);
@@ -143,6 +154,8 @@ public class HelpAndSupportActivity extends AppCompatActivity {
         setupOneFaq(faq1);
         setupOneFaq(faq2);
         setupOneFaq(faq3);
+        setupOneFaq(faq4);
+        setupOneFaq(faq5);
     }
 
     private void setupOneFaq(View faqView) {
@@ -166,14 +179,22 @@ public class HelpAndSupportActivity extends AppCompatActivity {
     private void setStaticTexts() {
 
         // FAQ text
-        ((TextView) faq1.findViewById(R.id.tvQuestion)).setText("How do I format notes?");
-        faqAns1.setText("You can use Markdown to format your notes...");
+        ((TextView) faq1.findViewById(R.id.tvQuestion)).setText("Is NotesNest free to use?");
+        faqAns1.setText("Yes, NoteNest is free to download and use with all core features including notes, reminders, to-do lists, categories, widgets, and local backups. Premium features with additional storage limits and cloud sync are planned for future releases.");
 
-        ((TextView) faq2.findViewById(R.id.tvQuestion)).setText("How do I sync across devices?");
-        faqAns2.setText("Sign in with your account to enable cloud sync...");
+        ((TextView) faq2.findViewById(R.id.tvQuestion)).setText("How can I backup my notes?");
+        faqAns2.setText("NotesNest offers two backup options: Local Backup (encrypted SQLite export saved on your device) and Cloud Backup (via Google Drive API). You can access backup options in the Settings menu to ensure your data is always safe.");
 
-        ((TextView) faq3.findViewById(R.id.tvQuestion)).setText("Can I recover a deleted note?");
-        faqAns3.setText("Deleted notes remain in Trash for 30 days...");
+        ((TextView) faq3.findViewById(R.id.tvQuestion)).setText("Is my data secure with NoteNest?");
+        faqAns3.setText("Absolutely. NoteNest uses encrypted storage for all sensitive data and secure authentication methods. Your credentials are never stored in plain form, and we use EncryptedSharedPreferences for session tokens. Security is built into the app's architecture from the ground up.");
+
+        ((TextView) faq4.findViewById(R.id.tvQuestion)).setText("Can I export my notes to share with others?");
+        faqAns4.setText("Yes! NotesNest allows you to export individual notes in multiple formats including Plain Text (.txt), PDF, and Image. You can then share exported notes via email, WhatsApp, or any other app using Android's share functionality.");
+
+        ((TextView) faq5.findViewById(R.id.tvQuestion)).setText("Why aren't my reminders working on my device?");
+        faqAns5.setText("Some Android manufacturers (like Xiaomi MIUI, Vivo) have aggressive battery optimization that can prevent reminders from triggering. To fix this, go to your device's Settings > Battery > App Battery Management, find NoteNest, and disable battery optimization or enable \"Autostart\" for the app.");
+
+
     }
 
 }
