@@ -158,5 +158,10 @@
     <string name="text_manage_account">Manage Account</string>
     <string name="text_security">Security</string>
     <string name="text_account_actions">Account Actions</string>
+    <string name="upgrade_to_premium">Upgrade to Premium</string>
+    <string name="text_got_it">GOT IT</string>
+    <string name="text_performance_improvements_and_bug_fixes">Performance improvements and bug fixes</string>
+    <string name="text_what_s_new">What\'s New ✨</string>
+    <string name="text_version_2_1_0">Version 2.1.0</string>
 
 </resources>

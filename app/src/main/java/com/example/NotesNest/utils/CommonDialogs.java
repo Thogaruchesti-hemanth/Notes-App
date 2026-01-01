@@ -10,6 +10,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
@@ -557,6 +558,52 @@ public class CommonDialogs {
                 .setNegativeButton("Cancel", null)
                 .show();
     }
+
+    public static void showWhatsNewDialog(Context context, String updateMessage) {
+        // Inflate the custom layout
+        View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_whats_new, null);
+
+        // Create the dialog
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(context, R.style.CustomDialogTheme);
+        builder.setView(dialogView);
+        androidx.appcompat.app.AlertDialog dialog = builder.create();
+        dialog.setCancelable(true);
+        dialog.setCanceledOnTouchOutside(true);
+
+        // Set up close button
+        ImageView ivClose = dialogView.findViewById(R.id.ivClose);
+        ivClose.setOnClickListener(v -> dialog.dismiss());
+
+        // Set up Got It button
+        Button btnGotIt = dialogView.findViewById(R.id.btnGotIt);
+        btnGotIt.setOnClickListener(v -> dialog.dismiss());
+
+        // Show the dialog
+        dialog.show();
+
+        TextView tvContent = dialog.findViewById(R.id.tvNewContent);
+        TextView versionText = dialogView.findViewById(R.id.tvVersion);
+        String appVersion = "";
+        try {
+            appVersion = context.getPackageManager()
+                    .getPackageInfo(context.getPackageName(), 0)
+                    .versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        versionText.setText(appVersion);
+        tvContent.setText(updateMessage);
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
+            lp.copyFrom(dialog.getWindow().getAttributes());
+            lp.width = (int) (context.getResources().getDisplayMetrics().widthPixels * 0.8);
+            lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
+            dialog.getWindow().setAttributes(lp);
+        }
+    }
+
 
     public interface NoteDialogCallback {
         void setDateTime(long timeStamp, TextView dateView, TextView timeView);

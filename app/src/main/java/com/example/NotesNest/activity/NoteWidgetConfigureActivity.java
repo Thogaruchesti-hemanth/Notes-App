@@ -46,6 +46,22 @@ public class NoteWidgetConfigureActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // --- 1️⃣ Premium restriction ---
+        SharedPreferenceUtil pref = new SharedPreferenceUtil(this);
+        if (!pref.isUserPremium()) {
+            Toast.makeText(this, "Upgrade to Premium to use widgets.", Toast.LENGTH_SHORT).show();
+
+            // Redirect to MainActivity / Upgrade screen
+            Intent intent = new Intent(this, com.example.NotesNest.activity.PremiumActivity.class);
+            intent.putExtra("show_upgrade", true);
+            startActivity(intent);
+
+            finish(); // Close this activity for free users
+            return;
+        }
+        // --- Premium check END ---
+
         setContentView(R.layout.activity_widget_config);
 
         noteViewModel = new ViewModelProvider(this).get(NoteViewModel.class);
@@ -95,7 +111,6 @@ public class NoteWidgetConfigureActivity extends AppCompatActivity {
     }
 
     private void setupSearch() {
-
         searchEditText.addTextChangedListener(new TextWatcher() {
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
@@ -105,7 +120,6 @@ public class NoteWidgetConfigureActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-
                 String query = s.toString().trim();
                 clearSearchBtn.setVisibility(query.isEmpty() ? View.GONE : View.VISIBLE);
 
@@ -124,7 +138,6 @@ public class NoteWidgetConfigureActivity extends AppCompatActivity {
     }
 
     public void runSearch(String query) {
-
         if (query == null) query = "";
         query = query.trim().toLowerCase();
 
@@ -154,13 +167,11 @@ public class NoteWidgetConfigureActivity extends AppCompatActivity {
     }
 
     private void loadNotesFromViewModel() {
-
         noteViewModel.getAllNotes(
                 new SharedPreferenceUtil(getApplicationContext()).getUserId()
         ).observe(this, noteEntities -> {
 
             if (noteEntities != null && !noteEntities.isEmpty()) {
-
                 notes.clear();
                 notes.addAll(noteEntities);
 
@@ -182,7 +193,6 @@ public class NoteWidgetConfigureActivity extends AppCompatActivity {
     }
 
     private void saveNoteSelectionAndFinish() {
-
         new SharedPreferenceUtil(this).saveWidgetNoteId(this, appWidgetId, selectedNote.id);
 
         AppWidgetManager manager = AppWidgetManager.getInstance(this);
