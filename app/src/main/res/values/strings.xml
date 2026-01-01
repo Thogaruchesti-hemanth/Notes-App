@@ -155,5 +155,8 @@
     <string name="text_logout">Logout</string>
     <string name="text_free_user">Free User</string>
     <string name="text_menu_button">menu button</string>
+    <string name="text_manage_account">Manage Account</string>
+    <string name="text_security">Security</string>
+    <string name="text_account_actions">Account Actions</string>
 
 </resources>
