@@ -393,7 +393,7 @@ This project is proprietary software. Unauthorized copying, modification, distri
 
 - 📧 Email: [saihemanth225@gmail.com](mailto:saihemanth225@gmail.com)
 - 💼 LinkedIn: [thogaruchesti-hemanth](https://www.linkedin.com/in/thogaruchesti-hemanth/)
-- 🐙 GitHub: [Thogaruchesti-hemanth](https://github.com/Thogaruchesti-hemanth)
+- 🐙 stackOverFlow: [Thogaruchesti-hemanth](https://stackoverflow.com/users/28964013/thogaruchesti-hemanth)
 
 ---
 
