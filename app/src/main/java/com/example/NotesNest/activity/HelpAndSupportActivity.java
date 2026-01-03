@@ -97,7 +97,7 @@ public class HelpAndSupportActivity extends AppCompatActivity {
         });
 
         whatsNewLayout.setOnClickListener(view -> {
-            String updateMessage = "efdfdfdsdfd";
+            String updateMessage = "• Added Change Password option for improved account security.\n• Introduced Delete Account option for better account control.\n• Updated FAQ section with clearer and more detailed information.\n• Enhanced the What’s New experience to keep you informed about updates.";
             showWhatsNewDialog(this, updateMessage);
         });
     }

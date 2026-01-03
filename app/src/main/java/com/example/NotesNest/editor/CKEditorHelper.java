@@ -3,14 +3,22 @@ package com.example.NotesNest.editor;
 import android.content.Context;
 import android.util.TypedValue;
 import android.webkit.JavascriptInterface;
+import android.webkit.ValueCallback;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
+
+import java.util.ArrayDeque;
+import java.util.Queue;
 
 public class CKEditorHelper {
 
     private final WebView webView;
     private final Context context;
+    private final Queue<Runnable> pendingActions = new ArrayDeque<>();
     private ContentChangeListener listener;
+    private boolean isEditorReady = false;
+    private EditorReadyListener editorReadyListener;
     private String currentBackgroundColor; // Default white
 
     public CKEditorHelper(Context context, WebView webView) {
@@ -35,6 +43,13 @@ public class CKEditorHelper {
 
         webView.addJavascriptInterface(new JSInterface(), "Android");
 
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                markEditorReady();
+            }
+        });
+
         // ✅ Get theme colors
         int bgColor = getColorFromAttr(com.google.android.material.R.attr.colorSecondary);
 
@@ -49,6 +64,23 @@ public class CKEditorHelper {
                 "UTF-8",
                 null
         );
+    }
+
+    private void markEditorReady() {
+        isEditorReady = true;
+
+        while (!pendingActions.isEmpty()) {
+            pendingActions.poll().run();
+        }
+
+        if (editorReadyListener != null) {
+            editorReadyListener.onReady();
+        }
+    }
+
+    public void setOnEditorReadyListener(EditorReadyListener listener) {
+        this.editorReadyListener = listener;
+        if (isEditorReady) listener.onReady();
     }
 
     private String getEditorHtml(String bgColor) {
@@ -162,25 +194,32 @@ public class CKEditorHelper {
      * Set HTML content safely into editor
      */
     public void setContent(String html) {
-        if (html == null) html = "";
-        String escaped = html.replace("'", "\\'");
-        webView.post(() -> webView.evaluateJavascript("setContent('" + escaped + "');", null));
+        final String safeHtml = (html == null) ? "" : html;
+
+        runWhenReady(() -> {
+            String escaped = safeHtml.replace("'", "\\'");
+            webView.evaluateJavascript("setContent('" + escaped + "');", null);
+        });
     }
 
     /**
      * Get HTML content from editor
      */
-    public void getContent(ContentCallback callback) {
-        webView.evaluateJavascript("getContent();", value -> {
-            if (value != null && value.length() > 2) {
-                callback.onResult(value.substring(1, value.length() - 1)
-                        .replace("\\u003C", "<")
-                        .replace("\\n", "")
-                        .replace("\\\"", "\""));
-            } else {
-                callback.onResult("");
-            }
-        });
+    public void getContent(ValueCallback<String> callback) {
+        runWhenReady(() ->
+                webView.evaluateJavascript("getContent();", value -> {
+                    if (value != null && value.length() > 2) {
+                        callback.onReceiveValue(
+                                value.substring(1, value.length() - 1)
+                                        .replace("\\u003C", "<")
+                                        .replace("\\n", "")
+                                        .replace("\\\"", "\"")
+                        );
+                    } else {
+                        callback.onReceiveValue("");
+                    }
+                })
+        );
     }
 
     /**
@@ -189,18 +228,17 @@ public class CKEditorHelper {
     public void setBackgroundColor(String color) {
         currentBackgroundColor = color;
         String jsCode = "setBackgroundColor('" + color + "');";
-        webView.post(() -> webView.evaluateJavascript(jsCode, null));
+        runWhenReady(() ->
+                webView.evaluateJavascript("setBackgroundColor('" + color + "');", null)
+        );
     }
 
-    /**
-     * Execute formatting commands (bold, italic, etc.)
-     */
-    public void executeCommand(String command) {
-        webView.evaluateJavascript("execCommand('" + command + "');", null);
-    }
-
-    public void setContentChangeListener(ContentChangeListener listener) {
-        this.listener = listener;
+    private void runWhenReady(Runnable action) {
+        if (isEditorReady) {
+            webView.post(action);
+        } else {
+            pendingActions.add(() -> webView.post(action));
+        }
     }
 
     private int getColorFromAttr(int attr) {
@@ -216,8 +254,8 @@ public class CKEditorHelper {
         void onContentChanged(String newHtml);
     }
 
-    public interface ContentCallback {
-        void onResult(String html);
+    public interface EditorReadyListener {
+        void onReady();
     }
 
     private class JSInterface {
