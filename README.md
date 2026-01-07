@@ -11,7 +11,7 @@
 
 A comprehensive Android productivity application designed to help you efficiently manage notes, tasks, reminders, and personal goals within a single, secure, and intuitive platform.
 
-[Features](#-features) • [Screenshots](#-screenshots) • [Installation](#-installation) • [Tech Stack](#-tech-stack) • [Architecture](#-architecture) • [Changelog](#-changelog) • [Contributing](#-contributing)
+[Features](#-features) • [Screenshots](#-screenshots) • [Installation](#-installation) • [Tech Stack](#-tech-stack) • [Architecture](#-architecture) • [Changelog](#-changelog) 
 
 </div>
 
@@ -20,24 +20,16 @@ A comprehensive Android productivity application designed to help you efficientl
 ## 🌟 Features
 
 ### 📝 **Smart Note Management**
-- Create, edit, delete, and organize notes effortlessly
-- Category and tag system for better organization
-- Advanced search functionality with filters
+- Create, edit, delete, and organise notes effortlessly
+- Category and tag system for better organisation
 - Switch between list and grid layout views
-- Drag-and-drop reordering support
-- Separate section for important/priority notes
+- Drag-and-drop reordering support for Categories.
 
 ### ⏰ **Intelligent Reminders**
 - Set time-based reminders with local notifications
 - Support for repeat reminders
 - WorkManager/AlarmManager integration for reliability
 - Never miss important tasks or deadlines
-
-### ✅ **Task Management**
-- Create and manage to-do lists
-- Mark tasks as complete or pending
-- Track daily productivity efficiently
-- Dedicated wish list for future goals
 
 ### 📤 **Export & Share**
 - Export notes as **Plain Text (.txt)**
@@ -47,7 +39,7 @@ A comprehensive Android productivity application designed to help you efficientl
 
 ### 🏠 **Home Screen Widgets**
 - **Note Preview Widget**: Display selected notes directly on home screen
-- **Quick Add Widget**: Add new notes instantly without opening the app
+- **Quick Add Widget**: Add new notes instantly
 - Real-time widget updates
 
 ### 💾 **Backup & Restore**
@@ -57,7 +49,7 @@ A comprehensive Android productivity application designed to help you efficientl
 - Data migration support across devices
 
 ### 🎨 **Modern UI/UX**
-- Full Material Design 3 implementation
+- Material Design 3 implementation
 - Light and dark theme support with auto-switching
 - Smooth animations and transitions
 - Adaptive layouts for phones, tablets, and landscape mode
@@ -73,9 +65,9 @@ A comprehensive Android productivity application designed to help you efficientl
 - Privacy-first design philosophy
 
 ### 📊 **Additional Features**
-- Dynamic badge counts in navigation drawer
+- Dynamic Note counts 
 - Profile editing (name, picture)
-- Contact support and FAQ section
+- Contact support and the FAQ section
 - Firebase Remote Config for dynamic feature control
 - Firebase Crashlytics for real-time crash monitoring
 - Semantic versioning for clear release tracking
@@ -103,7 +95,7 @@ A comprehensive Android productivity application designed to help you efficientl
 ### Prerequisites
 - Android Studio Arctic Fox or later
 - JDK 11 or higher
-- Android SDK (API 24+)
+- Android SDK (API 29+)
 - Firebase account (for authentication and analytics)
 - Google Drive API credentials (for cloud backup)
 
@@ -225,32 +217,38 @@ NotesNest/
 
 **Notes Table**
 - `id` (Primary Key)
+- `userId`
+- `CategoryId`
 - `title`
 - `content`
-- `category`
-- `timestamp`
-- `isImportant`
-- `order`
+- `colorHex`
+- `createdAt`
+- `updatedAt`
+- `isSynced`
+- `isDeleted`
 
 **Reminders Table**
 - `id` (Primary Key)
-- `noteId` (Foreign Key)
-- `reminderTime`
-- `isRepeating`
-- `repeatInterval`
-
-**Tasks Table**
-- `id` (Primary Key)
+- `userId`
+- `type` (TODO / TASK / BIRTHDAY) 
 - `title`
-- `isCompleted`
-- `priority`
-- `dueDate`
+- `message`
+- `name` // birthday person name
+- `notificationTime`  // millis
+- `isRepeated`
+- `repeatType`       // Daily, Weekly, Monthly, Yearly, None
+- `notifyType`       // onThatDay, dayBefore, 2 daysBefore, 1Week Before
+- `isRepeating`
+- `gradientStartColor`
+- `gradientEndColor`
+- `isSynced`
+- `isDeleted`
+- `updatedAt`
 
-**Wishlist Table**
-- `id` (Primary Key)
-- `itemName`
-- `description`
-- `dateAdded`
+**Category Table**
+- `id`
+- `name`
+- `order`
 
 ---
 
@@ -282,9 +280,9 @@ NotesNest/
 - Migration to Room Database
 
 #### 🔧 Improvements
-- Database optimization with indexing
+- Database optimisation with indexing
 - Memory leak fixes
-- App size optimization
+- App size optimisation
 - Performance enhancements
 
 ### Version 1.0.0 (14/04/2025)
@@ -301,62 +299,15 @@ NotesNest/
 ## 🎯 Roadmap
 
 ### Upcoming Features (Version 4.0.0)
-- [ ] Cloud synchronization across devices
-- [ ] Collaboration features (shared notes)
 - [ ] Voice-to-text note creation
-- [ ] Rich text editor with formatting
-- [ ] Note templates
 - [ ] Advanced analytics dashboard
-- [ ] Multi-language support
 - [ ] Wear OS companion app
 - [ ] Premium subscription features
 
 ### Under Consideration
-- [ ] Web version (PWA)
-- [ ] Desktop application (Windows/Mac/Linux)
 - [ ] AI-powered note suggestions
 - [ ] Integration with calendar apps
 - [ ] Markdown support
-- [ ] Note linking and backlinks
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! This project follows standard open-source contribution guidelines.
-
-### How to Contribute
-
-1. **Fork the repository**
-2. **Create a feature branch**
-   ```bash
-   git checkout -b feature/AmazingFeature
-   ```
-3. **Commit your changes**
-   ```bash
-   git commit -m 'Add some AmazingFeature'
-   ```
-4. **Push to the branch**
-   ```bash
-   git push origin feature/AmazingFeature
-   ```
-5. **Open a Pull Request**
-
-### Contribution Guidelines
-
-- Follow existing code style and conventions
-- Write clear commit messages
-- Add appropriate comments and documentation
-- Test your changes thoroughly
-- Update README if adding new features
-- Ensure all existing tests pass
-
-### Code Style
-- Follow Android coding standards
-- Use meaningful variable and method names
-- Keep methods small and focused
-- Add JavaDoc comments for public methods
-- Maintain consistent indentation (4 spaces)
 
 ---
 
@@ -383,7 +334,7 @@ Found a bug or have a feature request? Please check existing [Issues](https://gi
 
 © 2025 Thogaruchesti Hemanth - All Rights Reserved
 
-This project is proprietary software. Unauthorized copying, modification, distribution, or use of this software, via any medium, is strictly prohibited without explicit permission from the author.
+This project is proprietary software. Unauthorised copying, modification, distribution, or use of this software, via any medium, is strictly prohibited without explicit permission from the author.
 
 ---
 
@@ -413,18 +364,6 @@ This project is proprietary software. Unauthorized copying, modification, distri
 ![GitHub forks](https://img.shields.io/github/forks/Thogaruchesti-hemanth/NotesNest?style=social)
 ![GitHub issues](https://img.shields.io/github/issues/Thogaruchesti-hemanth/NotesNest)
 ![GitHub last commit](https://img.shields.io/github/last-commit/Thogaruchesti-hemanth/NotesNest)
-
----
-
-## 💖 Support
-
-If you find this project helpful, please consider:
-
-- ⭐ Starring the repository
-- 🐛 Reporting bugs
-- 💡 Suggesting new features
-- 📖 Improving documentation
-- 🔀 Contributing code
 
 ---
 
