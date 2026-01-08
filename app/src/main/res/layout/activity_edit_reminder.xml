@@ -15,7 +15,7 @@
         <androidx.appcompat.widget.LinearLayoutCompat
             android:id="@+id/headerLayout"
             android:layout_width="0dp"
-            android:layout_height="30dp"
+            android:layout_height="50dp"
             android:layout_marginTop="@dimen/margin_32"
             android:gravity="center_vertical"
             app:layout_constraintEnd_toEndOf="parent"
@@ -41,14 +41,15 @@
                 android:textSize="@dimen/text_22"
                 android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/tvSave"
+            <Button
+                android:id="@+id/btnSave"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:backgroundTint="@color/tabSelectedTextColorLight"
                 android:text="@string/text_save"
-                android:textColor="@color/tabSelectedTextColor"
-                android:textSize="@dimen/text_18"
-                android:textStyle="bold" />
+                android:gravity="center"
+                android:textColor="@color/black"
+                android:textSize="@dimen/text_16" />
         </androidx.appcompat.widget.LinearLayoutCompat>
 
         <com.google.android.material.textfield.TextInputLayout

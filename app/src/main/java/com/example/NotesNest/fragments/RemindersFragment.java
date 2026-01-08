@@ -1,5 +1,7 @@
 package com.example.NotesNest.fragments;
 
+import static com.example.NotesNest.activity.EditReminderActivity.EXTRA_REMINDER_ID;
+
 import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.os.Build;
@@ -205,7 +207,7 @@ public class RemindersFragment extends Fragment {
 
         CommonDialogs.showCustomDialog(requireContext(), reminder, "Edit", "Delete", () -> {
                     Intent i = new Intent(requireContext(), EditReminderActivity.class);
-                    i.putExtra("reminder_id", reminder.id);
+                    i.putExtra(EXTRA_REMINDER_ID, reminder.id);
                     startActivity(i);
                 },
                 () -> deleteReminder(reminder));

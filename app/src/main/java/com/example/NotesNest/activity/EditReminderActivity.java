@@ -25,6 +25,7 @@ import com.example.NotesNest.notifications.schedulers.NotificationScheduler;
 import com.example.NotesNest.utils.AnalyticsHelper;
 import com.example.NotesNest.utils.CommonDialogs;
 import com.example.NotesNest.databases.ViewModels.ReminderViewModel;
+import com.example.NotesNest.utils.SharedPreferenceUtil;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -91,7 +92,7 @@ public class EditReminderActivity extends AppCompatActivity {
 
     private void bindListeners() {
         binding.ivBack.setOnClickListener(v -> finish());
-        binding.tvSave.setOnClickListener(v -> validateAndSave());
+        binding.btnSave.setOnClickListener(v -> validateAndSave());
 
         binding.timeLayout.setOnClickListener(v -> showTimePicker());
         binding.dateLayout.setOnClickListener(v -> showDatePicker());
@@ -213,11 +214,13 @@ public class EditReminderActivity extends AppCompatActivity {
         }
 
         boolean repeated = !REPEAT_OPTIONS[0].equals(selectedRepeat);
+        String userId = new SharedPreferenceUtil(this).getUserId();
 
         if (currentEntity == null) {
             ReminderEntity entity = new ReminderEntity();
             entity.type = selectedType;
             entity.title = title;
+            entity.userId = userId;
             entity.notificationTime = selectedDateTime;
             entity.isRepeated = repeated;
             entity.repeatType = selectedRepeat;
@@ -228,6 +231,7 @@ public class EditReminderActivity extends AppCompatActivity {
             if (TYPE_BIRTHDAY.equals(selectedType)) entity.title = title;
             saveNewReminder(entity);
         } else {
+            currentEntity.userId = userId;
             currentEntity.type = selectedType;
             currentEntity.title = title;
             currentEntity.notificationTime = selectedDateTime;
@@ -268,7 +272,9 @@ public class EditReminderActivity extends AppCompatActivity {
     }
 
     private void loadReminder(int id) {
-        reminderViewModel.getReminderById(id, "").observe(this, entity -> { // assuming userId = 1
+        String userId = new SharedPreferenceUtil(this).getUserId();
+
+        reminderViewModel.getReminderById(id,userId).observe(this, entity -> {
             if (entity != null) {
                 currentEntity = entity;
                 populateFromEntity(entity);
