@@ -163,5 +163,7 @@
     <string name="text_performance_improvements_and_bug_fixes">Performance improvements and bug fixes</string>
     <string name="text_what_s_new">What\'s New ✨</string>
     <string name="text_version_2_1_0">Version 2.1.0</string>
+    <string name="text_heading_2">Heading 2</string>
+    <string name="text_heading_1">Heading 1</string>
 
 </resources>

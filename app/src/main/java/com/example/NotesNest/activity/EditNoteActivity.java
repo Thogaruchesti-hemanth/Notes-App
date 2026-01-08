@@ -5,7 +5,6 @@ import static com.example.NotesNest.utils.Constants.DEFAULT_COLORS;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.view.View;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.EditText;
@@ -14,14 +13,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.NotesNest.R;
@@ -51,6 +45,7 @@ public class EditNoteActivity extends AppCompatActivity {
     // Local category caches (UI-only)
     private final List<CategoryEntity> categories = new ArrayList<>();
     private final List<String> categoryNames = new ArrayList<>();
+
     // UI references
     private EditText etTitle;
     private WebView editorWebView;
@@ -61,12 +56,17 @@ public class EditNoteActivity extends AppCompatActivity {
     private ImageButton btnItalic;
     private ImageButton btnBullet;
     private ImageButton btnNumber;
+    private ImageButton btnH1;
+    private ImageButton btnH2;
+
     // Helpers / state
     private CKEditorHelper editorHelper;
     private DraftManager draftManager;
+
     // ViewModels
     private NoteViewModel noteViewModel;
     private CategoryViewModel categoryViewModel;
+
     // UI state
     private boolean isEditing = false;
     private int noteId = -1;
@@ -78,14 +78,7 @@ public class EditNoteActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_edit_note);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.edit_note_layout), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
-
 
         draftManager = new DraftManager(this);
 
@@ -97,7 +90,7 @@ public class EditNoteActivity extends AppCompatActivity {
         observeViewModels();
 
         // Start loading data
-        categoryViewModel.getAllCategories(); // ensures LiveData exists; actual values are observed below
+        categoryViewModel.getAllCategories();
         handleIncomingIntent();
 
         // default background when creating a new note
@@ -105,7 +98,6 @@ public class EditNoteActivity extends AppCompatActivity {
             selectedColor = DEFAULT_COLOR;
             updateBackgroundColor();
         }
-
     }
 
     private void bindViews() {
@@ -123,6 +115,8 @@ public class EditNoteActivity extends AppCompatActivity {
         btnItalic = findViewById(R.id.btn_italic);
         btnBullet = findViewById(R.id.btn_bullet_list);
         btnNumber = findViewById(R.id.btn_numbered_list);
+        btnH1 = findViewById(R.id.btn_h1);
+        btnH2 = findViewById(R.id.btn_h2);
 
         noteId = getIntent().getIntExtra("itemId", -1);
 
@@ -136,7 +130,17 @@ public class EditNoteActivity extends AppCompatActivity {
     private void setupEditorHelper() {
         editorHelper = new CKEditorHelper(this, findViewById(R.id.etNote));
 
-        // Editor is 100% ready here
+        editorHelper.setOnFormatStateChangeListener((bold, italic, listType, headingLevel) ->
+                runOnUiThread(() -> {
+                    btnBold.setSelected(bold);
+                    btnItalic.setSelected(italic);
+                    btnBullet.setSelected("ul".equals(listType));
+                    btnNumber.setSelected("ol".equals(listType));
+                    btnH1.setSelected("h1".equals(headingLevel));
+                    btnH2.setSelected("h2".equals(headingLevel));
+                })
+        );
+
         editorHelper.setOnEditorReadyListener(this::restoreDraftIfNeeded);
     }
 
@@ -149,25 +153,17 @@ public class EditNoteActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setNavigationOnClickListener(v -> finish());
 
-        btnBold.setOnClickListener(v -> {
-            runJs("execCommand('bold')");
-            toggleCommandState(v, "bold");
-        });
+        btnBold.setOnClickListener(v -> editorHelper.toggleBold());
 
-        btnItalic.setOnClickListener(v -> {
-            runJs("execCommand('italic')");
-            toggleCommandState(v, "italic");
-        });
+        btnItalic.setOnClickListener(v -> editorHelper.toggleItalic());
 
-        btnBullet.setOnClickListener(v -> {
-            runJs("toggleList()");
-            toggleCommandState(v, "insertUnorderedList");
-        });
+        btnBullet.setOnClickListener(v -> editorHelper.toggleBulletList());
 
-        btnNumber.setOnClickListener(v -> {
-            runJs("toggleNumberList()");
-            toggleCommandState(v, "insertOrderedList");
-        });
+        btnNumber.setOnClickListener(v -> editorHelper.toggleNumberedList());
+
+        btnH1.setOnClickListener(v -> editorHelper.toggleHeading("h1"));
+
+        btnH2.setOnClickListener(v -> editorHelper.toggleHeading("h2"));
     }
 
     private void setupListeners() {
@@ -190,42 +186,12 @@ public class EditNoteActivity extends AppCompatActivity {
         saveBtn.setOnClickListener(v -> saveNote());
     }
 
-    // Run arbitrary JS on the editor WebView (helper wrapper)
-    private void runJs(@NonNull String js) {
-        editorWebView.post(() -> editorWebView.evaluateJavascript("javascript:" + js, null));
-    }
-
-    // Toggle format button state by querying document.queryCommandState or list helper
-    private void toggleCommandState(@NonNull View view, @NonNull String command) {
-        if ("insertUnorderedList".equals(command) || "insertOrderedList".equals(command)) {
-            editorWebView.postDelayed(() -> editorWebView.evaluateJavascript("getListType();", value -> {
-                final String listType = value == null ? "" : value.replace("\"", "");
-                final boolean isBullet = "ul".equals(listType);
-                final boolean isNumber = "ol".equals(listType);
-
-                runOnUiThread(() -> {
-                    btnBullet.setSelected(isBullet);
-                    btnNumber.setSelected(isNumber);
-                });
-            }), 50);
-            return;
-        }
-
-        editorWebView.postDelayed(() -> editorWebView.evaluateJavascript(
-                "document.queryCommandState('" + command + "')", value -> {
-                    final boolean active = Boolean.parseBoolean(value == null ? "false" : value);
-                    runOnUiThread(() -> view.setSelected(active));
-                }), 50);
-    }
-
     // Observe ViewModels
     private void observeViewModels() {
-
         // Observe categories LiveData and update local cache + UI
         categoryViewModel.getAllCategories().observe(this, loaded -> {
             if (loaded == null) return;
 
-            // create a modifiable copy
             List<CategoryEntity> list = new ArrayList<>(loaded);
 
             boolean hasAll = false;
@@ -248,12 +214,10 @@ public class EditNoteActivity extends AppCompatActivity {
             categoryNames.clear();
             for (CategoryEntity c : categories) categoryNames.add(c.name);
 
-            // If not editing, select default category
             if (!isEditing && !categories.isEmpty()) {
                 tvCategory.setText(categories.get(0).name);
                 selectedCategoryId = categories.get(0).id;
             } else {
-                // If editing and selectedCategoryId is already known, try set human-readable name
                 if (isEditing && selectedCategoryId != -1) {
                     for (CategoryEntity c : categories) {
                         if (c.id == selectedCategoryId) {
@@ -284,7 +248,6 @@ public class EditNoteActivity extends AppCompatActivity {
 
             if (note.categoryId != null) {
                 selectedCategoryId = note.categoryId;
-                // try find name in cached categories; if not present, observe category by id
                 boolean found = false;
                 for (CategoryEntity c : categories) {
                     if (c.id == selectedCategoryId) {
@@ -307,9 +270,7 @@ public class EditNoteActivity extends AppCompatActivity {
         if (intent != null && intent.hasExtra(EXTRA_ITEM_ID)) {
             noteId = intent.getIntExtra(EXTRA_ITEM_ID, -1);
             if (noteId != -1) {
-                // we set isEditing when the note LiveData emits
-                isEditing = true; // ✅ SET EARLY
-                // call getNoteById() so LiveData is created and observed by observeViewModels()
+                isEditing = true;
                 noteViewModel.getNoteById(noteId);
             }
         }
@@ -328,7 +289,6 @@ public class EditNoteActivity extends AppCompatActivity {
             String userId = new SharedPreferenceUtil(this).getUserId();
 
             if (isEditing && noteId != -1) {
-                // update existing
                 final NoteEntity updated = new NoteEntity();
                 updated.id = noteId;
                 updated.userId = userId;
@@ -401,7 +361,6 @@ public class EditNoteActivity extends AppCompatActivity {
     private void resetUI() {
         etTitle.setText("");
         editorHelper.setContent("");
-
         tvCategory.setText("");
 
         selectedColor = DEFAULT_COLOR;
@@ -413,6 +372,8 @@ public class EditNoteActivity extends AppCompatActivity {
         btnItalic.setSelected(false);
         btnBullet.setSelected(false);
         btnNumber.setSelected(false);
+        btnH1.setSelected(false);
+        btnH2.setSelected(false);
     }
 
     @Override
