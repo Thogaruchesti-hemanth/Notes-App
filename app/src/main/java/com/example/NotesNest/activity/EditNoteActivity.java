@@ -394,6 +394,12 @@ public class EditNoteActivity extends AppCompatActivity {
     }
 
     private void setupKeyboardListener() {
+
+        // Run this fix ONLY on Samsung devices
+        if (!"samsung".equalsIgnoreCase(android.os.Build.MANUFACTURER)) {
+            return;
+        }
+
         final View rootView = findViewById(R.id.edit_note_layout);
         rootView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
             Rect r = new Rect();

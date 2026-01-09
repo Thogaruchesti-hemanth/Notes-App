@@ -4,13 +4,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <uses-permission
-        android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
-        android:targetSdkVersion="33" />
 
     <application
         android:allowBackup="false"
@@ -22,6 +16,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Notes"
         tools:targetApi="31">
+
         <activity
             android:name=".activity.ManageAccountActivity"
             android:exported="false" />
@@ -46,22 +41,25 @@
         <activity
             android:name=".activity.EditNoteActivity"
             android:exported="false" />
+
         <activity
             android:name=".activity.SplashScreenActivity"
             android:exported="true"
             android:theme="@style/Theme.Notes">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".activity.LoginActivity"
             android:exported="true" />
+
         <activity
             android:name=".activity.MainActivity"
             android:exported="true" />
+
         <activity
             android:name=".activity.NoteWidgetConfigureActivity"
             android:exported="true">
@@ -86,11 +84,11 @@
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
-
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_info" />
         </receiver>
+
         <receiver
             android:name=".widgets.CreateNoteWidget"
             android:exported="true"
@@ -98,17 +96,19 @@
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
-
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/create_note_widget_info" />
         </receiver>
+
         <receiver
             android:name="com.google.android.gms.measurement.AppMeasurementInstallReferrerReceiver"
             android:exported="true" />
+
         <receiver
             android:name=".notifications.receivers.ReminderReceiver"
             android:exported="true" />
+
     </application>
 
 </manifest>

@@ -12,7 +12,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin_40"
+        android:layout_marginTop="@dimen/margin_24"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
@@ -118,95 +118,100 @@
         android:id="@+id/ckeditor_toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal|bottom"
         android:layout_marginHorizontal="@dimen/margin_10"
         android:layout_marginBottom="@dimen/margin_50"
         android:background="@drawable/bg_primary_rounded_24"
-        android:gravity="center"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="@dimen/padding_8"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        android:padding="@dimen/padding_8">
 
-        <ImageButton
-            android:id="@+id/color_selection"
-            android:layout_width="@dimen/size_48"
-            android:layout_height="@dimen/size_48"
-            android:layout_marginEnd="@dimen/margin_4"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/text_color_picker"
-            android:src="@drawable/ic_color_picker" />
+        <!-- THIS VIEW SCROLLS -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:overScrollMode="never">
 
-        <View
-            android:layout_width="@dimen/size_1"
-            android:layout_height="match_parent"
-            android:layout_marginEnd="@dimen/margin_4"
-            android:background="?attr/colorSecondary" />
+            <!-- ONLY ITEMS INSIDE SCROLL -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-        <ImageButton
-            android:id="@+id/btn_h1"
-            android:layout_width="@dimen/size_48"
-            android:layout_height="@dimen/size_48"
-            android:layout_marginEnd="@dimen/margin_4"
-            android:background="@drawable/selector_item_background"
-            android:contentDescription="@string/text_heading_1"
-            android:src="@drawable/ic_h1"
-            android:textSize="@dimen/text_14"
-            android:textStyle="bold"
-            app:tint="@color/selector_tab_text_color" />
+                <ImageButton
+                    android:id="@+id/color_selection"
+                    android:layout_width="@dimen/size_48"
+                    android:layout_height="@dimen/size_48"
+                    android:layout_marginEnd="@dimen/margin_4"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/text_color_picker"
+                    android:src="@drawable/ic_color_picker" />
 
-        <ImageButton
-            android:id="@+id/btn_h2"
-            android:layout_width="@dimen/size_48"
-            android:layout_height="@dimen/size_48"
-            android:layout_marginEnd="@dimen/margin_4"
-            android:background="@drawable/selector_item_background"
-            android:contentDescription="@string/text_heading_2"
-            android:src="@drawable/ic_h2"
-            android:textSize="@dimen/text_14"
-            android:textStyle="bold"
-            app:tint="@color/selector_tab_text_color" />
+                <View
+                    android:layout_width="@dimen/size_1"
+                    android:layout_height="match_parent"
+                    android:layout_marginEnd="@dimen/margin_4"
+                    android:background="?attr/colorSecondary" />
 
-        <ImageButton
-            android:id="@+id/btn_bold"
-            android:layout_width="@dimen/size_48"
-            android:layout_height="@dimen/size_48"
-            android:layout_marginEnd="@dimen/margin_4"
-            android:background="@drawable/selector_item_background"
-            android:contentDescription="@string/text_text_bold_format"
-            android:src="@drawable/ic_format_bold"
-            app:tint="@color/selector_tab_text_color" />
+                <ImageButton
+                    android:id="@+id/btn_h1"
+                    android:layout_width="@dimen/size_48"
+                    android:layout_height="@dimen/size_48"
+                    android:layout_marginEnd="@dimen/margin_4"
+                    android:background="@drawable/selector_item_background"
+                    android:src="@drawable/ic_h1"
+                    app:tint="@color/selector_tab_text_color" />
 
-        <ImageButton
-            android:id="@+id/btn_italic"
-            android:layout_width="@dimen/size_48"
-            android:layout_height="@dimen/size_48"
-            android:layout_marginEnd="@dimen/margin_4"
-            android:background="@drawable/selector_item_background"
-            android:contentDescription="@string/text_text_italic_format"
-            android:src="@drawable/ic_format_italic"
-            app:tint="@color/selector_tab_text_color" />
+                <ImageButton
+                    android:id="@+id/btn_h2"
+                    android:layout_width="@dimen/size_48"
+                    android:layout_height="@dimen/size_48"
+                    android:layout_marginEnd="@dimen/margin_4"
+                    android:background="@drawable/selector_item_background"
+                    android:src="@drawable/ic_h2"
+                    app:tint="@color/selector_tab_text_color" />
 
-        <ImageButton
-            android:id="@+id/btn_bullet_list"
-            android:layout_width="@dimen/size_48"
-            android:layout_height="@dimen/size_48"
-            android:layout_marginEnd="@dimen/margin_4"
-            android:background="@drawable/selector_item_background"
-            android:contentDescription="@string/text_text_bullet_points_format"
-            android:src="@drawable/ic_format_list_bulleted"
-            app:tint="@color/selector_tab_text_color" />
+                <ImageButton
+                    android:id="@+id/btn_bold"
+                    android:layout_width="@dimen/size_48"
+                    android:layout_height="@dimen/size_48"
+                    android:layout_marginEnd="@dimen/margin_4"
+                    android:background="@drawable/selector_item_background"
+                    android:src="@drawable/ic_format_bold"
+                    app:tint="@color/selector_tab_text_color" />
 
-        <ImageButton
-            android:id="@+id/btn_numbered_list"
-            android:layout_width="@dimen/size_48"
-            android:layout_height="@dimen/size_48"
-            android:layout_marginEnd="@dimen/margin_4"
-            android:background="@drawable/selector_item_background"
-            android:contentDescription="@string/text_text_format_number_list"
-            android:src="@drawable/ic_format_number_list"
-            app:tint="@color/selector_tab_text_color" />
+                <ImageButton
+                    android:id="@+id/btn_italic"
+                    android:layout_width="@dimen/size_48"
+                    android:layout_height="@dimen/size_48"
+                    android:layout_marginEnd="@dimen/margin_4"
+                    android:background="@drawable/selector_item_background"
+                    android:src="@drawable/ic_format_italic"
+                    app:tint="@color/selector_tab_text_color" />
+
+                <ImageButton
+                    android:id="@+id/btn_bullet_list"
+                    android:layout_width="@dimen/size_48"
+                    android:layout_height="@dimen/size_48"
+                    android:layout_marginEnd="@dimen/margin_4"
+                    android:background="@drawable/selector_item_background"
+                    android:src="@drawable/ic_format_list_bulleted"
+                    app:tint="@color/selector_tab_text_color" />
+
+                <ImageButton
+                    android:id="@+id/btn_numbered_list"
+                    android:layout_width="@dimen/size_48"
+                    android:layout_height="@dimen/size_48"
+                    android:layout_marginEnd="@dimen/margin_4"
+                    android:background="@drawable/selector_item_background"
+                    android:src="@drawable/ic_format_number_list"
+                    app:tint="@color/selector_tab_text_color" />
+
+            </LinearLayout>
+
+        </HorizontalScrollView>
     </LinearLayout>
+
 
 </LinearLayout>
