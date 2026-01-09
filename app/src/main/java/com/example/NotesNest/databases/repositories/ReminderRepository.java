@@ -40,11 +40,7 @@ public class ReminderRepository {
         executorService.execute(() -> reminderDao.deleteReminder(reminder));
     }
 
-    public void deleteById(int id, int userId) {
-        executorService.execute(() -> reminderDao.deleteById(id, userId));
-    }
-
-// -------------------- WRITE WITH CALLBACK --------------------
+    // -------------------- WRITE WITH CALLBACK --------------------
 
     public void insert(ReminderEntity reminder, OnInsertCallback callback) {
         executorService.execute(() -> {
@@ -71,11 +67,6 @@ public class ReminderRepository {
         });
     }
 
-    // In ReminderRepository
-    public LiveData<List<ReminderEntity>> getRemindersByDateRange(int userId, long start, long end) {
-        return reminderDao.getRemindersByDateRangeLive(userId, start, end);
-    }
-
     // In ReminderRepository class - add this method:
 
     public LiveData<ReminderEntity> getReminderById(int id, String userId) {
@@ -84,6 +75,22 @@ public class ReminderRepository {
 
     public ReminderEntity getReminderById(String userId, int id){
         return reminderDao.getById(id,userId);
+    }
+
+    /**
+     * Insert a reminder and return the inserted row ID
+     * This is a blocking operation and should be called from a background thread
+     */
+    public long insertAndGetId(ReminderEntity reminder) {
+        return reminderDao.insertReminder(reminder);
+    }
+
+    /**
+     * Update a reminder and return the number of rows affected
+     * This is a blocking operation and should be called from a background thread
+     */
+    public int updateAndGetCount(ReminderEntity reminder) {
+        return reminderDao.updateReminder(reminder);
     }
 
 // -------------------- CALLBACK INTERFACES --------------------

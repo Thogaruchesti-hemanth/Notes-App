@@ -11,55 +11,109 @@ import com.example.NotesNest.databases.entities.ReminderEntity;
 import com.example.NotesNest.databases.repositories.ReminderRepository;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ReminderViewModel extends AndroidViewModel {
 
     private final ReminderRepository reminderRepository;
+    private final ExecutorService executorService;
 
-    // ADD THESE TWO
     private final MutableLiveData<Long> insertResult = new MutableLiveData<>();
     private final MutableLiveData<Boolean> updateResult = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> deleteResult = new MutableLiveData<>();
 
     public ReminderViewModel(@NonNull Application application) {
         super(application);
         reminderRepository = new ReminderRepository(application);
+        executorService = Executors.newSingleThreadExecutor();
     }
 
     // -------------------- READ --------------------
-    // (unchanged)
+
+    /**
+     * Get all reminders for a specific user
+     */
     public LiveData<List<ReminderEntity>> getAllReminders(String userId) {
         return reminderRepository.getAllReminders(userId);
     }
 
-    // -------------------- WRITE --------------------
+    /**
+     * Get a specific reminder by ID and user ID
+     */
+    public LiveData<ReminderEntity> getReminderById(int id, String userId) {
+        return reminderRepository.getReminderById(id, userId);
+    }
 
-    // Normal insert (no result)
+    // -------------------- WRITE (with results) --------------------
+
+    /**
+     * Insert a new reminder and return the inserted ID via LiveData
+     */
     public void insertReminder(ReminderEntity reminder) {
-        reminderRepository.insert(reminder);
+        executorService.execute(() -> {
+            try {
+                long id = reminderRepository.insertAndGetId(reminder);
+                insertResult.postValue(id);
+            } catch (Exception e) {
+                insertResult.postValue(-1L);
+            }
+        });
     }
 
-    // Normal update
+    /**
+     * Update an existing reminder and return success status via LiveData
+     */
     public void updateReminder(ReminderEntity reminder) {
-        reminderRepository.update(reminder);
+        executorService.execute(() -> {
+            try {
+                int rowsAffected = reminderRepository.updateAndGetCount(reminder);
+                updateResult.postValue(rowsAffected > 0);
+            } catch (Exception e) {
+                updateResult.postValue(false);
+            }
+        });
     }
 
+    /**
+     * Delete a reminder and return success status via LiveData
+     */
     public void deleteReminder(ReminderEntity reminder) {
-        reminderRepository.delete(reminder);
+        executorService.execute(() -> {
+            try {
+                reminderRepository.delete(reminder);
+                deleteResult.postValue(true);
+            } catch (Exception e) {
+                deleteResult.postValue(false);
+            }
+        });
     }
 
     // -------------------- GETTERS FOR LIVEDATA --------------------
 
+    /**
+     * Get the result of the last insert operation
+     *
+     * @return LiveData containing the inserted row ID (or -1 if failed)
+     */
     public LiveData<Long> getInsertResult() {
         return insertResult;
     }
 
+    /**
+     * Get the result of the last update operation
+     *
+     * @return LiveData containing true if successful, false otherwise
+     */
     public LiveData<Boolean> getUpdateResult() {
         return updateResult;
     }
 
-    // In ReminderViewModel class - add this method:
-
-    public LiveData<ReminderEntity> getReminderById(int id, String userId) {
-        return reminderRepository.getReminderById(id, userId);
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        if (executorService != null && !executorService.isShutdown()) {
+            executorService.shutdown();
+        }
     }
 }

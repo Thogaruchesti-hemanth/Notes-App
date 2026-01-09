@@ -1,362 +1,425 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/addEditReminder"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:background="?attr/colorSecondary">
 
+    <!-- Fixed Header -->
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
+        android:id="@+id/headerLayout"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_40"
         android:background="?attr/colorSecondary"
-        android:paddingHorizontal="@dimen/padding_20">
+        android:paddingHorizontal="@dimen/padding_20"
+        android:paddingTop="@dimen/padding_16"
+        android:paddingBottom="@dimen/padding_12"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-        <androidx.appcompat.widget.LinearLayoutCompat
-            android:id="@+id/headerLayout"
-            android:layout_width="0dp"
-            android:layout_height="50dp"
-            android:layout_marginTop="@dimen/margin_32"
-            android:gravity="center_vertical"
-            app:layout_constraintEnd_toEndOf="parent"
+        <ImageView
+            android:id="@+id/ivBack"
+            android:layout_width="@dimen/size_24"
+            android:layout_height="@dimen/size_24"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:contentDescription="@string/text_navigate_to_previous_screen_icon"
+            android:focusable="true"
+            android:padding="2dp"
+            android:src="@drawable/ic_arrow_right"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="?attr/colorPrimary" />
 
-            <ImageView
-                android:id="@+id/ivBack"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:contentDescription="@string/text_navigate_to_previous_screen_icon"
-                android:src="@drawable/ic_arrow_right" />
-
-            <TextView
-                android:id="@+id/tvTitle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginStart="@dimen/margin_10"
-                android:layout_weight="1"
-                android:text="@string/text_add_reminder"
-                android:textColor="?attr/colorPrimary"
-                android:textSize="@dimen/text_22"
-                android:textStyle="bold" />
-
-            <Button
-                android:id="@+id/btnSave"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:backgroundTint="@color/tabSelectedTextColorLight"
-                android:text="@string/text_save"
-                android:gravity="center"
-                android:textColor="@color/black"
-                android:textSize="@dimen/text_16" />
-        </androidx.appcompat.widget.LinearLayoutCompat>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/titleTextInputLayout"
+        <TextView
+            android:id="@+id/tvTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/margin_20"
-            android:background="@android:color/transparent"
-            android:hint="@string/text_reminder_title"
-            app:boxBackgroundMode="none"
-            app:hintTextColor="@color/grey_400"
+            android:layout_marginStart="@dimen/margin_16"
+            android:layout_marginEnd="@dimen/margin_16"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="@string/text_add_reminder"
+            android:textColor="?attr/colorPrimary"
+            android:textSize="@dimen/text_20"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/btnSave"
+            app:layout_constraintStart_toEndOf="@id/ivBack"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/btnSave"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:backgroundTint="@color/tabSelectedTextColorLight"
+            android:gravity="center"
+            android:minWidth="80dp"
+            android:paddingHorizontal="@dimen/padding_20"
+            android:text="@string/text_save"
+            android:textAllCaps="false"
+            android:textColor="@color/black"
+            android:textSize="@dimen/text_15"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/headerLayout">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/title_text_view"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                android:cursorVisible="true"
-                android:inputType="textCapSentences"
-                android:paddingHorizontal="@dimen/padding_6"
-                android:paddingVertical="@dimen/padding_12"
-                android:textColor="?attr/colorPrimary"
-                android:textSize="@dimen/text_24"
-                android:textStyle="bold" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-
-        <com.google.android.material.button.MaterialButtonToggleGroup
-            android:id="@+id/chipGroupType"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="@dimen/margin_10"
-            android:layout_marginTop="@dimen/margin_10"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/titleTextInputLayout"
-            app:singleSelection="true">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/chipReminder"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:backgroundTint="@color/selector_chip_bg"
-                android:checkable="true"
-                android:text="@string/text_reminder"
-                android:textColor="@color/selector_chip_text_color" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/chipTask"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:backgroundTint="@color/selector_chip_bg"
-                android:checkable="true"
-                android:text="@string/text_task"
-                android:textColor="@color/selector_chip_text_color" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/chipBirthday"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:backgroundTint="@color/selector_chip_bg"
-                android:checkable="true"
-                android:text="@string/text_birthday"
-                android:textColor="@color/selector_chip_text_color" />
-
-        </com.google.android.material.button.MaterialButtonToggleGroup>
-
-        <LinearLayout
-            android:id="@+id/dateLayout"
-            android:layout_width="0dp"
-            android:layout_height="@dimen/size_48"
-            android:layout_marginHorizontal="@dimen/margin_8"
-            android:layout_marginTop="@dimen/margin_10"
-            android:background="@drawable/bg_secondary_rounded_stroke_4"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="@dimen/padding_12"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/chipGroupType">
-
-            <ImageView
-                android:layout_width="@dimen/size_20"
-                android:layout_height="@dimen/size_20"
-                android:backgroundTint="@color/black"
-                android:contentDescription="@string/text_calender_icon"
-                android:src="@drawable/ic_calender" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/margin_12"
-                android:layout_weight="1"
-                android:text="@string/text_date"
-                android:textColor="?attr/colorPrimary" />
-
-            <TextView
-                android:id="@+id/tvDate"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/textColor"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/timeLayout"
-            android:layout_width="0dp"
-            android:layout_height="@dimen/size_48"
-            android:layout_marginHorizontal="@dimen/margin_8"
-            android:layout_marginTop="@dimen/margin_10"
-            android:background="@drawable/bg_secondary_rounded_stroke_4"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="@dimen/padding_12"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/dateLayout">
-
-            <ImageView
-                android:layout_width="@dimen/size_20"
-                android:layout_height="@dimen/size_20"
-                android:backgroundTint="@color/black"
-                android:contentDescription="@string/text_time_icon"
-                android:src="@drawable/ic_clock" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/margin_12"
-                android:layout_weight="1"
-                android:text="@string/text_time"
-                android:textColor="?attr/colorPrimary" />
-
-            <TextView
-                android:id="@+id/tvTime"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/textColor"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/repeatLayout"
-            android:layout_width="0dp"
-            android:layout_height="@dimen/size_48"
-            android:layout_marginHorizontal="@dimen/margin_8"
-            android:layout_marginTop="@dimen/margin_10"
-            android:background="@drawable/bg_secondary_rounded_stroke_4"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="@dimen/padding_12"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/timeLayout">
-
-            <ImageView
-                android:layout_width="@dimen/size_20"
-                android:layout_height="@dimen/size_20"
-                android:backgroundTint="@color/black"
-                android:contentDescription="@string/text_repeat_icon"
-                android:src="@drawable/ic_repeat" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/margin_12"
-                android:layout_weight="1"
-                android:text="@string/text_repeat"
-                android:textColor="?attr/colorPrimary" />
-
-            <TextView
-                android:id="@+id/tvRepeat"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/text_does_not_repeat"
-                android:textColor="@color/textColor"
-                android:textStyle="bold" />
-
-            <ImageView
-                android:layout_width="@dimen/size_16"
-                android:layout_height="@dimen/size_16"
-                android:layout_marginStart="@dimen/margin_8"
-                android:contentDescription="@string/text_chevron_down_arrow"
-                android:src="@drawable/ic_chevron_down" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/notifyLayout"
-            android:layout_width="0dp"
-            android:layout_height="@dimen/size_48"
-            android:layout_marginHorizontal="@dimen/margin_8"
-            android:layout_marginTop="@dimen/margin_10"
-            android:background="@drawable/bg_secondary_rounded_stroke_4"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="@dimen/padding_12"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/repeatLayout">
-
-            <ImageView
-                android:layout_width="@dimen/size_20"
-                android:layout_height="@dimen/size_20"
-                android:backgroundTint="@color/black"
-                android:contentDescription="@string/text_notification_icon"
-                android:src="@drawable/ic_notification" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/margin_12"
-                android:layout_weight="1"
-                android:text="@string/text_notify"
-                android:textColor="?attr/colorPrimary" />
-
-            <TextView
-                android:id="@+id/tvNotify"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/text_on_that_day"
-                android:textColor="@color/textColor"
-                android:textStyle="bold" />
-
-            <ImageView
-                android:layout_width="@dimen/size_16"
-                android:layout_height="@dimen/size_16"
-                android:layout_marginStart="@dimen/margin_8"
-                android:contentDescription="@string/text_chevron_down_arrow"
-                android:src="@drawable/ic_chevron_down" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/colorLayout"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="@dimen/margin_8"
-            android:layout_marginTop="@dimen/margin_10"
-            android:background="@drawable/bg_secondary_rounded_stroke_4"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="@dimen/padding_12"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/notifyLayout">
-
-            <ImageView
-                android:layout_width="@dimen/size_20"
-                android:layout_height="@dimen/size_20"
-                android:backgroundTint="@color/black"
-                android:contentDescription="@string/text_color_picker"
-                android:src="@drawable/ic_color_picker2" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/margin_12"
-                android:layout_weight="1"
-                android:text="@string/text_background_color"
-                android:textColor="?attr/colorPrimary" />
-
-            <View
-                android:id="@+id/colorPreview"
-                android:layout_width="@dimen/size_32"
-                android:layout_height="@dimen/size_32"
-                android:background="@drawable/bg_capsule_outline"
-                android:elevation="@dimen/elevation_4"
-                android:outlineProvider="background" />
-        </LinearLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilDetails"
-            android:layout_width="0dp"
-            android:layout_height="@dimen/size_120"
-            android:layout_marginHorizontal="@dimen/margin_8"
-            android:layout_marginTop="@dimen/margin_10"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/colorLayout">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etDetails"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="top"
-                android:hint="@string/text_add_a_message_or_details"
-                android:inputType="textMultiLine" />
-        </com.google.android.material.textfield.TextInputLayout>
+            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-</ScrollView>
+
+    <!-- Scrollable Content -->
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/headerLayout">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="@dimen/padding_20"
+            android:paddingTop="@dimen/padding_20"
+            android:paddingBottom="@dimen/padding_32">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/titleTextInputLayout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:hint="@string/text_reminder_title"
+                app:boxBackgroundMode="none"
+                app:hintTextColor="@color/grey_400"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/title_text_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:cursorVisible="true"
+                    android:inputType="textCapSentences"
+                    android:maxLines="3"
+                    android:paddingHorizontal="@dimen/padding_6"
+                    android:paddingVertical="@dimen/padding_12"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="@dimen/text_24"
+                    android:textStyle="bold" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/chipGroupType"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_16"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/titleTextInputLayout"
+                app:singleSelection="true">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/chipReminder"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/selector_chip_bg"
+                    android:checkable="true"
+                    android:text="@string/text_reminder"
+                    android:textAllCaps="false"
+                    android:textColor="@color/selector_chip_text_color"
+                    android:textSize="@dimen/text_14" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/chipTask"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/selector_chip_bg"
+                    android:checkable="true"
+                    android:text="@string/text_task"
+                    android:textAllCaps="false"
+                    android:textColor="@color/selector_chip_text_color"
+                    android:textSize="@dimen/text_14" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/chipBirthday"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/selector_chip_bg"
+                    android:checkable="true"
+                    android:text="@string/text_birthday"
+                    android:textAllCaps="false"
+                    android:textColor="@color/selector_chip_text_color"
+                    android:textSize="@dimen/text_14" />
+
+            </com.google.android.material.button.MaterialButtonToggleGroup>
+
+            <LinearLayout
+                android:id="@+id/dateLayout"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="@dimen/margin_16"
+                android:background="@drawable/bg_secondary_rounded_stroke_4"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="@dimen/padding_16"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/chipGroupType">
+
+                <ImageView
+                    android:layout_width="@dimen/size_20"
+                    android:layout_height="@dimen/size_20"
+                    android:contentDescription="@string/text_calender_icon"
+                    android:src="@drawable/ic_calender"
+                    app:tint="?attr/colorPrimary" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/margin_12"
+                    android:layout_weight="1"
+                    android:text="@string/text_date"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="@dimen/text_15" />
+
+                <TextView
+                    android:id="@+id/tvDate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="@dimen/text_15"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/timeLayout"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="@dimen/margin_12"
+                android:background="@drawable/bg_secondary_rounded_stroke_4"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="@dimen/padding_16"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/dateLayout">
+
+                <ImageView
+                    android:layout_width="@dimen/size_20"
+                    android:layout_height="@dimen/size_20"
+                    android:contentDescription="@string/text_time_icon"
+                    android:src="@drawable/ic_clock"
+                    app:tint="?attr/colorPrimary" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/margin_12"
+                    android:layout_weight="1"
+                    android:text="@string/text_time"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="@dimen/text_15" />
+
+                <TextView
+                    android:id="@+id/tvTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="@dimen/text_15"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/repeatLayout"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="@dimen/margin_12"
+                android:background="@drawable/bg_secondary_rounded_stroke_4"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="@dimen/padding_16"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/timeLayout">
+
+                <ImageView
+                    android:layout_width="@dimen/size_20"
+                    android:layout_height="@dimen/size_20"
+                    android:contentDescription="@string/text_repeat_icon"
+                    android:src="@drawable/ic_repeat"
+                    app:tint="?attr/colorPrimary" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/margin_12"
+                    android:layout_weight="1"
+                    android:text="@string/text_repeat"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="@dimen/text_15" />
+
+                <TextView
+                    android:id="@+id/tvRepeat"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/margin_8"
+                    android:text="@string/text_does_not_repeat"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="@dimen/text_14"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:layout_width="@dimen/size_16"
+                    android:layout_height="@dimen/size_16"
+                    android:contentDescription="@string/text_chevron_down_arrow"
+                    android:src="@drawable/ic_chevron_down"
+                    app:tint="?attr/colorPrimary" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/notifyLayout"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="@dimen/margin_12"
+                android:background="@drawable/bg_secondary_rounded_stroke_4"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="@dimen/padding_16"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/repeatLayout">
+
+                <ImageView
+                    android:layout_width="@dimen/size_20"
+                    android:layout_height="@dimen/size_20"
+                    android:contentDescription="@string/text_notification_icon"
+                    android:src="@drawable/ic_notification"
+                    app:tint="?attr/colorPrimary" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/margin_12"
+                    android:layout_weight="1"
+                    android:text="@string/text_notify"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="@dimen/text_15" />
+
+                <TextView
+                    android:id="@+id/tvNotify"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/margin_8"
+                    android:text="@string/text_on_that_day"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="@dimen/text_14"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:layout_width="@dimen/size_16"
+                    android:layout_height="@dimen/size_16"
+                    android:contentDescription="@string/text_chevron_down_arrow"
+                    android:src="@drawable/ic_chevron_down"
+                    app:tint="?attr/colorPrimary" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/colorLayout"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="@dimen/margin_12"
+                android:background="@drawable/bg_secondary_rounded_stroke_4"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="@dimen/padding_16"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/notifyLayout">
+
+                <ImageView
+                    android:layout_width="@dimen/size_20"
+                    android:layout_height="@dimen/size_20"
+                    android:contentDescription="@string/text_color_picker"
+                    android:src="@drawable/ic_color_picker2"
+                    app:tint="?attr/colorPrimary" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/margin_12"
+                    android:layout_weight="1"
+                    android:text="@string/text_background_color"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="@dimen/text_15" />
+
+                <View
+                    android:id="@+id/colorPreview"
+                    android:layout_width="@dimen/size_32"
+                    android:layout_height="@dimen/size_32"
+                    android:background="@drawable/bg_capsule_outline"
+                    android:elevation="@dimen/elevation_4"
+                    android:outlineProvider="background" />
+            </LinearLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilDetails"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_16"
+                android:hint="@string/text_add_a_message_or_details"
+                app:boxBackgroundMode="outline"
+                app:boxCornerRadiusBottomEnd="@dimen/padding_12"
+                app:boxCornerRadiusBottomStart="@dimen/padding_12"
+                app:boxCornerRadiusTopEnd="@dimen/padding_12"
+                app:boxCornerRadiusTopStart="@dimen/padding_12"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/colorLayout">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etDetails"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="top"
+                    android:inputType="textMultiLine|textCapSentences"
+                    android:minHeight="120dp"
+                    android:paddingTop="@dimen/padding_12"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="@dimen/text_15" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

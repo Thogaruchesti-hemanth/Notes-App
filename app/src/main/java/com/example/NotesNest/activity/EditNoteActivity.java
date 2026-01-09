@@ -4,7 +4,9 @@ import static com.example.NotesNest.utils.Constants.DEFAULT_COLORS;
 
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.os.Bundle;
+import android.view.View;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.EditText;
@@ -88,6 +90,7 @@ public class EditNoteActivity extends AppCompatActivity {
         initViewModels();
         setupListeners();
         observeViewModels();
+        setupKeyboardListener();
 
         // Start loading data
         categoryViewModel.getAllCategories();
@@ -388,5 +391,26 @@ public class EditNoteActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         AnalyticsHelper.logScreenView(getClass().getSimpleName(), getClass().getSimpleName());
+    }
+
+    private void setupKeyboardListener() {
+        final View rootView = findViewById(R.id.edit_note_layout);
+        rootView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+            Rect r = new Rect();
+            rootView.getWindowVisibleDisplayFrame(r);
+
+            // Calculate the difference between the screen height and the visible height
+            int screenHeight = rootView.getRootView().getHeight();
+            int keypadHeight = screenHeight - r.bottom;
+
+            // If keypadHeight is > 200, the keyboard is likely open
+            if (keypadHeight > 200) {
+                // Shrink the layout padding so the WebView is pushed up and visible
+                rootView.setPadding(0, 0, 0, keypadHeight);
+            } else {
+                // Reset padding when keyboard is closed
+                rootView.setPadding(0, 0, 0, 0);
+            }
+        });
     }
 }

@@ -101,19 +101,25 @@
             android:textStyle="bold" />
     </LinearLayout>
 
-    <WebView
-        android:id="@+id/etNote"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginVertical="@dimen/margin_16"
-        android:layout_weight="1"
-        android:background="@android:color/transparent" />
+        android:layout_weight="1">
+
+        <WebView
+            android:id="@+id/etNote"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent" />
+    </FrameLayout>
 
     <LinearLayout
         android:id="@+id/ckeditor_toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal|bottom"
+        android:layout_marginHorizontal="@dimen/margin_10"
         android:layout_marginBottom="@dimen/margin_50"
         android:background="@drawable/bg_primary_rounded_24"
         android:gravity="center"
