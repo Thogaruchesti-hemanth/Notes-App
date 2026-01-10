@@ -368,16 +368,6 @@ This project is proprietary software. Unauthorised copying, modification, distri
 
 ---
 
-## 📊 Project Stats
-
-![GitHub repo size](https://img.shields.io/github/repo-size/Thogaruchesti-hemanth/NotesNest)
-![GitHub stars](https://img.shields.io/github/stars/Thogaruchesti-hemanth/NotesNest?style=social)
-![GitHub forks](https://img.shields.io/github/forks/Thogaruchesti-hemanth/NotesNest?style=social)
-![GitHub issues](https://img.shields.io/github/issues/Thogaruchesti-hemanth/NotesNest)
-![GitHub last commit](https://img.shields.io/github/last-commit/Thogaruchesti-hemanth/NotesNest)
-
----
-
 <div align="center">
 
 **Made with ❤️ by Thogaruchesti Hemanth**
