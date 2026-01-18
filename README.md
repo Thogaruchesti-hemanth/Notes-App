@@ -78,13 +78,24 @@ A comprehensive Android productivity application designed to help you efficientl
 
 <div align="center">
 
-| Dashboard | Notes View | Reminders |
-|-----------|------------|-----------|
-| ![Dashboard](link-to-screenshot) | ![Notes](link-to-screenshot) | ![Reminders](link-to-screenshot) |
+| Slpash Screen                       | Login Screen              | SignUp Screen                       | Notes Dashoard                      | Edit Note Screen                     |
+| ------------------------------- | ----------------------- | ------------------------------- | ------------------------------ | --------------------------- |
+| <img alt="Slpash Screen" src="https://github.com/user-attachments/assets/09241de7-718a-4c6b-83da-140640d70405" width="180" height="380" /> | <img alt="Screenshot_20260110_135633" src="https://github.com/user-attachments/assets/a751fa72-aa8c-42a5-8f8d-92d1126b9333" width="180" height="380" />| <img alt="Screenshot_20260110_141335" src="https://github.com/user-attachments/assets/de665d75-2359-4a1b-8846-a0a76a5c2815" width="180" height="380"  />| <img alt="Screenshot_20260110_135949" src="https://github.com/user-attachments/assets/39f984d1-bb50-4e46-8465-42c09cad3894"  width="180" height="380" />| <img alt="Screenshot_20260110_140016" src="https://github.com/user-attachments/assets/14738f08-09b5-4e52-a18f-bb70453eb454" width="180" height="380" />|
 
-| Dark Mode | Widgets | Export Options |
-|-----------|---------|----------------|
-| ![Dark Mode](link-to-screenshot) | ![Widgets](link-to-screenshot) | ![Export](link-to-screenshot) |
+
+| Category Manager                    | Note Dialog                    | Share Options                        | Reminder Dashboard                  | Add Reminder Screen                      |
+| ------------------------- | ------------------------- | --------------------------------- | --------------------- | ----------------------------- |
+| <img alt="Screenshot_20260110_140002" src="https://github.com/user-attachments/assets/0c5d3576-80b7-45c6-9d7e-f618367f1a58" width="180" height="380" /> |  <img alt="Screenshot_20260110_140122" src="https://github.com/user-attachments/assets/9e0500c9-39ab-459e-bd0f-fddec933341a" width="180" height="380" />| <img alt="Screenshot_20260110_140132" src="https://github.com/user-attachments/assets/8b8bd034-a85d-4351-b174-d6da4919c8da" width="180" height="380" />| <img alt="Screenshot_20260110_140652" src="https://github.com/user-attachments/assets/d007a801-6ff7-418e-9397-3557f5229c67" width="180" height="380"/> | <img alt="Screenshot_20260110_140704" src="https://github.com/user-attachments/assets/9fb38af7-c765-47f0-a3bb-7ca11d94ea85" width="180" height="380"/> |
+
+| Drawer                    | Settings Screen                    | Help and Support Screen                        | Manage Account Screen                  | Drive Backup Screen                      |
+| ------------------------- | ------------------------- | --------------------------------- | --------------------- | ----------------------------- |
+| <img alt="Screenshot_20260110_140027" src="https://github.com/user-attachments/assets/5f8c51c9-924e-4055-9b76-299c622c0a2a" width="180" height="380" />| <img alt="Screenshot_20260110_140041" src="https://github.com/user-attachments/assets/6ff67473-3d0e-4fc6-8f6d-e97c6c8fabf4"  width="180" height="380" />| <img  alt="Screenshot_20260110_140107" src="https://github.com/user-attachments/assets/d26b59de-0ed4-49f5-a53c-36f025ff6d8e" width="180" height="380" />| <img alt="Screenshot_20260110_140905" src="https://github.com/user-attachments/assets/201310ce-cc51-44af-bea0-a3766f0df5d6" width="180" height="380" />| <img alt="Screenshot_20260110_140916" src="https://github.com/user-attachments/assets/6d98c85a-b910-484f-a54b-025e93f59b97" width="180" height="380"/> |
+
+| Edit Profile Dialog                    | Quick Note Widget                    | Config Note Widget Screen                        | Note Widget                  | Dark Mode Dashboard                      |
+| ------------------------- | ------------------------- | --------------------------------- | --------------------- | ----------------------------- |
+| <img alt="Screenshot_20260110_140719" src="https://github.com/user-attachments/assets/318e2efc-be5e-4d35-a91b-e3760740cfbe" width="180" height="380"/>|<img alt="Screenshot_20260110_144004" src="https://github.com/user-attachments/assets/9fea5f60-8c14-4691-b4f6-014003ae11cb" width="180" height="380"/>| <img alt="Screenshot_20260110_144021" src="https://github.com/user-attachments/assets/35f47b27-abab-4544-ae82-db6529b783af" width="180" height="380" />| <img  alt="Screenshot_20260110_144039" src="https://github.com/user-attachments/assets/df0211be-7695-48d1-8c46-72f5471b3375"  width="180" height="380" />|<img alt="Screenshot_20260110_144638" src="https://github.com/user-attachments/assets/bf5f2684-a949-452c-8309-c02888c1de65" width="180" height="380"/> |
+
+
 
 </div>
 
@@ -354,16 +365,6 @@ This project is proprietary software. Unauthorised copying, modification, distri
 - **Firebase** - For authentication and backend services
 - **Android Developers** - For excellent documentation
 - **Open Source Community** - For inspiration and libraries
-
----
-
-## 📊 Project Stats
-
-![GitHub repo size](https://img.shields.io/github/repo-size/Thogaruchesti-hemanth/NotesNest)
-![GitHub stars](https://img.shields.io/github/stars/Thogaruchesti-hemanth/NotesNest?style=social)
-![GitHub forks](https://img.shields.io/github/forks/Thogaruchesti-hemanth/NotesNest?style=social)
-![GitHub issues](https://img.shields.io/github/issues/Thogaruchesti-hemanth/NotesNest)
-![GitHub last commit](https://img.shields.io/github/last-commit/Thogaruchesti-hemanth/NotesNest)
 
 ---
 
