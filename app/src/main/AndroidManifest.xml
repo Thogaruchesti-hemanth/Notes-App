@@ -17,6 +17,10 @@
         android:theme="@style/Theme.Notes"
         tools:targetApi="31">
 
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-4258152474007475~9583641622"/>
+
         <activity
             android:name=".activity.ManageAccountActivity"
             android:exported="false" />

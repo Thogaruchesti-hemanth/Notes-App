@@ -31,7 +31,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_6"
         android:fontFamily="sans-serif-light"
-        android:text="@string/text_nest_your_ideas_let_them_take_flight"
+        android:text="@string/text_your_complete_productivity_hub"
         android:textColor="?attr/colorPrimary"
         android:textSize="@dimen/text_16" />
 

@@ -38,8 +38,8 @@ android {
         minSdk 29
         targetSdk 35
 
-        versionCode 10
-        versionName "3.0.5"
+        versionCode 11
+        versionName "3.0.6"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -152,6 +152,9 @@ dependencies {
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
+
+    // ----------ads-------------
+    implementation("com.google.android.gms:play-services-ads:24.9.0")
 }
 
 // Apply Google Services plugin for Firebase
