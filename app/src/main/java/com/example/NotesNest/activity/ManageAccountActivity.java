@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.text.InputType;
 import android.util.Base64;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -21,7 +22,10 @@ import androidx.appcompat.content.res.AppCompatResources;
 
 import com.example.NotesNest.FirebaseHelper;
 import com.example.NotesNest.R;
+import com.example.NotesNest.utils.PremiumManager;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -35,6 +39,8 @@ public class ManageAccountActivity extends AppCompatActivity {
     private ProgressDialog progressDialog;
     private LinearLayout logoutLayout, deleteAccountLayout, changePasswordLayout;
     private FirebaseHelper firebaseHelper;
+    private AdView adViewTop, adViewBottom;
+    private PremiumManager premiumManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,12 +49,25 @@ public class ManageAccountActivity extends AppCompatActivity {
 
         // Initialize FirebaseHelper
         firebaseHelper = new FirebaseHelper();
+        premiumManager = new PremiumManager(this);
 
         initViews();
         setupSettings();
         loadUserData();
         setupListeners();
+        setupAds();
     }    // Deletion callback instance
+
+    private void setupAds() {
+        if (premiumManager.isPremium()) {
+            adViewTop.setVisibility(View.GONE);
+            adViewBottom.setVisibility(View.GONE);
+            return;
+        }
+        AdRequest adRequest = new AdRequest.Builder().build();
+        adViewTop.loadAd(adRequest);
+        adViewBottom.loadAd(adRequest);
+    }
 
     private void initViews() {
         ivProfile = findViewById(R.id.ivProfile);
@@ -58,6 +77,8 @@ public class ManageAccountActivity extends AppCompatActivity {
         logoutLayout = findViewById(R.id.logoutLayout);
         deleteAccountLayout = findViewById(R.id.deleteAccountLayout);
         changePasswordLayout = findViewById(R.id.changePasswordLayout); // Add this to your layout
+        adViewTop = findViewById(R.id.adViewManageTop);
+        adViewBottom = findViewById(R.id.adViewManageBottom);
 
         findViewById(R.id.ivBackArrow).setOnClickListener(view -> finish());
     }    private final FirebaseHelper.DeletionCallback deletionCallback =

@@ -17,6 +17,7 @@ import com.example.NotesNest.FirebaseHelper;
 import com.example.NotesNest.R;
 import com.example.NotesNest.adapter.FeatureAdapter;
 import com.example.NotesNest.models.FeatureItem;
+import com.example.NotesNest.utils.BillingManager;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
 
 import java.util.ArrayList;
@@ -29,10 +30,12 @@ public class PremiumActivity extends AppCompatActivity {
     RecyclerView recyclerView;
     FirebaseHelper firebaseHelper;
     SharedPreferenceUtil sharedPreferenceUtil;
+    BillingManager billingManager;
 
     private String currentPlan;
 
     private String selectedPlan = FirebaseHelper.PLAN_NONE;
+    private Button btnUpgrade;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,11 +44,13 @@ public class PremiumActivity extends AppCompatActivity {
 
         firebaseHelper = new FirebaseHelper();
         sharedPreferenceUtil = new SharedPreferenceUtil(this);
+        billingManager = BillingManager.getInstance(this);
         currentPlan = sharedPreferenceUtil.getPlanType();
 
         initViews();
         setupFeatures();
         setupCurrentPlan();
+        observePurchaseState();
 
         // 👉 ONLY UI SELECTION HERE (NO FIREBASE CALL)
         View.OnClickListener planClickListener = v -> {
@@ -120,36 +125,98 @@ public class PremiumActivity extends AppCompatActivity {
             return;
         }
 
-        firebaseHelper.updatePremiumPlan(this, selectedPlan,
-                new FirebaseHelper.PremiumUpdateCallback() {
+        // Map plan type to product ID
+        String productId = mapPlanToProductId(selectedPlan);
+        if (productId == null) {
+            Toast.makeText(this, "Invalid plan selection", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-                    @Override
-                    public void onPremiumUpdateSuccess(String updatedPlanType, String expiryDate) {
-                        runOnUiThread(() -> {
+        // Launch in-app purchase flow
+        billingManager.launchPurchaseFlow(this, productId);
+    }
 
-                            currentPlan = updatedPlanType;
-                            selectedPlan = FirebaseHelper.PLAN_NONE;
+    /**
+     * Map selected plan to Google Play product ID
+     */
+    private String mapPlanToProductId(String planType) {
+        if (FirebaseHelper.PLAN_MONTHLY.equals(planType)) {
+            return BillingManager.PRODUCT_MONTHLY;
+        } else if (FirebaseHelper.PLAN_YEARLY.equals(planType)) {
+            return BillingManager.PRODUCT_YEARLY;
+        } else if (FirebaseHelper.PLAN_LIFETIME.equals(planType)) {
+            return BillingManager.PRODUCT_LIFETIME;
+        }
+        return null;
+    }
 
+    /**
+     * Observe purchase state changes from BillingManager
+     */
+    private void observePurchaseState() {
+        billingManager.getPurchaseState().observe(this, purchaseState -> {
+            if (purchaseState.isLoading) {
+                // Show loading state
+                btnUpgrade.setEnabled(false);
+                btnUpgrade.setText("Processing...");
+            } else {
+                // Hide loading state
+                btnUpgrade.setEnabled(true);
+                btnUpgrade.setText("Unlock Premium");
+
+                // If purchase was successful
+                if (purchaseState.planType != null) {
+                    currentPlan = purchaseState.planType;
+                    selectedPlan = FirebaseHelper.PLAN_NONE;
+                    setupCurrentPlan();
+
+                    Toast.makeText(this,
+                            "Premium " + getPlanDisplayName(purchaseState.planType) + " activated!",
+                            Toast.LENGTH_SHORT).show();
+
+                    // Optional: Sync with Firebase for server-side verification
+                    syncPurchaseToFirebase();
+                }
+            }
+        });
+
+        billingManager.getPurchaseError().observe(this, error -> {
+            if (error != null && !error.isEmpty()) {
+                btnUpgrade.setEnabled(true);
+                btnUpgrade.setText("Unlock Premium");
+                Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    /**
+     * Optional: Sync purchase verification with Firebase backend
+     * This ensures security by verifying the purchase token on your server
+     */
+    private void syncPurchaseToFirebase() {
+        String purchaseToken = sharedPreferenceUtil.getPurchaseToken();
+        String planType = sharedPreferenceUtil.getPlanType();
+
+        if (!purchaseToken.isEmpty()) {
+            // Call Firebase function to verify purchase
+            firebaseHelper.verifyAndActivatePremium(this, purchaseToken, planType,
+                    new FirebaseHelper.PremiumUpdateCallback() {
+                        @Override
+                        public void onPremiumUpdateSuccess(String updatedPlanType, String expiryDate) {
+                            // Update local storage with verified data
                             sharedPreferenceUtil.setIsPremium(true);
                             sharedPreferenceUtil.setPlanType(updatedPlanType);
                             sharedPreferenceUtil.setPremiumExpiryDate(expiryDate);
+                        }
 
-                            setupCurrentPlan();
-
+                        @Override
+                        public void onPremiumUpdateFailure(String error) {
                             Toast.makeText(PremiumActivity.this,
-                                    "Premium " + getPlanDisplayName(updatedPlanType) + " activated!",
+                                    "Server verification failed, but local premium is active",
                                     Toast.LENGTH_SHORT).show();
-                        });
-                    }
-
-                    @Override
-                    public void onPremiumUpdateFailure(String error) {
-                        runOnUiThread(() ->
-                                Toast.makeText(PremiumActivity.this,
-                                        "Upgrade failed: " + error,
-                                        Toast.LENGTH_SHORT).show());
-                    }
-                });
+                        }
+                    });
+        }
     }
 
     /* -------------------------------
@@ -187,7 +254,7 @@ public class PremiumActivity extends AppCompatActivity {
 
         ImageView ivClose = findViewById(R.id.ivClose);
         TextView tvContinueWithLimited = findViewById(R.id.tvContinueWithLimited);
-        Button btnUpgrade = findViewById(R.id.btnUnlock);
+        btnUpgrade = findViewById(R.id.btnUnlock);
 
         ivClose.setOnClickListener(v -> finish());
         tvContinueWithLimited.setOnClickListener(v -> finish());
@@ -223,14 +290,25 @@ public class PremiumActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        // Reconnect billing client if needed
+        billingManager.reconnectIfNeeded();
         syncPremiumStatus();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Clean up billing resources
+        if (billingManager != null) {
+            billingManager.destroy();
+        }
     }
 
     private void syncPremiumStatus() {
         firebaseHelper.checkPremiumStatus((isPremium, planType, expiryDate) ->
                 runOnUiThread(() -> {
 
-                    if (isPremium != sharedPreferenceUtil.isPremium()
+                    if (isPremium != sharedPreferenceUtil.isUserPremium()
                             || !planType.equals(sharedPreferenceUtil.getPlanType())) {
 
                         sharedPreferenceUtil.setIsPremium(isPremium);

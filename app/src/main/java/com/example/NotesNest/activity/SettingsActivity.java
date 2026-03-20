@@ -34,6 +34,9 @@ import com.example.NotesNest.backups.LocalBackupManager;
 import com.example.NotesNest.utils.CommonDialogs;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
 import com.example.NotesNest.utils.ThemeManager;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -53,6 +56,8 @@ public class SettingsActivity extends AppCompatActivity {
 
     private String pendingPassword; // Temporary storage for password during export flow
     private boolean isPremiumUser;
+    private AdView adView;
+    private AdRequest adRequest;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,6 +81,20 @@ public class SettingsActivity extends AppCompatActivity {
         setupNotesSpinner();
         setupThemeSpinner();
         setupDriveBackupPremium();
+
+        MobileAds.initialize(this);
+
+        // on below line we are initializing
+        // our ad view with its id
+        adView = findViewById(R.id.adView1);
+
+        // on below line we are
+        // initializing our ad request.
+        adRequest = new AdRequest.Builder().build();
+
+        // on below line we are loading our
+        // ad view with the ad request
+        adView.loadAd(adRequest);
     }
 
     private void setupActivityResultLaunchers() {
@@ -86,7 +105,7 @@ public class SettingsActivity extends AppCompatActivity {
                         Uri uri = result.getData().getData();
                         if (uri != null) {
                             showPasswordDialog(this, "Enter export password",
-                                    password -> startImportFromUri(uri, password));
+                                    password -> startImportFromUri(uri, password.toCharArray()));
                         }
                     }
                 });

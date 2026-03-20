@@ -32,6 +32,8 @@ import com.example.NotesNest.models.Task;
 import com.example.NotesNest.utils.AnalyticsHelper;
 import com.example.NotesNest.utils.CommonDialogs;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -53,6 +55,7 @@ public class RemindersFragment extends Fragment {
     private String currentUserId = null;
     boolean isPremium;
     private static final int FREE_REMINDER_LIMIT = 30;
+    private AdView adView;
 
 
     @Nullable
@@ -71,6 +74,7 @@ public class RemindersFragment extends Fragment {
         calendarRv = view.findViewById(R.id.calendarRecyclerView);
         hourRecyclerView = view.findViewById(R.id.hourRecyclerView);
         Button createButton = view.findViewById(R.id.createButton);
+        adView = view.findViewById(R.id.adViewReminders);
 
         currentUserId = new SharedPreferenceUtil(getContext()).getUserId();
         isPremium = new SharedPreferenceUtil(requireContext()).isUserPremium();
@@ -99,7 +103,18 @@ public class RemindersFragment extends Fragment {
             createButton.setAlpha(0.5f);
         }
 
+        setupBannerAd();
+
         return view;
+    }
+
+    private void setupBannerAd() {
+        if (isPremium) {
+            adView.setVisibility(View.GONE);
+            return;
+        }
+        AdRequest adRequest = new AdRequest.Builder().build();
+        adView.loadAd(adRequest);
     }
 
     @Override

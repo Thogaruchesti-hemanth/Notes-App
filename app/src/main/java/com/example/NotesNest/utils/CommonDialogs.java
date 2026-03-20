@@ -1,645 +1,297 @@
 package com.example.NotesNest.utils;
 
-import static android.view.View.GONE;
-import static com.example.NotesNest.utils.Constants.DEFAULT_COLORS;
 import static com.example.NotesNest.utils.Constants.professionalGradients;
 
-import android.animation.ArgbEvaluator;
-import android.animation.ValueAnimator;
-import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
-import android.os.Handler;
-import android.os.Looper;
-import android.text.Editable;
 import android.text.Html;
-import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.WindowManager;
-import android.webkit.WebView;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import androidx.annotation.ColorInt;
-import androidx.annotation.NonNull;
-import androidx.cardview.widget.CardView;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.appcompat.app.AlertDialog;
 
 import com.example.NotesNest.R;
 import com.example.NotesNest.activity.PremiumActivity;
-import com.example.NotesNest.adapter.CategoryAdapter;
-import com.example.NotesNest.adapter.ColorAdapter;
 import com.example.NotesNest.databases.ViewModels.CategoryViewModel;
 import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.databases.entities.ReminderEntity;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
-import com.google.android.material.button.MaterialButton;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.List;
-import java.util.Objects;
 
 public class CommonDialogs {
 
-    public static void showOptionsDialog(Context context, NoteEntity note, int position, NoteOptionsListener listener) {
-        new MaterialAlertDialogBuilder(context)
-                .setTitle("Select Action")
-                .setPositiveButton("Edit", (dialog, which) -> {
-                    if (listener != null) listener.onEdit(note);
-                })
-                .setNegativeButton("Delete", (dialog, which) -> {
-                    if (listener != null) listener.onDelete(note, position);
-                })
-                .show();
-    }
+    /**
+     * Shows a professional dialog when a premium feature is locked.
+     */
+    public static void showPremiumRequiredDialog(Context context, String message) {
+        if (context == null) return;
 
-    public static void showCategoryDialog(
-            Context context,
-            String title,
-            List<String> categoryNames,
-            int selectedIndex,
-            OnCategorySelectedListener listener
-    ) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.CustomAlertDialog);
         LayoutInflater inflater = LayoutInflater.from(context);
-        View dialogView = inflater.inflate(R.layout.dialog_list_view, null);
+        View dialogView = inflater.inflate(R.layout.dialog_premium_required, null);
         builder.setView(dialogView);
 
-        ListView listView = dialogView.findViewById(R.id.cardTypeList);
-        ImageView cancelIcon = dialogView.findViewById(R.id.ivCancel);
-        TextView titleTextView = dialogView.findViewById(R.id.tvTitle);
-        titleTextView.setText(title);
-
-        CategoryAdapter adapter = new CategoryAdapter(context, categoryNames);
-        adapter.setSelectedIndex(selectedIndex);
-        listView.setAdapter(adapter);
-
         AlertDialog dialog = builder.create();
-        Objects.requireNonNull(dialog.getWindow())
-                .setBackgroundDrawableResource(android.R.color.transparent);
-        dialog.show();
 
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            int width = (int) (context.getResources().getDisplayMetrics().widthPixels * 0.8);
-            int height = (int) (context.getResources().getDisplayMetrics().heightPixels * 0.5);
-            dialog.getWindow().setLayout(width, height);
-        }
+        TextView tvMessage = dialogView.findViewById(R.id.tvMessage);
+        Button btnUpgrade = dialogView.findViewById(R.id.btnUpgrade);
+        Button btnCancel = dialogView.findViewById(R.id.btnCancel);
 
-        cancelIcon.setOnClickListener(v -> dialog.dismiss());
+        tvMessage.setText(message);
 
-        listView.setOnItemClickListener((parent, view, position, id) -> {
-            adapter.setSelectedIndex(position);
-            String selected = categoryNames.get(position);
-
-            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                listener.onCategorySelected(selected, position);
-                dialog.dismiss();
-            }, 150);
-        });
-    }
-
-
-    public static void showInputDialog(
-            Context context,
-            String title,
-            String hint,
-            String positiveBtn,
-            String negativeBtn,
-            InputCallback callback
-    ) {
-
-        View view = LayoutInflater.from(context)
-                .inflate(R.layout.dialog_add_category, null);
-
-        TextView tvTitle = view.findViewById(R.id.tvTitle);
-        TextInputLayout tilName = view.findViewById(R.id.tilName);
-        TextInputEditText etName = view.findViewById(R.id.etName);
-        MaterialButton btnAdd = view.findViewById(R.id.btnAdd);
-        MaterialButton btnCancel = view.findViewById(R.id.btnCancel);
-
-        tvTitle.setText(title);
-        etName.setHint(hint);
-        btnAdd.setText(positiveBtn);
-        btnCancel.setText(negativeBtn);
-
-        // Text length watcher
-        etName.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (s.length() == 15) {
-                    tilName.setError("Maximum 15 characters allowed");
-                } else {
-                    tilName.setError(null);
-                }
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-            }
-        });
-
-        AlertDialog dialog = new AlertDialog.Builder(context)
-                .setView(view)
-                .setCancelable(false)
-                .create();
-
-        btnAdd.setOnClickListener(v -> {
-            String input = etName.getText().toString().trim();
-
-            if (input.isEmpty()) {
-                tilName.setError("Required");
-                return;
-            }
-
-            if (input.length() > 15) {
-                tilName.setError("Maximum 15 characters allowed");
-                return;
-            }
-
-            tilName.setError(null);
-            callback.onSubmit(input);
+        btnUpgrade.setOnClickListener(v -> {
+            context.startActivity(new Intent(context, PremiumActivity.class));
             dialog.dismiss();
         });
 
         btnCancel.setOnClickListener(v -> dialog.dismiss());
 
         dialog.show();
-
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            int width = (int) (context.getResources().getDisplayMetrics().widthPixels * 0.8);
-            int height = (int) (context.getResources().getDisplayMetrics().heightPixels * 0.35);
-            dialog.getWindow().setLayout(width, height);
-        }
-    }
-
-
-    public static void showConfirmDialog(
-            Context context,
-            String title,
-            String message,
-            String positiveBtn,
-            String negativeBtn,
-            ConfirmCallback callback
-    ) {
-        View view = LayoutInflater.from(context)
-                .inflate(R.layout.dialog_confirm_action, null);
-
-        TextView tvTitle = view.findViewById(R.id.tvTitle);
-        TextView tvMessage = view.findViewById(R.id.tvMessage);
-        Button btnPositive = view.findViewById(R.id.btnDelete);
-        Button btnNegative = view.findViewById(R.id.btnCancel);
-
-        tvTitle.setText(title);
-        tvMessage.setText(message);
-        btnPositive.setText(positiveBtn);
-        btnNegative.setText(negativeBtn);
-
-        AlertDialog dialog = new AlertDialog.Builder(context)
-                .setView(view)
-                .setCancelable(true)
-                .create();
-
-        btnPositive.setOnClickListener(v -> {
-            callback.onConfirm();
-            dialog.dismiss();
-        });
-
-        btnNegative.setOnClickListener(v -> dialog.dismiss());
-
-        dialog.show();
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            int width = (int) (context.getResources().getDisplayMetrics().widthPixels * 0.8);
-            int height = (int) (context.getResources().getDisplayMetrics().heightPixels * 0.35);
-            dialog.getWindow().setLayout(width, height);
-        }
-    }
-
-    public static void showNoteContentDialog(Context context, NoteEntity note, CategoryViewModel categoryViewModel, NoteDialogCallback callback) {
-
-        View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_note_full_content, null);
-
-        TextView dialogTitle = dialogView.findViewById(R.id.tvTitle);
-        TextView dialogDate = dialogView.findViewById(R.id.tvDate);
-        TextView dialogContent = dialogView.findViewById(R.id.tvMessage);
-        TextView dialogTime = dialogView.findViewById(R.id.tvTime);
-        TextView dialogCategory = dialogView.findViewById(R.id.tvCategory);
-        CardView dialogCard = dialogView.findViewById(R.id.dialogNote);
-        ImageButton shareButton = dialogView.findViewById(R.id.btnShare);
-
-        String content = HtmlListConverter.convertHtmlLists(note.content);
-
-        // Set data
-        dialogTitle.setText(note.title);
-        dialogContent.setText(
-                Html.fromHtml(content, Html.FROM_HTML_MODE_LEGACY)
-        );
-
-        // Format date/time - callback provided for flexibility
-        callback.setDateTime(note.createdAt, dialogDate, dialogTime);
-
-        // Set background color safely
-        try {
-            dialogCard.setCardBackgroundColor(Color.parseColor(note.colorHex));
-            dialogContent.setBackgroundColor(android.graphics.Color.parseColor(note.colorHex));
-        } catch (Exception e) {
-            dialogCard.setCardBackgroundColor(Color.WHITE);
-        }
-
-        // Set category - callback to fetch category name dynamically
-        callback.setCategory(dialogCategory, note.categoryId);
-
-        AlertDialog dialog = new AlertDialog.Builder(context)
-                .setView(dialogView)
-                .create();
-
-        dialog.show();
-
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
-            lp.copyFrom(dialog.getWindow().getAttributes());
-            lp.width = (int) (context.getResources().getDisplayMetrics().widthPixels * 0.8);
-            lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
-            dialog.getWindow().setAttributes(lp);
-        }
-
-        shareButton.setOnClickListener(view -> showShareBottomSheet(note, categoryViewModel, context, dialogView));
-
     }
 
     /**
-     * Show a generic color picker bottom sheet.
-     *
-     * @param context       Context of the activity/fragment
-     * @param selectedColor Currently selected color
-     * @param callback      Callback to return the selected color
+     * Shows a dialog to enter a password for import/export.
      */
-    public static void showColorPicker(Context context, String selectedColor, ColorSelectedListener callback) {
-        BottomSheetDialog dialog = new BottomSheetDialog(context);
+    public static void showPasswordDialog(Context context, String title, PasswordCallback callback) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.CustomAlertDialog);
+        LayoutInflater inflater = LayoutInflater.from(context);
+        View dialogView = inflater.inflate(R.layout.dialog_enter_password, null);
+        builder.setView(dialogView);
 
-        // Inflate the bottom sheet layout
-        View sheetView = LayoutInflater.from(context).inflate(
-                R.layout.bottom_color_picker,
-                dialog.getDelegate().findViewById(com.google.android.material.R.id.design_bottom_sheet),
-                false
-        );
+        AlertDialog dialog = builder.create();
 
-        View customSheetContainer = sheetView.findViewById(R.id.bottom_color_picker);
+        TextView tvTitle = dialogView.findViewById(R.id.tvTitle);
+        if (tvTitle != null) tvTitle.setText(title);
 
-        // ---- Initial background ----
-        int[] currentColor = {Color.parseColor(selectedColor)};
-        customSheetContainer.getBackground().setTint(currentColor[0]);
+        TextInputEditText passwordEdit = dialogView.findViewById(R.id.passwordEdit);
+        Button btnOk = dialogView.findViewById(R.id.btnOk);
+        Button btnCancel = dialogView.findViewById(R.id.btnCancel);
 
-        RecyclerView recyclerView = sheetView.findViewById(R.id.colorRecycler);
-        recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false));
-
-        ColorAdapter adapter = new ColorAdapter(DEFAULT_COLORS, selectedColor, color -> {
-
-            try {
-                int newColor = Color.parseColor(color);
-
-                // ✅ Smooth animationN
-                ValueAnimator colorAnim = ValueAnimator.ofObject(new ArgbEvaluator(), currentColor[0], newColor);
-                colorAnim.setDuration(250);
-                colorAnim.addUpdateListener(anim -> {
-                    int value = (int) anim.getAnimatedValue();
-                    customSheetContainer.getBackground().setTint(value);
-                });
-                colorAnim.start();
-
-                currentColor[0] = newColor;
-
-            } catch (Exception ignored) {
-            }
-            callback.onColorSelected(color);
-
-            // ✅ Let animation play slightly then dismiss
-            sheetView.postDelayed(dialog::dismiss, 260);
-
-        });
-
-        recyclerView.setAdapter(adapter);
-
-        dialog.setContentView(sheetView);
-        dialog.show();
-    }
-
-    public static void showGradientPicker(@NonNull Context context,
-                                          int selectedStartColor,
-                                          int selectedEndColor,
-                                          @NonNull OnGradientSelectedListener listener) {
-
-        BottomSheetDialog dialog = new BottomSheetDialog(context);
-        View sheetView = LayoutInflater.from(context).inflate(
-                R.layout.bottom_sheet_gradient_picker,
-                null,
-                false
-        );
-
-        LinearLayout container = sheetView.findViewById(R.id.gradientContainer);
-
-        // Add each gradient as a capsule item
-        for (int[] professionalGradient : professionalGradients) {
-            int start = professionalGradient[0];
-            int end = professionalGradient[1];
-
-            View gradientView = new View(context);
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    80 // capsule height in dp
-            );
-            params.setMargins(0, 8, 0, 8);
-            gradientView.setLayoutParams(params);
-
-            GradientDrawable drawable = new GradientDrawable(
-                    GradientDrawable.Orientation.LEFT_RIGHT,
-                    new int[]{start, end}
-            );
-            drawable.setCornerRadius(50f); // capsule shape
-
-            // Highlight if matches selected gradient
-            if (start == selectedStartColor && end == selectedEndColor) {
-                drawable.setStroke(2, Color.BLACK); // selected border
-            } else {
-                drawable.setStroke(0, Color.TRANSPARENT);
-            }
-
-            gradientView.setBackground(drawable);
-
-            gradientView.setOnClickListener(v -> {
-                listener.onGradientSelected(start, end);
-                dialog.dismiss();
+        if (btnOk == null) {
+            builder.setPositiveButton("OK", (d, w) -> {
+                String pass = passwordEdit.getText().toString();
+                if (!pass.isEmpty()) callback.onPasswordEntered(pass);
             });
-
-            container.addView(gradientView);
-        }
-
-        dialog.setContentView(sheetView);
-        dialog.show();
-    }
-
-    public static void showCustomDialog(
-            Context context,
-            ReminderEntity reminder,
-            String positiveText,
-            String negativeText,
-            Runnable positiveAction,
-            Runnable negativeAction
-    ) {
-        View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_reminder_options, null);
-
-        TextView dialogTitle = dialogView.findViewById(R.id.tvTitle);
-        TextView dialogMessage = dialogView.findViewById(R.id.tvMessage);
-        Button btnEdit = dialogView.findViewById(R.id.btnEdit);
-        Button btnDelete = dialogView.findViewById(R.id.btnDelete);
-        LinearLayout reminderLayout = dialogView.findViewById(R.id.reminderLayout);
-
-        dialogTitle.setText(reminder.title);
-        dialogMessage.setText(reminder.message);
-
-        btnEdit.setText(positiveText != null ? positiveText : "OK");
-        btnDelete.setText(negativeText != null ? negativeText : "Cancel");
-
-        GradientDrawable drawable = new GradientDrawable(
-                GradientDrawable.Orientation.LEFT_RIGHT,
-                new int[]{reminder.gradientStartColor, reminder.gradientEndColor}
-        );
-
-        reminderLayout.setBackground(drawable);
-
-        AlertDialog dialog = new AlertDialog.Builder(context)
-                .setView(dialogView)
-                .create();
-
-        dialog.show();
-        dialog.setCancelable(false
-        );
-
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
-            lp.copyFrom(dialog.getWindow().getAttributes());
-            lp.width = (int) (context.getResources().getDisplayMetrics().widthPixels * 0.85);
-            lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
-            dialog.getWindow().setAttributes(lp);
-        }
-
-        // Assign click listeners
-        btnEdit.setOnClickListener(v -> {
-            dialog.dismiss();
-            if (positiveAction != null) positiveAction.run();
-        });
-
-        btnDelete.setOnClickListener(v -> {
-            dialog.dismiss();
-            if (negativeAction != null) negativeAction.run();
-        });
-        dialogView.findViewById(R.id.btnClose).setOnClickListener(view -> dialog.dismiss());
-    }
-
-    public static void showShareBottomSheet(NoteEntity note, CategoryViewModel categoryViewModel, Context context, View noteView) {
-        View sheetView = LayoutInflater.from(context).inflate(R.layout.bottom_sheet_share_menu, null);
-
-        BottomSheetDialog sheet = new BottomSheetDialog(context);
-        sheet.setContentView(sheetView);
-        SharedPreferenceUtil prefs = new SharedPreferenceUtil(context);
-        TextView shareText = sheetView.findViewById(R.id.tvShareText);
-        LinearLayout shareImage = sheetView.findViewById(R.id.layoutShareImage);
-        LinearLayout sharePdf = sheetView.findViewById(R.id.layoutSharePDF);
-
-        if (!prefs.isPremium()) {
-            shareImage.setAlpha(0.5f);
-            sharePdf.setAlpha(0.5f);
+            builder.setNegativeButton("Cancel", null);
+            builder.show();
         } else {
-            sharePdf.findViewById(R.id.ivPremiumPDF).setVisibility(GONE);
-            shareImage.findViewById(R.id.ivPremiumImage).setVisibility(GONE);
-        }
-
-        sheet.show();
-
-        // ⭐ SHARE AS TEXT (FREE)
-        shareText.setOnClickListener(v -> {
-            sheet.dismiss();
-            new NoteShareManager(context).shareAsText(note, categoryViewModel);
-        });
-
-        // ⭐ SHARE AS IMAGE (PREMIUM)
-        shareImage.setOnClickListener(v -> {
-            if (!new SharedPreferenceUtil(context).isPremium()) {
-                sheet.dismiss();
-                showPremiumRequiredDialog(context, context.getString(R.string.text_premium_required_to_share_as_image));
-                return;
-            }
-
-            sheet.dismiss();
-            new NoteShareManager(context).shareAsImage(note, noteView);
-        });
-
-        // ⭐ SHARE AS PDF (PREMIUM)
-        sharePdf.setOnClickListener(v -> {
-            if (!new SharedPreferenceUtil(context).isPremium()) {
-                sheet.dismiss();
-                showPremiumRequiredDialog(context, context.getString(R.string.text_premium_required_to_share_as_pdf));
-                return;
-            }
-
-            sheet.dismiss();
-            new NoteShareManager(context).shareAsPdf(note, noteView);
-        });
-    }
-
-    public static void showPasswordDialog(Activity activity, String title, PasswordCallback callback) {
-
-        View view = LayoutInflater.from(activity)
-                .inflate(R.layout.dialog_enter_password, null);
-
-        TextInputLayout passwordLayout = view.findViewById(R.id.passwordLayout);
-        TextInputEditText passwordEdit = view.findViewById(R.id.passwordEdit);
-
-        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(
-                activity,
-                com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog
-        )
-                .setTitle(title)
-                .setView(view)
-                .setCancelable(true)
-                .setPositiveButton("OK", null)   // override later
-                .setNegativeButton("Cancel", (d, w) -> d.dismiss());
-
-        androidx.appcompat.app.AlertDialog dialog = builder.create();
-
-        dialog.setOnShowListener(dlg -> dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE)
-                .setOnClickListener(v -> {
-
-                    String pw = passwordEdit.getText() != null
-                            ? passwordEdit.getText().toString().trim()
-                            : "";
-
-                    if (pw.length() < 4) {
-                        passwordLayout.setError("Minimum 4 characters required");
-                        return;
-                    }
-
-                    passwordLayout.setError(null);
-                    callback.onPasswordEntered(pw.toCharArray());
+            btnOk.setOnClickListener(v -> {
+                String pass = passwordEdit.getText().toString();
+                if (pass.isEmpty()) {
+                    Toast.makeText(context, "Password cannot be empty", Toast.LENGTH_SHORT).show();
+                } else {
+                    callback.onPasswordEntered(pass);
                     dialog.dismiss();
-                }));
-
-        dialog.show();
+                }
+            });
+            btnCancel.setOnClickListener(v -> dialog.dismiss());
+            dialog.show();
+        }
     }
 
-    public static void showPremiumRequiredDialog(Context context, String message) {
-        if (context == null) return;
+    /**
+     * Shows a simple input dialog.
+     */
+    public static void showInputDialog(Context context, String title, String hint, String posBtn, String negBtn, InputCallback callback) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle(title);
+        View view = LayoutInflater.from(context).inflate(R.layout.edit_dialog, null);
+        builder.setView(view);
+        TextInputEditText input = view.findViewById(R.id.etUserName); // Fixed: was et_text, but layout has etUserName
+        if (input != null) input.setHint(hint);
 
-        new androidx.appcompat.app.AlertDialog.Builder(context)
-                .setTitle("Premium Required")
+        builder.setPositiveButton(posBtn, (dialog, which) -> {
+            if (input != null) callback.onInput(input.getText().toString());
+        });
+        builder.setNegativeButton(negBtn, null);
+        builder.show();
+    }
+
+    /**
+     * Shows a confirmation dialog.
+     */
+    public static void showConfirmDialog(Context context, String title, String message, String posBtn, String negBtn, Runnable onConfirm) {
+        new AlertDialog.Builder(context)
+                .setTitle(title)
                 .setMessage(message)
-                .setPositiveButton("Go Premium", (dialog, which) -> context.startActivity(new Intent(context, PremiumActivity.class)))
-                .setNegativeButton("Cancel", null)
+                .setPositiveButton(posBtn, (dialog, which) -> onConfirm.run())
+                .setNegativeButton(negBtn, null)
                 .show();
     }
 
-    public static void showWhatsNewDialog(Context context, String updateMessage) {
-        // Inflate the custom layout
-        View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_whats_new, null);
+    /**
+     * Shows a gradient picker bottom sheet.
+     */
+    public static void showGradientPicker(Context context, int currentStart, int currentEnd, GradientCallback callback) {
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(context, R.style.BottomSheetDialogTheme);
+        View view = LayoutInflater.from(context).inflate(R.layout.bottom_sheet_gradient_picker, null);
+        bottomSheetDialog.setContentView(view);
 
-        // Create the dialog
-        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(context, R.style.CustomDialogTheme);
-        builder.setView(dialogView);
-        androidx.appcompat.app.AlertDialog dialog = builder.create();
-        dialog.setCancelable(true);
-        dialog.setCanceledOnTouchOutside(true);
+        LinearLayout container = view.findViewById(R.id.gradientContainer);
 
-        // Set up close button
-        ImageView ivClose = dialogView.findViewById(R.id.ivClose);
-        ivClose.setOnClickListener(v -> dialog.dismiss());
+        for (int[] colors : professionalGradients) {
+            View gradientItem = new View(context);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, 150);
+            params.setMargins(0, 16, 0, 16);
+            gradientItem.setLayoutParams(params);
 
-        // Set up Got It button
-        Button btnGotIt = dialogView.findViewById(R.id.btnGotIt);
-        btnGotIt.setOnClickListener(v -> dialog.dismiss());
+            GradientDrawable gd = new GradientDrawable(
+                    GradientDrawable.Orientation.LEFT_RIGHT,
+                    new int[]{colors[0], colors[1]}
+            );
+            gd.setCornerRadius(24f);
+            gradientItem.setBackground(gd);
 
-        // Show the dialog
-        dialog.show();
+            gradientItem.setOnClickListener(v -> {
+                callback.onGradientSelected(colors[0], colors[1]);
+                bottomSheetDialog.dismiss();
+            });
 
-        TextView tvContent = dialog.findViewById(R.id.tvNewContent);
-        TextView versionText = dialogView.findViewById(R.id.tvVersion);
-        String appVersion = "";
-        try {
-            appVersion = context.getPackageManager()
-                    .getPackageInfo(context.getPackageName(), 0)
-                    .versionName;
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+            container.addView(gradientItem);
         }
-        versionText.setText(appVersion);
-        tvContent.setText(updateMessage);
 
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
-            lp.copyFrom(dialog.getWindow().getAttributes());
-            lp.width = (int) (context.getResources().getDisplayMetrics().widthPixels * 0.8);
-            lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
-            dialog.getWindow().setAttributes(lp);
-        }
+        bottomSheetDialog.show();
     }
 
+    /**
+     * Shows a color picker dialog. (Simplified placeholder)
+     */
+    public static void showColorPicker(Context context, String selectedColor, ColorCallback callback) {
+        // Implementation for Note colors if needed
+    }
+
+    /**
+     * Shows a category selection dialog.
+     */
+    public static void showCategoryDialog(Context context, String title, List<String> categories, int preselect, CategoryCallback callback) {
+        new AlertDialog.Builder(context)
+                .setTitle(title)
+                .setSingleChoiceItems(categories.toArray(new String[0]), preselect, (dialog, which) -> {
+                    callback.onCategorySelected(categories.get(which), which);
+                    dialog.dismiss();
+                })
+                .show();
+    }
+
+    /**
+     * Shows full content of a note.
+     */
+    public static void showNoteContentDialog(Context context, NoteEntity note, CategoryViewModel viewModel, NoteDialogCallback callback) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.CustomAlertDialog);
+        View view = LayoutInflater.from(context).inflate(R.layout.dialog_note_full_content, null);
+        builder.setView(view);
+
+        AlertDialog dialog = builder.create();
+
+        TextView title = view.findViewById(R.id.tvTitle);
+        TextView content = view.findViewById(R.id.tvMessage);
+        TextView date = view.findViewById(R.id.tvDate);
+        TextView time = view.findViewById(R.id.tvTime);
+        TextView category = view.findViewById(R.id.tvCategory);
+        ImageButton btnShare = view.findViewById(R.id.btnShare);
+        androidx.cardview.widget.CardView card = view.findViewById(R.id.dialogNote);
+
+        title.setText(note.title);
+        content.setText(Html.fromHtml(note.content, Html.FROM_HTML_MODE_LEGACY));
+
+        callback.setDateTime(note.createdAt, date, time);
+        callback.setCategory(category, note.categoryId != null ? note.categoryId : -1);
+
+        try {
+            int color = android.graphics.Color.parseColor(note.colorHex);
+            card.setCardBackgroundColor(color);
+        } catch (Exception ignored) {}
+
+        btnShare.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            intent.setType("text/plain");
+            intent.putExtra(Intent.EXTRA_SUBJECT, note.title);
+            intent.putExtra(Intent.EXTRA_TEXT, note.title + "\n\n" + Html.fromHtml(note.content, Html.FROM_HTML_MODE_LEGACY));
+            context.startActivity(Intent.createChooser(intent, "Share via"));
+        });
+
+        dialog.show();
+    }
+
+    /**
+     * Shows options (Edit/Delete) for a note.
+     */
+    public static void showOptionsDialog(Context context, NoteEntity note, int pos, NoteOptionsListener listener) {
+        String[] options = {"Edit", "Delete"};
+        new AlertDialog.Builder(context)
+                .setTitle("Select Action")
+                .setItems(options, (dialog, which) -> {
+                    if (which == 0) listener.onEdit(note);
+                    else listener.onDelete(note, pos);
+                })
+                .show();
+    }
+
+    /**
+     * Shows custom dialog for reminders.
+     */
+    public static void showCustomDialog(Context context, ReminderEntity reminder, String posBtn, String negBtn, Runnable onEdit, Runnable onDelete) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.CustomAlertDialog);
+        View view = LayoutInflater.from(context).inflate(R.layout.dialog_reminder_options, null);
+        builder.setView(view);
+
+        AlertDialog dialog = builder.create();
+
+        TextView tvTitle = view.findViewById(R.id.tvTitle);
+        TextView tvMessage = view.findViewById(R.id.tvMessage);
+        Button btnEdit = view.findViewById(R.id.btnEdit);
+        Button btnDelete = view.findViewById(R.id.btnDelete);
+        ImageButton btnClose = view.findViewById(R.id.btnClose);
+        View layout = view.findViewById(R.id.reminderLayout);
+
+        tvTitle.setText(reminder.title);
+        tvMessage.setText(reminder.message);
+        btnEdit.setText(posBtn);
+        btnDelete.setText(negBtn);
+
+        GradientDrawable gd = new GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[]{reminder.gradientStartColor, reminder.gradientEndColor}
+        );
+        gd.setCornerRadius(24f);
+        layout.setBackground(gd);
+
+        btnEdit.setOnClickListener(v -> {
+            onEdit.run();
+            dialog.dismiss();
+        });
+        btnDelete.setOnClickListener(v -> {
+            onDelete.run();
+            dialog.dismiss();
+        });
+        btnClose.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
+    }
+
+    public interface PasswordCallback { void onPasswordEntered(String password); }
+    public interface InputCallback { void onInput(String text); }
+    public interface GradientCallback { void onGradientSelected(int startColor, int endColor); }
+    public interface ColorCallback { void onColorSelected(String color); }
+    public interface CategoryCallback { void onCategorySelected(String category, int position); }
 
     public interface NoteDialogCallback {
         void setDateTime(long timeStamp, TextView dateView, TextView timeView);
-
         void setCategory(TextView categoryView, int categoryId);
     }
 
     public interface NoteOptionsListener {
         void onEdit(NoteEntity note);
-
-        void onDelete(NoteEntity note, int position);
+        void onDelete(NoteEntity note, int pos);
     }
-
-    public interface OnCategorySelectedListener {
-        void onCategorySelected(String selectedCategory, int position);
-    }
-
-    public interface InputCallback {
-        void onSubmit(String text);
-    }
-
-    public interface ConfirmCallback {
-        void onConfirm();
-    }
-
-    public interface ColorSelectedListener {
-        void onColorSelected(String color);
-    }
-
-    public interface OnGradientSelectedListener {
-        void onGradientSelected(@ColorInt int startColor, @ColorInt int endColor);
-    }
-
-    public interface PasswordCallback {
-        void onPasswordEntered(char[] password);
-    }
-
-
 }

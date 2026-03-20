@@ -29,13 +29,12 @@ import java.util.List;
 
 public class CategoryManager extends BottomSheetDialogFragment {
 
-    private static final int FREE_CATEGORY_LIMIT = 8;
-
     private final CategoryViewModel categoryViewModel;
     private final NoteViewModel noteViewModel;
     private final String currentUserId;
     private final OnCategoryUpdateListener listener;
     private final List<CategoryEntity> categories = new ArrayList<>();
+    private final PremiumManager premiumManager;
     private LinearLayout addCategoryLayout;
     private CategoryAdapter adapter;
 
@@ -47,6 +46,7 @@ public class CategoryManager extends BottomSheetDialogFragment {
         this.noteViewModel = noteViewModel;
         this.currentUserId = currentUserId;
         this.listener = listener;
+        this.premiumManager = new PremiumManager(getContext());
     }
 
     @NonNull
@@ -80,9 +80,6 @@ public class CategoryManager extends BottomSheetDialogFragment {
         });
     }
 
-    // -----------------------------------------
-    // LiveData observer (SAFE)
-    // -----------------------------------------
     private void observeCategories() {
         categoryViewModel.getAllCategories().observe(getViewLifecycleOwner(), list -> {
             categories.clear();
@@ -92,12 +89,16 @@ public class CategoryManager extends BottomSheetDialogFragment {
                 categories.addAll(sorted);
             }
             adapter.notifyDataSetChanged();
+            
+            // Visual feedback if limit reached
+            if (!premiumManager.canCreateCategory(categories.size())) {
+                addCategoryLayout.setAlpha(0.6f);
+            } else {
+                addCategoryLayout.setAlpha(1.0f);
+            }
         });
     }
 
-    // -----------------------------------------
-    // Drag & Drop
-    // -----------------------------------------
     private void attachDragAndDrop(RecyclerView recyclerView) {
         ItemTouchHelper helper = new ItemTouchHelper(new ItemTouchHelper.Callback() {
             @Override
@@ -109,159 +110,80 @@ public class CategoryManager extends BottomSheetDialogFragment {
             public boolean onMove(@NonNull RecyclerView rv,
                                   @NonNull RecyclerView.ViewHolder from,
                                   @NonNull RecyclerView.ViewHolder to) {
-
                 int fromPos = from.getBindingAdapterPosition();
                 int toPos = to.getBindingAdapterPosition();
-
-                CategoryEntity fromCat = categories.get(fromPos);
-                CategoryEntity toCat = categories.get(toPos);
-
-                if (fromCat.id == 0 || toCat.id == 0) return false;
-
+                if (fromPos == RecyclerView.NO_POSITION || toPos == RecyclerView.NO_POSITION) return false;
+                
                 Collections.swap(categories, fromPos, toPos);
                 adapter.notifyItemMoved(fromPos, toPos);
-                updateOrderValues();
                 return true;
             }
 
-            @Override
-            public void onSwiped(@NonNull RecyclerView.ViewHolder vh, int dir) {
-            }
+            @Override public void onSwiped(@NonNull RecyclerView.ViewHolder vh, int dir) {}
         });
-
         helper.attachToRecyclerView(recyclerView);
     }
 
-    private void updateOrderValues() {
-        int order = 0;
-        for (CategoryEntity c : categories) {
-            if (c.id != 0) c.order = order++;
-        }
-    }
-
-    // -----------------------------------------
-    // Premium Logic
-    // -----------------------------------------
-    private boolean isCategoryLimitReached() {
-        int count = 0;
-        for (CategoryEntity c : categories) {
-            if (c.id != 0) count++;
-        }
-        return count >= FREE_CATEGORY_LIMIT;
-    }
-
-    // -----------------------------------------
-    // Add / Delete / Save
-    // -----------------------------------------
     private void showAddCategoryDialog() {
-
-        if (isCategoryLimitReached()) {
-            addCategoryLayout.setAlpha(0.5f);
-            CommonDialogs.showPremiumRequiredDialog(requireContext(), "Free users can create up to 8 categories.\\nUpgrade to Premium for unlimited categories.");
+        if (!premiumManager.canCreateCategory(categories.size())) {
+            CommonDialogs.showPremiumRequiredDialog(requireContext(), 
+                "You've reached the free limit of " + PremiumManager.MAX_FREE_CATEGORIES + " categories. Upgrade for unlimited categories!");
             return;
         }
 
-        CommonDialogs.showInputDialog(requireContext(),
-                "Add Category",
-                "Enter category name",
-                "Add",
-                "Cancel",
-                name -> {
-                    if (name == null || name.trim().isEmpty()) {
-                        Toast.makeText(getContext(), "Category name cannot be empty", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    for (CategoryEntity c : categories) {
-                        if (c.name.equalsIgnoreCase(name.trim())) {
-                            Toast.makeText(getContext(), "Category already exists", Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-                    }
-
-                    CategoryEntity entity = new CategoryEntity();
-                    entity.name = name.trim();
-                    entity.order = categories.size();
-                    categoryViewModel.insertCategory(entity);
-                });
+        CommonDialogs.showInputDialog(requireContext(), "Add Category", "Enter category name", "Add", "Cancel", name -> {
+            if (name == null || name.trim().isEmpty()) {
+                Toast.makeText(getContext(), "Name cannot be empty", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            CategoryEntity entity = new CategoryEntity();
+            entity.name = name.trim();
+            entity.order = categories.size();
+            categoryViewModel.insertCategory(entity);
+        });
     }
 
     private void saveCategoryOrder() {
-        for (CategoryEntity c : categories) {
-            if (c.id != 0) categoryViewModel.updateCategory(c);
+        for (int i = 0; i < categories.size(); i++) {
+            CategoryEntity c = categories.get(i);
+            c.order = i;
+            categoryViewModel.updateCategory(c);
         }
         if (listener != null) listener.onCategoriesUpdated();
-        Toast.makeText(getContext(), "Categories order saved", Toast.LENGTH_SHORT).show();
     }
 
     private void showDeleteCategoryDialog(CategoryEntity category, int position) {
-        CommonDialogs.showConfirmDialog(requireContext(),
-                "Delete Category",
-                "All notes will move to 'All'",
-                "Delete",
-                "Cancel",
-                () -> {
-                    noteViewModel.resetCategoryNotes(currentUserId, category.id);
-                    categoryViewModel.deleteCategoryByName(category.name);
-
-                    categories.remove(position);
-                    adapter.notifyItemRemoved(position);
-                });
+        CommonDialogs.showConfirmDialog(requireContext(), "Delete Category", "Notes in this category will move to 'All'.", "Delete", "Cancel", () -> {
+            noteViewModel.resetCategoryNotes(currentUserId, category.id);
+            categoryViewModel.deleteCategoryByName(category.name);
+        });
     }
 
-    public interface OnCategoryUpdateListener {
-        void onCategoriesUpdated();
-    }
+    public interface OnCategoryUpdateListener { void onCategoriesUpdated(); }
 
-    // -----------------------------------------
-    // Adapter
-    // -----------------------------------------
     private class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.VH> {
-
         @NonNull
         @Override
         public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new VH(LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.item_category_manage, parent, false));
+            return new VH(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_category_manage, parent, false));
         }
 
         @Override
         public void onBindViewHolder(@NonNull VH holder, int position) {
             CategoryEntity category = categories.get(position);
-            if (category.id == 1) {
-                holder.name.setText(category.name + " (Default)");
-                holder.delete.setVisibility(View.GONE);
-            } else {
-                holder.name.setText(category.name);
-            }
-
+            holder.name.setText(category.name);
+            holder.delete.setOnClickListener(v -> showDeleteCategoryDialog(category, position));
+            
+            // Standardizing theme colors
             holder.delete.setColorFilter(ThemeManager.getThemeColor(requireContext(), R.color.black, R.color.white));
             holder.dragHandle.setColorFilter(ThemeManager.getThemeColor(requireContext(), R.color.black, R.color.white));
-
-            holder.delete.setOnClickListener(v -> {
-                int pos = holder.getBindingAdapterPosition();
-                if (pos == RecyclerView.NO_POSITION) return;
-
-                CategoryEntity cat = categories.get(pos);
-                if (cat.id == 1) {
-                    Toast.makeText(getContext(), "Cannot delete 'All'", Toast.LENGTH_SHORT).show();
-                } else {
-                    showDeleteCategoryDialog(cat, pos);
-                }
-            });
         }
 
-
-        @Override
-        public int getItemCount() {
-            return categories.size();
-        }
+        @Override public int getItemCount() { return categories.size(); }
 
         class VH extends RecyclerView.ViewHolder {
             TextView name;
-            ImageView delete;
-            ImageView dragHandle;
-
+            ImageView delete, dragHandle;
             VH(View v) {
                 super(v);
                 name = v.findViewById(R.id.tvCategoryName);

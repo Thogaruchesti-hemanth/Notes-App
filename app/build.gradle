@@ -38,8 +38,8 @@ android {
         minSdk 29
         targetSdk 35
 
-        versionCode 11
-        versionName "3.0.6"
+        versionCode 12
+        versionName "3.1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -122,6 +122,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-storage'
     implementation 'com.google.firebase:firebase-database'
     implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.google.firebase:firebase-functions'
 
     implementation 'com.google.android.gms:play-services-auth:20.7.0'
     implementation 'com.google.api-client:google-api-client-android:2.2.0'
@@ -155,6 +156,9 @@ dependencies {
 
     // ----------ads-------------
     implementation("com.google.android.gms:play-services-ads:24.9.0")
+
+    // ------- Google Play Billing Library (In-App Purchases) -------
+    implementation 'com.android.billingclient:billing:7.0.0'
 }
 
 // Apply Google Services plugin for Firebase

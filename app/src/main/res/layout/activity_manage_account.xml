@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:ads="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSecondary"
@@ -33,22 +34,32 @@
             android:textStyle="bold" />
     </LinearLayout>
 
+    <com.google.android.gms.ads.AdView
+        android:id="@+id/adViewManageTop"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        ads:adSize="BANNER"
+        ads:adUnitId="ca-app-pub-3940256099942544/6300978111" />
+
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
             android:gravity="center_horizontal"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingBottom="@dimen/padding_20">
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/profile_layout"
                 android:layout_width="@dimen/size_120"
                 android:layout_height="@dimen/size_120"
                 android:layout_gravity="center"
+                android:layout_marginTop="@dimen/margin_20"
                 app:cardCornerRadius="@dimen/radius_60"
                 app:cardElevation="@dimen/elevation_4">
 
@@ -163,5 +174,13 @@
 
         </LinearLayout>
     </ScrollView>
+
+    <com.google.android.gms.ads.AdView
+        android:id="@+id/adViewManageBottom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        ads:adSize="BANNER"
+        ads:adUnitId="ca-app-pub-3940256099942544/6300978111" />
 
 </LinearLayout>

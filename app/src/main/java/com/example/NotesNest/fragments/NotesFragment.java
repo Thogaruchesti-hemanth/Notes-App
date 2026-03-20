@@ -40,12 +40,16 @@ import com.example.NotesNest.databases.ViewModels.CategoryViewModel;
 import com.example.NotesNest.databases.ViewModels.NoteViewModel;
 import com.example.NotesNest.databases.entities.CategoryEntity;
 import com.example.NotesNest.databases.entities.NoteEntity;
+import com.example.NotesNest.utils.AdManager;
 import com.example.NotesNest.utils.CategoryManager;
 import com.example.NotesNest.utils.AnalyticsHelper;
 import com.example.NotesNest.utils.CommonDialogs;
 import com.example.NotesNest.utils.LayoutToggleViewModel;
+import com.example.NotesNest.utils.PremiumManager;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
 import com.example.NotesNest.utils.ThemeManager;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
 import com.google.android.material.tabs.TabLayout;
 
 import java.util.ArrayList;
@@ -57,7 +61,6 @@ import java.util.Objects;
 
 public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeListener {
 
-    private static final int FREE_NOTES_LIMIT = 30;
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
     private final Map<String, Integer> categoryNoteCounts = new HashMap<>();
     private RecyclerView recyclerView;
@@ -77,11 +80,12 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
     private ActivityResultLauncher<Intent> addEditNoteLauncher;
     private String currentUserId = null;
     private SharedPreferenceUtil preferenceUtil;
-    private boolean isPremiumUser = false;
+    private PremiumManager premiumManager;
     private int currentNotesCount = 0;
     private Context context;
     private NoteShimmerAdapter shimmerAdapter;
     private boolean isLoading = false;
+    private AdView adView;
 
 
     public NotesFragment() { /* Required empty constructor */ }
@@ -101,53 +105,49 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         titleTextView = view.findViewById(R.id.tvTitle);
         searchEditText = view.findViewById(R.id.searchEditText);
         clearSearchBtn = view.findViewById(R.id.clearSearchBtn);
+        adView = view.findViewById(R.id.adViewNotes);
 
-        // initialise context
         context = getContext();
-
-        // sharedPreferences
         preferenceUtil = new SharedPreferenceUtil(context);
+        premiumManager = new PremiumManager(context);
         currentUserId = preferenceUtil.getUserId();
-        isPremiumUser = preferenceUtil.isUserPremium();
 
         addEditNoteLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if (result.getResultCode() == Activity.RESULT_OK) {
-                        String query = searchEditText.getText().toString().trim();
-                        if (!query.isEmpty()) {
-                            runSearch(query);
-                        } else {
-                            runSearch("");
-                        }
+                        runSearch(searchEditText.getText().toString().trim());
                     }
                 });
 
 
-        //theme color for unselected tabs
         if (context != null) {
             unselectedTabColor = getThemeColor(context, com.google.android.material.R.attr.colorPrimary);
         }
 
-        // init ViewModels
         noteViewModel = new ViewModelProvider(requireActivity()).get(NoteViewModel.class);
         categoryViewModel = new ViewModelProvider(requireActivity()).get(CategoryViewModel.class);
 
-        // init Recycler + adapter
         setupRecycler();
-
-        //setup UI listeners
         setupSearch();
         setupCreateButton();
         manageCategoryButton.setOnClickListener(v -> showCategoryManager());
 
         observeCategories();
-
-        // Register for theme changes
         ThemeManager.registerListener(this);
-        observePremiumNoteLimit();
+        observeNoteCount();
+        setupBannerAd();
 
         return view;
+    }
+
+    private void setupBannerAd() {
+        if (premiumManager.isPremium()) {
+            adView.setVisibility(View.GONE);
+            return;
+        }
+        AdRequest adRequest = new AdRequest.Builder().build();
+        adView.loadAd(adRequest);
     }
 
     private void showCategoryManager() {
@@ -170,44 +170,30 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         adapter = new NoteAdapter(new ArrayList<>(), requireContext(), categoryViewModel, noteViewModel);
         shimmerAdapter = new NoteShimmerAdapter(10);
 
-        recyclerView.setLayoutManager(
-                new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
-        );
-
-        // Load shimmer initially
+        recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
         recyclerView.setAdapter(shimmerAdapter);
 
-        recyclerView.setAdapter(adapter);
-
-        // default layout
-        recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
-
-        // observe layout toggle from activity
         LayoutToggleViewModel layoutToggleViewModel = new ViewModelProvider(requireActivity()).get(LayoutToggleViewModel.class);
-
         layoutToggleViewModel.getLayoutType().observe(getViewLifecycleOwner(), isGrid -> {
-            if (isGrid) {
-                recyclerView.setLayoutManager(
-                        new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
-                );
-            } else {
-                recyclerView.setLayoutManager(
-                        new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL)
-                );
-            }
+            recyclerView.setLayoutManager(isGrid ? 
+                    new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL) : 
+                    new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL));
         });
     }
 
 
     private void setupCreateButton() {
         createButton.setOnClickListener(v -> {
-
-            if (!isPremiumUser && currentNotesCount >= FREE_NOTES_LIMIT) {
-                CommonDialogs.showPremiumRequiredDialog(context, "You have reached the free limit of 30 notes.\\nUpgrade to Premium to create unlimited notes.");
-                return;
+            if (!premiumManager.isPremium()) {
+                AdManager.showInterstitial(requireActivity(), this::openCreateItem);
+            } else {
+                if (!premiumManager.canCreateNote(currentNotesCount)) {
+                    CommonDialogs.showPremiumRequiredDialog(context,
+                            "You've reached the free limit of " + PremiumManager.MAX_FREE_NOTES + " notes. Upgrade to Premium for unlimited storage!");
+                    return;
+                }
+                openCreateItem();
             }
-
-            openCreateItem();
         });
     }
 
@@ -218,14 +204,8 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
 
     private void setupSearch() {
         searchEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-            }
-
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void afterTextChanged(Editable s) {}
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 String query = s.toString().trim();
@@ -233,38 +213,25 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
 
                 if (searchRunnable != null) searchHandler.removeCallbacks(searchRunnable);
                 searchRunnable = () -> runSearch(query);
-                searchHandler.postDelayed(searchRunnable, 300); // debounce 300ms
+                searchHandler.postDelayed(searchRunnable, 300);
             }
         });
 
         clearSearchBtn.setOnClickListener(v -> {
             searchEditText.setText("");
-
-            // Remove focus
             searchEditText.clearFocus();
-
-            // Hide keyboard
             InputMethodManager imm = (InputMethodManager) searchEditText.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-
-            if (imm != null) {
-                imm.hideSoftInputFromWindow(searchEditText.getWindowToken(), 0);
-            }
-
+            if (imm != null) imm.hideSoftInputFromWindow(searchEditText.getWindowToken(), 0);
             runSearch("");
         });
-
     }
 
     private void observeCategories() {
-        // Observe category list
         categoryViewModel.getAllCategories().observe(getViewLifecycleOwner(), categories -> {
             List<CategoryEntity> list = new ArrayList<>();
             if (categories != null) list.addAll(categories);
-
-            // ✅ Sort by category order instead of ID
             list.sort(Comparator.comparingInt(c -> c.order));
 
-            // Ensure "All" exists (UI-only item). Do not persist duplicate.
             boolean hasAll = false;
             for (CategoryEntity c : list) {
                 if ("All".equalsIgnoreCase(c.name)) {
@@ -281,16 +248,13 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
 
             categoryList = list;
             buildTabs();
-            // initial load (select first or previously selected)
             selectTabByName(selectedCategory);
-            // load notes for current selection
             runSearch(searchEditText.getText().toString().trim());
         });
     }
 
     private void buildTabs() {
         tabLayout.removeAllTabs();
-
         for (CategoryEntity category : categoryList) {
             TabLayout.Tab tab = tabLayout.newTab();
             View customView = createCustomTab(category.name, category.name.equals(selectedCategory));
@@ -299,7 +263,6 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
             tabLayout.addTab(tab);
         }
 
-        // set listeners
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
@@ -311,23 +274,12 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
                     runSearch(searchEditText.getText().toString().trim());
                 }
             }
-
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-                setTabUnselected(tab);
-            }
-
+            @Override public void onTabUnselected(TabLayout.Tab tab) { setTabUnselected(tab); }
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
-                String name = extractTabName(tab);
-                if (name != null) {
-                    titleTextView.setText(name);
-                    runSearch(searchEditText.getText().toString().trim());
-                }
+                runSearch(searchEditText.getText().toString().trim());
             }
         });
-
-        // Update note counts for all tabs
         updateAllTabCounts();
     }
 
@@ -346,14 +298,9 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         text.setTypeface(null, selected ? Typeface.BOLD : Typeface.NORMAL);
         text.setTextColor(selected ? ContextCompat.getColor(requireContext(), R.color.tabSelectedTextColor) : unselectedTabColor);
 
-        // Set count if available and tab is selected
         Integer noteCount = categoryNoteCounts.get(title);
         if (selected && noteCount != null && noteCount > 0) {
-            if (noteCount > 99) {
-                count.setText(R.string.text_99);
-            } else {
-                count.setText(String.valueOf(noteCount));
-            }
+            count.setText(noteCount > 99 ? "99+" : String.valueOf(noteCount));
             count.setVisibility(View.VISIBLE);
         } else {
             count.setVisibility(View.GONE);
@@ -369,15 +316,10 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         text.setTypeface(null, Typeface.BOLD);
         text.setTextColor(ContextCompat.getColor(requireContext(), R.color.tabSelectedTextColor));
 
-        // Show count for selected tab
         String categoryName = extractTabName(tab);
         Integer noteCount = categoryNoteCounts.get(categoryName);
         if (noteCount != null && noteCount > 0) {
-            if (noteCount > 99) {
-                count.setText(R.string.text_99);
-            } else {
-                count.setText(String.valueOf(noteCount));
-            }
+            count.setText(noteCount > 99 ? "99+" : String.valueOf(noteCount));
             count.setVisibility(View.VISIBLE);
         } else {
             count.setVisibility(View.GONE);
@@ -407,7 +349,6 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
                 break;
             }
         }
-
         if (!matched && tabLayout.getTabCount() > 0) {
             TabLayout.Tab first = tabLayout.getTabAt(0);
             if (first != null) {
@@ -420,34 +361,22 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         titleTextView.setText(selectedCategory);
     }
 
-    // ----- Search / Notes loading using ViewModel (no direct DB calls) -----
     private void runSearch(String query) {
-
         showShimmerAdapter();
-        // remove previous observer
-        try {
-            if (currentNotesObserver != null) {
-                noteViewModel.getAllNotes(currentUserId).removeObserver(currentNotesObserver);
-                noteViewModel.getNotesByCategory(currentUserId, 0).removeObserver(currentNotesObserver);
-                noteViewModel.searchNotes(currentUserId, query).removeObserver(currentNotesObserver);
-                // we remove from possible LiveData sources to be safe
-            }
-        } catch (Exception ignored) {
+        if (currentNotesObserver != null) {
+            noteViewModel.getAllNotes(currentUserId).removeObserver(currentNotesObserver);
         }
 
-        // new observer
         currentNotesObserver = notes -> updateRecycler(notes != null ? notes : new ArrayList<>());
 
         if (query == null) query = "";
         query = query.trim();
 
         if (query.isEmpty()) {
-            // No search query — load by category
             if ("All".equalsIgnoreCase(selectedCategory)) {
                 noteViewModel.getAllNotes(currentUserId).observe(getViewLifecycleOwner(), currentNotesObserver);
             } else {
                 int catId = getCategoryIdByName(selectedCategory);
-                // If category not found in cache, fallback to all
                 if (catId == -1) {
                     noteViewModel.getAllNotes(currentUserId).observe(getViewLifecycleOwner(), currentNotesObserver);
                 } else {
@@ -455,7 +384,6 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
                 }
             }
         } else {
-            // With search: use category-aware search
             if ("All".equalsIgnoreCase(selectedCategory)) {
                 noteViewModel.searchNotes(currentUserId, query).observe(getViewLifecycleOwner(), currentNotesObserver);
             } else {
@@ -473,13 +401,8 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
     private void updateRecycler(List<NoteEntity> notes) {
         if (isLoading) {
             isLoading = false;
-
-            // Attach real adapter once
-            if (recyclerView.getAdapter() != adapter) {
-                recyclerView.setAdapter(adapter);
-            }
+            if (recyclerView.getAdapter() != adapter) recyclerView.setAdapter(adapter);
         }
-
         adapter.updateData(notes);
     }
 
@@ -493,33 +416,13 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
     @Override
     public void onResume() {
         super.onResume();
-        // reload current view (LiveData will normally keep things updated; call runSearch to ensure)
         runSearch(searchEditText.getText().toString().trim());
         updateAllTabCounts();
         AnalyticsHelper.logScreenView("Notes", "NotesFragment");
-
-        String layoutType = preferenceUtil.getKeyNoteLayout();
-        boolean isGrid = layoutType.equals("Grid");
-
-        if (isGrid) {
-            recyclerView.setLayoutManager(
-                    new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
-            );
-        } else {
-            recyclerView.setLayoutManager(
-                    new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL)
-            );
-        }
-
-
     }
 
-
-    // Add this method to update counts for all categories
     private void updateAllTabCounts() {
         categoryNoteCounts.clear();
-
-        // Get count for "All" category
         noteViewModel.getNotesCount(currentUserId).observe(getViewLifecycleOwner(), count -> {
             if (count != null) {
                 categoryNoteCounts.put("All", count);
@@ -527,7 +430,6 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
             }
         });
 
-        // Get counts for each category
         for (CategoryEntity category : categoryList) {
             if (!"All".equals(category.name)) {
                 noteViewModel.getNotesCountByCategory(currentUserId, category.id)
@@ -550,11 +452,7 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
                     TextView countView = customView.findViewById(R.id.tvCount);
                     if (countView != null) {
                         if (count > 0 && categoryName.equals(selectedCategory)) {
-                            if (count > 99) {
-                                countView.setText(R.string.text_99);
-                            } else {
-                                countView.setText(String.valueOf(count));
-                            }
+                            countView.setText(count > 99 ? "99+" : String.valueOf(count));
                             countView.setVisibility(View.VISIBLE);
                         } else {
                             countView.setVisibility(View.GONE);
@@ -573,12 +471,10 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         }
     }
 
-
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         ThemeManager.unregisterListener(this);
-        // clear any pending callbacks
         if (searchRunnable != null) searchHandler.removeCallbacks(searchRunnable);
         searchHandler.removeCallbacksAndMessages(null);
     }
@@ -587,33 +483,21 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
     public void onThemeChanged(@NonNull String newTheme) {
         if (!isAdded()) return;
         unselectedTabColor = getThemeColor(requireContext(), com.google.android.material.R.attr.colorPrimary);
-        // rebuild UI colors
         buildTabs();
         runSearch(searchEditText.getText().toString().trim());
     }
 
-    private void observePremiumNoteLimit() {
-        noteViewModel.getNotesCount(currentUserId)
-                .observe(getViewLifecycleOwner(), count -> {
-                    if (count == null) return;
-
-                    currentNotesCount = count;
-
-                    if (!isPremiumUser && currentNotesCount >= FREE_NOTES_LIMIT) {
-                        disableCreateButton();
-                    } else {
-                        enableCreateButton();
-                    }
-                });
+    private void observeNoteCount() {
+        noteViewModel.getNotesCount(currentUserId).observe(getViewLifecycleOwner(), count -> {
+            if (count == null) return;
+            currentNotesCount = count;
+            
+            // Visual indicator on create button if limit reached
+            if (!premiumManager.canCreateNote(currentNotesCount)) {
+                createButton.setAlpha(0.6f);
+            } else {
+                createButton.setAlpha(1.0f);
+            }
+        });
     }
-
-    private void disableCreateButton() {
-        createButton.setAlpha(0.5f);
-    }
-
-    private void enableCreateButton() {
-        createButton.setEnabled(true);
-        createButton.setAlpha(1f);
-    }
-
 }

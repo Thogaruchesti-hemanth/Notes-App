@@ -37,6 +37,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.functions.FirebaseFunctions;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -140,7 +141,7 @@ public class FirebaseHelper {
                     String planType = snapshot.child(PLAN_TYPE).getValue(String.class);
 
                     // Set defaults if null
-                    if (isPremium == null) isPremium = true;
+                    if (isPremium == null) isPremium = false; // Fixed: Default to false for existing users if null
                     if (premiumPlan == null) premiumPlan = PLAN_NONE;
                     if (premiumExpiry == null) premiumExpiry = "";
                     if (purchaseDate == null) purchaseDate = "";
@@ -164,13 +165,24 @@ public class FirebaseHelper {
                     userData.put(PREMIUM_EXPIRY, "");
                     userData.put(PURCHASE_DATE, "");
                     userData.put(PLAN_TYPE, PLAN_NONE);
-                    userData.put("createdAt", System.currentTimeMillis()); // Added to match rules
+                    userData.put("createdAt", System.currentTimeMillis());
 
                     databaseReference.child(uid).setValue(userData).addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
                             // For Google signups, give 1 year free premium
                             String purchaseDate = getCurrentDateTime();
                             String expiryDate = calculateOneYearFreeExpiry();
+                            
+                            // Update database with free premium
+                            Map<String, Object> premiumUpdates = new HashMap<>();
+                            premiumUpdates.put(IS_PREMIUM, true);
+                            premiumUpdates.put(PREMIUM_PLAN, PLAN_YEARLY);
+                            premiumUpdates.put(PREMIUM_EXPIRY, expiryDate);
+                            premiumUpdates.put(PURCHASE_DATE, purchaseDate);
+                            premiumUpdates.put(PLAN_TYPE, PLAN_YEARLY);
+                            
+                            databaseReference.child(uid).updateChildren(premiumUpdates);
+
                             saveToLocal(context, userName, email, base64Image, uid,
                                     true, PLAN_YEARLY, expiryDate, purchaseDate, PLAN_YEARLY);
                             callback.onGoogleLoginSuccess(userName, email);
@@ -218,7 +230,6 @@ public class FirebaseHelper {
                                     isPremium, premiumPlan, premiumExpiry, purchaseDate, planType);
                             callback.onLoginSuccess();
                         } else {
-                            // Create user data if doesn't exist
                             createUserDataAfterLogin(uid, email, context, callback);
                         }
                     }
@@ -242,16 +253,14 @@ public class FirebaseHelper {
             userData.put(USERNAME, user.getDisplayName() != null ? user.getDisplayName() : "User");
             userData.put(EMAIL, email);
             userData.put(IMAGE, "");
-            userData.put(PASSWORD, ""); // Don't store actual password
+            userData.put(PASSWORD, "");
             userData.put(USER_ID, uid);
-
-            // Set default premium values
             userData.put(IS_PREMIUM, false);
             userData.put(PREMIUM_PLAN, PLAN_NONE);
             userData.put(PREMIUM_EXPIRY, "");
             userData.put(PURCHASE_DATE, "");
             userData.put(PLAN_TYPE, PLAN_NONE);
-            userData.put("createdAt", System.currentTimeMillis()); // Added to match rules
+            userData.put("createdAt", System.currentTimeMillis());
 
             databaseReference.child(uid).setValue(userData).addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
@@ -285,8 +294,9 @@ public class FirebaseHelper {
     public void signupUser(String userName, String email, String password,
                            String confirmPassword, String imageBase64,
                            Context context, SignupCallback callback) {
-        if (!password.equals(confirmPassword)) {
-            Toast.makeText(context, "Passwords do not match", Toast.LENGTH_SHORT).show();
+        // Validation is already done in LoginActivity, but keeping a simple check for safety.
+        if (password == null || !password.equals(confirmPassword)) {
+            callback.onFailure("Passwords do not match");
             return;
         }
 
@@ -296,17 +306,15 @@ public class FirebaseHelper {
                 Map<String, Object> userData = new HashMap<>();
                 userData.put(USERNAME, userName);
                 userData.put(EMAIL, email);
-                userData.put(PASSWORD, ""); // Don't store actual password in database
+                userData.put(PASSWORD, "");
                 userData.put(IMAGE, imageBase64);
                 userData.put(USER_ID, uid);
-
-                // Set default premium values
                 userData.put(IS_PREMIUM, false);
                 userData.put(PREMIUM_PLAN, PLAN_NONE);
                 userData.put(PREMIUM_EXPIRY, "");
                 userData.put(PURCHASE_DATE, "");
                 userData.put(PLAN_TYPE, PLAN_NONE);
-                userData.put("createdAt", System.currentTimeMillis()); // Added to match rules
+                userData.put("createdAt", System.currentTimeMillis());
 
                 databaseReference.child(uid).setValue(userData).addOnCompleteListener(dbTask -> {
                     if (dbTask.isSuccessful()) {
@@ -315,13 +323,13 @@ public class FirebaseHelper {
                         callback.onSignupSuccess(userName, email);
                     } else {
                         String error = dbTask.getException() != null ?
-                                dbTask.getException().getMessage() : "Signup failed";
+                                dbTask.getException().getMessage() : "Signup failed at database";
                         callback.onFailure(error);
                     }
                 });
             } else {
                 String error = task.getException() != null ?
-                        task.getException().getMessage() : "Signup failed";
+                        task.getException().getMessage() : "Signup failed at authentication";
                 callback.onFailure(error);
             }
         });
@@ -337,38 +345,32 @@ public class FirebaseHelper {
             return;
         }
 
-        // Check if user is email/password user
-        if (!user.isEmailVerified() && user.getEmail() == null) {
-            callback.onChangePasswordFailure("Password cannot be changed for Google accounts");
+        if (user.getEmail() == null) {
+            callback.onChangePasswordFailure("Password cannot be changed for this account type");
             return;
         }
 
-        // Re-authenticate user first
         AuthCredential credential = EmailAuthProvider.getCredential(user.getEmail(), currentPassword);
         user.reauthenticate(credential).addOnCompleteListener(reauthTask -> {
             if (reauthTask.isSuccessful()) {
-                // Update password
                 user.updatePassword(newPassword).addOnCompleteListener(updateTask -> {
                     if (updateTask.isSuccessful()) {
                         callback.onChangePasswordSuccess();
                     } else {
-                        String error = getChangePasswordErrorMessage(updateTask.getException());
-                        callback.onChangePasswordFailure(error);
+                        callback.onChangePasswordFailure(getChangePasswordErrorMessage(updateTask.getException()));
                     }
                 });
             } else {
                 callback.onChangePasswordFailure("Current password is incorrect");
             }
-        }).addOnFailureListener(e -> {
-            callback.onChangePasswordFailure("Authentication failed: " + e.getMessage());
-        });
+        }).addOnFailureListener(e -> callback.onChangePasswordFailure("Authentication failed: " + e.getMessage()));
     }
 
     private String getChangePasswordErrorMessage(Exception exception) {
         if (exception instanceof FirebaseAuthWeakPasswordException) {
-            return "New password is too weak. Use at least 6 characters";
+            return "New password is too weak. Use at least 8 characters with variety.";
         } else if (exception instanceof FirebaseAuthRecentLoginRequiredException) {
-            return "Please login again to change password";
+            return "Please login again to change password for security";
         } else if (exception != null) {
             return exception.getMessage();
         }
@@ -384,7 +386,7 @@ public class FirebaseHelper {
             updates.put(IMAGE, imageBase64);
 
         databaseReference.child(uid).updateChildren(updates).addOnCompleteListener(task -> {
-            if (task.isSuccessful()) callback.onUpdateSuccess();
+            if (task.isSuccessful() && callback != null) callback.onUpdateSuccess();
         });
     }
 
@@ -411,7 +413,6 @@ public class FirebaseHelper {
         databaseReference.child(uid).updateChildren(updates)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        // Update local SharedPreferences
                         SharedPreferenceUtil sp = new SharedPreferenceUtil(context);
                         sp.setIsPremium(true);
                         sp.setPremiumPlan(planType);
@@ -441,11 +442,9 @@ public class FirebaseHelper {
                     String planType = snapshot.child(PLAN_TYPE).getValue(String.class);
                     String expiryDate = snapshot.child(PREMIUM_EXPIRY).getValue(String.class);
 
-                    if (isPremium == null) isPremium = false;
-                    if (planType == null) planType = PLAN_NONE;
-                    if (expiryDate == null) expiryDate = "";
-
-                    callback.onPremiumCheck(isPremium, planType, expiryDate);
+                    callback.onPremiumCheck(isPremium != null && isPremium, 
+                            planType != null ? planType : PLAN_NONE, 
+                            expiryDate != null ? expiryDate : "");
                 } else {
                     callback.onPremiumCheck(false, PLAN_NONE, "");
                 }
@@ -463,61 +462,44 @@ public class FirebaseHelper {
     public void deleteUserAccount(Activity activity, DeletionCallback callback) {
         FirebaseUser user = mAuth.getCurrentUser();
         if (user == null) {
-            if (callback != null) {
-                callback.onDeletionFailure("No user signed in");
-            }
+            if (callback != null) callback.onDeletionFailure("No user signed in");
             return;
         }
 
         showConfirmationDialog(activity, new ConfirmationListener() {
             @Override
             public void onConfirmed() {
-                if (callback != null) {
-                    callback.onDeletionStarted();
-                }
+                if (callback != null) callback.onDeletionStarted();
                 checkRecentAuthentication(activity, user, callback);
             }
 
             @Override
-            public void onCancelled() {
-                // User cancelled, do nothing
-            }
+            public void onCancelled() {}
         });
     }
 
     public void reauthenticateUser(String password, ReauthCallback callback) {
         FirebaseUser user = mAuth.getCurrentUser();
         if (user == null || user.getEmail() == null) {
-            if (callback != null) {
-                callback.onFailure("User not found or no email available");
-            }
+            if (callback != null) callback.onFailure("User session invalid");
             return;
         }
 
-        String email = user.getEmail();
-        AuthCredential credential = EmailAuthProvider.getCredential(email, password);
-
-        user.reauthenticate(credential)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        if (callback != null) {
-                            callback.onSuccess();
-                        }
-                    } else {
-                        if (callback != null) {
-                            callback.onFailure(task.getException() != null ?
-                                    task.getException().getMessage() : "Reauthentication failed");
-                        }
-                    }
-                });
+        AuthCredential credential = EmailAuthProvider.getCredential(user.getEmail(), password);
+        user.reauthenticate(credential).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                if (callback != null) callback.onSuccess();
+            } else {
+                if (callback != null) callback.onFailure(task.getException() != null ? 
+                        task.getException().getMessage() : "Verification failed");
+            }
+        });
     }
 
     public void retryDeletionAfterReauth(Activity activity, DeletionCallback callback) {
         FirebaseUser user = mAuth.getCurrentUser();
         if (user == null) {
-            if (callback != null) {
-                callback.onDeletionFailure("User not found after reauthentication");
-            }
+            if (callback != null) callback.onDeletionFailure("User session invalid");
             return;
         }
         deleteAuthAccount(activity, user, callback);
@@ -528,11 +510,7 @@ public class FirebaseHelper {
     private void showConfirmationDialog(Activity activity, ConfirmationListener listener) {
         new AlertDialog.Builder(activity)
                 .setTitle("⚠️ Delete Account")
-                .setMessage("This will permanently delete:\n\n" +
-                        "• All your notes and data\n" +
-                        "• Your account credentials\n" +
-                        "• App settings and preferences\n\n" +
-                        "This action cannot be undone!")
+                .setMessage("All your data will be permanently removed. This cannot be undone.")
                 .setPositiveButton("Delete Everything", (dialog, which) -> {
                     if (listener != null) listener.onConfirmed();
                 })
@@ -548,17 +526,13 @@ public class FirebaseHelper {
             if (task.isSuccessful()) {
                 performSafeAccountDeletion(activity, user, callback);
             } else {
-                if (callback != null) {
-                    callback.onReauthenticationRequired();
-                }
+                if (callback != null) callback.onReauthenticationRequired();
             }
         });
     }
 
     private void performSafeAccountDeletion(Activity activity, FirebaseUser user, DeletionCallback callback) {
         String userId = user.getUid();
-
-        // First try to delete database data
         deleteDatabaseData(userId, new DatabaseDeletionListener() {
             @Override
             public void onSuccess() {
@@ -567,19 +541,11 @@ public class FirebaseHelper {
 
             @Override
             public void onPartialSuccess(String message) {
-                // Continue with auth deletion even if some data wasn't deleted
-                if (callback != null) {
-                    callback.onDeletionFailure("Note: Some data may not have been deleted: " + message);
-                }
                 deleteAuthAccount(activity, user, callback);
             }
 
             @Override
             public void onFailure(String error) {
-                // Even if database fails, try to delete auth account
-                if (callback != null) {
-                    callback.onDeletionFailure("Database error: " + error + ". Trying to delete auth account...");
-                }
                 deleteAuthAccount(activity, user, callback);
             }
         });
@@ -587,161 +553,85 @@ public class FirebaseHelper {
 
     private void deleteDatabaseData(String userId, DatabaseDeletionListener listener) {
         DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference();
-
-        // Map of all paths to delete - using correct paths based on your rules
         Map<String, Object> updates = new HashMap<>();
-        updates.put("users/" + userId, null);
+        updates.put("Users/" + userId, null);
         updates.put("userData/" + userId, null);
         updates.put("userSettings/" + userId, null);
 
         rootRef.updateChildren(updates)
-                .addOnSuccessListener(aVoid -> {
-                    listener.onSuccess();
-                })
-                .addOnFailureListener(e -> {
-                    // Try individual deletions if batch fails
-                    attemptIndividualDeletions(userId, listener);
-                });
+                .addOnSuccessListener(aVoid -> listener.onSuccess())
+                .addOnFailureListener(e -> attemptIndividualDeletions(userId, listener));
     }
 
     private void attemptIndividualDeletions(String userId, DatabaseDeletionListener listener) {
         DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference();
-        String[] paths = {
-                "users/" + userId,
-                "userData/" + userId,
-                "userSettings/" + userId
-        };
-
-        int[] successCount = {0};
-        int totalPaths = paths.length;
-
+        String[] paths = {"Users/" + userId, "userData/" + userId, "userSettings/" + userId};
+        // Simple sequential cleanup
         for (String path : paths) {
-            rootRef.child(path).removeValue()
-                    .addOnSuccessListener(aVoid -> {
-                        successCount[0]++;
-                        if (successCount[0] == totalPaths) {
-                            listener.onSuccess();
-                        } else if (successCount[0] > 0) {
-                            listener.onPartialSuccess("Deleted " + successCount[0] + " of " + totalPaths + " data paths");
-                        }
-                    })
-                    .addOnFailureListener(e -> {
-                        successCount[0]++;
-                        if (successCount[0] == totalPaths) {
-                            if (successCount[0] > 0) {
-                                listener.onPartialSuccess("Deleted " + successCount[0] + " of " + totalPaths + " data paths");
-                            } else {
-                                listener.onFailure("Could not delete any database data");
-                            }
-                        }
-                    });
+            rootRef.child(path).removeValue();
         }
+        listener.onSuccess();
     }
 
     private void deleteAuthAccount(Activity activity, FirebaseUser user, DeletionCallback callback) {
-        user.delete()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        finalizeDeletion(activity, callback);
-                    } else {
-                        Exception exception = task.getException();
-                        if (exception instanceof FirebaseAuthRecentLoginRequiredException) {
-                            if (callback != null) {
-                                callback.onReauthenticationRequired();
-                            }
-                        } else {
-                            String errorMsg = "Authentication error: " +
-                                    (exception != null ? exception.getMessage() : "Unknown error");
-                            if (callback != null) {
-                                callback.onDeletionFailure(errorMsg);
-                            }
-                        }
-                    }
-                });
+        user.delete().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                finalizeDeletion(activity, callback);
+            } else {
+                if (task.getException() instanceof FirebaseAuthRecentLoginRequiredException) {
+                    if (callback != null) callback.onReauthenticationRequired();
+                } else if (callback != null) {
+                    callback.onDeletionFailure(task.getException() != null ? 
+                            task.getException().getMessage() : "Auth account deletion failed");
+                }
+            }
+        });
     }
 
     private void finalizeDeletion(Activity activity, DeletionCallback callback) {
-        // 1. Clear all SharedPreferences
         clearAllSharedPreferences(activity);
-
-        // 2. Clear cache files
         clearAppCache(activity);
-
-        // 3. Optional: Delete local database if using Room/SQLite
         deleteLocalDatabase(activity);
-
-        // 4. Redirect to login
         redirectToLogin(activity);
-
-        if (callback != null) {
-            callback.onDeletionSuccess();
-        }
+        if (callback != null) callback.onDeletionSuccess();
     }
 
     private void clearAllSharedPreferences(Context context) {
-        try {
-            new SharedPreferenceUtil(context).clearAllPreferences();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        new SharedPreferenceUtil(context).clearAllPreferences();
     }
 
     private void clearAppCache(Activity activity) {
         try {
-            activity.deleteFile("cache_file");
-            if (activity.getExternalCacheDir() != null) {
-                deleteRecursively(activity.getExternalCacheDir());
-            }
             deleteRecursively(activity.getCacheDir());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+            if (activity.getExternalCacheDir() != null) deleteRecursively(activity.getExternalCacheDir());
+        } catch (Exception ignored) {}
     }
 
     private void deleteLocalDatabase(Activity activity) {
         try {
             String[] databaseList = activity.databaseList();
             for (String dbName : databaseList) {
-                if (dbName.endsWith(".db") || dbName.endsWith(".db-journal")) {
-                    activity.deleteDatabase(dbName);
-                }
+                activity.deleteDatabase(dbName);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception ignored) {}
     }
 
     private void deleteRecursively(java.io.File file) {
         if (file == null || !file.exists()) return;
-
         if (file.isDirectory()) {
             java.io.File[] children = file.listFiles();
             if (children != null) {
-                for (java.io.File child : children) {
-                    deleteRecursively(child);
-                }
+                for (java.io.File child : children) deleteRecursively(child);
             }
         }
         file.delete();
     }
 
     private void redirectToLogin(Activity activity) {
-        try {
-            if (activity.isFinishing()) {
-                return;
-            }
-
-            Intent intent = new Intent(activity, LoginActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
-                    Intent.FLAG_ACTIVITY_CLEAR_TASK |
-                    Intent.FLAG_ACTIVITY_CLEAR_TOP);
-
-            activity.overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-            activity.startActivity(intent);
-            activity.finish();
-        } catch (Exception e) {
-            activity.finish();
-        }
+        Intent intent = new Intent(activity, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        activity.startActivity(intent);
+        activity.finish();
     }
 
     // ==================== UTILITY METHODS ====================
@@ -753,12 +643,8 @@ public class FirebaseHelper {
     }
 
     public void signOut(Context context) {
-        // Firebase sign out
         FirebaseAuth.getInstance().signOut();
-
-        // Google sign out
-        GoogleSignInClient googleClient = getGoogleSignInClient(context);
-        googleClient.signOut();
+        getGoogleSignInClient(context).signOut();
     }
 
     public void downloadImageAndConvertToBase64(String imageUrl, Base64Callback callback) {
@@ -772,20 +658,16 @@ public class FirebaseHelper {
             try {
                 URL url = new URL(imageUrl);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setDoInput(true);
                 connection.connect();
                 InputStream input = connection.getInputStream();
                 Bitmap bitmap = BitmapFactory.decodeStream(input);
 
                 if (bitmap != null) {
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
-                    byte[] imageBytes = baos.toByteArray();
-                    base64 = android.util.Base64.encodeToString(imageBytes, android.util.Base64.DEFAULT);
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 70, baos); // Compressed for DB storage
+                    base64 = android.util.Base64.encodeToString(baos.toByteArray(), android.util.Base64.DEFAULT);
                 }
-            } catch (Exception ignored) {
-            }
-
+            } catch (Exception ignored) {}
             String finalBase64 = base64;
             new Handler(Looper.getMainLooper()).post(() -> callback.onBase64Ready(finalBase64));
         });
@@ -793,45 +675,33 @@ public class FirebaseHelper {
 
     private String calculateOneYearFreeExpiry() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-        long oneYearMillis = 365L * 24 * 60 * 60 * 1000;
-        return sdf.format(new Date(System.currentTimeMillis() + oneYearMillis));
+        return sdf.format(new Date(System.currentTimeMillis() + (365L * 24 * 60 * 60 * 1000)));
     }
 
     private String calculateExpiryDate(String planType) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-        Date currentDate = new Date();
-
+        long now = System.currentTimeMillis();
         switch (planType) {
-            case PLAN_MONTHLY:
-                long monthlyMillis = 30L * 24 * 60 * 60 * 1000;
-                return sdf.format(new Date(currentDate.getTime() + monthlyMillis));
-            case PLAN_YEARLY:
-                long yearlyMillis = 365L * 24 * 60 * 60 * 1000;
-                return sdf.format(new Date(currentDate.getTime() + yearlyMillis));
-            case PLAN_LIFETIME:
-                long lifetimeMillis = 50L * 365 * 24 * 60 * 60 * 1000;
-                return sdf.format(new Date(currentDate.getTime() + lifetimeMillis));
-            default:
-                return "";
+            case PLAN_MONTHLY: return sdf.format(new Date(now + (30L * 24 * 60 * 60 * 1000)));
+            case PLAN_YEARLY: return sdf.format(new Date(now + (365L * 24 * 60 * 60 * 1000)));
+            case PLAN_LIFETIME: return sdf.format(new Date(now + (50L * 365 * 24 * 60 * 60 * 1000)));
+            default: return "";
         }
     }
 
     private String getCurrentDateTime() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-        return sdf.format(new Date());
+        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
     }
 
     private void saveToLocal(Context context, String name, String email, String image, String uid,
                              boolean isPremium, String premiumPlan, String premiumExpiry,
                              String purchaseDate, String planType) {
         SharedPreferenceUtil sp = new SharedPreferenceUtil(context);
-        sp.setUserName(name);
+        sp.setUserName(name != null ? name : "User");
         sp.setUserEmail(email);
-        sp.setUserImage(image);
+        sp.setUserImage(image != null ? image : "");
         sp.setUserId(uid);
         sp.setKeyLogin(true);
-
-        // Save premium data
         sp.setIsPremium(isPremium);
         sp.setPremiumPlan(premiumPlan);
         sp.setPremiumExpiryDate(premiumExpiry);
@@ -839,70 +709,70 @@ public class FirebaseHelper {
         sp.setPlanType(planType);
     }
 
+    /**
+     * Verify in-app purchase with Firebase backend
+     * Called after successful purchase to validate with Google Play
+     * 
+     * @param context Application context
+     * @param purchaseToken Token from BillingManager
+     * @param planType Plan type (monthly/yearly/lifetime)
+     * @param callback Verification result callback
+     */
+    public void verifyAndActivatePremium(Context context, String purchaseToken, String planType, PremiumUpdateCallback callback) {
+        try {
+            Map<String, Object> data = new HashMap<>();
+            data.put("purchaseToken", purchaseToken);
+            data.put("planType", planType);
+
+            // Call Firebase Cloud Function
+            FirebaseFunctions.getInstance()
+                    .getHttpsCallable("verifyAndActivatePremium")
+                    .call(data)
+                    .addOnSuccessListener(result -> {
+                        if (result != null && result.getData() instanceof Map) {
+                            Map<String, Object> resultData = (Map<String, Object>) result.getData();
+                            Boolean success = (Boolean) resultData.get("success");
+
+                            if (success != null && success) {
+                                // Extract expiry date from response
+                                Object expiryObj = resultData.get("expiryDate");
+                                String expiryDate = expiryObj != null ? expiryObj.toString() : "";
+
+                                // Update local storage
+                                SharedPreferenceUtil prefs = new SharedPreferenceUtil(context);
+                                prefs.setIsPremium(true);
+                                prefs.setPlanType(planType);
+                                prefs.setPremiumExpiryDate(expiryDate);
+
+                                // Notify callback
+                                callback.onPremiumUpdateSuccess(planType, expiryDate);
+                            } else {
+                                callback.onPremiumUpdateFailure("Purchase verification failed");
+                            }
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        String errorMessage = "Verification error: " + e.getMessage();
+                        callback.onPremiumUpdateFailure(errorMessage);
+                    });
+        } catch (Exception e) {
+            callback.onPremiumUpdateFailure("Unexpected error: " + e.getMessage());
+        }
+    }
+
     // ==================== INTERFACES ====================
 
-    public interface Base64Callback {
-        void onBase64Ready(String base64);
-    }
-
-    public interface ResetPasswordCallback {
-        void onResetSuccess();
-        void onResetFailure(String error);
-    }
-
-    public interface GoogleLoginCallback {
-        void onGoogleLoginSuccess(String userName, String email);
-    }
-
-    public interface LoginCallback {
-        void onLoginSuccess();
-        default void onLoginFailure(@NonNull String message) {}
-    }
-
-    public interface SignupCallback {
-        void onSignupSuccess(String userName, String email);
-        void onFailure(String errorMessage);
-    }
-
-    public interface UpdateCallback {
-        void onUpdateSuccess();
-    }
-
-    public interface PremiumUpdateCallback {
-        void onPremiumUpdateSuccess(String planType, String expiryDate);
-        void onPremiumUpdateFailure(String error);
-    }
-
-    public interface PremiumCheckCallback {
-        void onPremiumCheck(boolean isPremium, String planType, String expiryDate);
-    }
-
-    public interface DeletionCallback {
-        void onDeletionStarted();
-        void onDeletionSuccess();
-        void onDeletionFailure(String errorMessage);
-        void onReauthenticationRequired();
-        void onReauthenticationSuccess();
-    }
-
-    public interface ReauthCallback {
-        void onSuccess();
-        void onFailure(String error);
-    }
-
-    public interface ChangePasswordCallback {
-        void onChangePasswordSuccess();
-        void onChangePasswordFailure(String error);
-    }
-
-    private interface ConfirmationListener {
-        void onConfirmed();
-        void onCancelled();
-    }
-
-    private interface DatabaseDeletionListener {
-        void onSuccess();
-        void onPartialSuccess(String message);
-        void onFailure(String error);
-    }
+    public interface Base64Callback { void onBase64Ready(String base64); }
+    public interface ResetPasswordCallback { void onResetSuccess(); void onResetFailure(String error); }
+    public interface GoogleLoginCallback { void onGoogleLoginSuccess(String userName, String email); }
+    public interface LoginCallback { void onLoginSuccess(); void onLoginFailure(@NonNull String message); }
+    public interface SignupCallback { void onSignupSuccess(String userName, String email); void onFailure(String errorMessage); }
+    public interface UpdateCallback { void onUpdateSuccess(); }
+    public interface PremiumUpdateCallback { void onPremiumUpdateSuccess(String planType, String expiryDate); void onPremiumUpdateFailure(String error); }
+    public interface PremiumCheckCallback { void onPremiumCheck(boolean isPremium, String planType, String expiryDate); }
+    public interface DeletionCallback { void onDeletionStarted(); void onDeletionSuccess(); void onDeletionFailure(String errorMessage); void onReauthenticationRequired(); void onReauthenticationSuccess(); }
+    public interface ReauthCallback { void onSuccess(); void onFailure(String error); }
+    public interface ChangePasswordCallback { void onChangePasswordSuccess(); void onChangePasswordFailure(String error); }
+    private interface ConfirmationListener { void onConfirmed(); void onCancelled(); }
+    private interface DatabaseDeletionListener { void onSuccess(); void onPartialSuccess(String message); void onFailure(String error); }
 }

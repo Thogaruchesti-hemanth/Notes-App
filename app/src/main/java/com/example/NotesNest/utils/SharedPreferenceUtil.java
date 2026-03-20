@@ -14,6 +14,7 @@ public class SharedPreferenceUtil {
     public static final String PLAN_MONTHLY = "monthly";
     public static final String PLAN_YEARLY = "yearly";
     public static final String PLAN_LIFETIME = "lifetime";
+
     private static final String PREF_NAME = "UserPreferences";
     private static final String KEY_USERNAME = "user_name";
     private static final String KEY_EMAIL = "user_email";
@@ -24,6 +25,7 @@ public class SharedPreferenceUtil {
     private static final String ONBOARDING_KEY = "completed";
     private static final String WIDGET_PREF_NAME = "note_widgets";
     private static final String KEY_NOTE_LAYOUT = "note_layout";
+
     // Premium plan constants
     private static final String PREMIUM_PLAN = "premium_plan";
     private static final String IS_PREMIUM = "is_premium";
@@ -31,12 +33,15 @@ public class SharedPreferenceUtil {
     private static final String PURCHASE_DATE = "purchase_date";
     private static final String PLAN_TYPE = "plan_type";
     private static final String KEY_THEME = "theme"; // light / dark
-    private static SharedPreferences sharedPreferences;
+    private static final String KEY_CATEGORY_SEED_DONE = "CATEGORY_SEED_DONE";
+    private static final String PURCHASE_TOKEN = "purchase_token";
+    private static final String ORDER_ID = "order_id";
+
+    private final SharedPreferences sharedPreferences;
 
     public SharedPreferenceUtil(Context context) {
-        if (sharedPreferences == null) {
-            sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        }
+        // Use application context to avoid memory leaks
+        this.sharedPreferences = context.getApplicationContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
     }
 
     public void setUserImage(String imageUrl) {
@@ -80,22 +85,19 @@ public class SharedPreferenceUtil {
     }
 
     public boolean isCategorySeedDone() {
-        return sharedPreferences.getBoolean("CATEGORY_SEED_DONE", false);
+        return sharedPreferences.getBoolean(KEY_CATEGORY_SEED_DONE, false);
     }
 
     public void setCategorySeedDone(boolean done) {
-        sharedPreferences.edit().putBoolean("CATEGORY_SEED_DONE", done).apply();
+        sharedPreferences.edit().putBoolean(KEY_CATEGORY_SEED_DONE, done).apply();
     }
 
-    /**
-     * Check if system theme is enabled
-     */
     public boolean isSystemTheme() {
         return sharedPreferences.getBoolean(KEY_SYSTEM_THEME, false);
     }
 
     public void setSystemTheme(boolean enabled) {
-        sharedPreferences.edit().putBoolean("system_theme", enabled).apply();
+        sharedPreferences.edit().putBoolean(KEY_SYSTEM_THEME, enabled).apply();
     }
 
     public String getTheme() {
@@ -115,14 +117,14 @@ public class SharedPreferenceUtil {
     }
 
     public void saveWidgetNoteId(Context context, int appWidgetId, int noteId) {
-        SharedPreferences prefs = context.getSharedPreferences(WIDGET_PREF_NAME, Context.MODE_PRIVATE);
+        SharedPreferences prefs = context.getApplicationContext().getSharedPreferences(WIDGET_PREF_NAME, Context.MODE_PRIVATE);
         prefs.edit()
                 .putInt("widget_note_" + appWidgetId, noteId)
                 .apply();
     }
 
     public int getWidgetNoteId(Context context, int appWidgetId) {
-        SharedPreferences prefs = context.getSharedPreferences(WIDGET_PREF_NAME, Context.MODE_PRIVATE);
+        SharedPreferences prefs = context.getApplicationContext().getSharedPreferences(WIDGET_PREF_NAME, Context.MODE_PRIVATE);
         return prefs.getInt("widget_note_" + appWidgetId, -1);
     }
 
@@ -135,25 +137,19 @@ public class SharedPreferenceUtil {
     }
 
     public boolean isUserPremium() {
-        return sharedPreferences.getBoolean("is_premium", false);
+        return sharedPreferences.getBoolean(IS_PREMIUM, false);
     }
 
     public void setIsPremium(boolean isPremium) {
         sharedPreferences.edit().putBoolean(IS_PREMIUM, isPremium).apply();
     }
 
-    // Getters
     public String getPremiumPlan() {
         return sharedPreferences.getString(PREMIUM_PLAN, PLAN_NONE);
     }
 
-    // Setters
     public void setPremiumPlan(String plan) {
         sharedPreferences.edit().putString(PREMIUM_PLAN, plan).apply();
-    }
-
-    public boolean isPremium() {
-        return sharedPreferences.getBoolean(IS_PREMIUM, false);
     }
 
     public String getPremiumExpiryDate() {
@@ -180,41 +176,58 @@ public class SharedPreferenceUtil {
         sharedPreferences.edit().putString(PLAN_TYPE, planType).apply();
     }
 
-    // Check if premium is active
     public boolean isPremiumActive() {
-        if (!isPremium()) return false;
+        if (!isUserPremium()) return false;
 
         String planType = getPlanType();
         if (PLAN_LIFETIME.equals(planType)) {
-            return true; // Lifetime is always active
+            return true;
         }
 
         String expiryDate = getPremiumExpiryDate();
         if (expiryDate.isEmpty()) return false;
 
-        // Check if expiry date is in future
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
             Date expiry = sdf.parse(expiryDate);
             Date current = new Date();
-            return current.before(expiry);
+            return expiry != null && current.before(expiry);
         } catch (Exception e) {
             return false;
         }
     }
 
     public void clearAllPreferences() {
-        if (sharedPreferences != null) {
-            sharedPreferences.edit().clear().apply();
-        }
+        sharedPreferences.edit().clear().apply();
     }
 
-    // Clear premium data
     public void clearPremiumData() {
-        sharedPreferences.edit().remove(PREMIUM_PLAN).apply();
-        sharedPreferences.edit().remove(IS_PREMIUM).apply();
-        sharedPreferences.edit().remove(PREMIUM_EXPIRY_DATE).apply();
-        sharedPreferences.edit().remove(PURCHASE_DATE).apply();
-        sharedPreferences.edit().remove(PLAN_TYPE).apply();
+        sharedPreferences.edit()
+                .remove(PREMIUM_PLAN)
+                .remove(IS_PREMIUM)
+                .remove(PREMIUM_EXPIRY_DATE)
+                .remove(PURCHASE_DATE)
+                .remove(PLAN_TYPE)
+                .remove(PURCHASE_TOKEN)
+                .remove(ORDER_ID)
+                .apply();
+    }
+
+    // ==================== In-App Purchase Methods ====================
+
+    public String getPurchaseToken() {
+        return sharedPreferences.getString(PURCHASE_TOKEN, "");
+    }
+
+    public void setPurchaseToken(String token) {
+        sharedPreferences.edit().putString(PURCHASE_TOKEN, token).apply();
+    }
+
+    public String getOrderId() {
+        return sharedPreferences.getString(ORDER_ID, "");
+    }
+
+    public void setOrderId(String orderId) {
+        sharedPreferences.edit().putString(ORDER_ID, orderId).apply();
     }
 }

@@ -5,6 +5,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- Required for Google Play Billing (In-App Purchases) -->
+    <uses-permission android:name="com.android.vending.BILLING" />
 
     <application
         android:allowBackup="false"
@@ -19,7 +21,7 @@
 
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-4258152474007475~9583641622"/>
+            android:value="ca-app-pub-3940256099942544~3347511713"/>
 
         <activity
             android:name=".activity.ManageAccountActivity"
@@ -104,10 +106,6 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/create_note_widget_info" />
         </receiver>
-
-        <receiver
-            android:name="com.google.android.gms.measurement.AppMeasurementInstallReferrerReceiver"
-            android:exported="true" />
 
         <receiver
             android:name=".notifications.receivers.ReminderReceiver"
