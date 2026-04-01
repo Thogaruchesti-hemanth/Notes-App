@@ -1,6 +1,7 @@
 package com.example.NotesNest.activity;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -14,25 +15,31 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.NotesNest.FirebaseHelper;
-import com.example.NotesNest.R;
+import com.hemanth.NotesNest.R;
 import com.example.NotesNest.adapter.FeatureAdapter;
 import com.example.NotesNest.models.FeatureItem;
+import com.example.NotesNest.utils.BillingManager;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class PremiumActivity extends AppCompatActivity {
 
-    LinearLayout planMonthly, planYearly, planLifetime;
-    RadioButton radioMonthly, radioYearly, radioLifetime;
-    RecyclerView recyclerView;
-    FirebaseHelper firebaseHelper;
-    SharedPreferenceUtil sharedPreferenceUtil;
+    private static final String TAG = "PremiumActivity";
+
+    private LinearLayout planMonthly, planYearly, planLifetime;
+    private RadioButton radioMonthly, radioYearly, radioLifetime;
+    private TextView tvPriceMonthly, tvPriceYearly, tvPriceLifetime;
+    private RecyclerView recyclerView;
+    private FirebaseHelper firebaseHelper;
+    private SharedPreferenceUtil sharedPreferenceUtil;
+    private BillingManager billingManager;
 
     private String currentPlan;
-
     private String selectedPlan = FirebaseHelper.PLAN_NONE;
+    private Button btnUpgrade;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,166 +48,168 @@ public class PremiumActivity extends AppCompatActivity {
 
         firebaseHelper = new FirebaseHelper();
         sharedPreferenceUtil = new SharedPreferenceUtil(this);
+        billingManager = BillingManager.getInstance(this);
         currentPlan = sharedPreferenceUtil.getPlanType();
 
         initViews();
         setupFeatures();
         setupCurrentPlan();
+        observeBilling();
 
-        // 👉 ONLY UI SELECTION HERE (NO FIREBASE CALL)
         View.OnClickListener planClickListener = v -> {
-            if (v == planMonthly) {
-                updateSelection(FirebaseHelper.PLAN_MONTHLY);
-            } else if (v == planYearly) {
-                updateSelection(FirebaseHelper.PLAN_YEARLY);
-            } else if (v == planLifetime) {
-                updateSelection(FirebaseHelper.PLAN_LIFETIME);
-            }
+            if (v == planMonthly) updateSelection(FirebaseHelper.PLAN_MONTHLY);
+            else if (v == planYearly) updateSelection(FirebaseHelper.PLAN_YEARLY);
+            else if (v == planLifetime) updateSelection(FirebaseHelper.PLAN_LIFETIME);
         };
 
         planMonthly.setOnClickListener(planClickListener);
         planYearly.setOnClickListener(planClickListener);
         planLifetime.setOnClickListener(planClickListener);
-    }
-
-    /* -------------------------------
-       CURRENT PLAN UI SETUP
-     --------------------------------*/
-    private void setupCurrentPlan() {
-        resetSelection();
-
-        switch (currentPlan) {
-            case FirebaseHelper.PLAN_MONTHLY:
-                select(planMonthly, radioMonthly);
-                break;
-            case FirebaseHelper.PLAN_YEARLY:
-                select(planYearly, radioYearly);
-                break;
-            case FirebaseHelper.PLAN_LIFETIME:
-                select(planLifetime, radioLifetime);
-                break;
-        }
-
-        selectedPlan = FirebaseHelper.PLAN_NONE; // nothing selected initially
-    }
-
-    /* -------------------------------
-       PLAN SELECTION (NO UPGRADE)
-     --------------------------------*/
-    private void updateSelection(String planType) {
-
-        if (planType.equals(currentPlan)) {
-            Toast.makeText(this, "You already have this plan", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        resetSelection();
-        selectedPlan = planType;
-
-        switch (planType) {
-            case FirebaseHelper.PLAN_MONTHLY:
-                select(planMonthly, radioMonthly);
-                break;
-            case FirebaseHelper.PLAN_YEARLY:
-                select(planYearly, radioYearly);
-                break;
-            case FirebaseHelper.PLAN_LIFETIME:
-                select(planLifetime, radioLifetime);
-                break;
-        }
-    }
-
-    /* -------------------------------
-       UPGRADE BUTTON ACTION
-     --------------------------------*/
-    private void upgradeSelectedPlan() {
-
-        if (selectedPlan.equals(FirebaseHelper.PLAN_NONE)) {
-            Toast.makeText(this, "Please select a plan first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        firebaseHelper.updatePremiumPlan(this, selectedPlan,
-                new FirebaseHelper.PremiumUpdateCallback() {
-
-                    @Override
-                    public void onPremiumUpdateSuccess(String updatedPlanType, String expiryDate) {
-                        runOnUiThread(() -> {
-
-                            currentPlan = updatedPlanType;
-                            selectedPlan = FirebaseHelper.PLAN_NONE;
-
-                            sharedPreferenceUtil.setIsPremium(true);
-                            sharedPreferenceUtil.setPlanType(updatedPlanType);
-                            sharedPreferenceUtil.setPremiumExpiryDate(expiryDate);
-
-                            setupCurrentPlan();
-
-                            Toast.makeText(PremiumActivity.this,
-                                    "Premium " + getPlanDisplayName(updatedPlanType) + " activated!",
-                                    Toast.LENGTH_SHORT).show();
-                        });
-                    }
-
-                    @Override
-                    public void onPremiumUpdateFailure(String error) {
-                        runOnUiThread(() ->
-                                Toast.makeText(PremiumActivity.this,
-                                        "Upgrade failed: " + error,
-                                        Toast.LENGTH_SHORT).show());
-                    }
-                });
-    }
-
-    /* -------------------------------
-       HELPERS
-     --------------------------------*/
-    private String getPlanDisplayName(String planType) {
-        switch (planType) {
-            case FirebaseHelper.PLAN_MONTHLY:
-                return "Monthly";
-            case FirebaseHelper.PLAN_YEARLY:
-                return "Yearly";
-            case FirebaseHelper.PLAN_LIFETIME:
-                return "Lifetime";
-            default:
-                return "";
-        }
-    }
-
-    private void setupFeatures() {
-        recyclerView.setLayoutManager(
-                new GridLayoutManager(this, 2, RecyclerView.HORIZONTAL, false));
-        recyclerView.setAdapter(new FeatureAdapter(getFeatures()));
+        
+        btnUpgrade.setOnClickListener(v -> upgradeSelectedPlan());
     }
 
     private void initViews() {
         recyclerView = findViewById(R.id.features_recyclerView);
-
         planMonthly = findViewById(R.id.planMonthly);
         planYearly = findViewById(R.id.planYearly);
         planLifetime = findViewById(R.id.planLifetime);
-
         radioMonthly = findViewById(R.id.radioMonthly);
         radioYearly = findViewById(R.id.radioYearly);
         radioLifetime = findViewById(R.id.radioLifetime);
+        
+        tvPriceMonthly = findViewById(R.id.tvPriceMonthly);
+        tvPriceYearly = findViewById(R.id.tvPriceYearly);
+        tvPriceLifetime = findViewById(R.id.tvPriceLifetime);
 
         ImageView ivClose = findViewById(R.id.ivClose);
         TextView tvContinueWithLimited = findViewById(R.id.tvContinueWithLimited);
-        Button btnUpgrade = findViewById(R.id.btnUnlock);
+        btnUpgrade = findViewById(R.id.btnUnlock);
 
         ivClose.setOnClickListener(v -> finish());
         tvContinueWithLimited.setOnClickListener(v -> finish());
+    }
 
-        // 🔥 Upgrade happens ONLY here
-        btnUpgrade.setOnClickListener(v -> upgradeSelectedPlan());
+    private void observeBilling() {
+        billingManager.getPurchaseState().observe(this, state -> {
+            if (state.isLoading) {
+                btnUpgrade.setEnabled(false);
+                btnUpgrade.setText("Processing Payment...");
+            } else {
+                btnUpgrade.setEnabled(true);
+                btnUpgrade.setText("Unlock Premium");
+                if (state.planType != null && !"none".equals(state.planType)) {
+                    syncPurchaseToFirebase(state.planType, state.purchaseToken);
+                }
+            }
+        });
+
+        billingManager.getProductPrices().observe(this, prices -> {
+            if (prices != null && !prices.isEmpty()) {
+                updatePriceUI(prices);
+            }
+        });
+
+        billingManager.getPurchaseError().observe(this, error -> {
+            if (error != null) {
+                Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void updatePriceUI(Map<String, String> prices) {
+        if (prices.containsKey(BillingManager.PRODUCT_MONTHLY)) {
+            tvPriceMonthly.setText(getString(R.string.price_format_monthly, prices.get(BillingManager.PRODUCT_MONTHLY)));
+        }
+        if (prices.containsKey(BillingManager.PRODUCT_YEARLY)) {
+            tvPriceYearly.setText(getString(R.string.price_format_yearly, prices.get(BillingManager.PRODUCT_YEARLY)));
+        }
+        if (prices.containsKey(BillingManager.PRODUCT_LIFETIME)) {
+            tvPriceLifetime.setText(getString(R.string.price_format_lifetime, prices.get(BillingManager.PRODUCT_LIFETIME)));
+        }
+    }
+
+    private void syncPurchaseToFirebase(String planType, String token) {
+        firebaseHelper.verifyAndActivatePremium(this, token, planType,
+                new FirebaseHelper.PremiumUpdateCallback() {
+                    @Override
+                    public void onPremiumUpdateSuccess(String updatedPlanType, String expiryDate) {
+                        handleSuccess(updatedPlanType, expiryDate);
+                    }
+
+                    @Override
+                    public void onPremiumUpdateFailure(String error) {
+                        firebaseHelper.updatePremiumPlan(PremiumActivity.this, planType, new FirebaseHelper.PremiumUpdateCallback() {
+                            @Override
+                            public void onPremiumUpdateSuccess(String type, String date) { handleSuccess(type, date); }
+                            @Override
+                            public void onPremiumUpdateFailure(String e) {
+                                Toast.makeText(PremiumActivity.this, "Activation Error: " + e, Toast.LENGTH_LONG).show();
+                            }
+                        });
+                    }
+                });
+    }
+
+    private void handleSuccess(String updatedPlanType, String expiryDate) {
+        sharedPreferenceUtil.setIsPremium(true);
+        sharedPreferenceUtil.setPlanType(updatedPlanType);
+        sharedPreferenceUtil.setPremiumExpiryDate(expiryDate);
+        
+        currentPlan = updatedPlanType;
+        selectedPlan = FirebaseHelper.PLAN_NONE;
+        
+        runOnUiThread(() -> {
+            setupCurrentPlan();
+            Toast.makeText(this, "Premium Activated Successfully! ⭐", Toast.LENGTH_LONG).show();
+            finish();
+        });
+    }
+
+    private void upgradeSelectedPlan() {
+        if (selectedPlan.equals(FirebaseHelper.PLAN_NONE)) {
+            Toast.makeText(this, "Please select a plan first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String productId = mapPlanToProductId(selectedPlan);
+        billingManager.launchPurchaseFlow(this, productId);
+    }
+
+    private String mapPlanToProductId(String planType) {
+        if (FirebaseHelper.PLAN_MONTHLY.equals(planType)) return BillingManager.PRODUCT_MONTHLY;
+        if (FirebaseHelper.PLAN_YEARLY.equals(planType)) return BillingManager.PRODUCT_YEARLY;
+        if (FirebaseHelper.PLAN_LIFETIME.equals(planType)) return BillingManager.PRODUCT_LIFETIME;
+        return null;
+    }
+
+    private void setupCurrentPlan() {
+        resetSelection();
+        switch (currentPlan) {
+            case FirebaseHelper.PLAN_MONTHLY: select(planMonthly, radioMonthly); break;
+            case FirebaseHelper.PLAN_YEARLY: select(planYearly, radioYearly); break;
+            case FirebaseHelper.PLAN_LIFETIME: select(planLifetime, radioLifetime); break;
+        }
+        selectedPlan = FirebaseHelper.PLAN_NONE;
+    }
+
+    private void updateSelection(String planType) {
+        if (planType.equals(currentPlan)) {
+            Toast.makeText(this, "You already have this plan", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        resetSelection();
+        selectedPlan = planType;
+        switch (planType) {
+            case FirebaseHelper.PLAN_MONTHLY: select(planMonthly, radioMonthly); break;
+            case FirebaseHelper.PLAN_YEARLY: select(planYearly, radioYearly); break;
+            case FirebaseHelper.PLAN_LIFETIME: select(planLifetime, radioLifetime); break;
+        }
     }
 
     private void resetSelection() {
         planMonthly.setBackgroundResource(R.drawable.bg_plan_unselected);
         planYearly.setBackgroundResource(R.drawable.bg_plan_unselected);
         planLifetime.setBackgroundResource(R.drawable.bg_plan_unselected);
-
         radioMonthly.setChecked(false);
         radioYearly.setChecked(false);
         radioLifetime.setChecked(false);
@@ -209,6 +218,11 @@ public class PremiumActivity extends AppCompatActivity {
     private void select(LinearLayout plan, RadioButton radio) {
         plan.setBackgroundResource(R.drawable.bg_plan_selected);
         radio.setChecked(true);
+    }
+
+    private void setupFeatures() {
+        recyclerView.setLayoutManager(new GridLayoutManager(this, 2, RecyclerView.HORIZONTAL, false));
+        recyclerView.setAdapter(new FeatureAdapter(getFeatures()));
     }
 
     private List<FeatureItem> getFeatures() {
@@ -223,23 +237,7 @@ public class PremiumActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        syncPremiumStatus();
-    }
-
-    private void syncPremiumStatus() {
-        firebaseHelper.checkPremiumStatus((isPremium, planType, expiryDate) ->
-                runOnUiThread(() -> {
-
-                    if (isPremium != sharedPreferenceUtil.isPremium()
-                            || !planType.equals(sharedPreferenceUtil.getPlanType())) {
-
-                        sharedPreferenceUtil.setIsPremium(isPremium);
-                        sharedPreferenceUtil.setPlanType(planType);
-                        sharedPreferenceUtil.setPremiumExpiryDate(expiryDate);
-
-                        currentPlan = planType;
-                        setupCurrentPlan();
-                    }
-                }));
+        billingManager.reconnectIfNeeded();
+        billingManager.queryProductPrices();
     }
 }

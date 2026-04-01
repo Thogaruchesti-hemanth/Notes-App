@@ -10,7 +10,7 @@ import android.content.Intent;
 import android.util.Log;
 import android.widget.RemoteViews;
 
-import com.example.NotesNest.R;
+import com.hemanth.NotesNest.R;
 import com.example.NotesNest.activity.EditNoteActivity;
 
 public class CreateNoteWidget extends AppWidgetProvider {

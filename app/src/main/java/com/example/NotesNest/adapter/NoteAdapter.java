@@ -15,7 +15,7 @@ import androidx.lifecycle.LifecycleOwner;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.NotesNest.R;
+import com.hemanth.NotesNest.R;
 import com.example.NotesNest.activity.EditNoteActivity;
 import com.example.NotesNest.databases.ViewModels.CategoryViewModel;
 import com.example.NotesNest.databases.ViewModels.NoteViewModel;

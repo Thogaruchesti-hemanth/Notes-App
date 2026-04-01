@@ -1,6 +1,7 @@
 package com.example.NotesNest.utils;
 
 import android.app.Dialog;
+import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,7 +16,8 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.NotesNest.R;
+import com.hemanth.NotesNest.R;
+import com.example.NotesNest.adapter.CategoryAdapter;
 import com.example.NotesNest.databases.ViewModels.CategoryViewModel;
 import com.example.NotesNest.databases.ViewModels.NoteViewModel;
 import com.example.NotesNest.databases.entities.CategoryEntity;
@@ -29,17 +31,17 @@ import java.util.List;
 
 public class CategoryManager extends BottomSheetDialogFragment {
 
-    private static final int FREE_CATEGORY_LIMIT = 8;
-
     private final CategoryViewModel categoryViewModel;
     private final NoteViewModel noteViewModel;
     private final String currentUserId;
     private final OnCategoryUpdateListener listener;
     private final List<CategoryEntity> categories = new ArrayList<>();
-    private LinearLayout addCategoryLayout;
+    private final PremiumManager premiumManager;
+    private LinearLayout layoutAddCategory;
     private CategoryAdapter adapter;
 
-    public CategoryManager(CategoryViewModel categoryViewModel,
+    public CategoryManager(Context context,
+                           CategoryViewModel categoryViewModel,
                            NoteViewModel noteViewModel,
                            String currentUserId,
                            OnCategoryUpdateListener listener) {
@@ -47,6 +49,7 @@ public class CategoryManager extends BottomSheetDialogFragment {
         this.noteViewModel = noteViewModel;
         this.currentUserId = currentUserId;
         this.listener = listener;
+        this.premiumManager = new PremiumManager(context);
     }
 
     @NonNull
@@ -57,217 +60,102 @@ public class CategoryManager extends BottomSheetDialogFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.bottom_sheet_manage_categories, container, false);
-    }
+        View view = inflater.inflate(R.layout.bottom_sheet_manage_categories, container, false);
 
-    @Override
-    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+        layoutAddCategory = view.findViewById(R.id.layoutAddCategory);
         RecyclerView recyclerView = view.findViewById(R.id.recyclerViewCategories);
-        addCategoryLayout = view.findViewById(R.id.layoutAddCategory);
-        TextView doneButton = view.findViewById(R.id.tvDone);
+        TextView tvDone = view.findViewById(R.id.tvDone);
 
-        adapter = new CategoryAdapter();
-        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        if (tvDone != null) {
+            tvDone.setOnClickListener(v -> dismiss());
+        }
+
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        adapter = new CategoryAdapter(categories, (category, position) -> {
+            // Edit category name
+            showEditCategoryDialog(category);
+        }, (category, position) -> {
+            // Delete category
+            categoryViewModel.deleteCategory(category);
+        });
         recyclerView.setAdapter(adapter);
 
-        attachDragAndDrop(recyclerView);
-        observeCategories();
+        setupItemTouchHelper(recyclerView);
 
-        addCategoryLayout.setOnClickListener(v -> showAddCategoryDialog());
-        doneButton.setOnClickListener(v -> {
-            saveCategoryOrder();
-            dismiss();
-        });
-    }
-
-    // -----------------------------------------
-    // LiveData observer (SAFE)
-    // -----------------------------------------
-    private void observeCategories() {
         categoryViewModel.getAllCategories().observe(getViewLifecycleOwner(), list -> {
             categories.clear();
             if (list != null) {
-                List<CategoryEntity> sorted = new ArrayList<>(list);
-                sorted.sort(Comparator.comparingInt(c -> c.order));
-                categories.addAll(sorted);
+                categories.addAll(list);
+                Collections.sort(categories, Comparator.comparingInt(c -> c.order));
             }
             adapter.notifyDataSetChanged();
         });
+
+        if (layoutAddCategory != null) {
+            layoutAddCategory.setOnClickListener(v -> showAddCategoryDialog());
+        }
+
+        return view;
     }
 
-    // -----------------------------------------
-    // Drag & Drop
-    // -----------------------------------------
-    private void attachDragAndDrop(RecyclerView recyclerView) {
-        ItemTouchHelper helper = new ItemTouchHelper(new ItemTouchHelper.Callback() {
+    private void setupItemTouchHelper(RecyclerView recyclerView) {
+        ItemTouchHelper helper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0) {
             @Override
-            public int getMovementFlags(@NonNull RecyclerView rv, @NonNull RecyclerView.ViewHolder vh) {
-                return makeMovementFlags(ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0);
-            }
+            public boolean onMove(@NonNull RecyclerView rv, @NonNull RecyclerView.ViewHolder vh, @NonNull RecyclerView.ViewHolder target) {
+                int from = vh.getAdapterPosition();
+                int to = target.getAdapterPosition();
+                if (from == RecyclerView.NO_POSITION || to == RecyclerView.NO_POSITION) return false;
 
-            @Override
-            public boolean onMove(@NonNull RecyclerView rv,
-                                  @NonNull RecyclerView.ViewHolder from,
-                                  @NonNull RecyclerView.ViewHolder to) {
-
-                int fromPos = from.getBindingAdapterPosition();
-                int toPos = to.getBindingAdapterPosition();
-
-                CategoryEntity fromCat = categories.get(fromPos);
-                CategoryEntity toCat = categories.get(toPos);
-
-                if (fromCat.id == 0 || toCat.id == 0) return false;
-
-                Collections.swap(categories, fromPos, toPos);
-                adapter.notifyItemMoved(fromPos, toPos);
-                updateOrderValues();
+                Collections.swap(categories, from, to);
+                adapter.notifyItemMoved(from, to);
+                saveCategoryOrder();
                 return true;
             }
 
-            @Override
-            public void onSwiped(@NonNull RecyclerView.ViewHolder vh, int dir) {
-            }
+            @Override public void onSwiped(@NonNull RecyclerView.ViewHolder vh, int dir) {}
         });
-
         helper.attachToRecyclerView(recyclerView);
     }
 
-    private void updateOrderValues() {
-        int order = 0;
-        for (CategoryEntity c : categories) {
-            if (c.id != 0) c.order = order++;
-        }
-    }
-
-    // -----------------------------------------
-    // Premium Logic
-    // -----------------------------------------
-    private boolean isCategoryLimitReached() {
-        int count = 0;
-        for (CategoryEntity c : categories) {
-            if (c.id != 0) count++;
-        }
-        return count >= FREE_CATEGORY_LIMIT;
-    }
-
-    // -----------------------------------------
-    // Add / Delete / Save
-    // -----------------------------------------
     private void showAddCategoryDialog() {
-
-        if (isCategoryLimitReached()) {
-            addCategoryLayout.setAlpha(0.5f);
-            CommonDialogs.showPremiumRequiredDialog(requireContext(), "Free users can create up to 8 categories.\\nUpgrade to Premium for unlimited categories.");
+        if (!premiumManager.canCreateCategory(categories.size())) {
+            CommonDialogs.showPremiumRequiredDialog(requireContext(), 
+                "You've reached the free limit of " + PremiumManager.MAX_FREE_CATEGORIES + " categories. Upgrade for unlimited categories!");
             return;
         }
 
-        CommonDialogs.showInputDialog(requireContext(),
-                "Add Category",
-                "Enter category name",
-                "Add",
-                "Cancel",
-                name -> {
-                    if (name == null || name.trim().isEmpty()) {
-                        Toast.makeText(getContext(), "Category name cannot be empty", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
+        CommonDialogs.showInputDialog(requireContext(), "Add Category", "Enter category name", "Add", "Cancel", name -> {
+            if (name == null || name.trim().isEmpty()) {
+                Toast.makeText(getContext(), "Name cannot be empty", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            CategoryEntity entity = new CategoryEntity();
+            entity.name = name.trim();
+            entity.order = categories.size();
+            categoryViewModel.insertCategory(entity);
+        });
+    }
 
-                    for (CategoryEntity c : categories) {
-                        if (c.name.equalsIgnoreCase(name.trim())) {
-                            Toast.makeText(getContext(), "Category already exists", Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-                    }
-
-                    CategoryEntity entity = new CategoryEntity();
-                    entity.name = name.trim();
-                    entity.order = categories.size();
-                    categoryViewModel.insertCategory(entity);
-                });
+    private void showEditCategoryDialog(CategoryEntity category) {
+        CommonDialogs.showInputDialog(requireContext(), "Edit Category", "Enter category name", "Update", "Cancel", name -> {
+            if (name == null || name.trim().isEmpty()) {
+                Toast.makeText(getContext(), "Name cannot be empty", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            category.name = name.trim();
+            categoryViewModel.updateCategory(category);
+        });
     }
 
     private void saveCategoryOrder() {
-        for (CategoryEntity c : categories) {
-            if (c.id != 0) categoryViewModel.updateCategory(c);
+        for (int i = 0; i < categories.size(); i++) {
+            CategoryEntity c = categories.get(i);
+            c.order = i;
+            categoryViewModel.updateCategory(c);
         }
-        if (listener != null) listener.onCategoriesUpdated();
-        Toast.makeText(getContext(), "Categories order saved", Toast.LENGTH_SHORT).show();
-    }
-
-    private void showDeleteCategoryDialog(CategoryEntity category, int position) {
-        CommonDialogs.showConfirmDialog(requireContext(),
-                "Delete Category",
-                "All notes will move to 'All'",
-                "Delete",
-                "Cancel",
-                () -> {
-                    noteViewModel.resetCategoryNotes(currentUserId, category.id);
-                    categoryViewModel.deleteCategoryByName(category.name);
-
-                    categories.remove(position);
-                    adapter.notifyItemRemoved(position);
-                });
     }
 
     public interface OnCategoryUpdateListener {
-        void onCategoriesUpdated();
-    }
-
-    // -----------------------------------------
-    // Adapter
-    // -----------------------------------------
-    private class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.VH> {
-
-        @NonNull
-        @Override
-        public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new VH(LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.item_category_manage, parent, false));
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull VH holder, int position) {
-            CategoryEntity category = categories.get(position);
-            if (category.id == 1) {
-                holder.name.setText(category.name + " (Default)");
-                holder.delete.setVisibility(View.GONE);
-            } else {
-                holder.name.setText(category.name);
-            }
-
-            holder.delete.setColorFilter(ThemeManager.getThemeColor(requireContext(), R.color.black, R.color.white));
-            holder.dragHandle.setColorFilter(ThemeManager.getThemeColor(requireContext(), R.color.black, R.color.white));
-
-            holder.delete.setOnClickListener(v -> {
-                int pos = holder.getBindingAdapterPosition();
-                if (pos == RecyclerView.NO_POSITION) return;
-
-                CategoryEntity cat = categories.get(pos);
-                if (cat.id == 1) {
-                    Toast.makeText(getContext(), "Cannot delete 'All'", Toast.LENGTH_SHORT).show();
-                } else {
-                    showDeleteCategoryDialog(cat, pos);
-                }
-            });
-        }
-
-
-        @Override
-        public int getItemCount() {
-            return categories.size();
-        }
-
-        class VH extends RecyclerView.ViewHolder {
-            TextView name;
-            ImageView delete;
-            ImageView dragHandle;
-
-            VH(View v) {
-                super(v);
-                name = v.findViewById(R.id.tvCategoryName);
-                delete = v.findViewById(R.id.ivDelete);
-                dragHandle = v.findViewById(R.id.ivDragHandle);
-            }
-        }
+        void onUpdate();
     }
 }

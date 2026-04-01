@@ -9,10 +9,13 @@ import android.widget.ImageView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.splashscreen.SplashScreen;
 
-import com.example.NotesNest.R;
+import com.hemanth.NotesNest.R;
+import com.example.NotesNest.utils.AdManager;
 import com.example.NotesNest.utils.AnalyticsHelper;
 import com.example.NotesNest.utils.DBSeedUtil;
+import com.example.NotesNest.utils.PremiumManager;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
 import com.example.NotesNest.utils.ThemeManager;
 
@@ -21,21 +24,28 @@ public class SplashScreenActivity extends AppCompatActivity {
 
     private static final int SPLASH_DELAY_MS = 1500;
     private SharedPreferenceUtil prefs;
+    private PremiumManager premiumManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Install the splash screen before calling super.onCreate()
+        SplashScreen.installSplashScreen(this);
+
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_splash_screen);
 
         prefs = new SharedPreferenceUtil(this);
+        premiumManager = new PremiumManager(this);
 
         ThemeManager.applyTheme(this);
         updateLogo();
         DBSeedUtil.seedDefaultCategories(this);
-        AnalyticsHelper.init(this);
+        
+        // Load Ads (Init is handled in NotesApplication)
+        AdManager.loadInterstitial(this);
 
-        new Handler(Looper.getMainLooper()).postDelayed(this::goToNextScreen, SPLASH_DELAY_MS);
+        new Handler(Looper.getMainLooper()).postDelayed(this::handleStartFlow, SPLASH_DELAY_MS);
     }
 
     private void updateLogo() {
@@ -46,6 +56,15 @@ public class SplashScreenActivity extends AppCompatActivity {
                 ? R.drawable.splash_logo_dark
                 : R.drawable.splash_logo_light
         );
+    }
+
+    private void handleStartFlow() {
+        if (!premiumManager.isPremium()) {
+            // Show App Open Ad for free users
+            AdManager.showAppOpenAd(this, this::goToNextScreen);
+        } else {
+            goToNextScreen();
+        }
     }
 
     /**

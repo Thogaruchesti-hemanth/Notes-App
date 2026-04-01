@@ -18,7 +18,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.NotesNest.R;
+import com.hemanth.NotesNest.R;
 import com.example.NotesNest.adapter.NoteConfigAdapter;
 import com.example.NotesNest.databases.ViewModels.NoteViewModel;
 import com.example.NotesNest.databases.entities.NoteEntity;

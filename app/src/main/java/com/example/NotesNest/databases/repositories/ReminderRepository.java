@@ -60,7 +60,7 @@ public class ReminderRepository {
         return reminderDao.getAllRemindersLive(userId);
     }
 
-    public void getAllReminders(int userID,Callback callback) {
+    public void getAllReminders(String userID, Callback callback) {
         executorService.execute(() -> {
             List<ReminderEntity> list = reminderDao.getAllReminders(userID);
             if (callback != null) callback.onResult(list);

@@ -30,7 +30,7 @@ public class HtmlListConverter {
     private static String convertUnorderedLists(String content) {
         Pattern ulPattern = Pattern.compile("(?i)<ul[^>]*>(.*?)</ul>", Pattern.DOTALL);
         Matcher matcher = ulPattern.matcher(content);
-        StringBuilder sb = new StringBuilder();
+        StringBuffer sb = new StringBuffer();
 
         while (matcher.find()) {
             String block = matcher.group(1);
@@ -61,7 +61,7 @@ public class HtmlListConverter {
     private static String convertOrderedLists(String content) {
         Pattern olPattern = Pattern.compile("(?i)<ol[^>]*>(.*?)</ol>", Pattern.DOTALL);
         Matcher matcher = olPattern.matcher(content);
-        StringBuilder sb = new StringBuilder();
+        StringBuffer sb = new StringBuffer();
 
         while (matcher.find()) {
             String block = matcher.group(1);

@@ -5,25 +5,18 @@ apply plugin: 'com.android.application'
 def keystoreProperties = new Properties()
 def keystorePropertiesFile = rootProject.file('key.properties')
 
-// Load keystore only if file exists
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
 android {
+    namespace 'com.hemanth.NotesNest'
+    compileSdk 35 // Updated to stable 35
 
-    // App namespace (recommended instead of package)
-    namespace 'com.example.NotesNest'
-
-    // Compile SDK version
-    compileSdk 36
-
-    // Enable viewBinding
     buildFeatures {
         viewBinding true
     }
 
-    // Signing configuration for release APK
     signingConfigs {
         release {
             storeFile file(keystoreProperties['storeFile'] ?: 'key.properties')
@@ -35,57 +28,41 @@ android {
 
     defaultConfig {
         applicationId "com.hemanth.NotesNest"
-        minSdk 29
-        targetSdk 35
+        minSdk 29 // Android 10
+        targetSdk 35 // Targeting Android 15
 
-        versionCode 11
-        versionName "3.0.6"
+        versionCode 13
+        versionName "3.2.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
-
         release {
-            // Use release signing
             signingConfig signingConfigs.release
-
-            // Disable cleartext traffic for security (Play Store requirement)
             manifestPlaceholders = [usesCleartextTraffic: "false"]
-
-            // Enable R8 code shrinking & optimization
             minifyEnabled true
-
-            // Remove unused resources to reduce APK size
             shrinkResources true
-
-            // Use default R8 + custom rules file
             proguardFiles(
                     getDefaultProguardFile('proguard-android-optimize.txt'),
                     'proguard-rules.pro'
             )
         }
-
         debug {
             signingConfig signingConfigs.debug
             manifestPlaceholders = [usesCleartextTraffic: "true"]
         }
     }
 
-    // Java compatibility
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        // Upgrade to Java 17 for better performance and modern API support
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     packagingOptions {
         resources {
             pickFirsts += ["META-INF/*"]
-        }
-    }
-
-    packagingOptions {
-        resources {
             excludes += [
                     "META-INF/DEPENDENCIES",
                     "META-INF/LICENSE",
@@ -98,64 +75,50 @@ android {
 }
 
 dependencies {
-
-    // ------- AndroidX Core UI Libraries -------
     implementation libs.appcompat
     implementation libs.material
     implementation libs.activity
     implementation libs.constraintlayout
-    implementation 'com.google.android.material:material:1.12.0'
+    
+    // Core KTX for better Java/Kotlin interoperability
+    implementation 'androidx.core:core-ktx:1.15.0'
+    
+    // Splash Screen API for Android 12+
+    implementation 'androidx.core:core-splashscreen:1.0.1'
 
-    // ------- Room Database -------
-    def room_version = "2.8.3"
+    // Room Database
+    def room_version = "2.6.1" // Stable version
     implementation "androidx.room:room-runtime:$room_version"
     annotationProcessor "androidx.room:room-compiler:$room_version"
     implementation "androidx.room:room-ktx:$room_version"
 
-    // ------- WorkManager -------
     implementation libs.work.runtime
 
-    // ------- Firebase (using latest recommended versions) -------
-    implementation platform('com.google.firebase:firebase-bom:33.6.0')
-
+    // Firebase
+    implementation platform('com.google.firebase:firebase-bom:33.9.0')
     implementation 'com.google.firebase:firebase-auth'
     implementation 'com.google.firebase:firebase-storage'
     implementation 'com.google.firebase:firebase-database'
     implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.google.firebase:firebase-functions'
 
-    implementation 'com.google.android.gms:play-services-auth:20.7.0'
-    implementation 'com.google.api-client:google-api-client-android:2.2.0'
+    implementation 'com.google.android.gms:play-services-auth:21.3.0'
+    implementation 'com.google.api-client:google-api-client-android:2.7.0'
     implementation 'com.google.apis:google-api-services-drive:v3-rev20230212-2.0.0'
 
-    // Add Firebase Analytics ONLY if you need it:
-    // implementation 'com.google.firebase:firebase-analytics-ktx'
-
-    // ------- Google Sign-In -------
-    // Use ONLY latest version (removed duplicate older version)
-    implementation 'com.google.android.gms:play-services-auth:21.4.0'
-
-    // ------- WebKit -------
-    implementation "androidx.webkit:webkit:1.14.0"
-
-    // ------- UI Components -------
+    implementation "androidx.webkit:webkit:1.12.1"
     implementation 'androidx.viewpager2:viewpager2:1.1.0'
     implementation 'com.facebook.shimmer:shimmer:0.5.0'
     implementation 'com.google.android.flexbox:flexbox:3.0.0'
-
-    // ------- Security -------
-    implementation 'androidx.security:security-crypto:1.1.0-alpha03'
-
-    // ------- Image Loading -------
+    implementation 'androidx.security:security-crypto:1.1.0-alpha06'
     implementation 'com.squareup.picasso:picasso:2.8'
 
-    // ------- Testing -------
+    implementation("com.google.android.gms:play-services-ads:23.6.0")
+    implementation 'com.android.billingclient:billing:8.3.0'
+
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
-
-    // ----------ads-------------
-    implementation("com.google.android.gms:play-services-ads:24.9.0")
 }
 
-// Apply Google Services plugin for Firebase
 apply plugin: 'com.google.gms.google-services'

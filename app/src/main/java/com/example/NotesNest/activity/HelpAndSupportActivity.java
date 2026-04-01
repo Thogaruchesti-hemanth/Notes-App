@@ -1,11 +1,16 @@
 package com.example.NotesNest.activity;
 
-import static com.example.NotesNest.utils.CommonDialogs.showWhatsNewDialog;
 
+import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -18,13 +23,18 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.example.NotesNest.R;
+import com.hemanth.NotesNest.R;
+import com.example.NotesNest.utils.PremiumManager;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
 
 public class HelpAndSupportActivity extends AppCompatActivity {
 
     private LinearLayout emailLayout, reportBugLayout, feedbackLayout, userGuideLayout, videoTutorialLayout, whatsNewLayout, aboutAppLayout, privacyPolicyLayout, termServiceLayout;
     private LinearLayout faq1, faq2, faq3, faq4, faq5;
     private TextView faqAns1, faqAns2, faqAns3, faqAns4, faqAns5;
+    private AdView adViewTop, adViewMid, adViewBottom;
+    private PremiumManager premiumManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,11 +47,26 @@ public class HelpAndSupportActivity extends AppCompatActivity {
             return insets;
         });
 
+        premiumManager = new PremiumManager(this);
         initViews();
         setupOptions();
         setupFaqs();
         setStaticTexts();
         setupListeners();
+        setupAds();
+    }
+
+    private void setupAds() {
+        if (premiumManager.isPremium()) {
+            adViewTop.setVisibility(View.GONE);
+            adViewMid.setVisibility(View.GONE);
+            adViewBottom.setVisibility(View.GONE);
+            return;
+        }
+        AdRequest adRequest = new AdRequest.Builder().build();
+        adViewTop.loadAd(adRequest);
+        adViewMid.loadAd(adRequest);
+        adViewBottom.loadAd(adRequest);
     }
 
     private void setupListeners() {
@@ -97,9 +122,42 @@ public class HelpAndSupportActivity extends AppCompatActivity {
         });
 
         whatsNewLayout.setOnClickListener(view -> {
-            String updateMessage = "• Added Change Password option for improved account security.\n• Introduced Delete Account option for better account control.\n• Updated FAQ section with clearer and more detailed information.\n• Enhanced the What’s New experience to keep you informed about updates.";
+            String updateMessage = "• Added Ad support for free users.\n• Implemented professional subscription management.\n• Improved Cloud Backup security and feature locking.\n• Fixed memory leaks in settings management.\n• General performance improvements.";
             showWhatsNewDialog(this, updateMessage);
         });
+    }
+
+    private void showWhatsNewDialog(Context context, String content) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.CustomAlertDialog);
+        LayoutInflater inflater = LayoutInflater.from(context);
+        View dialogView = inflater.inflate(R.layout.dialog_whats_new, null);
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+
+        ImageView ivClose = dialogView.findViewById(R.id.ivClose);
+        TextView tvVersion = dialogView.findViewById(R.id.tvVersion);
+        TextView tvNewContent = dialogView.findViewById(R.id.tvNewContent);
+        Button btnGotIt = dialogView.findViewById(R.id.btnGotIt);
+
+        // Set version name
+        try {
+            PackageInfo pInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+            tvVersion.setText("Version " + pInfo.versionName);
+        } catch (PackageManager.NameNotFoundException e) {
+            tvVersion.setText("Version 3.0.6");
+        }
+
+        tvNewContent.setText(content);
+
+        ivClose.setOnClickListener(v -> dialog.dismiss());
+        btnGotIt.setOnClickListener(v -> dialog.dismiss());
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        dialog.show();
     }
 
     private void initViews() {
@@ -126,6 +184,10 @@ public class HelpAndSupportActivity extends AppCompatActivity {
         aboutAppLayout = findViewById(R.id.layoutAboutApp);
         privacyPolicyLayout = findViewById(R.id.layoutPrivacyPolicy);
         termServiceLayout = findViewById(R.id.layoutTermsOfService);
+
+        adViewTop = findViewById(R.id.adViewHelpTop);
+        adViewMid = findViewById(R.id.adViewHelpMid);
+        adViewBottom = findViewById(R.id.adViewHelpBottom);
 
         findViewById(R.id.ivBackArrow).setOnClickListener(view -> finish());
     }

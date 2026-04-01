@@ -58,12 +58,12 @@ public class NoteRepository {
         return noteDao.searchNotesInCategory(userId, categoryId, keyword);
     }
 
-    public LiveData<List<NoteEntity>> fullTextSearch(int userId, String query) {
+    public LiveData<List<NoteEntity>> fullTextSearch(String userId, String query) {
         return noteDao.fullTextSearch(userId, query);
     }
 
     // SYNC
-    public LiveData<List<NoteEntity>> getPendingSyncNotes(int userId) {
+    public LiveData<List<NoteEntity>> getPendingSyncNotes(String userId) {
         return noteDao.getPendingSyncNotes(userId);
     }
 

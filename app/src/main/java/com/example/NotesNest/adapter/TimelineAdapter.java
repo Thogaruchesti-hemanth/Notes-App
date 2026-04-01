@@ -1,4 +1,4 @@
-package com.example.NotesNest.adapter;
+package com.hemanth.NotesNest.adapter;
 
 import android.content.Context;
 import android.graphics.drawable.GradientDrawable;
@@ -13,7 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.NotesNest.R;
+import com.hemanth.NotesNest.R;
 import com.example.NotesNest.models.Task;
 
 import java.util.ArrayList;

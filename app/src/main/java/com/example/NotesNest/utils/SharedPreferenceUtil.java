@@ -1,7 +1,10 @@
 package com.example.NotesNest.utils;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -9,11 +12,15 @@ import java.util.Locale;
 
 public class SharedPreferenceUtil {
 
+    // Broadcast Action for Premium Update
+    public static final String ACTION_PREMIUM_UPDATED = "com.example.NotesNest.ACTION_PREMIUM_UPDATED";
+
     // Premium plans
     public static final String PLAN_NONE = "none";
     public static final String PLAN_MONTHLY = "monthly";
     public static final String PLAN_YEARLY = "yearly";
     public static final String PLAN_LIFETIME = "lifetime";
+
     private static final String PREF_NAME = "UserPreferences";
     private static final String KEY_USERNAME = "user_name";
     private static final String KEY_EMAIL = "user_email";
@@ -24,6 +31,7 @@ public class SharedPreferenceUtil {
     private static final String ONBOARDING_KEY = "completed";
     private static final String WIDGET_PREF_NAME = "note_widgets";
     private static final String KEY_NOTE_LAYOUT = "note_layout";
+
     // Premium plan constants
     private static final String PREMIUM_PLAN = "premium_plan";
     private static final String IS_PREMIUM = "is_premium";
@@ -31,190 +39,223 @@ public class SharedPreferenceUtil {
     private static final String PURCHASE_DATE = "purchase_date";
     private static final String PLAN_TYPE = "plan_type";
     private static final String KEY_THEME = "theme"; // light / dark
-    private static SharedPreferences sharedPreferences;
+    private static final String KEY_CATEGORY_SEED_DONE = "CATEGORY_SEED_DONE";
+    private static final String PURCHASE_TOKEN = "purchase_token";
+    private static final String ORDER_ID = "order_id";
+
+    private SharedPreferences sharedPreferences;
+    private Context context;
 
     public SharedPreferenceUtil(Context context) {
-        if (sharedPreferences == null) {
-            sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        if (context != null) {
+            this.context = context.getApplicationContext();
+            this.sharedPreferences = this.context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         }
     }
 
+    private boolean isInitialized() {
+        return sharedPreferences != null;
+    }
+
     public void setUserImage(String imageUrl) {
-        sharedPreferences.edit().putString(KEY_PHOTO, imageUrl).apply();
+        if (isInitialized()) sharedPreferences.edit().putString(KEY_PHOTO, imageUrl).apply();
     }
 
     public String getUserName() {
-        return sharedPreferences.getString(KEY_USERNAME, "UserName");
+        return isInitialized() ? sharedPreferences.getString(KEY_USERNAME, "UserName") : "UserName";
     }
 
     public void setUserName(String userName) {
-        sharedPreferences.edit().putString(KEY_USERNAME, userName).apply();
+        if (isInitialized()) sharedPreferences.edit().putString(KEY_USERNAME, userName).apply();
     }
 
     public String getImageUrl() {
-        return sharedPreferences.getString(KEY_PHOTO, "User Image");
+        return isInitialized() ? sharedPreferences.getString(KEY_PHOTO, "User Image") : "User Image";
     }
 
     public String getUserEmail() {
-        return sharedPreferences.getString(KEY_EMAIL, "user@example.com");
+        return isInitialized() ? sharedPreferences.getString(KEY_EMAIL, "user@example.com") : "user@example.com";
     }
 
     public void setUserEmail(String userEmail) {
-        sharedPreferences.edit().putString(KEY_EMAIL, userEmail).apply();
+        if (isInitialized()) sharedPreferences.edit().putString(KEY_EMAIL, userEmail).apply();
     }
 
     public String getUserId() {
-        return sharedPreferences.getString(KEY_USERID, "-1");
+        return isInitialized() ? sharedPreferences.getString(KEY_USERID, "-1") : "-1";
     }
 
     public void setUserId(String userId) {
-        sharedPreferences.edit().putString(KEY_USERID, userId).apply();
+        if (isInitialized()) sharedPreferences.edit().putString(KEY_USERID, userId).apply();
     }
 
     public void setKeyLogin(boolean value) {
-        sharedPreferences.edit().putBoolean(KEY_LOGIN, value).apply();
+        if (isInitialized()) sharedPreferences.edit().putBoolean(KEY_LOGIN, value).apply();
     }
 
     public boolean getLogin() {
-        return sharedPreferences.getBoolean(KEY_LOGIN, false);
+        return isInitialized() && sharedPreferences.getBoolean(KEY_LOGIN, false);
     }
 
     public boolean isCategorySeedDone() {
-        return sharedPreferences.getBoolean("CATEGORY_SEED_DONE", false);
+        return isInitialized() && sharedPreferences.getBoolean(KEY_CATEGORY_SEED_DONE, false);
     }
 
     public void setCategorySeedDone(boolean done) {
-        sharedPreferences.edit().putBoolean("CATEGORY_SEED_DONE", done).apply();
+        if (isInitialized()) sharedPreferences.edit().putBoolean(KEY_CATEGORY_SEED_DONE, done).apply();
     }
 
-    /**
-     * Check if system theme is enabled
-     */
     public boolean isSystemTheme() {
-        return sharedPreferences.getBoolean(KEY_SYSTEM_THEME, false);
+        return isInitialized() && sharedPreferences.getBoolean(KEY_SYSTEM_THEME, false);
     }
 
     public void setSystemTheme(boolean enabled) {
-        sharedPreferences.edit().putBoolean("system_theme", enabled).apply();
+        if (isInitialized()) sharedPreferences.edit().putBoolean(KEY_SYSTEM_THEME, enabled).apply();
     }
 
     public String getTheme() {
-        return sharedPreferences.getString(KEY_THEME, "light");
+        return isInitialized() ? sharedPreferences.getString(KEY_THEME, "light") : "light";
     }
 
     public void setTheme(String theme) {
-        sharedPreferences.edit().putString(KEY_THEME, theme).apply();
+        if (isInitialized()) sharedPreferences.edit().putString(KEY_THEME, theme).apply();
     }
 
     public boolean isOnboardingCompleted() {
-        return sharedPreferences.getBoolean(ONBOARDING_KEY, false);
+        return isInitialized() && sharedPreferences.getBoolean(ONBOARDING_KEY, false);
     }
 
     public void setOnboardingCompleted(boolean completed) {
-        sharedPreferences.edit().putBoolean(ONBOARDING_KEY, completed).apply();
+        if (isInitialized()) sharedPreferences.edit().putBoolean(ONBOARDING_KEY, completed).apply();
     }
 
     public void saveWidgetNoteId(Context context, int appWidgetId, int noteId) {
-        SharedPreferences prefs = context.getSharedPreferences(WIDGET_PREF_NAME, Context.MODE_PRIVATE);
+        if (context == null) return;
+        SharedPreferences prefs = context.getApplicationContext().getSharedPreferences(WIDGET_PREF_NAME, Context.MODE_PRIVATE);
         prefs.edit()
                 .putInt("widget_note_" + appWidgetId, noteId)
                 .apply();
     }
 
     public int getWidgetNoteId(Context context, int appWidgetId) {
-        SharedPreferences prefs = context.getSharedPreferences(WIDGET_PREF_NAME, Context.MODE_PRIVATE);
+        if (context == null) return -1;
+        SharedPreferences prefs = context.getApplicationContext().getSharedPreferences(WIDGET_PREF_NAME, Context.MODE_PRIVATE);
         return prefs.getInt("widget_note_" + appWidgetId, -1);
     }
 
     public String getKeyNoteLayout() {
-        return sharedPreferences.getString(KEY_NOTE_LAYOUT, "Grid");
+        return isInitialized() ? sharedPreferences.getString(KEY_NOTE_LAYOUT, "Grid") : "Grid";
     }
 
     public void setKeyNoteLayout(String layout) {
-        sharedPreferences.edit().putString(KEY_NOTE_LAYOUT, layout).apply();
+        if (isInitialized()) sharedPreferences.edit().putString(KEY_NOTE_LAYOUT, layout).apply();
     }
 
     public boolean isUserPremium() {
-        return sharedPreferences.getBoolean("is_premium", false);
+        return isInitialized() && sharedPreferences.getBoolean(IS_PREMIUM, false);
     }
 
     public void setIsPremium(boolean isPremium) {
-        sharedPreferences.edit().putBoolean(IS_PREMIUM, isPremium).apply();
+        if (isInitialized()) {
+            sharedPreferences.edit().putBoolean(IS_PREMIUM, isPremium).apply();
+            notifyPremiumChanged();
+        }
     }
 
-    // Getters
     public String getPremiumPlan() {
-        return sharedPreferences.getString(PREMIUM_PLAN, PLAN_NONE);
+        return isInitialized() ? sharedPreferences.getString(PREMIUM_PLAN, PLAN_NONE) : PLAN_NONE;
     }
 
-    // Setters
     public void setPremiumPlan(String plan) {
-        sharedPreferences.edit().putString(PREMIUM_PLAN, plan).apply();
-    }
-
-    public boolean isPremium() {
-        return sharedPreferences.getBoolean(IS_PREMIUM, false);
+        if (isInitialized()) sharedPreferences.edit().putString(PREMIUM_PLAN, plan).apply();
     }
 
     public String getPremiumExpiryDate() {
-        return sharedPreferences.getString(PREMIUM_EXPIRY_DATE, "");
+        return isInitialized() ? sharedPreferences.getString(PREMIUM_EXPIRY_DATE, "") : "";
     }
 
     public void setPremiumExpiryDate(String expiryDate) {
-        sharedPreferences.edit().putString(PREMIUM_EXPIRY_DATE, expiryDate).apply();
+        if (isInitialized()) sharedPreferences.edit().putString(PREMIUM_EXPIRY_DATE, expiryDate).apply();
     }
 
     public String getPurchaseDate() {
-        return sharedPreferences.getString(PURCHASE_DATE, "");
+        return isInitialized() ? sharedPreferences.getString(PURCHASE_DATE, "") : "";
     }
 
     public void setPurchaseDate(String purchaseDate) {
-        sharedPreferences.edit().putString(PURCHASE_DATE, purchaseDate).apply();
+        if (isInitialized()) sharedPreferences.edit().putString(PURCHASE_DATE, purchaseDate).apply();
     }
 
     public String getPlanType() {
-        return sharedPreferences.getString(PLAN_TYPE, PLAN_NONE);
+        return isInitialized() ? sharedPreferences.getString(PLAN_TYPE, PLAN_NONE) : PLAN_NONE;
     }
 
     public void setPlanType(String planType) {
-        sharedPreferences.edit().putString(PLAN_TYPE, planType).apply();
+        if (isInitialized()) sharedPreferences.edit().putString(PLAN_TYPE, planType).apply();
     }
 
-    // Check if premium is active
     public boolean isPremiumActive() {
-        if (!isPremium()) return false;
+        if (!isInitialized() || !isUserPremium()) return false;
 
         String planType = getPlanType();
         if (PLAN_LIFETIME.equals(planType)) {
-            return true; // Lifetime is always active
+            return true;
         }
 
         String expiryDate = getPremiumExpiryDate();
         if (expiryDate.isEmpty()) return false;
 
-        // Check if expiry date is in future
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
             Date expiry = sdf.parse(expiryDate);
             Date current = new Date();
-            return current.before(expiry);
+            return expiry != null && current.before(expiry);
         } catch (Exception e) {
             return false;
         }
     }
 
     public void clearAllPreferences() {
-        if (sharedPreferences != null) {
-            sharedPreferences.edit().clear().apply();
+        if (isInitialized()) sharedPreferences.edit().clear().apply();
+    }
+
+    public void clearPremiumData() {
+        if (isInitialized()) {
+            sharedPreferences.edit()
+                    .remove(PREMIUM_PLAN)
+                    .remove(IS_PREMIUM)
+                    .remove(PREMIUM_EXPIRY_DATE)
+                    .remove(PURCHASE_DATE)
+                    .remove(PLAN_TYPE)
+                    .remove(PURCHASE_TOKEN)
+                    .remove(ORDER_ID)
+                    .apply();
+            notifyPremiumChanged();
         }
     }
 
-    // Clear premium data
-    public void clearPremiumData() {
-        sharedPreferences.edit().remove(PREMIUM_PLAN).apply();
-        sharedPreferences.edit().remove(IS_PREMIUM).apply();
-        sharedPreferences.edit().remove(PREMIUM_EXPIRY_DATE).apply();
-        sharedPreferences.edit().remove(PURCHASE_DATE).apply();
-        sharedPreferences.edit().remove(PLAN_TYPE).apply();
+    private void notifyPremiumChanged() {
+        if (context != null) {
+            Intent intent = new Intent(ACTION_PREMIUM_UPDATED);
+            LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+        }
+    }
+
+    // ==================== In-App Purchase Methods ====================
+
+    public String getPurchaseToken() {
+        return isInitialized() ? sharedPreferences.getString(PURCHASE_TOKEN, "") : "";
+    }
+
+    public void setPurchaseToken(String token) {
+        if (isInitialized()) sharedPreferences.edit().putString(PURCHASE_TOKEN, token).apply();
+    }
+
+    public String getOrderId() {
+        return isInitialized() ? sharedPreferences.getString(ORDER_ID, "") : "";
+    }
+
+    public void setOrderId(String orderId) {
+        if (isInitialized()) sharedPreferences.edit().putString(ORDER_ID, orderId).apply();
     }
 }

@@ -1,70 +1,75 @@
 package com.example.NotesNest.adapter;
 
-
-import android.content.Context;
-import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.core.content.ContextCompat;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.NotesNest.R;
-import com.example.NotesNest.utils.ThemeManager;
+import com.hemanth.NotesNest.R;
+import com.example.NotesNest.databases.entities.CategoryEntity;
 
 import java.util.List;
 
-public class CategoryAdapter extends BaseAdapter {
-    private final Context context;
-    private final List<String> categories;
-    private int selectedIndex = 0;
+public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHolder> {
 
-    public CategoryAdapter(Context context, List<String> categories) {
-        this.context = context;
-        this.categories = categories;
+    private final List<CategoryEntity> categories;
+    private final OnCategoryActionListener editListener;
+    private final OnCategoryActionListener deleteListener;
+
+    public interface OnCategoryActionListener {
+        void onAction(CategoryEntity category, int position);
     }
 
-    public void setSelectedIndex(int index) {
-        this.selectedIndex = index;
-        notifyDataSetChanged();
+    public CategoryAdapter(List<CategoryEntity> categories, OnCategoryActionListener editListener, OnCategoryActionListener deleteListener) {
+        this.categories = categories;
+        this.editListener = editListener;
+        this.deleteListener = deleteListener;
+    }
+
+    @NonNull
+    @Override
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_category_manage, parent, false);
+        return new ViewHolder(view);
     }
 
     @Override
-    public int getCount() {
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        CategoryEntity category = categories.get(position);
+        holder.tvCategoryName.setText(category.name);
+
+        holder.itemView.setOnClickListener(v -> {
+            if (editListener != null) {
+                editListener.onAction(category, position);
+            }
+        });
+
+        holder.ivDelete.setOnClickListener(v -> {
+            if (deleteListener != null) {
+                deleteListener.onAction(category, position);
+            }
+        });
+    }
+
+    @Override
+    public int getItemCount() {
         return categories.size();
     }
 
-    @Override
-    public Object getItem(int position) {
-        return categories.get(position);
-    }
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        TextView tvCategoryName;
+        ImageView ivDelete;
+        ImageView ivDragHandle;
 
-    @Override
-    public long getItemId(int position) {
-        return position;
-    }
-
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        TextView textView;
-        if (convertView == null) {
-            convertView = LayoutInflater.from(context)
-                    .inflate(android.R.layout.simple_list_item_1, parent, false);
+        public ViewHolder(@NonNull View itemView) {
+            super(itemView);
+            tvCategoryName = itemView.findViewById(R.id.tvCategoryName);
+            ivDelete = itemView.findViewById(R.id.ivDelete);
+            ivDragHandle = itemView.findViewById(R.id.ivDragHandle);
         }
-        textView = convertView.findViewById(android.R.id.text1);
-        textView.setText(categories.get(position));
-
-        // Highlight selected
-        if (position == selectedIndex) {
-            textView.setTypeface(Typeface.DEFAULT_BOLD);
-            textView.setTextColor(ContextCompat.getColor(context, R.color.tabSelectedTextColorLight));
-        } else {
-            textView.setTypeface(Typeface.DEFAULT);
-            textView.setTextColor(ThemeManager.getThemeColor(context, R.color.black, R.color.white));
-        }
-
-        return convertView;
     }
 }

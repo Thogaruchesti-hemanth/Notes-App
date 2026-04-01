@@ -44,6 +44,7 @@ public class CKEditorHelper {
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
         webSettings.setAllowFileAccess(true);
+        webSettings.setAllowContentAccess(true);
 
         webView.addJavascriptInterface(new Object() {
             @JavascriptInterface
