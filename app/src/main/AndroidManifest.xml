@@ -5,53 +5,69 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="replace" />
     <!-- Required for Google Play Billing (In-App Purchases) -->
     <uses-permission android:name="com.android.vending.BILLING" />
 
+    <!-- Android 11 (API 30) Package Visibility -->
+    <queries>
+        <package android:name="com.google.android.gms" />
+        <intent>
+            <action android:name="com.google.android.gms.auth.api.signin.SERVICE" />
+        </intent>
+        <intent>
+            <action android:name="com.google.android.gms.ads.AdService" />
+        </intent>
+        <intent>
+            <action android:name="com.android.vending.billing.InAppBillingService.BIND" />
+        </intent>
+    </queries>
+
     <application
+        android:name="com.example.NotesNest.NotesApplication"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
-        android:exported="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Notes"
-        tools:targetApi="31">
+        android:enableOnBackInvokedCallback="true"
+        tools:targetApi="34">
 
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-3940256099942544~3347511713"/>
 
         <activity
-            android:name=".activity.ManageAccountActivity"
+            android:name="com.example.NotesNest.activity.ManageAccountActivity"
             android:exported="false" />
         <activity
-            android:name=".activity.PremiumActivity"
+            android:name="com.example.NotesNest.activity.PremiumActivity"
             android:exported="false" />
         <activity
-            android:name=".activity.DriveBackupActivity"
+            android:name="com.example.NotesNest.activity.DriveBackupActivity"
             android:exported="false" />
         <activity
-            android:name=".activity.HelpAndSupportActivity"
+            android:name="com.example.NotesNest.activity.HelpAndSupportActivity"
             android:exported="false" />
         <activity
-            android:name=".activity.SettingsActivity"
+            android:name="com.example.NotesNest.activity.SettingsActivity"
             android:exported="false" />
         <activity
-            android:name=".activity.EditReminderActivity"
+            android:name="com.example.NotesNest.activity.EditReminderActivity"
             android:exported="false" />
         <activity
-            android:name=".activity.OnboardingActivity"
+            android:name="com.example.NotesNest.activity.OnboardingActivity"
             android:exported="false" />
         <activity
-            android:name=".activity.EditNoteActivity"
+            android:name="com.example.NotesNest.activity.EditNoteActivity"
             android:exported="false" />
 
         <activity
-            android:name=".activity.SplashScreenActivity"
+            android:name="com.example.NotesNest.activity.SplashScreenActivity"
             android:exported="true"
-            android:theme="@style/Theme.Notes">
+            android:theme="@style/Theme.App.Starting">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -59,15 +75,16 @@
         </activity>
 
         <activity
-            android:name=".activity.LoginActivity"
+            android:name="com.example.NotesNest.activity.LoginActivity"
+            android:windowSoftInputMode="adjustResize"
             android:exported="true" />
 
         <activity
-            android:name=".activity.MainActivity"
+            android:name="com.example.NotesNest.activity.MainActivity"
             android:exported="true" />
 
         <activity
-            android:name=".activity.NoteWidgetConfigureActivity"
+            android:name="com.example.NotesNest.activity.NoteWidgetConfigureActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
@@ -85,7 +102,7 @@
         </provider>
 
         <receiver
-            android:name=".widgets.NoteWidget"
+            android:name="com.example.NotesNest.widgets.NoteWidget"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -96,7 +113,7 @@
         </receiver>
 
         <receiver
-            android:name=".widgets.CreateNoteWidget"
+            android:name="com.example.NotesNest.widgets.CreateNoteWidget"
             android:exported="true"
             android:label="@string/create_note_widget_label">
             <intent-filter>
@@ -108,7 +125,7 @@
         </receiver>
 
         <receiver
-            android:name=".notifications.receivers.ReminderReceiver"
+            android:name="com.example.NotesNest.notifications.receivers.ReminderReceiver"
             android:exported="true" />
 
     </application>

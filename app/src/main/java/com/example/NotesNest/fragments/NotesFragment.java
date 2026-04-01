@@ -3,8 +3,10 @@ package com.example.NotesNest.fragments;
 import static com.example.NotesNest.editor.CKEditorHelper.getThemeColor;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
@@ -29,10 +31,11 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
-import com.example.NotesNest.R;
+import com.hemanth.NotesNest.R;
 import com.example.NotesNest.activity.EditNoteActivity;
 import com.example.NotesNest.adapter.NoteAdapter;
 import com.example.NotesNest.adapter.NoteShimmerAdapter;
@@ -87,6 +90,20 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
     private boolean isLoading = false;
     private AdView adView;
 
+    private final BroadcastReceiver premiumReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (SharedPreferenceUtil.ACTION_PREMIUM_UPDATED.equals(intent.getAction())) {
+                if (adView != null) {
+                    adView.setVisibility(View.GONE);
+                    adView.destroy();
+                }
+                if (createButton != null) {
+                    createButton.setAlpha(1.0f);
+                }
+            }
+        }
+    };
 
     public NotesFragment() { /* Required empty constructor */ }
 
@@ -138,6 +155,9 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         observeNoteCount();
         setupBannerAd();
 
+        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(
+                premiumReceiver, new IntentFilter(SharedPreferenceUtil.ACTION_PREMIUM_UPDATED));
+
         return view;
     }
 
@@ -157,6 +177,7 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         }
 
         CategoryManager categoryManager = new CategoryManager(
+                requireContext(),
                 categoryViewModel,
                 noteViewModel,
                 currentUserId,
@@ -187,11 +208,6 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
             if (!premiumManager.isPremium()) {
                 AdManager.showInterstitial(requireActivity(), this::openCreateItem);
             } else {
-                if (!premiumManager.canCreateNote(currentNotesCount)) {
-                    CommonDialogs.showPremiumRequiredDialog(context,
-                            "You've reached the free limit of " + PremiumManager.MAX_FREE_NOTES + " notes. Upgrade to Premium for unlimited storage!");
-                    return;
-                }
                 openCreateItem();
             }
         });
@@ -477,6 +493,7 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         ThemeManager.unregisterListener(this);
         if (searchRunnable != null) searchHandler.removeCallbacks(searchRunnable);
         searchHandler.removeCallbacksAndMessages(null);
+        LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(premiumReceiver);
     }
 
     @Override
@@ -492,7 +509,6 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
             if (count == null) return;
             currentNotesCount = count;
             
-            // Visual indicator on create button if limit reached
             if (!premiumManager.canCreateNote(currentNotesCount)) {
                 createButton.setAlpha(0.6f);
             } else {

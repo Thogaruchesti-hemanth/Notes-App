@@ -38,6 +38,7 @@ public abstract class AppDatabase extends RoomDatabase {
                                     AppDatabase.class,
                                     "notesnest.db"
                             )
+                            .fallbackToDestructiveMigration()
                             .build();
                 }
             }
@@ -57,6 +58,7 @@ public abstract class AppDatabase extends RoomDatabase {
                         AppDatabase.class,
                         "notesnest.db"
                 )
+                .fallbackToDestructiveMigration()
                 .build();
     }
 

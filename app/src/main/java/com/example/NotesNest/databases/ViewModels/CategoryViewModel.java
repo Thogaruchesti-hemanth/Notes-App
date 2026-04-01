@@ -32,6 +32,10 @@ public class CategoryViewModel extends AndroidViewModel {
         categoryRepository.insert(category);
     }
 
+    public void deleteCategory(CategoryEntity category) {
+        categoryRepository.delete(category);
+    }
+
     public void deleteCategoryByName(String categoryName) {
         categoryRepository.deleteByName(categoryName);
     }

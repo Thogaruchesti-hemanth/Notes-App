@@ -19,4 +19,11 @@
     </style>
 
     <style name="Theme.Notes" parent="Base.Theme.Notes" />
+
+    <!-- Splash Screen Theme -->
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/white</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="postSplashScreenTheme">@style/Theme.Notes</item>
+    </style>
 </resources>

@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -38,6 +39,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.functions.FirebaseFunctions;
+import com.google.firebase.functions.FirebaseFunctionsException;
+import com.hemanth.NotesNest.R;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -52,6 +55,8 @@ import java.util.Objects;
 import java.util.concurrent.Executors;
 
 public class FirebaseHelper {
+
+    private static final String TAG = "FirebaseHelper";
 
     // Plan constants
     public static final String PLAN_NONE = "none";
@@ -74,10 +79,12 @@ public class FirebaseHelper {
     // Firebase instances
     private final DatabaseReference databaseReference;
     private final FirebaseAuth mAuth;
+    private final FirebaseFunctions mFunctions;
 
     public FirebaseHelper() {
         databaseReference = FirebaseDatabase.getInstance().getReference("Users");
         mAuth = FirebaseAuth.getInstance();
+        mFunctions = FirebaseFunctions.getInstance();
     }
 
     // ==================== GOOGLE AUTHENTICATION ====================
@@ -129,19 +136,16 @@ public class FirebaseHelper {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
-                    // Existing user - get current data
                     String existingName = snapshot.child(USERNAME).getValue(String.class);
                     String existingImage = snapshot.child(IMAGE).getValue(String.class);
 
-                    // Get premium data
                     Boolean isPremium = snapshot.child(IS_PREMIUM).getValue(Boolean.class);
                     String premiumPlan = snapshot.child(PREMIUM_PLAN).getValue(String.class);
                     String premiumExpiry = snapshot.child(PREMIUM_EXPIRY).getValue(String.class);
                     String purchaseDate = snapshot.child(PURCHASE_DATE).getValue(String.class);
                     String planType = snapshot.child(PLAN_TYPE).getValue(String.class);
 
-                    // Set defaults if null
-                    if (isPremium == null) isPremium = false; // Fixed: Default to false for existing users if null
+                    if (isPremium == null) isPremium = false;
                     if (premiumPlan == null) premiumPlan = PLAN_NONE;
                     if (premiumExpiry == null) premiumExpiry = "";
                     if (purchaseDate == null) purchaseDate = "";
@@ -151,15 +155,13 @@ public class FirebaseHelper {
                             isPremium, premiumPlan, premiumExpiry, purchaseDate, planType);
                     callback.onGoogleLoginSuccess(existingName, email);
                 } else {
-                    // New user - create with defaults
                     Map<String, Object> userData = new HashMap<>();
                     userData.put(USERNAME, userName != null ? userName : "");
                     userData.put(EMAIL, email);
                     userData.put(IMAGE, base64Image);
-                    userData.put(PASSWORD, ""); // Empty for Google users
+                    userData.put(PASSWORD, "");
                     userData.put(USER_ID, uid);
 
-                    // Set default premium values
                     userData.put(IS_PREMIUM, false);
                     userData.put(PREMIUM_PLAN, PLAN_NONE);
                     userData.put(PREMIUM_EXPIRY, "");
@@ -169,11 +171,9 @@ public class FirebaseHelper {
 
                     databaseReference.child(uid).setValue(userData).addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
-                            // For Google signups, give 1 year free premium
                             String purchaseDate = getCurrentDateTime();
                             String expiryDate = calculateOneYearFreeExpiry();
                             
-                            // Update database with free premium
                             Map<String, Object> premiumUpdates = new HashMap<>();
                             premiumUpdates.put(IS_PREMIUM, true);
                             premiumUpdates.put(PREMIUM_PLAN, PLAN_YEARLY);
@@ -212,14 +212,12 @@ public class FirebaseHelper {
                             String userEmail = snapshot.child(EMAIL).getValue(String.class);
                             String userImage = snapshot.child(IMAGE).getValue(String.class);
 
-                            // Get premium data
                             Boolean isPremium = snapshot.child(IS_PREMIUM).getValue(Boolean.class);
                             String premiumPlan = snapshot.child(PREMIUM_PLAN).getValue(String.class);
                             String premiumExpiry = snapshot.child(PREMIUM_EXPIRY).getValue(String.class);
                             String purchaseDate = snapshot.child(PURCHASE_DATE).getValue(String.class);
                             String planType = snapshot.child(PLAN_TYPE).getValue(String.class);
 
-                            // Set defaults if null
                             if (isPremium == null) isPremium = false;
                             if (premiumPlan == null) premiumPlan = PLAN_NONE;
                             if (premiumExpiry == null) premiumExpiry = "";
@@ -294,7 +292,6 @@ public class FirebaseHelper {
     public void signupUser(String userName, String email, String password,
                            String confirmPassword, String imageBase64,
                            Context context, SignupCallback callback) {
-        // Validation is already done in LoginActivity, but keeping a simple check for safety.
         if (password == null || !password.equals(confirmPassword)) {
             callback.onFailure("Passwords do not match");
             return;
@@ -395,7 +392,7 @@ public class FirebaseHelper {
     public void updatePremiumPlan(Context context, String planType, PremiumUpdateCallback callback) {
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser == null) {
-            callback.onPremiumUpdateFailure("User not logged in");
+            if (callback != null) callback.onPremiumUpdateFailure("User not logged in");
             return;
         }
 
@@ -419,9 +416,9 @@ public class FirebaseHelper {
                         sp.setPlanType(planType);
                         sp.setPurchaseDate(currentDate);
                         sp.setPremiumExpiryDate(expiryDate);
-                        callback.onPremiumUpdateSuccess(planType, expiryDate);
+                        if (callback != null) callback.onPremiumUpdateSuccess(planType, expiryDate);
                     } else {
-                        callback.onPremiumUpdateFailure("Failed to update premium plan");
+                        if (callback != null) callback.onPremiumUpdateFailure("Failed to update premium plan");
                     }
                 });
     }
@@ -566,7 +563,6 @@ public class FirebaseHelper {
     private void attemptIndividualDeletions(String userId, DatabaseDeletionListener listener) {
         DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference();
         String[] paths = {"Users/" + userId, "userData/" + userId, "userSettings/" + userId};
-        // Simple sequential cleanup
         for (String path : paths) {
             rootRef.child(path).removeValue();
         }
@@ -664,7 +660,7 @@ public class FirebaseHelper {
 
                 if (bitmap != null) {
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 70, baos); // Compressed for DB storage
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 70, baos);
                     base64 = android.util.Base64.encodeToString(baos.toByteArray(), android.util.Base64.DEFAULT);
                 }
             } catch (Exception ignored) {}
@@ -710,54 +706,59 @@ public class FirebaseHelper {
     }
 
     /**
-     * Verify in-app purchase with Firebase backend
-     * Called after successful purchase to validate with Google Play
-     * 
-     * @param context Application context
-     * @param purchaseToken Token from BillingManager
-     * @param planType Plan type (monthly/yearly/lifetime)
-     * @param callback Verification result callback
+     * VERIFY AND ACTIVATE PREMIUM (SECURE)
+     * This method calls a Firebase Cloud Function to verify the purchase token
+     * with Google Play servers. No local database update fallback is allowed for security.
      */
     public void verifyAndActivatePremium(Context context, String purchaseToken, String planType, PremiumUpdateCallback callback) {
-        try {
-            Map<String, Object> data = new HashMap<>();
-            data.put("purchaseToken", purchaseToken);
-            data.put("planType", planType);
+        Map<String, Object> data = new HashMap<>();
+        data.put("purchaseToken", purchaseToken);
+        data.put("planType", planType);
 
-            // Call Firebase Cloud Function
-            FirebaseFunctions.getInstance()
-                    .getHttpsCallable("verifyAndActivatePremium")
-                    .call(data)
-                    .addOnSuccessListener(result -> {
-                        if (result != null && result.getData() instanceof Map) {
-                            Map<String, Object> resultData = (Map<String, Object>) result.getData();
-                            Boolean success = (Boolean) resultData.get("success");
+        mFunctions
+                .getHttpsCallable("verifyAndActivatePremium")
+                .call(data)
+                .addOnSuccessListener(result -> {
+                    Map<String, Object> map = (Map<String, Object>) result.getData();
+                    if (map == null) {
+                        callback.onPremiumUpdateFailure("Invalid server response");
+                        return;
+                    }
 
-                            if (success != null && success) {
-                                // Extract expiry date from response
-                                Object expiryObj = resultData.get("expiryDate");
-                                String expiryDate = expiryObj != null ? expiryObj.toString() : "";
-
-                                // Update local storage
-                                SharedPreferenceUtil prefs = new SharedPreferenceUtil(context);
-                                prefs.setIsPremium(true);
-                                prefs.setPlanType(planType);
-                                prefs.setPremiumExpiryDate(expiryDate);
-
-                                // Notify callback
-                                callback.onPremiumUpdateSuccess(planType, expiryDate);
-                            } else {
-                                callback.onPremiumUpdateFailure("Purchase verification failed");
-                            }
+                    boolean success = (boolean) map.get("success");
+                    if (success) {
+                        Log.d(TAG, "✅ Premium verified via cloud function.");
+                        
+                        // Extract expiry from millis returned by server
+                        Object expiryObj = map.get("expiryDate");
+                        long expiryMillis = 0;
+                        if (expiryObj instanceof Number) {
+                            expiryMillis = ((Number) expiryObj).longValue();
                         }
-                    })
-                    .addOnFailureListener(e -> {
-                        String errorMessage = "Verification error: " + e.getMessage();
-                        callback.onPremiumUpdateFailure(errorMessage);
-                    });
-        } catch (Exception e) {
-            callback.onPremiumUpdateFailure("Unexpected error: " + e.getMessage());
-        }
+                        
+                        // Format date for local storage consistency
+                        String expiryDateStr = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+                                .format(new Date(expiryMillis));
+
+                        SharedPreferenceUtil sp = new SharedPreferenceUtil(context);
+                        sp.setIsPremium(true);
+                        sp.setPremiumPlan(planType);
+                        sp.setPlanType(planType);
+                        sp.setPremiumExpiryDate(expiryDateStr);
+                        callback.onPremiumUpdateSuccess(planType, expiryDateStr);
+                    } else {
+                        callback.onPremiumUpdateFailure("Verification failed");
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "❌ Cloud function error: " + e.getMessage());
+                    if (e instanceof FirebaseFunctionsException) {
+                        FirebaseFunctionsException ffe = (FirebaseFunctionsException) e;
+                        callback.onPremiumUpdateFailure(ffe.getMessage());
+                    } else {
+                        callback.onPremiumUpdateFailure("Server error. Please try again later.");
+                    }
+                });
     }
 
     // ==================== INTERFACES ====================

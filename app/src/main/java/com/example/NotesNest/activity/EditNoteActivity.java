@@ -20,7 +20,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.example.NotesNest.R;
+import com.hemanth.NotesNest.R;
 import com.example.NotesNest.databases.entities.CategoryEntity;
 import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.databases.ViewModels.CategoryViewModel;
@@ -418,5 +418,18 @@ public class EditNoteActivity extends AppCompatActivity {
                 rootView.setPadding(0, 0, 0, 0);
             }
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (editorWebView != null) {
+            editorWebView.stopLoading();
+            editorWebView.setWebViewClient(null);
+            editorWebView.clearHistory();
+            editorWebView.removeAllViews();
+            editorWebView.destroy();
+            editorWebView = null;
+        }
+        super.onDestroy();
     }
 }

@@ -7,7 +7,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.NotesNest.R;
+import com.hemanth.NotesNest.R;
 import com.facebook.shimmer.ShimmerFrameLayout;
 
 public class NoteShimmerAdapter extends RecyclerView.Adapter<NoteShimmerAdapter.ShimmerViewHolder> {

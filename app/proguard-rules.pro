@@ -5,123 +5,88 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# ---------------------------------------------------------
+# General R8/ProGuard rules
+# ---------------------------------------------------------
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Keep line numbers for better crash reports
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
-
-
-###############################
-# ROOM (Required)
-###############################
+# ---------------------------------------------------------
+# Room Database rules
+# ---------------------------------------------------------
 -keep class androidx.room.** { *; }
 -dontwarn androidx.room.**
-
 -keep class * extends androidx.room.RoomDatabase
+# Keep the entities to avoid issues with reflection/schema
+-keep class com.example.NotesNest.databases.entities.** { *; }
+-keep class com.example.NotesNest.databases.daos.** { *; }
 
-###############################
-# FIREBASE (Analytics, Auth, Storage, DB)
-###############################
+# ---------------------------------------------------------
+# Firebase rules
+# ---------------------------------------------------------
 -keep class com.google.firebase.** { *; }
 -dontwarn com.google.firebase.**
-
-# Needed for Firebase Task API
 -keep class com.google.android.gms.tasks.** { *; }
-
-###############################
-# GOOGLE PLAY SERVICES
-###############################
--keep class com.google.android.gms.** { *; }
--dontwarn com.google.android.gms.**
-
-# Fix missing AdvertisingIdClient$Info
--dontwarn com.google.android.gms.ads.identifier.**
-
-###############################
-# AUTH (Google Sign-In)
-###############################
--keep class com.google.android.gms.auth.** { *; }
--dontwarn com.google.android.gms.auth.**
-
-###############################
-# PICASSO
-###############################
--dontwarn com.squareup.picasso.**
--keep class com.squareup.picasso.** { *; }
-
-###############################
-# SHIMMER
-###############################
--keep class com.facebook.shimmer.** { *; }
--dontwarn com.facebook.shimmer.**
-
-###############################
-# WEBKIT
-###############################
--dontwarn androidx.webkit.**
-
-###############################
-# SECURITY CRYPTO
-###############################
--keep class androidx.security.** { *; }
--dontwarn androidx.security.**
-
-###############################
-# FLEXBOX
-###############################
--keep class com.google.android.flexbox.** { *; }
--dontwarn com.google.android.flexbox.**
-
-###############################
-# WORKMANAGER
-###############################
--keep class androidx.work.** { *; }
--dontwarn androidx.work.**
-
-###############################
-# ANDROIDX / MATERIAL
-###############################
--dontwarn androidx.**
--keep class androidx.** { *; }
-
--dontwarn com.google.android.material.**
-
-###############################
-# VIEWPAGER2
-###############################
--keep class androidx.viewpager2.** { *; }
--dontwarn androidx.viewpager2.**
-
-###############################
-# KEEP MODELS (If Using Firebase Realtime Database)
-###############################
+# Keep models used by Firebase Realtime Database
 -keepclassmembers class * {
     @com.google.firebase.database.PropertyName <fields>;
 }
 
-###############################
-# KEEP ENUMS USED BY REFLECTION
-###############################
+# ---------------------------------------------------------
+# Google Play Services and Auth rules
+# ---------------------------------------------------------
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.android.gms.**
+-dontwarn com.google.android.gms.ads.identifier.**
+-keep class com.google.android.gms.auth.** { *; }
+-dontwarn com.google.android.gms.auth.**
+
+# ---------------------------------------------------------
+# Google Drive and Client API rules
+# ---------------------------------------------------------
+-keep class com.google.api.services.** { *; }
+-keep class com.google.api.client.** { *; }
+-keep class com.google.http.client.** { *; }
+-dontwarn com.google.api.client.**
+-dontwarn com.google.http.client.**
+
+# ---------------------------------------------------------
+# Third-party Library rules
+# ---------------------------------------------------------
+
+# Picasso
+-dontwarn com.squareup.picasso.**
+-keep class com.squareup.picasso.** { *; }
+
+# Shimmer
+-keep class com.facebook.shimmer.** { *; }
+-dontwarn com.facebook.shimmer.**
+
+# Flexbox
+-keep class com.google.android.flexbox.** { *; }
+-dontwarn com.google.android.flexbox.**
+
+# ---------------------------------------------------------
+# AndroidX and Support Library rules
+# ---------------------------------------------------------
+-keep class androidx.** { *; }
+-dontwarn androidx.**
+-keep class com.google.android.material.** { *; }
+-dontwarn com.google.android.material.**
+
+# ---------------------------------------------------------
+# Common rules for reflection and enums
+# ---------------------------------------------------------
 -keepclassmembers enum * {
     public static **[] values();
     public static ** valueOf(java.lang.String);
 }
 
-# Suppress Conscrypt warnings (we do not use it)
+# Suppress Conscrypt and other unused library warnings
 -dontwarn org.conscrypt.**
-
-
--keep class com.google.api.services.** { *; }
--keep class com.google.api.client.** { *; }
--keep class com.google.http.client.** { *; }
-
+-dontwarn org.apache.http.**
+-dontwarn com.google.j2objc.annotations.**
+-dontwarn javax.annotation.**
+-dontwarn javax.inject.**

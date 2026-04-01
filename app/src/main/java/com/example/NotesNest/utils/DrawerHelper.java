@@ -28,7 +28,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.NotesNest.FirebaseHelper;
-import com.example.NotesNest.R;
+import com.hemanth.NotesNest.R;
 import com.example.NotesNest.activity.HelpAndSupportActivity;
 import com.example.NotesNest.activity.PremiumActivity;
 import com.example.NotesNest.activity.SettingsActivity;
@@ -52,11 +52,8 @@ public class DrawerHelper {
     private ImageView profileImageView;
     private TextView userNameTextView, emailTextView;
 
-    // NEW: Modern Photo Picker Launcher
     private ActivityResultLauncher<PickVisualMediaRequest> pickMedia;
-
     private ImageView currentDialogImageView;
-    private final boolean isPremiumUser;
 
     public DrawerHelper(AppCompatActivity activity) {
         this.activity = activity;
@@ -65,16 +62,19 @@ public class DrawerHelper {
         this.pref = new SharedPreferenceUtil(activity);
         this.firebaseHelper = new FirebaseHelper();
 
-        this.isPremiumUser = pref.isUserPremium();
-
         setDrawerWidth();
         setupHeaderViews();
         setupMenuButton();
-        setupPhotoPicker(); // Updated method name
+        setupPhotoPicker();
         loadUserData();
         setupViewPager(activity);
         setupTopMenu();
         setupFooterMenu();
+    }
+
+    public void refreshUI() {
+        setupHeaderViews();
+        loadUserData();
     }
 
     private void setupFooterMenu() {
@@ -157,11 +157,14 @@ public class DrawerHelper {
 
         profileHeader.findViewById(R.id.btnEdit).setOnClickListener(v -> openEditDialog());
 
+        boolean isPremiumUser = pref.isUserPremium();
+
         if (isPremiumUser) {
             premiumButton.setVisibility(View.GONE);
             premiumRing.setVisibility(View.VISIBLE);
             premiumBadge.setVisibility(View.VISIBLE);
         } else {
+            premiumButton.setVisibility(View.VISIBLE);
             premiumButton.setOnClickListener(view -> {
                 activity.startActivity(new Intent(activity, PremiumActivity.class));
                 drawerLayout.closeDrawer(GravityCompat.START);
@@ -182,9 +185,6 @@ public class DrawerHelper {
             drawerLayout.openDrawer(GravityCompat.START);
     }
 
-    /**
-     * FIX: Replaced Gallery Intent with modern Photo Picker
-     */
     private void setupPhotoPicker() {
         pickMedia = activity.registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
             if (uri != null) {
@@ -222,7 +222,6 @@ public class DrawerHelper {
             profileImage.setImageResource(R.drawable.ic_profile);
         }
 
-        // Updated listener to launch Photo Picker
         profileUpdateButton.setOnClickListener(v -> pickMedia.launch(new PickVisualMediaRequest.Builder()
                 .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
                 .build()));
@@ -291,7 +290,7 @@ public class DrawerHelper {
             ImageDecoder.Source source = ImageDecoder.createSource(activity.getContentResolver(), uri);
             Bitmap bitmap = ImageDecoder.decodeBitmap(source);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            int quality = 80; // Start slightly lower for faster processing
+            int quality = 80;
             bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream);
 
             while (outputStream.toByteArray().length > 100 * 1024 && quality > 10) {
