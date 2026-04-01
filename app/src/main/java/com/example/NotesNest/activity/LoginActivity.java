@@ -32,9 +32,9 @@ import androidx.security.crypto.MasterKey;
 
 import com.example.NotesNest.AnimatedRunningBorderLayout;
 import com.example.NotesNest.FirebaseHelper;
-import com.example.NotesNest.R;
+import com.hemanth.NotesNest.R;
 import com.example.NotesNest.SingleColorRunningBorderLayout;
-import com.example.NotesNest.databinding.ActivityLoginBinding;
+import com.hemanth.NotesNest.databinding.ActivityLoginBinding;
 import com.example.NotesNest.utils.AnalyticsHelper;
 import com.example.NotesNest.utils.ThemeManager;
 import com.example.NotesNest.utils.ValidationUtils;
@@ -78,10 +78,16 @@ public class LoginActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         binding = ActivityLoginBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.loginLayout), (v, insets) -> {
+        
+        // Handle Window Insets for System Bars and Keyboard
+        ViewCompat.setOnApplyWindowInsetsListener(binding.loginLayout, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
+            Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
+            
+            // Apply padding to avoid overlapping with system bars (status/nav) 
+            // and the IME (keyboard)
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, Math.max(systemBars.bottom, ime.bottom));
+            return WindowInsetsCompat.CONSUMED;
         });
 
         firebaseHelper = new FirebaseHelper();

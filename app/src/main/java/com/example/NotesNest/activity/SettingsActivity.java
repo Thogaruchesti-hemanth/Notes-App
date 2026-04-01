@@ -28,10 +28,11 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.example.NotesNest.R;
+import com.hemanth.NotesNest.R;
 import com.example.NotesNest.backups.ImportManager;
 import com.example.NotesNest.backups.LocalBackupManager;
 import com.example.NotesNest.utils.CommonDialogs;
+import com.example.NotesNest.utils.PremiumManager;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
 import com.example.NotesNest.utils.ThemeManager;
 import com.google.android.gms.ads.AdRequest;
@@ -58,6 +59,7 @@ public class SettingsActivity extends AppCompatActivity {
     private boolean isPremiumUser;
     private AdView adView;
     private AdRequest adRequest;
+    private PremiumManager premiumManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,7 +74,8 @@ public class SettingsActivity extends AppCompatActivity {
             return insets;
         });
 
-        isPremiumUser = new SharedPreferenceUtil(this).isUserPremium();
+        premiumManager = new PremiumManager(this);
+        isPremiumUser = premiumManager.isPremium();
 
         initViews();
         setupOptions();
@@ -81,19 +84,17 @@ public class SettingsActivity extends AppCompatActivity {
         setupNotesSpinner();
         setupThemeSpinner();
         setupDriveBackupPremium();
+        setupAds();
+    }
 
+    private void setupAds() {
+        if (isPremiumUser) {
+            if (adView != null) adView.setVisibility(View.GONE);
+            return;
+        }
         MobileAds.initialize(this);
-
-        // on below line we are initializing
-        // our ad view with its id
         adView = findViewById(R.id.adView1);
-
-        // on below line we are
-        // initializing our ad request.
         adRequest = new AdRequest.Builder().build();
-
-        // on below line we are loading our
-        // ad view with the ad request
         adView.loadAd(adRequest);
     }
 
@@ -276,6 +277,7 @@ public class SettingsActivity extends AppCompatActivity {
         versionTextView = findViewById(R.id.tvVersion);
         findViewById(R.id.layoutChangePassword).setVisibility(View.GONE);
         findViewById(R.id.ivBackArrow).setOnClickListener(v -> finish());
+        adView = findViewById(R.id.adView1);
 
         try {
             PackageInfo p = getPackageManager().getPackageInfo(getPackageName(), 0);

@@ -67,7 +67,7 @@ public interface NoteDao {
     @Query("SELECT notes.* FROM notes JOIN notes_fts ON notes.id = notes_fts.rowid " +
             "WHERE notes.userId = :userId AND notes.isDeleted = 0 AND notes_fts MATCH :query " +
             "ORDER BY notes.updatedAt DESC")
-    LiveData<List<NoteEntity>> fullTextSearch(int userId, String query);
+    LiveData<List<NoteEntity>> fullTextSearch(String userId, String query);
 
     // ------------------------------------------
     // SYNC / OFFLINE-FIRST
@@ -75,7 +75,7 @@ public interface NoteDao {
 
     // Get all unsynced notes
     @Query("SELECT * FROM notes WHERE userId = :userId AND isSynced = 0 AND isDeleted = 0")
-    LiveData<List<NoteEntity>> getPendingSyncNotes(int userId);
+    LiveData<List<NoteEntity>> getPendingSyncNotes(String userId);
 
     // Mark note as synced
     @Query("UPDATE notes SET isSynced = 1, updatedAt = :updateTime WHERE id = :noteId")

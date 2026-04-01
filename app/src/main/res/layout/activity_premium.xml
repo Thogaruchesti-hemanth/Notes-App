@@ -51,6 +51,7 @@
             android:layout_marginTop="@dimen/margin_20"
             android:background="@drawable/bg_plan_unselected"
             android:orientation="horizontal"
+            android:gravity="center_vertical"
             android:padding="@dimen/padding_16">
 
             <RadioButton
@@ -62,10 +63,11 @@
                 app:buttonTint="@color/radio_selector_yellow" />
 
             <TextView
+                android:id="@+id/tvPriceMonthly"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/margin_12"
-                android:text="@string/text_monthly_50_month"
+                android:text="Monthly - Fetching..."
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -77,6 +79,7 @@
             android:layout_marginTop="@dimen/margin_12"
             android:background="@drawable/bg_plan_selected"
             android:orientation="horizontal"
+            android:gravity="center_vertical"
             android:padding="@dimen/padding_16">
 
             <RadioButton
@@ -89,10 +92,11 @@
                 app:buttonTint="@color/radio_selector_yellow" />
 
             <TextView
+                android:id="@+id/tvPriceYearly"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/margin_12"
-                android:text="@string/text_yearly_299_year"
+                android:text="Yearly - Fetching..."
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -104,6 +108,7 @@
             android:layout_marginTop="@dimen/margin_12"
             android:background="@drawable/bg_plan_unselected"
             android:orientation="horizontal"
+            android:gravity="center_vertical"
             android:padding="@dimen/padding_16">
 
             <RadioButton
@@ -115,10 +120,11 @@
                 app:buttonTint="@color/radio_selector_yellow" />
 
             <TextView
+                android:id="@+id/tvPriceLifetime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/margin_12"
-                android:text="@string/text_lifetime_499_one_time"
+                android:text="Lifetime - Fetching..."
                 android:textStyle="bold" />
         </LinearLayout>
 

@@ -11,7 +11,7 @@ import android.widget.Toast;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
-import com.example.NotesNest.R;
+import com.hemanth.NotesNest.R;
 
 public class ReminderReceiver extends BroadcastReceiver {
 

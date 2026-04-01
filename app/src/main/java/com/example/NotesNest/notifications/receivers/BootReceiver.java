@@ -9,6 +9,7 @@ import android.util.Log;
 import com.example.NotesNest.databases.entities.ReminderEntity;
 import com.example.NotesNest.databases.repositories.ReminderRepository;
 import com.example.NotesNest.notifications.schedulers.NotificationScheduler;
+import com.example.NotesNest.utils.SharedPreferenceUtil;
 
 public class BootReceiver extends BroadcastReceiver {
 
@@ -23,8 +24,9 @@ public class BootReceiver extends BroadcastReceiver {
         Log.d(TAG, "Device booted — rescheduling reminders");
 
         ReminderRepository repo = new ReminderRepository((Application) context.getApplicationContext());
+        String currentUserId = new SharedPreferenceUtil(context).getUserId();
 
-        repo.getAllReminders(1, reminders -> {
+        repo.getAllReminders(currentUserId, reminders -> {
             long now = System.currentTimeMillis();
             for (ReminderEntity r : reminders) {
                 long notifyAt = r.notificationTime;
