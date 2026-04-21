@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.NotesNest.FirebaseHelper;
-import com.hemanth.NotesNest.R;
+import com.example.NotesNest.R;
 import com.example.NotesNest.adapter.FeatureAdapter;
 import com.example.NotesNest.models.FeatureItem;
 import com.example.NotesNest.utils.BillingManager;

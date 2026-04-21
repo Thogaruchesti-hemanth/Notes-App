@@ -19,7 +19,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.hemanth.NotesNest.R;
+import com.example.NotesNest.R;
 import com.example.NotesNest.databases.AppDatabase;
 import com.example.NotesNest.utils.AnalyticsHelper;
 import com.example.NotesNest.utils.DrawerHelper;

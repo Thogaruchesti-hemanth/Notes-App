@@ -28,7 +28,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.NotesNest.FirebaseHelper;
-import com.hemanth.NotesNest.R;
+import com.example.NotesNest.R;
 import com.example.NotesNest.activity.HelpAndSupportActivity;
 import com.example.NotesNest.activity.PremiumActivity;
 import com.example.NotesNest.activity.SettingsActivity;

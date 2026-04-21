@@ -28,7 +28,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.hemanth.NotesNest.R;
+import com.example.NotesNest.R;
 import com.example.NotesNest.backups.ImportManager;
 import com.example.NotesNest.backups.LocalBackupManager;
 import com.example.NotesNest.utils.CommonDialogs;

@@ -13,7 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import com.hemanth.NotesNest.R;
+import com.example.NotesNest.R;
 import com.example.NotesNest.activity.MainActivity;
 import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.databases.repositories.NoteRepository;

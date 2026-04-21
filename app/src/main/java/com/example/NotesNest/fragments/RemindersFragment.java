@@ -21,10 +21,9 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.hemanth.NotesNest.R;
+import com.example.NotesNest.R;
 import com.example.NotesNest.activity.EditReminderActivity;
 import com.example.NotesNest.adapter.CalendarAdapter;
-import com.example.NotesNest.adapter.TimelineAdapter;
 import com.example.NotesNest.databases.ViewModels.ReminderViewModel;
 import com.example.NotesNest.databases.entities.ReminderEntity;
 import com.example.NotesNest.models.CalendarItem;
@@ -138,7 +137,7 @@ public class RemindersFragment extends Fragment {
     /* ---------------- TIMELINE ---------------- */
 
     private void setupTimeline(List<Task> tasks) {
-        TimelineAdapter adapter = new TimelineAdapter(
+        com.hemanth.NotesNest.adapter.TimelineAdapter adapter = new com.hemanth.NotesNest.adapter.TimelineAdapter(
                 requireContext(),
                 tasks,
                 this::showReminderOptions

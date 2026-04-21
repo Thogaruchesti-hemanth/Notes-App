@@ -11,7 +11,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.splashscreen.SplashScreen;
 
-import com.hemanth.NotesNest.R;
+import com.example.NotesNest.R;
 import com.example.NotesNest.utils.AdManager;
 import com.example.NotesNest.utils.AnalyticsHelper;
 import com.example.NotesNest.utils.DBSeedUtil;

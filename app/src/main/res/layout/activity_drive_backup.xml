@@ -3,36 +3,20 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     android:background="?attr/colorSecondary"
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- App Bar -->
-    <LinearLayout
-        android:id="@+id/appbar_root"
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginVertical="@dimen/margin_20"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
-
-        <ImageView
-            android:id="@+id/back_arrow_icon"
-            android:layout_width="@dimen/size_32"
-            android:layout_height="@dimen/size_32"
-            android:contentDescription="@string/text_back_button"
-            android:src="@drawable/ic_back_arrow" />
-
-        <TextView
-            android:id="@+id/title_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/size_32"
-            android:text="Drive Backup"
-            android:textColor="?attr/colorPrimary"
-            android:textSize="@dimen/text_22"
-            android:textStyle="bold" />
-    </LinearLayout>
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorSecondary"
+        android:title="@string/text_drive_backup"
+        android:titleTextColor="@color/tabSelectedTextColor"
+        app:navigationIcon="@drawable/ic_back_arrow"
+        app:navigationIconTint="?attr/colorPrimary" />
 
     <ScrollView
         android:id="@+id/scrollView"
@@ -40,7 +24,8 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:fillViewport="true"
-        android:scrollbars="none">
+        android:scrollbars="none"
+        tools:ignore="SpeakableTextPresentCheck">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -62,13 +47,14 @@
                     android:layout_height="@dimen/size_120"
                     android:layout_marginBottom="@dimen/margin_20"
                     android:src="@drawable/ic_profile"
-                    android:tint="@color/tabSelectedTextColorLight" />
+                    android:contentDescription="@string/text_backup_account_profile"
+                    app:tint="@color/tabSelectedTextColorLight" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/margin_8"
-                    android:text="Google Drive Backup"
+                    android:text="@string/text_google_drive_backup"
                     android:textColor="?attr/colorPrimary"
                     android:textSize="@dimen/text_24"
                     android:textStyle="bold" />
@@ -80,7 +66,7 @@
                     android:layout_marginBottom="@dimen/margin_24"
                     android:gravity="center"
                     android:lineSpacingExtra="4dp"
-                    android:text="Securely backup your notes and attachments to Google Drive. Your data will be encrypted and stored safely."
+                    android:text="@string/text_securely_backup_your_notes_and_attachments_to_google_drive_your_data_will_be_encrypted_and_stored_safely"
                     android:textColor="?attr/colorPrimary"
                     android:textSize="@dimen/text_14" />
 
@@ -94,7 +80,7 @@
                     android:drawableStart="@drawable/ic_google"
                     android:drawablePadding="@dimen/padding_8"
                     android:padding="@dimen/padding_12"
-                    android:text="Connect Google Account"
+                    android:text="@string/text_connect_google_account"
                     android:textColor="?attr/colorSecondary"
                     android:textSize="@dimen/text_16" />
 
@@ -103,7 +89,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/margin_16"
                     android:gravity="center"
-                    android:text="Your notes will be backed up based on your selected mode"
+                    android:text="@string/text_your_notes_will_be_backed_up_based_on_your_selected_mode"
                     android:textColor="@color/grey"
                     android:textSize="@dimen/text_12" />
             </LinearLayout>
@@ -118,43 +104,60 @@
                 android:orientation="vertical"
                 android:visibility="gone">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <ImageView
+                    <com.google.android.material.imageview.ShapeableImageView
+                        android:id="@+id/imgProfile"
                         android:layout_width="@dimen/size_80"
                         android:layout_height="@dimen/size_80"
                         android:src="@drawable/ic_profile"
-                        android:tint="@color/tabSelectedTextColorLight" />
+                        android:scaleType="centerCrop"
+                        app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full" />
+
+                    <TextView
+                        android:id="@+id/txtName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="@string/text_user_name"
+                        android:textColor="?attr/colorPrimary"
+                        android:textSize="@dimen/text_18"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/txtEmail"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="4dp"
                         android:maxWidth="300dp"
                         android:ellipsize="middle"
-                        android:text="Not signed in"
+                        android:text="@string/text_not_signed_in"
                         android:textColor="?attr/colorPrimary"
-                        android:textSize="@dimen/text_16" />
+                        android:textSize="@dimen/text_14" />
 
                     <TextView
                         android:id="@+id/txtStatus"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="12dp"
                         android:background="@drawable/btn_rounded_blue"
                         android:gravity="center"
                         android:paddingHorizontal="16dp"
                         android:paddingVertical="8dp"
                         android:text="@string/text_not_connected_to_drive"
-                        android:textColor="@color/white"
+                        android:textColor="?attr/colorSecondary"
                         android:textSize="@dimen/text_12" />
-                </LinearLayout>
             </LinearLayout>
+
+            <!-- Progress Indicator -->
+            <com.google.android.material.progressindicator.LinearProgressIndicator
+                android:id="@+id/backupProgress"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:indeterminate="true"
+                android:visibility="gone"
+                app:indicatorColor="?attr/colorPrimary"
+                app:trackColor="@color/tabSelectedTextColorLight"
+                app:trackThickness="4dp" />
 
             <!-- Settings Section -->
             <TextView
@@ -163,7 +166,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:paddingHorizontal="@dimen/padding_12"
-                android:text="BACKUP SETTINGS"
+                android:text="@string/text_backup_settings"
                 android:textColor="@color/tabSelectedTextColorLight"
                 android:textSize="@dimen/text_16"
                 android:textStyle="bold"
@@ -189,23 +192,24 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
+                        android:orientation="vertical"
                         android:paddingVertical="12dp"
                         android:paddingHorizontal="8dp">
 
-                        <TextView
-                            android:layout_width="0dp"
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/inputLayoutFrequency"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Backup Mode"
-                            android:textColor="?attr/colorPrimary"
-                            android:textSize="@dimen/text_14" />
+                            android:hint="@string/text_select_frequency"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
 
-                        <Spinner
-                            android:id="@+id/spinnerFrequency"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:minWidth="150dp" />
+                            <AutoCompleteTextView
+                                android:id="@+id/dropdownFrequency"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:hint="@string/text_backup_frequency"
+                                android:inputType="none"/>
+                        </com.google.android.material.textfield.TextInputLayout>
                     </LinearLayout>
 
                     <!-- Enable Automatic Backups -->
@@ -220,14 +224,18 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Enable Automatic Backups"
+                            android:text="@string/text_enable_automatic_backups"
                             android:textColor="?attr/colorPrimary"
                             android:textSize="@dimen/text_14" />
 
-                        <Switch
+                        <androidx.appcompat.widget.SwitchCompat
                             android:id="@+id/switchAutoBackup"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            android:layout_height="wrap_content"
+                            android:thumb="@drawable/selector_switch_thumb"
+                            app:track="@drawable/selector_switch_track"
+                            app:trackTint="@null"
+                            app:thumbTint="@null"/>
                     </LinearLayout>
 
                     <!-- Attachments -->
@@ -242,14 +250,18 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Include Attachments"
+                            android:text="@string/text_include_attachments"
                             android:textColor="?attr/colorPrimary"
                             android:textSize="@dimen/text_14" />
 
-                        <Switch
+                        <androidx.appcompat.widget.SwitchCompat
                             android:id="@+id/switchAttachments"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            android:layout_height="wrap_content"
+                            android:thumb="@drawable/selector_switch_thumb"
+                            app:track="@drawable/selector_switch_track"
+                            app:trackTint="@null"
+                            app:thumbTint="@null"/>
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -261,7 +273,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:paddingHorizontal="@dimen/padding_12"
-                android:text="BACKUP STATUS"
+                android:text="@string/text_backup_status"
                 android:textColor="@color/tabSelectedTextColorLight"
                 android:textSize="@dimen/text_16"
                 android:textStyle="bold"
@@ -288,8 +300,9 @@
                         android:layout_width="@dimen/size_32"
                         android:layout_height="@dimen/size_32"
                         android:layout_margin="@dimen/margin_8"
+                        android:contentDescription="@string/text_sync_icon"
                         android:src="@drawable/ic_sync"
-                        android:tint="@color/google_blue" />
+                        app:tint="@color/google_blue" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -302,7 +315,7 @@
                             android:id="@+id/lastBackupTextView"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Last Backup"
+                            android:text="@string/text_last_backup"
                             android:textColor="?attr/colorPrimary"
                             android:textSize="@dimen/text_14"
                             android:textStyle="bold" />
@@ -311,7 +324,7 @@
                             android:id="@+id/txtLastBackupTime"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Never backed up"
+                            android:text="@string/text_never_backed_up"
                             android:textColor="?attr/colorPrimary"
                             android:textSize="@dimen/text_12" />
                     </LinearLayout>
@@ -322,20 +335,22 @@
                         android:layout_height="wrap_content"
                         android:layout_margin="@dimen/margin_8"
                         android:src="@drawable/ic_tick_done"
-                        android:tint="@color/google_green"
+                        android:contentDescription="@string/text_backup_complete_icon"
+                        app:tint="@color/google_green"
                         android:visibility="gone" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <!-- Backup Now Button -->
-            <Button
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btnBackupNow"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:layout_marginHorizontal="40dp"
-                android:backgroundTint="?attr/colorPrimary"
-                android:text="Backup Now"
+                android:background="@drawable/btn_rounded"
+                android:text="@string/text_backup_now"
+                android:textAllCaps="false"
                 android:textColor="?attr/colorSecondary"
                 android:textSize="@dimen/text_16"
                 android:visibility="gone" />
@@ -349,7 +364,7 @@
                 android:layout_marginHorizontal="40dp"
                 android:gravity="center"
                 android:paddingVertical="12dp"
-                android:text="Disconnect Google Account"
+                android:text="@string/text_disconnect_google_account"
                 android:textColor="@color/red"
                 android:textSize="@dimen/text_14"
                 android:visibility="gone" />

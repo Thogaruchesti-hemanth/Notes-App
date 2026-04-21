@@ -6,6 +6,8 @@ import android.util.Log;
 
 import com.example.NotesNest.utils.AdManager;
 import com.example.NotesNest.utils.AnalyticsHelper;
+import com.example.NotesNest.utils.AppPreferences;
+import com.example.NotesNest.utils.AppToast;
 import com.google.android.gms.security.ProviderInstaller;
 import com.google.firebase.FirebaseApp;
 
@@ -20,6 +22,9 @@ public class NotesApplication extends Application {
     public void onCreate() {
         super.onCreate();
 
+        // 0. Initialize App Preferences
+        AppPreferences.init(this);
+
         // 1. Initialize Firebase
         FirebaseApp.initializeApp(this);
 
@@ -29,7 +34,10 @@ public class NotesApplication extends Application {
         // 3. Initialize Mobile Ads SDK
         AdManager.init(this);
 
-        // 4. Update Security Provider (ProviderInstaller)
+        // 4. Initialize Custom Toast Utility
+        AppToast.init(this);
+
+        // 5. Update Security Provider (ProviderInstaller)
         // This fixes SSL/TLS and GMS registration issues on older devices
         ProviderInstaller.installIfNeededAsync(this, new ProviderInstaller.ProviderInstallListener() {
             @Override
