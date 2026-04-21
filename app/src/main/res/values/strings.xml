@@ -169,5 +169,34 @@
     <string name="text_heading_2">Heading 2</string>
     <string name="text_heading_1">Heading 1</string>
     <string name="text_your_complete_productivity_hub">Your Complete Productivity Hub</string>
+    <string name="text_connected">Connected</string>
+    <string name="text_backing_up">Backing up...</string>
+    <string name="text_backup_complete">✓ Backup complete</string>
+    <string name="text_cloud_backup_is_a_premium_feature_secure_your_notes_across_all_your_devices_by_upgrading_today">Cloud Backup is a Premium feature. Secure your notes across all your devices by upgrading today!</string>
+    <string name="text_auto_backup_enabled">Auto backup enabled</string>
+    <string name="text_upgrade_to_premium_to_enable_cloud_backup">Upgrade to Premium to enable Cloud Backup.</string>
+    <string name="text_manual_cloud_backup_is_a_premium_feature">Manual cloud backup is a premium feature.</string>
+    <string name="text_backup_completed_successfully">Backup Completed Successfully</string>
+    <string name="text_backup_now">Backup Now</string>
+    <string name="text_backup_failed">Backup failed</string>
+    <string name="text_disconnect_google_account">Disconnect Google Account</string>
+    <string name="text_never_backed_up">Never backed up</string>
+    <string name="text_last_backup">Last Backup</string>
+    <string name="text_backup_status">BACKUP STATUS</string>
+    <string name="text_include_attachments">Include Attachments</string>
+    <string name="text_enable_automatic_backups">Enable Automatic Backups</string>
+    <string name="text_backup_mode">Backup Mode</string>
+    <string name="text_backup_settings">BACKUP SETTINGS</string>
+    <string name="text_not_signed_in">Not signed in</string>
+    <string name="text_your_notes_will_be_backed_up_based_on_your_selected_mode">Your notes will be backed up based on your selected mode</string>
+    <string name="text_connect_google_account">Connect Google Account</string>
+    <string name="text_securely_backup_your_notes_and_attachments_to_google_drive_your_data_will_be_encrypted_and_stored_safely">Securely backup your notes and attachments to Google Drive. Your data will be encrypted and stored safely.</string>
+    <string name="text_google_drive_backup">Google Drive Backup</string>
+    <string name="text_drive_backup">Drive Backup</string>
+    <string name="text_backup_complete_icon">backup complete icon</string>
+    <string name="text_sync_icon">sync icon</string>
+    <string name="text_select_frequency">Select Frequency</string>
+    <string name="text_backup_frequency">Backup Frequency</string>
+    <string name="text_backup_account_profile">Backup Account Profile</string>
 
 </resources>

@@ -18,9 +18,9 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.hemanth.NotesNest.R;
+import com.example.NotesNest.R;
 import com.example.NotesNest.databases.entities.ReminderEntity;
-import com.hemanth.NotesNest.databinding.ActivityEditReminderBinding;
+import com.example.NotesNest.databinding.ActivityEditReminderBinding;
 import com.example.NotesNest.notifications.schedulers.NotificationScheduler;
 import com.example.NotesNest.utils.AnalyticsHelper;
 import com.example.NotesNest.utils.CommonDialogs;

@@ -12,7 +12,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.hemanth.NotesNest.R;
+import com.example.NotesNest.R;
 import com.example.NotesNest.activity.NoteWidgetConfigureActivity;
 import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.utils.DateTimeUtils;

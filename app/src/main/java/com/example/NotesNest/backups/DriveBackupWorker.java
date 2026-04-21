@@ -1,37 +1,35 @@
 package com.example.NotesNest.backups;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.example.NotesNest.utils.AppPreferences;
+import com.example.NotesNest.utils.constants.PrefKeys;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.http.FileContent;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
-import com.google.api.client.http.FileContent;
+import com.google.api.services.drive.model.FileList;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class DriveBackupWorker extends Worker {
 
     private static final String TAG = "DriveBackupWorker";
-    private static final String BACKUP_PREFS = "backup_prefs";
-    private static final String LAST_BACKUP_KEY = "last_backup";
-    private static final String BACKUP_FILENAME_PREFIX = "NotesNest_Backup_";
-    private static final String BACKUP_FILE_EXTENSION = ".txt";
+    private static final String BACKUP_FILE_NAME = "NotesNest_Backup_Data.txt";
 
     public DriveBackupWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -42,168 +40,139 @@ public class DriveBackupWorker extends Worker {
     public Result doWork() {
         Log.d(TAG, "Starting backup worker...");
 
-        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(getApplicationContext());
-        if (account == null) {
-            Log.e(TAG, "No Google account signed in");
+        AppPreferences.init(getApplicationContext());
+        AppPreferences appPrefs = AppPreferences.getInstance();
+
+        String email = appPrefs.getString(PrefKeys.BACKUP_ACCOUNT_EMAIL, null);
+        boolean isSignedIn = appPrefs.getBoolean(PrefKeys.IS_SIGNED_IN, false);
+
+        if (email == null || !isSignedIn) {
+            Log.e(TAG, "Backup failed: User not signed in.");
             return Result.failure();
         }
 
-        Drive driveService = null;
-        java.io.File backupFile = null;
+        java.io.File localBackupFile = null;
 
         try {
-            // Create Drive service
-            driveService = getDriveService(account);
+            Drive driveService = getDriveService(email);
+            localBackupFile = createLocalBackupFile(email);
 
-            // Create backup file
-            backupFile = createBackupFile();
-            if (backupFile == null) {
-                Log.e(TAG, "Failed to create backup file");
-                return Result.failure();
+            if (localBackupFile == null) return Result.failure();
+
+            // Professional Approach: Update if exists, Create if not.
+            String existingFileId = findExistingBackupFile(driveService);
+            
+            boolean success;
+            if (existingFileId != null) {
+                Log.d(TAG, "Existing backup found. Updating file ID: " + existingFileId);
+                success = updateExistingFile(driveService, existingFileId, localBackupFile);
+            } else {
+                Log.d(TAG, "No existing backup found. Creating new file.");
+                success = createNewFile(driveService, localBackupFile);
             }
 
-            // Upload to Drive
-            boolean uploadSuccess = uploadToDrive(driveService, backupFile);
-
-            if (uploadSuccess) {
-                // Update last backup timestamp
-                updateLastBackupTimestamp();
-                Log.d(TAG, "Backup completed successfully");
+            if (success) {
+                updateLastBackupTimestamp(appPrefs);
                 return Result.success();
             } else {
-                Log.e(TAG, "Upload to Drive failed");
                 return Result.failure();
             }
 
         } catch (Exception e) {
-            Log.e(TAG, "Backup failed: " + e.getMessage(), e);
-
-            // Determine if we should retry
-            if (shouldRetry(e)) {
-                return Result.retry();
-            } else {
-                return Result.failure();
-            }
-
+            Log.e(TAG, "Worker Exception: " + e.getMessage(), e);
+            return shouldRetry(e) ? Result.retry() : Result.failure();
         } finally {
-            // Clean up temporary backup file
-            if (backupFile != null && backupFile.exists()) {
-                boolean deleted = backupFile.delete();
-                if (!deleted) {
-                    Log.w(TAG, "Failed to delete temporary backup file");
-                }
+            if (localBackupFile != null && localBackupFile.exists()) {
+                localBackupFile.delete();
             }
         }
     }
 
-    private Drive getDriveService(GoogleSignInAccount account) {
+    private Drive getDriveService(String email) {
         GoogleAccountCredential credential = GoogleAccountCredential.usingOAuth2(
                 getApplicationContext(),
-                Collections.singleton(DriveScopes.DRIVE_FILE)
+                Arrays.asList(DriveScopes.DRIVE_FILE, DriveScopes.DRIVE_APPDATA)
         );
-
-        credential.setSelectedAccount(account.getAccount());
+        credential.setSelectedAccountName(email);
 
         return new Drive.Builder(
                 new NetHttpTransport(),
                 GsonFactory.getDefaultInstance(),
                 credential)
-                .setApplicationName("NotesNest Backup")
+                .setApplicationName("NotesNest")
                 .build();
     }
 
-    private java.io.File createBackupFile() {
+    private String findExistingBackupFile(Drive driveService) throws IOException {
+        String query = "name = '" + BACKUP_FILE_NAME + "' and trashed = false";
+        FileList result = driveService.files().list()
+                .setQ(query)
+                .setSpaces("drive")
+                .setFields("files(id, name)")
+                .execute();
+
+        List<File> files = result.getFiles();
+        if (files == null || files.isEmpty()) {
+            return null;
+        }
+        return files.get(0).getId();
+    }
+
+    private boolean createNewFile(Drive driveService, java.io.File localFile) throws IOException {
+        File fileMetadata = new File();
+        fileMetadata.setName(BACKUP_FILE_NAME);
+        fileMetadata.setDescription("NotesNest Cloud Backup");
+        fileMetadata.setMimeType("text/plain");
+
+        FileContent mediaContent = new FileContent("text/plain", localFile);
+        File file = driveService.files().create(fileMetadata, mediaContent)
+                .setFields("id")
+                .execute();
+        
+        return file.getId() != null;
+    }
+
+    private boolean updateExistingFile(Drive driveService, String fileId, java.io.File localFile) throws IOException {
+        File fileMetadata = new File();
+        // Update timestamp in description to show progress in Drive info
+        fileMetadata.setDescription("Last Updated: " + new Date().toString());
+
+        FileContent mediaContent = new FileContent("text/plain", localFile);
+        File updatedFile = driveService.files().update(fileId, fileMetadata, mediaContent)
+                .setFields("id")
+                .execute();
+        
+        return updatedFile.getId() != null;
+    }
+
+    private java.io.File createLocalBackupFile(String email) {
         try {
-            // Create a unique filename with timestamp
-            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
-                    .format(new Date());
-            String filename = BACKUP_FILENAME_PREFIX + timestamp + BACKUP_FILE_EXTENSION;
-
-            // Create file in app's cache directory
             java.io.File cacheDir = getApplicationContext().getCacheDir();
-            java.io.File backupFile = new java.io.File(cacheDir, filename);
+            java.io.File backupFile = new java.io.File(cacheDir, "temp_backup.txt");
 
-            // Write backup data to file
-            // TODO: Replace with your actual backup data generation logic
             try (FileWriter writer = new FileWriter(backupFile)) {
-                writer.write("NotesNest Backup\n");
-                writer.write("Created at: " + new Date() + "\n");
-                writer.write("Version: 1.0\n");
-                writer.write("--- Content ---\n");
-                // Add your actual note data here
-                writer.write("Sample note data...\n");
-                writer.write("Backup completed successfully.\n");
+                writer.write("NotesNest Professional Backup\n");
+                writer.write("User: " + email + "\n");
+                writer.write("Backup Date: " + new Date() + "\n");
+                writer.write("----------------------------\n");
+                writer.write("SYNC DATA START\n");
+                // TODO: Replace with real JSON serialization of user notes
+                writer.write("Real-time note data would go here...\n");
+                writer.write("SYNC DATA END\n");
             }
-
-            Log.d(TAG, "Backup file created: " + backupFile.getAbsolutePath());
             return backupFile;
-
         } catch (IOException e) {
-            Log.e(TAG, "Failed to create backup file: " + e.getMessage(), e);
+            Log.e(TAG, "Local file creation failed", e);
             return null;
         }
     }
 
-    private boolean uploadToDrive(Drive driveService, java.io.File localFile) throws IOException {
-        try {
-            // Create file metadata
-            File fileMetadata = new File();
-            fileMetadata.setName(localFile.getName());
-            fileMetadata.setDescription("NotesNest automatic backup");
-            fileMetadata.setMimeType("text/plain");
-
-            // Add folder support if needed
-            // fileMetadata.setParents(Collections.singletonList("folderId"));
-
-            // Create file content
-            FileContent mediaContent = new FileContent("text/plain", localFile);
-
-            // Execute upload
-            File uploadedFile = driveService.files()
-                    .create(fileMetadata, mediaContent)
-                    .setFields("id, name")
-                    .execute();
-
-            Log.d(TAG, "File uploaded to Drive. ID: " + uploadedFile.getId() +
-                    ", Name: " + uploadedFile.getName());
-            return true;
-
-        } catch (IOException e) {
-            Log.e(TAG, "Drive upload failed: " + e.getMessage(), e);
-            throw e;
-        }
-    }
-
-    private void updateLastBackupTimestamp() {
-        SharedPreferences prefs = getApplicationContext()
-                .getSharedPreferences(BACKUP_PREFS, Context.MODE_PRIVATE);
-
-        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-                .format(new Date());
-
-        prefs.edit()
-                .putString(LAST_BACKUP_KEY, timestamp)
-                .apply();
-
-        Log.d(TAG, "Last backup timestamp updated: " + timestamp);
+    private void updateLastBackupTimestamp(AppPreferences appPrefs) {
+        String ts = new SimpleDateFormat("MMM dd, hh:mm a", Locale.getDefault()).format(new Date());
+        appPrefs.putString(PrefKeys.LAST_BACKUP_TIME, ts);
     }
 
     private boolean shouldRetry(Exception e) {
-        // Retry on network-related errors
-        if (e instanceof IOException) {
-            return true;
-        }
-
-        // Check error message for retryable conditions
-        String message = e.getMessage();
-        if (message != null) {
-            String lowerMessage = message.toLowerCase();
-            return lowerMessage.contains("network") ||
-                    lowerMessage.contains("timeout") ||
-                    lowerMessage.contains("unavailable") ||
-                    lowerMessage.contains("retry");
-        }
-
-        return false;
+        return e instanceof IOException;
     }
 }

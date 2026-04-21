@@ -27,18 +27,25 @@ import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.credentials.Credential;
+import androidx.credentials.CredentialManager;
+import androidx.credentials.GetCredentialRequest;
+import androidx.credentials.GetCredentialResponse;
+import androidx.credentials.exceptions.GetCredentialException;
 import androidx.security.crypto.EncryptedSharedPreferences;
 import androidx.security.crypto.MasterKey;
 
 import com.example.NotesNest.AnimatedRunningBorderLayout;
 import com.example.NotesNest.FirebaseHelper;
-import com.hemanth.NotesNest.R;
+import com.example.NotesNest.R;
 import com.example.NotesNest.SingleColorRunningBorderLayout;
-import com.hemanth.NotesNest.databinding.ActivityLoginBinding;
+import com.example.NotesNest.databinding.ActivityLoginBinding;
 import com.example.NotesNest.utils.AnalyticsHelper;
 import com.example.NotesNest.utils.ThemeManager;
 import com.example.NotesNest.utils.ValidationUtils;
 import com.example.NotesNest.utils.formaters.ValidationTextWatcher;
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption;
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -46,31 +53,18 @@ import com.google.firebase.auth.FirebaseUser;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
-
-/**
- * LoginActivity - Cleaned (Option A)
- * <p>
- * Key characteristics:
- * - Uses ViewBinding for safer view access
- * - ActivityResultLauncher for both Google sign-in and image picking
- * - Clear separation between UI state toggles (login/signup)
- * - Consolidated validation helpers
- * - Secure session storage with EncryptedSharedPreferences
- * - Minimal, well-named helper methods for readability and long-term maintenance
- */
 public class LoginActivity extends AppCompatActivity {
     private static final String TAG = LoginActivity.class.getSimpleName();
     private ActivityLoginBinding binding;
     private FirebaseHelper firebaseHelper;
-    // Launchers
-    private ActivityResultLauncher<Intent> googleLauncher;
     private ActivityResultLauncher<Intent> imagePickerLauncher;
-    // In-memory selection
     private String selectedImageBase64 = "";
-    // Animated borders (small UI flourish in your original app)
     private SingleColorRunningBorderLayout loginBorder;
     private AnimatedRunningBorderLayout googleBorder;
+    private CredentialManager credentialManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,18 +73,15 @@ public class LoginActivity extends AppCompatActivity {
         binding = ActivityLoginBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         
-        // Handle Window Insets for System Bars and Keyboard
         ViewCompat.setOnApplyWindowInsetsListener(binding.loginLayout, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
-            
-            // Apply padding to avoid overlapping with system bars (status/nav) 
-            // and the IME (keyboard)
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, Math.max(systemBars.bottom, ime.bottom));
             return WindowInsetsCompat.CONSUMED;
         });
 
         firebaseHelper = new FirebaseHelper();
+        credentialManager = CredentialManager.create(this);
 
         initUi();
         registerLaunchers();
@@ -99,7 +90,6 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void setupRealtimeValidation() {
-        // Real-time validation for signup fields
         binding.loginEmail.addTextChangedListener(new ValidationTextWatcher(
                 binding.loginEmailLayout,
                 binding.loginEmail,
@@ -144,27 +134,6 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void registerLaunchers() {
-        // Google Sign-In launcher already used in your original code -- keep same callback shape
-        googleLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-            if (result.getData() != null && result.getResultCode() != RESULT_CANCELED) {
-                googleBorder.startLoading();
-                binding.googleSignInButton.setTextColor(ThemeManager.getThemeColor(this,R.color.black,R.color.white));
-                binding.googleSignInButton.setBackgroundColor(ThemeManager.getThemeColor(this,R.color.backgroundLight,R.color.black));
-                firebaseHelper.handleGoogleSignInResult(result.getData(), this, (userName, email) -> {
-                    googleBorder.stopLoading();
-                    binding.googleSignInButton.setTextColor(ThemeManager.getThemeColor(this,R.color.white,R.color.black));
-                    binding.googleSignInButton.setBackgroundColor(ThemeManager.getThemeColor(this,R.color.black,R.color.black));
-                    saveSession();
-                    navigateToMain();
-                });
-            } else {
-                googleBorder.stopLoading();
-                binding.googleSignInButton.setTextColor(ThemeManager.getThemeColor(this,R.color.white,R.color.black));
-                binding.googleSignInButton.setBackgroundColor(ThemeManager.getThemeColor(this,R.color.black,R.color.white));
-            }
-        });
-
-        // Image picker using ActivityResult API (replaces startActivityForResult)
         imagePickerLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
             if (result.getResultCode() == RESULT_OK && result.getData() != null && result.getData().getData() != null) {
                 handleImageResult(result.getData().getData());
@@ -194,14 +163,92 @@ public class LoginActivity extends AppCompatActivity {
 
         binding.googleSignInButton.setOnClickListener(v -> {
             clearFocusAndHideKeyboard();
-            firebaseHelper.signInWithGoogle(googleLauncher, this);
+            signInWithGoogle();
         });
 
         binding.termsCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> clearError());
 
     }
 
-    // ----------------- UI Mode Helpers -----------------
+    private void signInWithGoogle() {
+        googleBorder.startLoading();
+        binding.googleSignInButton.setTextColor(ThemeManager.getThemeColor(this, R.color.black, R.color.white));
+        binding.googleSignInButton.setBackgroundColor(ThemeManager.getThemeColor(this, R.color.backgroundLight, R.color.black));
+
+        GetGoogleIdOption googleIdOption = new GetGoogleIdOption.Builder()
+                .setFilterByAuthorizedAccounts(false)
+                .setServerClientId(getString(R.string.default_web_client_id))
+                .setAutoSelectEnabled(true)
+                .build();
+
+        GetCredentialRequest request = new GetCredentialRequest.Builder()
+                .addCredentialOption(googleIdOption)
+                .build();
+
+        Executor executor = Executors.newSingleThreadExecutor();
+
+        credentialManager.getCredentialAsync(
+                this,
+                request,
+                null,
+                executor,
+                new androidx.credentials.CredentialManagerCallback<GetCredentialResponse, GetCredentialException>() {
+                    @Override
+                    public void onResult(GetCredentialResponse result) {
+                        handleSignInResult(result.getCredential());
+                    }
+
+                    @Override
+                    public void onError(@NonNull GetCredentialException e) {
+                        runOnUiThread(() -> {
+                            googleBorder.stopLoading();
+                            binding.googleSignInButton.setTextColor(ThemeManager.getThemeColor(LoginActivity.this, R.color.white, R.color.black));
+                            binding.googleSignInButton.setBackgroundColor(ThemeManager.getThemeColor(LoginActivity.this, R.color.black, R.color.white));
+                            Log.e(TAG, "❌ Credential Manager Error: " + e.getMessage());
+                            Toast.makeText(LoginActivity.this, "Google Sign-In failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        });
+                    }
+                }
+        );
+    }
+
+    private void handleSignInResult(Credential credential) {
+        try {
+            String idToken = null;
+            if (credential instanceof GoogleIdTokenCredential googleIdTokenCredential) {
+                idToken = googleIdTokenCredential.getIdToken();
+            } else if (credential.getType().equals(GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL)) {
+                // Manually parse if it's the correct type but returned as a base Credential
+                GoogleIdTokenCredential googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.getData());
+                idToken = googleIdTokenCredential.getIdToken();
+            }
+
+            if (idToken != null) {
+                final String finalIdToken = idToken;
+                runOnUiThread(() -> {
+                    firebaseHelper.firebaseAuthWithGoogle(finalIdToken, this, (userName, email) -> {
+                        googleBorder.stopLoading();
+                        binding.googleSignInButton.setTextColor(ThemeManager.getThemeColor(this, R.color.white, R.color.black));
+                        binding.googleSignInButton.setBackgroundColor(ThemeManager.getThemeColor(this, R.color.black, R.color.black));
+                        saveSession();
+                        navigateToMain();
+                    });
+                });
+            } else {
+                Log.e(TAG, "Unexpected credential type: " + credential.getType());
+                runOnUiThread(() -> {
+                    googleBorder.stopLoading();
+                    showError("Sign-in error: Please try another Google account");
+                });
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error parsing credential", e);
+            runOnUiThread(() -> {
+                googleBorder.stopLoading();
+                showError("Sign-in failed. Please try again.");
+            });
+        }
+    }
 
     private boolean isLoginMode() {
         return "Login".contentEquals(binding.loginButton.getText());
@@ -239,8 +286,6 @@ public class LoginActivity extends AppCompatActivity {
         binding.loginButton.setText(R.string.login);
 
     }
-
-    // ----------------- Login / Signup -----------------
 
     private void loginUser() {
         final String email = binding.loginEmail.getText() == null ? "" : binding.loginEmail.getText().toString().trim();
@@ -338,7 +383,7 @@ public class LoginActivity extends AppCompatActivity {
 
         // disable button to prevent duplicate taps
         binding.loginButton.setEnabled(false);
-        firebaseHelper.signupUser(username, email, password, confirm, selectedImageBase64, this, new FirebaseHelper.SignupCallback() {
+        firebaseHelper.signupUser(username, email, password, selectedImageBase64, this, new FirebaseHelper.SignupCallback() {
             @Override
             public void onSignupSuccess(String userName, String email) {
                 binding.loginButton.setEnabled(true);
@@ -633,7 +678,7 @@ public class LoginActivity extends AppCompatActivity {
     private void disableErrorAnimations(@NonNull TextInputLayout layout) {
         layout.setErrorEnabled(false);
         layout.setError(null);
-        layout.jumpDrawablesToCurrentState(); // 👈 instantly stops any pending animations
+        layout.jumpDrawablesToCurrentState();
     }
 
     @Override

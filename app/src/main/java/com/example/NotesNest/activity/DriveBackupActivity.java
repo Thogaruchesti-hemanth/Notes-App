@@ -1,319 +1,509 @@
 package com.example.NotesNest.activity;
 
-import android.content.Intent;
-import android.content.SharedPreferences;
+import android.accounts.Account;
+import android.app.Activity;
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
+import android.view.animation.Animation;
+import android.view.animation.RotateAnimation;
 import android.widget.ArrayAdapter;
-import android.widget.CompoundButton;
-import android.widget.LinearLayout;
-import android.widget.Spinner;
-import android.widget.Switch;
-import android.widget.TextView;
-import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.IntentSenderRequest;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.cardview.widget.CardView;
+import androidx.credentials.ClearCredentialStateRequest;
+import androidx.credentials.Credential;
+import androidx.credentials.CredentialManager;
+import androidx.credentials.GetCredentialRequest;
+import androidx.credentials.GetCredentialResponse;
+import androidx.credentials.exceptions.GetCredentialException;
+import androidx.work.Constraints;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
-import com.hemanth.NotesNest.R;
+import com.example.NotesNest.FirebaseHelper;
+import com.example.NotesNest.R;
 import com.example.NotesNest.backups.DriveBackupWorker;
+import com.example.NotesNest.databinding.ActivityDriveBackupBinding;
+import com.example.NotesNest.models.BackupMode;
+import com.example.NotesNest.utils.AppLog;
+import com.example.NotesNest.utils.AppPreferences;
+import com.example.NotesNest.utils.AppToast;
 import com.example.NotesNest.utils.CommonDialogs;
 import com.example.NotesNest.utils.PremiumManager;
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInClient;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.common.api.ApiException;
+import com.example.NotesNest.utils.constants.PrefDefaults;
+import com.example.NotesNest.utils.constants.PrefKeys;
+import com.google.android.gms.auth.api.identity.AuthorizationRequest;
+import com.google.android.gms.auth.api.identity.Identity;
 import com.google.android.gms.common.api.Scope;
-import com.google.android.gms.tasks.Task;
-import com.google.android.material.button.MaterialButton;
-import com.google.android.material.textview.MaterialTextView;
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption;
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 import com.google.api.services.drive.DriveScopes;
+import com.squareup.picasso.Picasso;
 
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 public class DriveBackupActivity extends AppCompatActivity {
 
-    private static final String TAG = "DriveBackupActivity";
-    private static final int RC_SIGN_IN = 9001;
-
-    private LinearLayout layoutSetup, layoutAccountInfo;
-    private TextView txtEmail, txtStatus, txtLastBackupTime, textSettingsTitle, textStatusTitle;
-    private CardView cardSettings, cardStatus;
-    private Spinner spinnerFrequency;
-    private Switch switchAttachments, switchAutoBackup;
-    private MaterialButton btnBackupNow, btnAddAccount;
-    private MaterialTextView btnDisconnect;
-    private View backArrowIcon;
-
-    private GoogleSignInClient googleSignInClient;
-    private SharedPreferences backupPrefs;
+    private static final String TAG = DriveBackupActivity.class.getSimpleName();
+    private static final String UNIQUE_WORK_NAME = "DriveAutoBackupWork";
+    private AppPreferences appPreferences;
     private boolean isSignedIn = false;
-    private boolean isInitializing = true;
-    private boolean isRestoringUI = false;
     private PremiumManager premiumManager;
+    private FirebaseHelper firebaseHelper;
+    private androidx.credentials.CredentialManager credentialManager;
+    private ActivityResultLauncher<IntentSenderRequest> authorizationLauncher;
+    private ActivityDriveBackupBinding binding;
+    private RotateAnimation syncAnimation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_drive_backup);
+        binding = ActivityDriveBackupBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         premiumManager = new PremiumManager(this);
-        
-        // Immediate Premium Check
-        if (!premiumManager.canUseCloudBackup()) {
-            CommonDialogs.showPremiumRequiredDialog(this, 
-                "Cloud Backup is a Premium feature. Secure your notes across all your devices by upgrading today!");
-            // We don't finish() here so they can see what they're missing, 
-            // but we'll disable interactions.
-        }
+        appPreferences = AppPreferences.getInstance();
+        firebaseHelper = new FirebaseHelper();
+        credentialManager = CredentialManager.create(this);
+        binding.toolbar.setTitle(R.string.text_drive_backup);
+        binding.toolbar.setNavigationOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
 
-        initializeViews();
-        setupGoogleSignIn();
-        setupBackButton();
-        setupSpinner();
+        initAnimations();
+        registerAuthorizationLauncher();
+        validateCloudBackupPremiumAccess();
+        setupDropdown();
         restoreUIState();
         setupClickListeners();
     }
 
-    private void initializeViews() {
-        layoutSetup = findViewById(R.id.layoutSetup);
-        layoutAccountInfo = findViewById(R.id.layoutAccountInfo);
-        txtEmail = findViewById(R.id.txtEmail);
-        txtStatus = findViewById(R.id.txtStatus);
-        textSettingsTitle = findViewById(R.id.textSettingsTitle);
-        cardSettings = findViewById(R.id.cardSettings);
-        spinnerFrequency = findViewById(R.id.spinnerFrequency);
-        switchAttachments = findViewById(R.id.switchAttachments);
-        switchAutoBackup = findViewById(R.id.switchAutoBackup);
-        textStatusTitle = findViewById(R.id.textStatusTitle);
-        cardStatus = findViewById(R.id.cardStatus);
-        txtLastBackupTime = findViewById(R.id.txtLastBackupTime);
-        btnBackupNow = findViewById(R.id.btnBackupNow);
-        btnDisconnect = findViewById(R.id.btnDisconnect);
-        btnAddAccount = findViewById(R.id.btnAddAccount);
-        backArrowIcon = findViewById(R.id.back_arrow_icon);
+    private void initAnimations() {
+        syncAnimation = new RotateAnimation(0, 360,
+                Animation.RELATIVE_TO_SELF, 0.5f,
+                Animation.RELATIVE_TO_SELF, 0.5f);
+        syncAnimation.setDuration(1000);
+        syncAnimation.setRepeatCount(Animation.INFINITE);
+    }
 
-        backupPrefs = getSharedPreferences("drive_backup_prefs", MODE_PRIVATE);
-        
+    private void registerAuthorizationLauncher() {
+        authorizationLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartIntentSenderForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                        try {
+                            String email = appPreferences.getString(PrefKeys.BACKUP_ACCOUNT_EMAIL, null);
+                            if (email != null) {
+                                onAuthorizationSuccess(email);
+                            }
+                        } catch (Exception e) {
+                            AppLog.e(TAG, "Authorization failed", e);
+                        }
+                    }
+                }
+        );
+    }
+
+    private void validateCloudBackupPremiumAccess() {
         if (!premiumManager.canUseCloudBackup()) {
+            CommonDialogs.showPremiumRequiredDialog(this, getString(R.string.text_cloud_backup_is_a_premium_feature_secure_your_notes_across_all_your_devices_by_upgrading_today));
             applyPremiumLockUI();
         }
     }
+    private void setupDropdown() {
+        BackupMode[] modes = BackupMode.values();
+        ArrayAdapter<BackupMode> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, modes);
+        binding.dropdownFrequency.setAdapter(adapter);
 
-    private void applyPremiumLockUI() {
-        // Visually disable everything if not premium
-        btnBackupNow.setEnabled(false);
-        btnBackupNow.setAlpha(0.5f);
-        btnAddAccount.setEnabled(false);
-        btnAddAccount.setAlpha(0.5f);
-        cardSettings.setAlpha(0.5f);
-        spinnerFrequency.setEnabled(false);
-        switchAttachments.setEnabled(false);
-        switchAutoBackup.setEnabled(false);
-    }
-
-    private void setupBackButton() {
-        backArrowIcon.setOnClickListener(v -> finish());
-    }
-
-    private void setupGoogleSignIn() {
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-                .requestScopes(new Scope(DriveScopes.DRIVE_FILE))
-                .requestScopes(new Scope(DriveScopes.DRIVE_APPDATA))
-                .build();
-        googleSignInClient = GoogleSignIn.getClient(this, gso);
-    }
-
-    private void setupSpinner() {
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
-                this, R.array.backup_frequency_options, android.R.layout.simple_spinner_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerFrequency.setAdapter(adapter);
-
-        spinnerFrequency.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (isInitializing) return;
-                String selectedOption = parent.getItemAtPosition(position).toString();
-                backupPrefs.edit().putString("backup_mode", selectedOption).apply();
-                updateBackupSettings(true);
+        binding.dropdownFrequency.setOnItemClickListener((parent, view, position, id) -> {
+            BackupMode selectedMode = (BackupMode) parent.getItemAtPosition(position);
+            appPreferences.putString(PrefKeys.BACKUP_MODE, selectedMode.getDisplayName());
+            updateBackupSettings();
+            
+            // Re-schedule if auto backup is already enabled
+            if (appPreferences.getBoolean(PrefKeys.AUTO_BACKUP_ENABLED, false)) {
+                scheduleAutoBackup(true);
             }
-            @Override public void onNothingSelected(AdapterView<?> parent) {}
         });
     }
 
-    private void updateBackupSettings(boolean showToast) {
-        String backupMode = backupPrefs.getString("backup_mode", "On when click backup");
-        switch (backupMode) {
-            case "On when click backup":
-            case "Off":
-                switchAutoBackup.setEnabled(false);
-                switchAutoBackup.setChecked(false);
-                backupPrefs.edit().putBoolean("auto_backup_enabled", false).apply();
-                break;
-            default:
-                if (premiumManager.canUseCloudBackup()) {
-                    switchAutoBackup.setEnabled(true);
-                }
-                break;
+    private void updateBackupSettings() {
+        String savedMode = appPreferences.getString(PrefKeys.BACKUP_MODE, BackupMode.MANUAL.getDisplayName());
+        BackupMode mode = BackupMode.fromString(savedMode);
+
+        if (mode == BackupMode.MANUAL || mode == BackupMode.OFF) {
+            binding.switchAutoBackup.setEnabled(false);
+            binding.switchAutoBackup.setChecked(false);
+            appPreferences.putBoolean(PrefKeys.AUTO_BACKUP_ENABLED, false);
+            scheduleAutoBackup(false);
+        } else if (premiumManager.canUseCloudBackup()) {
+            binding.switchAutoBackup.setEnabled(true);
         }
     }
 
     private void restoreUIState() {
-        isRestoringUI = true;
-        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
-        if (account != null && hasDriveScope(account)) {
-            updateUIForSignedIn(account);
+        String email = appPreferences.getString(PrefKeys.BACKUP_ACCOUNT_EMAIL, null);
+        if (email != null && appPreferences.getBoolean(PrefKeys.IS_SIGNED_IN, false)) {
+            updateUIForSignedIn(email);
         } else {
             updateUIForSignedOut();
         }
 
-        isInitializing = true;
-        String savedMode = backupPrefs.getString("backup_mode", "On when click backup");
-        String[] modes = getResources().getStringArray(R.array.backup_frequency_options);
-        for (int i = 0; i < modes.length; i++) {
-            if (modes[i].equals(savedMode)) {
-                spinnerFrequency.setSelection(i, false);
-                break;
+        String savedMode = appPreferences.getString(PrefKeys.BACKUP_MODE, BackupMode.MANUAL.getDisplayName());
+        BackupMode mode = BackupMode.fromString(savedMode);
+        binding.dropdownFrequency.setText(mode.toString(), false);
+        updateBackupSettings();
+
+        binding.switchAttachments.setChecked(appPreferences.getBoolean(PrefKeys.INCLUDE_ATTACHMENTS, false));
+        binding.switchAutoBackup.setChecked(appPreferences.getBoolean(PrefKeys.AUTO_BACKUP_ENABLED, false));
+
+        binding.switchAutoBackup.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (!binding.switchAutoBackup.isEnabled()) return;
+            appPreferences.putBoolean(PrefKeys.AUTO_BACKUP_ENABLED, isChecked);
+            scheduleAutoBackup(isChecked);
+            if (isSignedIn && isChecked) {
+                AppToast.s(getString(R.string.text_auto_backup_enabled));
             }
-        }
-        isInitializing = false;
-        updateBackupSettings(false);
-
-        switchAttachments.setChecked(backupPrefs.getBoolean("include_attachments", false));
-        switchAutoBackup.setChecked(backupPrefs.getBoolean("auto_backup_enabled", false));
-
-        switchAutoBackup.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (!switchAutoBackup.isEnabled()) return;
-            backupPrefs.edit().putBoolean("auto_backup_enabled", isChecked).apply();
-            if (isSignedIn && isChecked) Toast.makeText(this, "Auto backup enabled", Toast.LENGTH_SHORT).show();
         });
 
-        switchAttachments.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            backupPrefs.edit().putBoolean("include_attachments", isChecked).apply();
-        });
+        binding.switchAttachments.setOnCheckedChangeListener((buttonView, isChecked) -> appPreferences.putBoolean(PrefKeys.INCLUDE_ATTACHMENTS, isChecked));
 
-        txtLastBackupTime.setText(backupPrefs.getString("last_backup_time", "Never backed up"));
-        isRestoringUI = false;
+        binding.txtLastBackupTime.setText(appPreferences.getString(PrefKeys.LAST_BACKUP_TIME, PrefDefaults.LAST_BACKUP_TIME));
     }
 
-    private boolean hasDriveScope(GoogleSignInAccount account) {
-        if (account == null || account.getGrantedScopes() == null) return false;
-        for (Scope scope : account.getGrantedScopes()) {
-            String uri = scope.getScopeUri();
-            if (uri.equals(DriveScopes.DRIVE_FILE) || uri.equals(DriveScopes.DRIVE_APPDATA)) return true;
+    private void scheduleAutoBackup(boolean enable) {
+        WorkManager workManager = WorkManager.getInstance(this);
+        if (!enable) {
+            workManager.cancelUniqueWork(UNIQUE_WORK_NAME);
+            AppLog.d(TAG, "Auto backup disabled, work cancelled.");
+            return;
         }
-        return false;
+
+        String savedMode = appPreferences.getString(PrefKeys.BACKUP_MODE, BackupMode.DAILY.getDisplayName());
+        BackupMode mode = BackupMode.fromString(savedMode);
+        
+        long intervalHours;
+        switch (mode) {
+            case DAILY:
+                intervalHours = TimeUnit.DAYS.toHours(1);
+                break;
+
+            case WEEKLY:
+                intervalHours = TimeUnit.DAYS.toHours(7);
+                break;
+
+            case MONTHLY:
+                intervalHours = TimeUnit.DAYS.toHours(30);
+                break;
+
+            default:
+                AppLog.d(TAG, "Auto backup not scheduled (mode: " + mode + ")");
+                return;
+        }
+
+        Constraints constraints = new Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .setRequiresBatteryNotLow(true)
+                .build();
+
+        PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(
+                DriveBackupWorker.class, intervalHours, TimeUnit.HOURS)
+                .setConstraints(constraints)
+                .build();
+
+        workManager.enqueueUniquePeriodicWork(
+                UNIQUE_WORK_NAME,
+                ExistingPeriodicWorkPolicy.UPDATE,
+                request
+        );
+        AppLog.d(TAG, "Auto backup scheduled: " + mode.getDisplayName());
     }
 
     private void setupClickListeners() {
-        btnAddAccount.setOnClickListener(v -> {
+        binding.btnAddAccount.setOnClickListener(v -> {
             if (premiumManager.canUseCloudBackup()) signIn();
-            else CommonDialogs.showPremiumRequiredDialog(this, "Upgrade to Premium to enable Cloud Backup.");
+            else
+                CommonDialogs.showPremiumRequiredDialog(this, getString(R.string.text_upgrade_to_premium_to_enable_cloud_backup));
         });
 
-        btnBackupNow.setOnClickListener(v -> {
+        binding.btnBackupNow.setOnClickListener(v -> {
             if (!premiumManager.canUseCloudBackup()) {
-                CommonDialogs.showPremiumRequiredDialog(this, "Manual cloud backup is a premium feature.");
+                CommonDialogs.showPremiumRequiredDialog(this, getString(R.string.text_manual_cloud_backup_is_a_premium_feature));
                 return;
             }
-            if (isSignedIn) runBackupNow();
-            else signIn();
+            if (!isSignedIn) {
+                signIn();
+                return;
+            }
+            
+            if (!isNetworkAvailable()) {
+                AppToast.s("No internet connection available. Please check your network.");
+                return;
+            }
+            
+            runBackupNow();
         });
 
-        btnDisconnect.setOnClickListener(v -> signOut());
+        binding.btnDisconnect.setOnClickListener(v -> signOut());
+    }
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager cm =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        if (cm == null) return false;
+
+        Network network = cm.getActiveNetwork();
+        if (network == null) return false;
+
+        NetworkCapabilities capabilities = cm.getNetworkCapabilities(network);
+        if (capabilities == null) return false;
+
+        return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
+                || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+                || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET);
     }
 
     private void signIn() {
-        startActivityForResult(googleSignInClient.getSignInIntent(), RC_SIGN_IN);
-    }
+        GetGoogleIdOption googleIdOption = new GetGoogleIdOption.Builder()
+                .setFilterByAuthorizedAccounts(false)
+                .setServerClientId(getString(R.string.default_web_client_id))
+                .build();
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == RC_SIGN_IN) {
-            handleSignInResult(GoogleSignIn.getSignedInAccountFromIntent(data));
-        }
-    }
+        GetCredentialRequest request = new GetCredentialRequest.Builder()
+                .addCredentialOption(googleIdOption)
+                .build();
 
-    private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
-        try {
-            GoogleSignInAccount account = completedTask.getResult(ApiException.class);
-            if (account != null && hasDriveScope(account)) {
-                updateUIForSignedIn(account);
-                backupPrefs.edit().putString("backup_account_email", account.getEmail()).putBoolean("is_signed_in", true).apply();
-                Toast.makeText(this, "Connected!", Toast.LENGTH_SHORT).show();
-            } else {
-                signOut();
+        credentialManager.getCredentialAsync(this, request, null, Runnable::run, new androidx.credentials.CredentialManagerCallback<>() {
+            @Override
+            public void onResult(GetCredentialResponse result) {
+                handleCredentialResult(result.getCredential());
             }
-        } catch (ApiException e) {
-            updateUIForSignedOut();
+
+            @Override
+            public void onError(@NonNull GetCredentialException e) {
+                runOnUiThread(() -> {
+                    AppLog.e(TAG, "Credential Manager Error: " + e.getMessage());
+                    AppToast.s("Sign-in failed: " + e.getMessage());
+                });
+            }
+        });
+    }
+
+    private void handleCredentialResult(Credential credential) {
+        if (credential instanceof GoogleIdTokenCredential googleIdTokenCredential) {
+            String email = googleIdTokenCredential.getId();
+            String name = googleIdTokenCredential.getDisplayName();
+            String profilePic = googleIdTokenCredential.getProfilePictureUri() != null ? googleIdTokenCredential.getProfilePictureUri().toString() : null;
+
+            appPreferences.putString(PrefKeys.BACKUP_ACCOUNT_EMAIL, email);
+            appPreferences.putString(PrefKeys.USER_NAME, name);
+            appPreferences.putString(PrefKeys.USER_IMAGE, profilePic);
+            
+            runOnUiThread(() -> requestDriveAuthorization(email));
+        } else {
+            AppLog.e(TAG, "Unexpected credential type: " + credential.getType());
         }
     }
 
-    private void updateUIForSignedIn(GoogleSignInAccount account) {
+    private void requestDriveAuthorization(String email) {
+        AuthorizationRequest request = AuthorizationRequest.builder()
+                .setRequestedScopes(Arrays.asList(new Scope(DriveScopes.DRIVE_FILE), new Scope(DriveScopes.DRIVE_APPDATA)))
+                .setAccount(new Account(email, "com.google"))
+                .build();
+
+        Identity.getAuthorizationClient(this)
+                .authorize(request)
+                .addOnSuccessListener(result -> {
+                    if (result.hasResolution()) {
+                        try {
+                            authorizationLauncher.launch(new IntentSenderRequest.Builder(Objects.requireNonNull(result.getPendingIntent()).getIntentSender()).build());
+                        } catch (Exception e) {
+                            AppLog.e(TAG, "Authorization resolution failed", e);
+                        }
+                    } else {
+                        onAuthorizationSuccess(email);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    AppLog.e(TAG, "Drive authorization failed", e);
+                    AppToast.s("Drive authorization failed: " + e.getMessage());
+                });
+    }
+
+    private void onAuthorizationSuccess(String email) {
+        updateUIForSignedIn(email);
+        appPreferences.putString(PrefKeys.BACKUP_ACCOUNT_EMAIL, email);
+        appPreferences.putBoolean(PrefKeys.IS_SIGNED_IN, true);
+        AppToast.s("Connected as " + email);
+    }
+
+    private void updateUIForSignedIn(String email) {
         isSignedIn = true;
-        txtEmail.setText(account.getEmail());
-        txtStatus.setText("Connected");
-        layoutSetup.setVisibility(View.GONE);
-        layoutAccountInfo.setVisibility(View.VISIBLE);
-        cardSettings.setVisibility(View.VISIBLE);
-        cardStatus.setVisibility(View.VISIBLE);
         
+        String name = appPreferences.getString(PrefKeys.USER_NAME, "User");
+        String profilePic = appPreferences.getString(PrefKeys.USER_IMAGE, null);
+
+        binding.txtName.setText(name);
+        binding.txtEmail.setText(email);
+        
+        if (profilePic != null && !profilePic.isEmpty()) {
+            Picasso.get().load(profilePic).placeholder(R.drawable.ic_profile).into(binding.imgProfile);
+        } else {
+            binding.imgProfile.setImageResource(R.drawable.ic_profile);
+        }
+
+        binding.txtStatus.setText(R.string.text_connected);
+        binding.layoutSetup.setVisibility(View.GONE);
+        binding.layoutAccountInfo.setVisibility(View.VISIBLE);
+        binding.cardSettings.setVisibility(View.VISIBLE);
+        binding.cardStatus.setVisibility(View.VISIBLE);
+        binding.btnBackupNow.setVisibility(View.VISIBLE);
+        binding.btnBackupNow.setText(R.string.text_backup_now);
+        binding.btnDisconnect.setVisibility(View.VISIBLE);
+        binding.textSettingsTitle.setVisibility(View.VISIBLE);
+        binding.textStatusTitle.setVisibility(View.VISIBLE);
+
         if (!premiumManager.canUseCloudBackup()) applyPremiumLockUI();
     }
 
     private void updateUIForSignedOut() {
         isSignedIn = false;
-        layoutSetup.setVisibility(View.VISIBLE);
-        layoutAccountInfo.setVisibility(View.GONE);
-        cardSettings.setVisibility(View.GONE);
-        cardStatus.setVisibility(View.GONE);
+        binding.layoutSetup.setVisibility(View.VISIBLE);
+        binding.layoutAccountInfo.setVisibility(View.GONE);
+        binding.cardSettings.setVisibility(View.GONE);
+        binding.cardStatus.setVisibility(View.GONE);
+        binding.btnBackupNow.setVisibility(View.GONE);
+        binding.btnDisconnect.setVisibility(View.GONE);
+        binding.textSettingsTitle.setVisibility(View.GONE);
+        binding.textStatusTitle.setVisibility(View.GONE);
+        
+        binding.imgProfile.setImageResource(R.drawable.ic_profile);
     }
 
     private void runBackupNow() {
-        txtStatus.setText("Backing up...");
+        // Start UI response
+        binding.btnBackupNow.setEnabled(false);
+        binding.btnBackupNow.setText(R.string.text_backing_up);
+        binding.txtStatus.setText(R.string.text_backing_up);
+        binding.imgTick.setVisibility(View.GONE);
+        binding.imgStatusIcon.startAnimation(syncAnimation);
+        binding.backupProgress.setVisibility(View.VISIBLE);
+
         OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(DriveBackupWorker.class).build();
         WorkManager.getInstance(this).enqueue(request);
         WorkManager.getInstance(this).getWorkInfoByIdLiveData(request.getId()).observe(this, info -> {
-            if (info != null && info.getState().isFinished()) {
-                txtStatus.setText("✓ Backup complete");
-                String ts = new SimpleDateFormat("MMM dd, hh:mm a", Locale.getDefault()).format(new Date());
-                backupPrefs.edit().putString("last_backup_time", ts).apply();
-                txtLastBackupTime.setText(ts);
+            if (info != null) {
+                if (info.getState() == WorkInfo.State.SUCCEEDED) {
+                    onBackupSuccess();
+                } else if (info.getState() == WorkInfo.State.FAILED) {
+                    onBackupFailure();
+                }
             }
         });
     }
 
+    private void onBackupSuccess() {
+        binding.imgStatusIcon.clearAnimation();
+        binding.btnBackupNow.setEnabled(true);
+        binding.btnBackupNow.setText(R.string.text_backup_now);
+        binding.txtStatus.setText(R.string.text_backup_complete);
+        binding.imgTick.setVisibility(View.VISIBLE);
+        binding.backupProgress.setVisibility(View.GONE);
+        
+        String ts = new SimpleDateFormat("MMM dd, hh:mm a", Locale.getDefault()).format(new Date());
+        appPreferences.putString(PrefKeys.LAST_BACKUP_TIME, ts);
+        binding.txtLastBackupTime.setText(ts);
+        
+        AppToast.s(getString(R.string.text_backup_completed_successfully));
+    }
+
+    private void onBackupFailure() {
+        binding.imgStatusIcon.clearAnimation();
+        binding.btnBackupNow.setEnabled(true);
+        binding.btnBackupNow.setText(R.string.text_backup_now);
+        binding.txtStatus.setText(R.string.text_backup_failed);
+        binding.imgTick.setVisibility(View.GONE);
+        binding.backupProgress.setVisibility(View.GONE);
+        
+        AppToast.s("Backup failed. Please try again.");
+    }
+
     private void signOut() {
-        googleSignInClient.signOut().addOnCompleteListener(this, task -> {
-            updateUIForSignedOut();
-            backupPrefs.edit().remove("backup_account_email").remove("is_signed_in").apply();
-        });
+        // Replace deprecated Identity.getSignInClient().signOut() with CredentialManager.clearCredentialStateAsync()
+        credentialManager.clearCredentialStateAsync(
+                new ClearCredentialStateRequest(),
+                null,
+                Runnable::run,
+                new androidx.credentials.CredentialManagerCallback<>() {
+                    @Override
+                    public void onResult(Void result) {
+                        runOnUiThread(() -> {
+                            firebaseHelper.signOut(DriveBackupActivity.this);
+                            updateUIForSignedOut();
+                            appPreferences.remove(PrefKeys.BACKUP_ACCOUNT_EMAIL);
+                            appPreferences.remove(PrefKeys.IS_SIGNED_IN);
+                            appPreferences.remove(PrefKeys.USER_NAME);
+                            appPreferences.remove(PrefKeys.USER_IMAGE);
+                            
+                            // Cancel any scheduled auto backup
+                            WorkManager.getInstance(DriveBackupActivity.this).cancelUniqueWork(UNIQUE_WORK_NAME);
+                        });
+                    }
+
+                    @Override
+                    public void onError(@NonNull androidx.credentials.exceptions.ClearCredentialException e) {
+                        AppLog.e(TAG, "Failed to clear credential state", e);
+                        // Still update UI and sign out from Firebase
+                        runOnUiThread(() -> {
+                            firebaseHelper.signOut(DriveBackupActivity.this);
+                            updateUIForSignedOut();
+                            appPreferences.remove(PrefKeys.BACKUP_ACCOUNT_EMAIL);
+                            appPreferences.remove(PrefKeys.IS_SIGNED_IN);
+                        });
+                    }
+                }
+        );
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         if (premiumManager.isPremium()) {
-            // Re-enable UI if user upgraded and returned
-            btnBackupNow.setEnabled(true);
-            btnBackupNow.setAlpha(1.0f);
-            btnAddAccount.setEnabled(true);
-            btnAddAccount.setAlpha(1.0f);
-            cardSettings.setAlpha(1.0f);
-            spinnerFrequency.setEnabled(true);
-            switchAttachments.setEnabled(true);
-            updateBackupSettings(false);
+            binding.btnBackupNow.setEnabled(true);
+            binding.btnBackupNow.setAlpha(1.0f);
+            binding.btnAddAccount.setEnabled(true);
+            binding.btnAddAccount.setAlpha(1.0f);
+            binding.cardSettings.setAlpha(1.0f);
+            binding.inputLayoutFrequency.setEnabled(true);
+            binding.switchAttachments.setEnabled(true);
+            updateBackupSettings();
         }
         restoreUIState();
+    }
+
+    private void applyPremiumLockUI() {
+        binding.btnBackupNow.setEnabled(false);
+        binding.btnBackupNow.setAlpha(0.5f);
+        binding.btnAddAccount.setEnabled(false);
+        binding.btnAddAccount.setAlpha(0.5f);
+        binding.cardSettings.setAlpha(0.5f);
+        binding.inputLayoutFrequency.setEnabled(false);
+        binding.switchAttachments.setEnabled(false);
+        binding.switchAutoBackup.setEnabled(false);
     }
 }

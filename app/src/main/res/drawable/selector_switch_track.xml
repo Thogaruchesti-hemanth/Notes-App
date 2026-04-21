@@ -5,16 +5,16 @@
         <shape android:shape="rectangle">
             <solid android:color="@color/tabSelectedTextColorLight" />
             <corners android:radius="@dimen/radius_100" />
-            <stroke android:width="@dimen/size_1" android:color="@color/white" />
+            <stroke android:width="@dimen/size_1" android:color="@color/tabSelectedTextColorLight" />
             <size android:width="@dimen/size_40" android:height="@dimen/size_20" />
         </shape>
     </item>
 
     <item android:state_checked="false">
         <shape android:shape="rectangle">
-            <solid android:color="?attr/colorPrimary" />
+            <solid android:color="@color/chip_bg_color" />
             <corners android:radius="@dimen/radius_100" />
-            <stroke android:width="@dimen/size_1" android:color="?attr/colorSecondary" />
+            <stroke android:width="@dimen/size_1" android:color="@color/chip_bg_color" />
             <size android:width="@dimen/size_40" android:height="@dimen/size_20" />
         </shape>
     </item>
