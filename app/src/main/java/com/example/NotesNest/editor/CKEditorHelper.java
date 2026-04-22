@@ -103,9 +103,9 @@ public class CKEditorHelper {
 
                 "<style>" +
                 "html, body {margin:0; padding:0; height:100%; background:" + bgColor + ";}" +
-                "#editorContainer { display:flex; flex-direction:column; height:100%; padding:8px; box-sizing:border-box; }" +
-                "#editor { flex:1; border:1px solid #1D1E1D; padding:8px; font-family:Arial,sans-serif; " +
-                "color:#000000; background:" + bgColor + "; overflow-y:auto; border-radius:6px; }" +
+                "#editorContainer { display:flex; flex-direction:column; height:100%;}" +
+                "#editor { flex:1; font-family:Arial,sans-serif; " +
+                "color:#000000; background:" + bgColor + "; overflow-y:auto; }" +
                 "#editor:focus{outline:none;}" +
                 "#editor[placeholder]:empty:before {content: attr(placeholder); color:#999;}" +
                 "#editor[placeholder]:empty:focus:before {content:'';}" +
@@ -340,6 +340,27 @@ public class CKEditorHelper {
      */
     public void toggleHeading(String level) {
         runWhenReady(() -> webView.evaluateJavascript("toggleHeading('" + level + "');", null));
+    }
+
+    /**
+     * Undo action
+     */
+    public void undo() {
+        runWhenReady(() -> webView.evaluateJavascript("document.execCommand('undo', false, null);", null));
+    }
+
+    /**
+     * Redo action
+     */
+    public void redo() {
+        runWhenReady(() -> webView.evaluateJavascript("document.execCommand('redo', false, null);", null));
+    }
+
+    /**
+     * Insert checkbox
+     */
+    public void insertCheckbox() {
+        runWhenReady(() -> webView.evaluateJavascript("insertCheckbox();", null));
     }
 
     private void runWhenReady(Runnable action) {

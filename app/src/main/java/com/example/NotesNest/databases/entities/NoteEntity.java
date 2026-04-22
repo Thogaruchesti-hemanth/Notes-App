@@ -35,7 +35,7 @@ public class NoteEntity {
     public long updatedAt;          // for offline sync conflict resolution
     public boolean isSynced;        // offline-first flag
     public boolean isDeleted;       // soft deletion flag
+    public boolean isPinned;        // pinned note flag
 
     public NoteEntity() {}
 }
-

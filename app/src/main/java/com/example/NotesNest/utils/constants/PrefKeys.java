@@ -31,4 +31,11 @@ public final class PrefKeys {
     public static final String INCLUDE_ATTACHMENTS = "include_attachments";
     public static final String LAST_BACKUP_TIME = "last_backup_time";
 
+    // Edit Note Draft
+    public static final String KEY_DRAFT_CONTENT = "draft_content";
+    public static final String KEY_DRAFT_TITLE = "draft_title";
+    public static final String KEY_DRAFT_COLOR = "draft_color";
+
+
+
 }

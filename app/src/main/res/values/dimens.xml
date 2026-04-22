@@ -79,6 +79,7 @@
     <dimen name="size_40">40dp</dimen>
     <dimen name="size_48">48dp</dimen>
     <dimen name="size_50">50dp</dimen>
+    <dimen name="size_56">56dp</dimen>
     <dimen name="size_60">60dp</dimen>
     <dimen name="size_72">72dp</dimen>
     <dimen name="size_80">80dp</dimen>

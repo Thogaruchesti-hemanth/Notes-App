@@ -10,33 +10,14 @@
     android:orientation="vertical"
     tools:context=".activity.HelpAndSupportActivity">
 
-    <LinearLayout
-        android:id="@+id/layoutHeader"
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingHorizontal="@dimen/padding_24"
-        android:paddingTop="@dimen/padding_32"
-        android:paddingBottom="@dimen/padding_12">
-
-        <ImageView
-            android:id="@+id/ivBackArrow"
-            android:layout_width="@dimen/size_32"
-            android:layout_height="@dimen/size_32"
-            android:contentDescription="@string/text_back_button"
-            android:src="@drawable/ic_back_arrow" />
-
-        <TextView
-            android:id="@+id/tvTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/size_32"
-            android:text="@string/text_help_amp_support"
-            android:textColor="?attr/colorPrimary"
-            android:textSize="@dimen/text_22"
-            android:textStyle="bold" />
-    </LinearLayout>
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorSecondary"
+        android:titleTextColor="@color/tabSelectedTextColor"
+        app:navigationIcon="@drawable/ic_back_arrow"
+        app:navigationIconTint="?attr/colorPrimary" />
 
     <com.google.android.gms.ads.AdView
         android:id="@+id/adViewHelpTop"
@@ -150,11 +131,6 @@
                         layout="@layout/item_support_option"
                         android:tag="video_tutorials" />
 
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="@color/grey_200" />
-
                     <include
                         android:id="@+id/layoutWhatsNew"
                         layout="@layout/item_support_option"
@@ -190,6 +166,7 @@
                 app:cardBackgroundColor="?attr/colorSecondary"
                 app:cardCornerRadius="@dimen/radius_12"
                 app:cardElevation="2dp"
+                android:layout_marginBottom="@dimen/margin_10"
                 app:cardUseCompatPadding="true">
 
                 <LinearLayout
@@ -224,71 +201,10 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="@dimen/margin_10"
-                android:text="@string/text_faqs"
-                android:textAllCaps="true"
-                android:textColor="@color/tabSelectedTextColorLight"
-                android:textSize="@dimen/text_16"
-                android:textStyle="bold" />
-
-            <com.google.android.material.card.MaterialCardView
+            <View
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/margin_10"
-                app:cardBackgroundColor="?attr/colorSecondary"
-                app:cardCornerRadius="@dimen/radius_12"
-                app:cardElevation="2dp"
-                app:cardUseCompatPadding="true">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-                    <!-- FAQ Item 1 -->
-                    <include
-                        android:id="@+id/layoutFAQ1"
-                        layout="@layout/item_faq" />
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="@color/grey_200" />
-
-                    <include
-                        android:id="@+id/layoutFAQ2"
-                        layout="@layout/item_faq" />
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="@color/grey_200" />
-
-                    <include
-                        android:id="@+id/layoutFAQ3"
-                        layout="@layout/item_faq" />
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="@color/grey_200" />
-
-                    <include
-                        android:id="@+id/layoutFAQ4"
-                        layout="@layout/item_faq" />
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="@color/grey_200" />
-
-                    <include
-                        android:id="@+id/layoutFAQ5"
-                        layout="@layout/item_faq" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+                android:layout_height="1dp"
+                android:background="@color/grey_200" />
         </LinearLayout>
     </ScrollView>
 

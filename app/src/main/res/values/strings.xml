@@ -46,7 +46,6 @@
     <string name="text_notes_categories">notes categories</string>
     <string name="text_category">Category</string>
     <string name="text_all">All</string>
-    <string name="text_color_picker">color picker</string>
     <string name="text_text_bold_format">text bold format</string>
     <string name="text_text_italic_format">text italic format</string>
     <string name="text_text_bullet_points_format">text bullet points format</string>
@@ -94,7 +93,7 @@
     <string name="text_share_as_image">Share as Image</string>
     <string name="text_share_as_pdf">Share as Pdf</string>
     <string name="text_select_note">Select Note</string>
-    <string name="text_back_button">back button</string>
+    <string name="text_back">back</string>
     <string name="text_create_a_note_first_then_come_back_here">Create a note first, then come back here</string>
     <string name="text_no_notes_available">No notes available</string>
     <string name="create_note_widget_label">Create Note Widget</string>
@@ -198,5 +197,17 @@
     <string name="text_select_frequency">Select Frequency</string>
     <string name="text_backup_frequency">Backup Frequency</string>
     <string name="text_backup_account_profile">Backup Account Profile</string>
-
+    <string name="version_text">Version %1$s</string>
+    <string name="text_note_pinned">Note Pinned</string>
+    <string name="text_undo">Undo</string>
+    <string name="text_redo">Redo </string>
+    <string name="text_color_picker">Color Picker</string>
+    <string name="text_text_bold">Text Bold</string>
+    <string name="text_text_italic">Text italic</string>
+    <string name="text_bullet_list">Bullet List</string>
+    <string name="text_number_list">Number list</string>
+    <string name="text_checkbox">Checkbox</string>
+    <string name="text_h1_format">H1 text formatting</string>
+    <string name="text_h2_text">H2 text formatting</string>
+    <string name="text_back_button">Back Button</string>
 </resources>

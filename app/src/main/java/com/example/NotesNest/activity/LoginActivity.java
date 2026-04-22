@@ -162,6 +162,10 @@ public class LoginActivity extends AppCompatActivity {
         binding.uploadImageButton.setOnClickListener(v -> openImageSelector());
 
         binding.googleSignInButton.setOnClickListener(v -> {
+            if (!binding.termsCheckbox.isChecked()) {
+                showError(getString(R.string.error_terms_required));
+                return;
+            }
             clearFocusAndHideKeyboard();
             signInWithGoogle();
         });
@@ -192,7 +196,7 @@ public class LoginActivity extends AppCompatActivity {
                 request,
                 null,
                 executor,
-                new androidx.credentials.CredentialManagerCallback<GetCredentialResponse, GetCredentialException>() {
+                new androidx.credentials.CredentialManagerCallback<>() {
                     @Override
                     public void onResult(GetCredentialResponse result) {
                         handleSignInResult(result.getCredential());
@@ -225,15 +229,13 @@ public class LoginActivity extends AppCompatActivity {
 
             if (idToken != null) {
                 final String finalIdToken = idToken;
-                runOnUiThread(() -> {
-                    firebaseHelper.firebaseAuthWithGoogle(finalIdToken, this, (userName, email) -> {
-                        googleBorder.stopLoading();
-                        binding.googleSignInButton.setTextColor(ThemeManager.getThemeColor(this, R.color.white, R.color.black));
-                        binding.googleSignInButton.setBackgroundColor(ThemeManager.getThemeColor(this, R.color.black, R.color.black));
-                        saveSession();
-                        navigateToMain();
-                    });
-                });
+                runOnUiThread(() -> firebaseHelper.firebaseAuthWithGoogle(finalIdToken, this, (userName, email) -> {
+                    googleBorder.stopLoading();
+                    binding.googleSignInButton.setTextColor(ThemeManager.getThemeColor(this, R.color.white, R.color.black));
+                    binding.googleSignInButton.setBackgroundColor(ThemeManager.getThemeColor(this, R.color.black, R.color.black));
+                    saveSession();
+                    navigateToMain();
+                }));
             } else {
                 Log.e(TAG, "Unexpected credential type: " + credential.getType());
                 runOnUiThread(() -> {
