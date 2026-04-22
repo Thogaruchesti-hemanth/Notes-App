@@ -10,7 +10,7 @@ import com.example.NotesNest.activity.PremiumActivity;
 public class PremiumManager {
 
     // Subscription Limits
-    public static final int MAX_FREE_NOTES = 10;
+    public static final int MAX_FREE_NOTES = 30;
     public static final int MAX_FREE_CATEGORIES = 3;
     
     private final SharedPreferenceUtil prefs;

@@ -102,4 +102,41 @@ public class AppPreferences {
                 .apply();
     }
 
+    // Edit Note Draft
+    /**
+     * ✅ Restore only if valid
+     */
+    public boolean hasValidDraft() {
+
+        String title = prefs.getString(PrefKeys.KEY_DRAFT_TITLE, "");
+        String content = prefs.getString(PrefKeys.KEY_DRAFT_CONTENT, "");
+
+        return !title.trim().isEmpty() || !content.trim().isEmpty();
+    }
+
+    public void saveDraft(String title, String html,String color) {
+
+        title = title == null ? "" : title.trim();
+        html = html == null ? "" : html.trim();
+
+        if (title.isEmpty() && html.isEmpty()) {
+            clearDraft();
+            return;
+        }
+
+        prefs.edit()
+                .putString(PrefKeys.KEY_DRAFT_TITLE, title)
+                .putString(PrefKeys.KEY_DRAFT_CONTENT, html)
+                .putString(PrefKeys.KEY_DRAFT_COLOR, color)
+                .apply();
+    }
+
+    public void clearDraft() {
+        remove(PrefKeys.KEY_DRAFT_TITLE);
+        remove(PrefKeys.KEY_DRAFT_CONTENT);
+        remove(PrefKeys.KEY_DRAFT_COLOR);
+    }
+
+
+
 }

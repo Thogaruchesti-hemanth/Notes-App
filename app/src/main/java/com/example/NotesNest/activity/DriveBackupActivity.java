@@ -1,11 +1,9 @@
 package com.example.NotesNest.activity;
 
+import static com.example.NotesNest.utils.ValidationUtils.isNetworkAvailable;
+
 import android.accounts.Account;
 import android.app.Activity;
-import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkCapabilities;
 import android.os.Bundle;
 import android.view.View;
 import android.view.animation.Animation;
@@ -250,7 +248,7 @@ public class DriveBackupActivity extends AppCompatActivity {
                 return;
             }
             
-            if (!isNetworkAvailable()) {
+            if (!isNetworkAvailable(this)) {
                 AppToast.s("No internet connection available. Please check your network.");
                 return;
             }
@@ -259,23 +257,6 @@ public class DriveBackupActivity extends AppCompatActivity {
         });
 
         binding.btnDisconnect.setOnClickListener(v -> signOut());
-    }
-
-    private boolean isNetworkAvailable() {
-        ConnectivityManager cm =
-                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        if (cm == null) return false;
-
-        Network network = cm.getActiveNetwork();
-        if (network == null) return false;
-
-        NetworkCapabilities capabilities = cm.getNetworkCapabilities(network);
-        if (capabilities == null) return false;
-
-        return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
-                || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
-                || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET);
     }
 
     private void signIn() {

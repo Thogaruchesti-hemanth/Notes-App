@@ -21,7 +21,7 @@ import com.example.NotesNest.databases.entities.ReminderEntity;
                 NoteFTSEntity.class,
                 ReminderEntity.class
         },
-        version = 1, // initial production version
+        version = 3, // Incremented version to fix IllegalStateException after schema change
         exportSchema = true
 )
 public abstract class AppDatabase extends RoomDatabase {

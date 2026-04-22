@@ -1,9 +1,11 @@
 package com.example.NotesNest.utils;
 
+import static com.example.NotesNest.utils.Constants.DEFAULT_COLORS;
 import static com.example.NotesNest.utils.Constants.professionalGradients;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.text.Html;
 import android.view.LayoutInflater;
@@ -15,23 +17,26 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.NotesNest.R;
 import com.example.NotesNest.activity.PremiumActivity;
 import com.example.NotesNest.databases.ViewModels.CategoryViewModel;
 import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.databases.entities.ReminderEntity;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.List;
 
 public class CommonDialogs {
 
-    /**
-     * Shows a professional dialog when a premium feature is locked.
-     */
     public static void showPremiumRequiredDialog(Context context, String message) {
         if (context == null) return;
 
@@ -58,9 +63,6 @@ public class CommonDialogs {
         dialog.show();
     }
 
-    /**
-     * Shows a dialog to enter a password for import/export.
-     */
     public static void showPasswordDialog(Context context, String title, PasswordCallback callback) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.CustomAlertDialog);
         LayoutInflater inflater = LayoutInflater.from(context);
@@ -98,27 +100,48 @@ public class CommonDialogs {
         }
     }
 
-    /**
-     * Shows a simple input dialog.
-     */
-    public static void showInputDialog(Context context, String title, String hint, String posBtn, String negBtn, InputCallback callback) {
+    public static void showInputDialog(Context context, String title, String hint,
+                                       String posBtn, String negBtn, InputCallback callback) {
+
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle(title);
-        View view = LayoutInflater.from(context).inflate(R.layout.edit_dialog, null);
+        View view = LayoutInflater.from(context).inflate(R.layout.dialog_add_category, null);
         builder.setView(view);
-        TextInputEditText input = view.findViewById(R.id.etUserName); // Fixed: was et_text, but layout has etUserName
+
+        TextInputEditText input = view.findViewById(R.id.etName);
         if (input != null) input.setHint(hint);
 
-        builder.setPositiveButton(posBtn, (dialog, which) -> {
-            if (input != null) callback.onInput(input.getText().toString());
+        MaterialButton btnAdd = view.findViewById(R.id.btnAdd);
+        MaterialButton btnCancel = view.findViewById(R.id.btnCancel);
+        TextInputLayout tilName = view.findViewById(R.id.tilName);
+
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        btnAdd.setOnClickListener(v -> {
+            String text = (input != null && input.getText() != null)
+                    ? input.getText().toString().trim()
+                    : "";
+
+            if (text.isEmpty()) {
+                if (tilName != null) {
+                    tilName.setError("Please enter a value");
+                }
+                return; // ❗ stop here, don’t close dialog
+            }
+
+            if (tilName != null) tilName.setError(null); // clear error
+
+            callback.onInput(text);
+            dialog.dismiss();
         });
-        builder.setNegativeButton(negBtn, null);
-        builder.show();
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
     }
 
-    /**
-     * Shows a confirmation dialog.
-     */
     public static void showConfirmDialog(Context context, String title, String message, String posBtn, String negBtn, Runnable onConfirm) {
         new AlertDialog.Builder(context)
                 .setTitle(title)
@@ -128,9 +151,6 @@ public class CommonDialogs {
                 .show();
     }
 
-    /**
-     * Shows a gradient picker bottom sheet.
-     */
     public static void showGradientPicker(Context context, int currentStart, int currentEnd, GradientCallback callback) {
         BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(context, R.style.BottomSheetDialogTheme);
         View view = LayoutInflater.from(context).inflate(R.layout.bottom_sheet_gradient_picker, null);
@@ -164,15 +184,89 @@ public class CommonDialogs {
     }
 
     /**
-     * Shows a color picker dialog. (Simplified placeholder)
+     * Shows a color picker dialog for note background (Horizontal Scroll).
      */
     public static void showColorPicker(Context context, String selectedColor, ColorCallback callback) {
-        // Implementation for Note colors if needed
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(context, R.style.BottomSheetDialogTheme);
+        View view = LayoutInflater.from(context).inflate(R.layout.bottom_sheet_gradient_picker, null);
+        bottomSheetDialog.setContentView(view);
+
+        // Rounded corners and background color
+        View root = view.findViewById(R.id.bottom_gradient_picker_root);
+        if (root != null) {
+            GradientDrawable background = new GradientDrawable();
+            background.setColor(Color.parseColor(selectedColor));
+            float radius = 24 * context.getResources().getDisplayMetrics().density;
+            background.setCornerRadii(new float[]{radius, radius, radius, radius, 0, 0, 0, 0});
+            root.setBackground(background);
+        }
+
+        // Set height to wrap_content only
+        bottomSheetDialog.getBehavior().setPeekHeight(BottomSheetBehavior.PEEK_HEIGHT_AUTO);
+        bottomSheetDialog.getBehavior().setFitToContents(true);
+
+        TextView tvTitle = view.findViewById(R.id.tvTitle);
+        if (tvTitle != null) {
+            tvTitle.setText("Choose Note Color");
+            tvTitle.setTextColor(Color.BLACK);
+        }
+
+        LinearLayout container = view.findViewById(R.id.gradientContainer);
+        container.setPadding(16, 16, 16, 16);
+        
+        RecyclerView recyclerView = new RecyclerView(context);
+        recyclerView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false));
+        
+        container.removeAllViews();
+        container.addView(recyclerView);
+
+        recyclerView.setAdapter(new RecyclerView.Adapter<ColorViewHolder>() {
+            @NonNull
+            @Override
+            public ColorViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+                View colorView = new View(context);
+                int size = (int) (56 * context.getResources().getDisplayMetrics().density);
+                RecyclerView.LayoutParams params = new RecyclerView.LayoutParams(size, size);
+                params.setMargins(12, 12, 12, 12);
+                colorView.setLayoutParams(params);
+                return new ColorViewHolder(colorView);
+            }
+
+            @Override
+            public void onBindViewHolder(@NonNull ColorViewHolder holder, int position) {
+                String colorHex = DEFAULT_COLORS[position];
+                GradientDrawable gd = new GradientDrawable();
+                gd.setColor(Color.parseColor(colorHex));
+                gd.setShape(GradientDrawable.OVAL);
+                
+                if (colorHex.equalsIgnoreCase(selectedColor)) {
+                    gd.setStroke(6, Color.WHITE);
+                }
+                
+                holder.itemView.setBackground(gd);
+                holder.itemView.setElevation(4f);
+                holder.itemView.setOnClickListener(v -> {
+                    callback.onColorSelected(colorHex);
+                    bottomSheetDialog.dismiss();
+                });
+            }
+
+            @Override
+            public int getItemCount() {
+                return DEFAULT_COLORS.length;
+            }
+        });
+
+        bottomSheetDialog.show();
     }
 
-    /**
-     * Shows a category selection dialog.
-     */
+    static class ColorViewHolder extends RecyclerView.ViewHolder {
+        public ColorViewHolder(@NonNull View itemView) {
+            super(itemView);
+        }
+    }
+
     public static void showCategoryDialog(Context context, String title, List<String> categories, int preselect, CategoryCallback callback) {
         new AlertDialog.Builder(context)
                 .setTitle(title)
@@ -183,9 +277,6 @@ public class CommonDialogs {
                 .show();
     }
 
-    /**
-     * Shows full content of a note.
-     */
     public static void showNoteContentDialog(Context context, NoteEntity note, CategoryViewModel viewModel, NoteDialogCallback callback) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.CustomAlertDialog);
         View view = LayoutInflater.from(context).inflate(R.layout.dialog_note_full_content, null);
@@ -223,9 +314,6 @@ public class CommonDialogs {
         dialog.show();
     }
 
-    /**
-     * Shows options (Edit/Delete) for a note.
-     */
     public static void showOptionsDialog(Context context, NoteEntity note, int pos, NoteOptionsListener listener) {
         String[] options = {"Edit", "Delete"};
         new AlertDialog.Builder(context)
@@ -237,9 +325,6 @@ public class CommonDialogs {
                 .show();
     }
 
-    /**
-     * Shows custom dialog for reminders.
-     */
     public static void showCustomDialog(Context context, ReminderEntity reminder, String posBtn, String negBtn, Runnable onEdit, Runnable onDelete) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.CustomAlertDialog);
         View view = LayoutInflater.from(context).inflate(R.layout.dialog_reminder_options, null);

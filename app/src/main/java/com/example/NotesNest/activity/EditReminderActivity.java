@@ -42,7 +42,6 @@ public class EditReminderActivity extends AppCompatActivity {
     public static final String EXTRA_REMINDER_ID = "reminder_id";
     private static final String[] REPEAT_OPTIONS = {"Does not repeat", "Daily", "Weekly", "Monthly", "Yearly"};
     private static final String[] NOTIFY_OPTIONS = {"On that day", "Day before", "2 days before", "1 week before"};
-
     private final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
     private final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("hh:mm a", Locale.getDefault());
     private final Calendar calendar = Calendar.getInstance();

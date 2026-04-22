@@ -3,21 +3,24 @@ package com.example.NotesNest.activity;
 import static com.example.NotesNest.utils.Constants.DEFAULT_COLORS;
 
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
-import android.graphics.Rect;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.webkit.WebView;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageButton;
-import android.widget.LinearLayout;
-import android.widget.TextView;
+import android.view.ViewGroup;
 import android.widget.Toast;
 
+import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+import androidx.core.graphics.ColorUtils;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.NotesNest.R;
@@ -25,126 +28,140 @@ import com.example.NotesNest.databases.entities.CategoryEntity;
 import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.databases.ViewModels.CategoryViewModel;
 import com.example.NotesNest.databases.ViewModels.NoteViewModel;
+import com.example.NotesNest.databinding.ActivityEditNoteBinding;
 import com.example.NotesNest.editor.CKEditorHelper;
-import com.example.NotesNest.utils.AnalyticsHelper;
+import com.example.NotesNest.utils.AppPreferences;
 import com.example.NotesNest.utils.CommonDialogs;
-import com.example.NotesNest.utils.DraftManager;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
+import com.example.NotesNest.utils.constants.PrefKeys;
+import com.google.android.material.chip.Chip;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * EditNoteActivity — MVVM refactor using NoteViewModel + CategoryViewModel
- * No direct DB access here; all read/write go through ViewModels -> Repositories.
- */
 public class EditNoteActivity extends AppCompatActivity {
 
-    // Intent keys / constants
+    private static final String TAG = "EditNoteActivity";
     public static final String EXTRA_ITEM_ID = "itemId";
-    private final String DEFAULT_COLOR = DEFAULT_COLORS[0];
-
-    // Local category caches (UI-only)
+    private final String defaultColor = DEFAULT_COLORS[0];
     private final List<CategoryEntity> categories = new ArrayList<>();
-    private final List<String> categoryNames = new ArrayList<>();
-
-    // UI references
-    private EditText etTitle;
-    private WebView editorWebView;
-    private TextView tvCategory;
-    private LinearLayout categoryLayout;
-    private Button saveBtn;
-    private ImageButton btnBold;
-    private ImageButton btnItalic;
-    private ImageButton btnBullet;
-    private ImageButton btnNumber;
-    private ImageButton btnH1;
-    private ImageButton btnH2;
-
-    // Helpers / state
     private CKEditorHelper editorHelper;
-    private DraftManager draftManager;
-
-    // ViewModels
+    private AppPreferences preferences;
     private NoteViewModel noteViewModel;
     private CategoryViewModel categoryViewModel;
-
-    // UI state
     private boolean isEditing = false;
     private int noteId = -1;
-    private String selectedColor = DEFAULT_COLOR;
-    private int selectedCategoryId = -1;
+    private String selectedColor = defaultColor;
+    private Integer selectedCategoryId = null;
     private long originalCreatedAt = -1;
-
+    private boolean isPinned = false;
+    private boolean isNoteSaved = false;
+    private ActivityEditNoteBinding binding;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_edit_note);
+        EdgeToEdge.enable(this);
 
-        draftManager = new DraftManager(this);
+        try {
+            binding = ActivityEditNoteBinding.inflate(getLayoutInflater());
+            setContentView(binding.getRoot());
+        } catch (RuntimeException e) {
+            Log.e(TAG, "Error inflating layout, possibly WebView related", e);
+            Toast.makeText(this, "WebView error: Please update Android System WebView", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
 
-        bindViews();
-        setupToolbar();
+        preferences = AppPreferences.getInstance();
+        binding.btnColorPicker.setImageTintList(ColorStateList.valueOf(Color.BLACK));
+
+        binding.etNote.setNestedScrollingEnabled(false);
+        binding.etNote.setOverScrollMode(View.OVER_SCROLL_NEVER);
+
+        noteId = getIntent().getIntExtra(EXTRA_ITEM_ID, -1);
+
+        applyWindowInsets();
         setupEditorHelper();
         initViewModels();
         setupListeners();
         observeViewModels();
-        setupKeyboardListener();
 
-        // Start loading data
-        categoryViewModel.getAllCategories();
+        if (savedInstanceState != null) {
+            noteId = savedInstanceState.getInt("noteId", -1);
+            isEditing = savedInstanceState.getBoolean("isEditing", false);
+            selectedColor = savedInstanceState.getString("selectedColor", defaultColor);
+            int savedCatId = savedInstanceState.getInt("selectedCategoryId", -1);
+            selectedCategoryId = (savedCatId == -1) ? null : savedCatId;
+            isPinned = savedInstanceState.getBoolean("isPinned", false);
+            updatePinUI();
+        }
+
         handleIncomingIntent();
 
-        // default background when creating a new note
         if (!isEditing) {
-            selectedColor = DEFAULT_COLOR;
+            selectedColor = defaultColor;
             updateBackgroundColor();
         }
     }
 
-    private void bindViews() {
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    private void applyWindowInsets() {
+        View root = findViewById(R.id.edit_note_layout);
+        final View header = findViewById(R.id.headerLayout);
+        final View keyboardSpacer = findViewById(R.id.keyboard_spacer);
 
-        etTitle = findViewById(R.id.etTitle);
-        editorWebView = findViewById(R.id.etNote);
-        tvCategory = findViewById(R.id.tvCategory);
-        categoryLayout = findViewById(R.id.categoryLayout);
-        saveBtn = findViewById(R.id.btnSave);
+        if (root == null) return;
 
-        btnBold = findViewById(R.id.btn_bold);
-        btnItalic = findViewById(R.id.btn_italic);
-        btnBullet = findViewById(R.id.btn_bullet_list);
-        btnNumber = findViewById(R.id.btn_numbered_list);
-        btnH1 = findViewById(R.id.btn_h1);
-        btnH2 = findViewById(R.id.btn_h2);
+        ViewCompat.setOnApplyWindowInsetsListener(root, (v, windowInsets) -> {
+            Insets systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            Insets ime = windowInsets.getInsets(WindowInsetsCompat.Type.ime());
 
-        noteId = getIntent().getIntExtra("itemId", -1);
+            if (header != null) {
+                header.setPadding(header.getPaddingLeft(), systemBars.top, header.getPaddingRight(), header.getPaddingBottom());
+            }
 
-        findViewById(R.id.color_selection).setOnClickListener(v ->
-                CommonDialogs.showColorPicker(this, selectedColor, color -> {
-                    selectedColor = color;
-                    updateBackgroundColor();
-                }));
+            int bottomInset = Math.max(systemBars.bottom, ime.bottom);
+            if (keyboardSpacer != null) {
+                ViewGroup.LayoutParams params = keyboardSpacer.getLayoutParams();
+                if (params != null) {
+                    params.height = bottomInset;
+                    keyboardSpacer.setLayoutParams(params);
+                }
+            }
+
+            return windowInsets;
+        });
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt("noteId", noteId);
+        outState.putBoolean("isEditing", isEditing);
+        outState.putString("selectedColor", selectedColor);
+        outState.putInt("selectedCategoryId", (selectedCategoryId == null) ? -1 : selectedCategoryId);
+        outState.putBoolean("isPinned", isPinned);
     }
 
     private void setupEditorHelper() {
-        editorHelper = new CKEditorHelper(this, findViewById(R.id.etNote));
 
-        editorHelper.setOnFormatStateChangeListener((bold, italic, listType, headingLevel) ->
-                runOnUiThread(() -> {
-                    btnBold.setSelected(bold);
-                    btnItalic.setSelected(italic);
-                    btnBullet.setSelected("ul".equals(listType));
-                    btnNumber.setSelected("ol".equals(listType));
-                    btnH1.setSelected("h1".equals(headingLevel));
-                    btnH2.setSelected("h2".equals(headingLevel));
-                })
-        );
-
-        editorHelper.setOnEditorReadyListener(this::restoreDraftIfNeeded);
+        try {
+            editorHelper = new CKEditorHelper(this, binding.etNote);
+            editorHelper.setOnFormatStateChangeListener((bold, italic, listType, headingLevel) ->
+                    runOnUiThread(() -> {
+                        binding.btnBold.setSelected(bold);
+                        binding.btnItalic.setSelected(italic);
+                        binding.btnBulletList.setSelected("ul".equals(listType));
+                        binding.btnNumberedList.setSelected("ol".equals(listType));
+                        binding.btnH1.setSelected("h1".equals(headingLevel));
+                        binding.btnH2.setSelected("h2".equals(headingLevel));
+                    })
+            );
+            editorHelper.setOnEditorReadyListener(this::restoreDraftIfNeeded);
+        } catch (Exception e) {
+            Log.e(TAG, "Error initializing CKEditorHelper", e);
+            Toast.makeText(this, "Editor initialization failed", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void initViewModels() {
@@ -152,284 +169,252 @@ public class EditNoteActivity extends AppCompatActivity {
         categoryViewModel = new ViewModelProvider(this).get(CategoryViewModel.class);
     }
 
-    private void setupToolbar() {
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        toolbar.setNavigationOnClickListener(v -> finish());
-
-        btnBold.setOnClickListener(v -> editorHelper.toggleBold());
-
-        btnItalic.setOnClickListener(v -> editorHelper.toggleItalic());
-
-        btnBullet.setOnClickListener(v -> editorHelper.toggleBulletList());
-
-        btnNumber.setOnClickListener(v -> editorHelper.toggleNumberedList());
-
-        btnH1.setOnClickListener(v -> editorHelper.toggleHeading("h1"));
-
-        btnH2.setOnClickListener(v -> editorHelper.toggleHeading("h2"));
-    }
-
     private void setupListeners() {
-        categoryLayout.setOnClickListener(v -> {
-            int preselectIndex = 0;
-            for (int i = 0; i < categories.size(); i++) {
-                if (categories.get(i).id == selectedCategoryId) {
-                    preselectIndex = i;
-                    break;
-                }
-            }
-
-            CommonDialogs.showCategoryDialog(this, "Categories", new ArrayList<>(categoryNames), preselectIndex,
-                    (selectedCategory, position) -> {
-                        tvCategory.setText(selectedCategory);
-                        selectedCategoryId = categories.get(position).id;
-                    });
-        });
-
-        saveBtn.setOnClickListener(v -> saveNote());
+        setBackListener();
+        setPinListener();
+        setSaveListener();
+        setUndoRedoListeners();
+        setColorPickerListener();
+        setFormattingListeners();
     }
 
-    // Observe ViewModels
+    private void setBackListener() {
+        binding.btnBack.setOnClickListener(v ->
+                getOnBackPressedDispatcher().onBackPressed());
+    }
+
+    private void setPinListener() {
+        binding.btnPin.setOnClickListener(v -> {
+            isPinned = !isPinned;
+            updatePinUI();
+        });
+    }
+    private void setSaveListener() {
+        binding.btnSave.setOnClickListener(v -> saveNote());
+    }
+
+    private void setUndoRedoListeners() {
+        binding.btnUndo.setOnClickListener(v -> performEditorAction(EditorAction.UNDO));
+        binding.btnRedo.setOnClickListener(v -> performEditorAction(EditorAction.REDO));
+    }
+
+    private void setColorPickerListener() {
+        binding.btnColorPicker.setOnClickListener(v ->
+                CommonDialogs.showColorPicker(this, selectedColor, color -> {
+                    selectedColor = color;
+                    updateBackgroundColor();
+                }));
+    }
+
+    private void setFormattingListeners() {
+        binding.btnBold.setOnClickListener(v -> performEditorAction(EditorAction.BOLD));
+        binding.btnItalic.setOnClickListener(v -> performEditorAction(EditorAction.ITALIC));
+        binding.btnBulletList.setOnClickListener(v -> performEditorAction(EditorAction.BULLET));
+        binding.btnNumberedList.setOnClickListener(v -> performEditorAction(EditorAction.NUMBERED));
+        binding.btnChecklist.setOnClickListener(v -> performEditorAction(EditorAction.CHECKLIST));
+        binding.btnH1.setOnClickListener(v -> performEditorAction(EditorAction.H1));
+        binding.btnH2.setOnClickListener(v -> performEditorAction(EditorAction.H2));
+    }
+
+    private void performEditorAction(EditorAction action) {
+        if (editorHelper == null) return;
+
+        switch (action) {
+            case UNDO: editorHelper.undo(); break;
+            case REDO: editorHelper.redo(); break;
+            case BOLD: editorHelper.toggleBold(); break;
+            case ITALIC: editorHelper.toggleItalic(); break;
+            case BULLET: editorHelper.toggleBulletList(); break;
+            case NUMBERED: editorHelper.toggleNumberedList(); break;
+            case CHECKLIST: editorHelper.insertCheckbox(); break;
+            case H1: editorHelper.toggleHeading("h1"); break;
+            case H2: editorHelper.toggleHeading("h2"); break;
+        }
+    }
+
     private void observeViewModels() {
-        // Observe categories LiveData and update local cache + UI
         categoryViewModel.getAllCategories().observe(this, loaded -> {
             if (loaded == null) return;
-
-            List<CategoryEntity> list = new ArrayList<>(loaded);
-
-            boolean hasAll = false;
-            for (CategoryEntity c : list) {
-                if ("All".equalsIgnoreCase(c.name)) {
-                    hasAll = true;
-                    break;
-                }
-            }
-            if (!hasAll) {
-                CategoryEntity all = new CategoryEntity();
-                all.id = 0;
-                all.name = "All";
-                list.add(0, all);
-            }
-
             categories.clear();
-            categories.addAll(list);
-
-            categoryNames.clear();
-            for (CategoryEntity c : categories) categoryNames.add(c.name);
-
-            if (!isEditing && !categories.isEmpty()) {
-                tvCategory.setText(categories.get(0).name);
-                selectedCategoryId = categories.get(0).id;
-            } else {
-                if (isEditing && selectedCategoryId != -1) {
-                    for (CategoryEntity c : categories) {
-                        if (c.id == selectedCategoryId) {
-                            tvCategory.setText(c.name);
-                            break;
-                        }
-                    }
-                }
-            }
+            categories.addAll(loaded);
+            populateCategoryChips();
         });
 
-        // Observe single note LiveData (for editing)
-        noteViewModel.getNoteById(noteId).observe(this, note -> {
-            if (note == null) return;
-
-            isEditing = true;
-
-            final String title = note.title == null ? "" : note.title;
-            final String content = note.content == null ? "" : note.content;
-            final String bgColor = note.colorHex == null ? DEFAULT_COLOR : note.colorHex;
-
-            etTitle.setText(title);
-            editorHelper.setContent(content);
-
-            selectedColor = bgColor;
-            originalCreatedAt = note.createdAt;
-            updateBackgroundColor();
-
-            if (note.categoryId != null) {
+        if (noteId != -1) {
+            noteViewModel.getNoteById(noteId).observe(this, note -> {
+                if (note == null) return;
+                isEditing = true;
+                binding.etTitle.setText(note.title);
+                if (editorHelper != null) {
+                    editorHelper.setContent(note.content);
+                }
+                selectedColor = note.colorHex != null ? note.colorHex : defaultColor;
+                originalCreatedAt = note.createdAt;
+                isPinned = note.isPinned;
                 selectedCategoryId = note.categoryId;
-                boolean found = false;
-                for (CategoryEntity c : categories) {
-                    if (c.id == selectedCategoryId) {
-                        tvCategory.setText(c.name);
-                        found = true;
-                        break;
-                    }
+                updatePinUI();
+                updateBackgroundColor();
+                updateSelectedChip();
+            });
+        }
+    }
+
+    private void populateCategoryChips() {
+        binding.categoryChipGroup.removeAllViews();
+        LayoutInflater inflater = LayoutInflater.from(this);
+        for (CategoryEntity category : categories) {
+            Chip chip = (Chip) inflater.inflate(R.layout.item_category_chip, binding.categoryChipGroup, false);
+            chip.setText(category.name.toUpperCase());
+            chip.setTag(category.id);
+            chip.setId(View.generateViewId()); // Ensure unique ID for ChipGroup single selection
+            chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    selectedCategoryId = (Integer) chip.getTag();
+                } else if (binding.categoryChipGroup.getCheckedChipId() == View.NO_ID) {
+                    selectedCategoryId = null;
                 }
-                if (!found) {
-                    categoryViewModel.getCategoryById(selectedCategoryId).observe(this, cat -> {
-                        if (cat != null) tvCategory.setText(cat.name);
-                    });
-                }
+                updateChipColors();
+            });
+            binding.categoryChipGroup.addView(chip);
+        }
+        updateSelectedChip();
+        updateChipColors();
+    }
+
+    private void updateSelectedChip() {
+        if (selectedCategoryId == null) return;
+        for (int i = 0; i < binding.categoryChipGroup.getChildCount(); i++) {
+            Chip chip = (Chip) binding.categoryChipGroup.getChildAt(i);
+            if (chip.getTag() != null && chip.getTag().equals(selectedCategoryId)) {
+                chip.setChecked(true);
+                break;
             }
-        });
+        }
+    }
+
+    private void updateChipColors() {
+        int baseColor = Color.parseColor(selectedColor);
+
+
+        ColorStateList colorStateList = new ColorStateList(
+                new int[][]{
+                        new int[]{android.R.attr.state_checked},
+                        new int[]{}
+                },
+                new int[]{
+                        ColorUtils.blendARGB(baseColor, Color.BLACK, 0.3f),
+                        ColorUtils.blendARGB(baseColor, Color.WHITE, 0.2f)
+                }
+        );
+
+        for (int i = 0; i < binding.categoryChipGroup.getChildCount(); i++) {
+            Chip chip = (Chip) binding.categoryChipGroup.getChildAt(i);
+            chip.setChipBackgroundColor(colorStateList);
+            chip.setChipStrokeWidth(0); // Clean look
+        }
     }
 
     private void handleIncomingIntent() {
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra(EXTRA_ITEM_ID)) {
             noteId = intent.getIntExtra(EXTRA_ITEM_ID, -1);
-            if (noteId != -1) {
-                isEditing = true;
-                noteViewModel.getNoteById(noteId);
-            }
+            isEditing = noteId != -1;
         }
     }
 
-    // Save/update note (uses ViewModel)
     private void saveNote() {
-        final String title = etTitle.getText() == null ? "" : etTitle.getText().toString().trim();
+        final String title = binding.etTitle.getText().toString().trim();
         if (title.isEmpty()) {
             Toast.makeText(this, "Please enter a title", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        editorHelper.getContent(htmlContent -> {
-            long timestamp = System.currentTimeMillis();
-            String userId = new SharedPreferenceUtil(this).getUserId();
-
-            if (isEditing && noteId != -1) {
-                final NoteEntity updated = new NoteEntity();
-                updated.id = noteId;
-                updated.userId = userId;
-                updated.title = title;
-                updated.content = htmlContent;
-                updated.createdAt = originalCreatedAt;
-                updated.updatedAt = timestamp;
-                updated.categoryId = selectedCategoryId;
-                updated.colorHex = selectedColor;
-
-                noteViewModel.updateNote(updated);
-            } else {
-                final NoteEntity newNote = new NoteEntity();
-                newNote.title = title;
-                newNote.userId = userId;
-                newNote.content = htmlContent;
-                newNote.createdAt = timestamp;
-                newNote.updatedAt = timestamp;
-                newNote.categoryId = selectedCategoryId;
-                newNote.colorHex = selectedColor;
-
-                noteViewModel.insertNote(newNote);
-            }
-
-            clearDraft();
-            resetUI();
-            Toast.makeText(EditNoteActivity.this, "Note saved successfully", Toast.LENGTH_SHORT).show();
-            finish();
-        });
-    }
-
-    // Draft handling
-    private void restoreDraftIfNeeded() {
-        if (isEditing || noteId != -1) return;
-        if (!draftManager.hasValidDraft()) return;
-
-        etTitle.setText(draftManager.getDraftTitle());
-        editorHelper.setContent(draftManager.getDraftContent());
-        tvCategory.setText(draftManager.getDraftCategory());
-        selectedColor = draftManager.getDraftColor() == null ? DEFAULT_COLOR : draftManager.getDraftColor();
-
-        updateBackgroundColor();
-    }
-
-    private void saveDraftSilently() {
-        editorHelper.getContent(htmlContent -> draftManager.saveDraft(
-                etTitle.getText() == null ? "" : etTitle.getText().toString(),
-                htmlContent,
-                "",
-                "",
-                tvCategory.getText() == null ? "" : tvCategory.getText().toString(),
-                selectedColor
-        ));
-    }
-
-    private void clearDraft() {
-        draftManager.clearDraft();
-    }
-
-    // UI helpers
-    private void updateBackgroundColor() {
-        editorHelper.setBackgroundColor(selectedColor);
-        try {
-            editorWebView.setBackgroundColor(Color.parseColor(selectedColor));
-        } catch (IllegalArgumentException e) {
-            editorWebView.setBackgroundColor(Color.parseColor(DEFAULT_COLOR));
+        if (editorHelper != null) {
+            editorHelper.getContent(htmlContent -> performSave(title, htmlContent));
+        } else {
+            performSave(title, "");
         }
     }
 
-    private void resetUI() {
-        etTitle.setText("");
-        editorHelper.setContent("");
-        tvCategory.setText("");
+    private void performSave(String title, String htmlContent) {
+        long timestamp = System.currentTimeMillis();
+        String userId = new SharedPreferenceUtil(this).getUserId();
 
-        selectedColor = DEFAULT_COLOR;
-        updateBackgroundColor();
+        NoteEntity note = new NoteEntity();
+        if (isEditing) note.id = noteId;
+        note.userId = userId;
+        note.title = title;
+        note.content = htmlContent;
+        note.createdAt = isEditing ? originalCreatedAt : timestamp;
+        note.updatedAt = timestamp;
+        note.categoryId = selectedCategoryId;
+        note.colorHex = selectedColor;
+        note.isPinned = isPinned;
 
-        selectedCategoryId = -1;
+        if (isEditing) noteViewModel.updateNote(note);
+        else noteViewModel.insertNote(note);
 
-        btnBold.setSelected(false);
-        btnItalic.setSelected(false);
-        btnBullet.setSelected(false);
-        btnNumber.setSelected(false);
-        btnH1.setSelected(false);
-        btnH2.setSelected(false);
+        isNoteSaved = true;
+        preferences.clearDraft();
+        finish();
+    }
+
+    private void updatePinUI() {
+        if (isPinned) {
+            binding.btnPin.setColorFilter(ContextCompat.getColor(this, R.color.tabSelectedTextColor));
+        } else {
+            binding.btnPin.clearColorFilter();
+        }
+    }
+
+    private void updateBackgroundColor() {
+        int color = Color.parseColor(selectedColor);
+        View root = findViewById(R.id.edit_note_layout);
+        if (root != null) root.setBackgroundColor(color);
+
+        if (editorHelper != null) {
+            editorHelper.setBackgroundColor(selectedColor);
+        }
+        binding.btnColorPicker.setBackgroundTintList(ColorStateList.valueOf(color));
+        updateChipColors();
+    }
+
+    private void restoreDraftIfNeeded() {
+        if (isEditing) return;
+        if (!preferences.hasValidDraft()) return;
+        binding.etTitle.setText(preferences.getString(PrefKeys.KEY_DRAFT_TITLE, ""));
+        if (editorHelper != null) {
+            editorHelper.setContent(preferences.getString(PrefKeys.KEY_DRAFT_CONTENT, ""));
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        if (!isEditing && noteId == -1) {
-            saveDraftSilently();
+        // Only save draft if it's a new note, and it hasn't been saved yet
+        if (!isEditing && noteId == -1 && !isNoteSaved && editorHelper != null) {
+            editorHelper.getContent(htmlContent -> preferences.saveDraft(
+                    binding.etTitle.getText().toString(), htmlContent, selectedColor
+            ));
         }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        AnalyticsHelper.logScreenView(getClass().getSimpleName(), getClass().getSimpleName());
-    }
-
-    private void setupKeyboardListener() {
-
-        // Run this fix ONLY on Samsung devices
-        if (!"samsung".equalsIgnoreCase(android.os.Build.MANUFACTURER)) {
-            return;
-        }
-
-        final View rootView = findViewById(R.id.edit_note_layout);
-        rootView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
-            Rect r = new Rect();
-            rootView.getWindowVisibleDisplayFrame(r);
-
-            // Calculate the difference between the screen height and the visible height
-            int screenHeight = rootView.getRootView().getHeight();
-            int keypadHeight = screenHeight - r.bottom;
-
-            // If keypadHeight is > 200, the keyboard is likely open
-            if (keypadHeight > 200) {
-                // Shrink the layout padding so the WebView is pushed up and visible
-                rootView.setPadding(0, 0, 0, keypadHeight);
-            } else {
-                // Reset padding when keyboard is closed
-                rootView.setPadding(0, 0, 0, 0);
-            }
-        });
     }
 
     @Override
     protected void onDestroy() {
-        if (editorWebView != null) {
-            editorWebView.stopLoading();
-            editorWebView.setWebViewClient(null);
-            editorWebView.clearHistory();
-            editorWebView.removeAllViews();
-            editorWebView.destroy();
-            editorWebView = null;
+        if (binding != null) {
+            try {
+                binding.etNote.stopLoading();
+                binding.etNote.clearHistory();
+                binding.etNote.removeAllViews();
+                binding.etNote.destroy();
+            } catch (Exception e) {
+                Log.e(TAG, "Error destroying WebView", e);
+            }
         }
         super.onDestroy();
+    }
+
+    private enum EditorAction {
+        UNDO, REDO, BOLD, ITALIC, BULLET, NUMBERED, CHECKLIST, H1, H2
     }
 }

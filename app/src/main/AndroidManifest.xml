@@ -65,6 +65,7 @@
             android:exported="false" />
         <activity
             android:name="com.example.NotesNest.activity.EditNoteActivity"
+            android:windowSoftInputMode="adjustResize"
             android:exported="false" />
 
         <activity

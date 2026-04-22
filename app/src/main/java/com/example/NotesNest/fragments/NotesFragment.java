@@ -1,6 +1,7 @@
 package com.example.NotesNest.fragments;
 
 import static com.example.NotesNest.editor.CKEditorHelper.getThemeColor;
+import static com.example.NotesNest.utils.ValidationUtils.isNetworkAvailable;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -205,10 +206,23 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
 
     private void setupCreateButton() {
         createButton.setOnClickListener(v -> {
-            if (!premiumManager.isPremium()) {
-                AdManager.showInterstitial(requireActivity(), this::openCreateItem);
-            } else {
+            if (premiumManager.isPremium()) {
                 openCreateItem();
+            } else {
+                if (currentNotesCount >= PremiumManager.MAX_FREE_NOTES) {
+                    if (!isNetworkAvailable(context)) {
+                        CommonDialogs.showPremiumRequiredDialog(context, 
+                                "Note limit reached (30 notes). Premium required for more. Please connect to internet to upgrade.");
+                    } else {
+                        CommonDialogs.showConfirmDialog(context, "Note Limit Reached", 
+                                "You have reached the limit of 30 notes. To add more notes, you need to upgrade to Premium. Would you like to watch an ad to add this note?", 
+                                "Watch Ad", "Upgrade", () -> {
+                                    AdManager.showInterstitial(requireActivity(), this::openCreateItem);
+                                });
+                    }
+                } else {
+                    openCreateItem();
+                }
             }
         });
     }

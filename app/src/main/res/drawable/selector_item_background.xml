@@ -1,14 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_selected="true">
-        <shape android:shape="rectangle">
-            <solid android:color="?attr/colorPrimary" />
-            <corners android:radius="@dimen/radius_8" />
+        <shape android:shape="oval">
+            <solid android:color="@color/tabSelectedTextColor" />
         </shape>
     </item>
     <item>
-        <shape android:shape="rectangle">
+        <shape android:shape="oval">
             <solid android:color="@android:color/transparent" />
-            <corners android:radius="@dimen/radius_8" />
         </shape>
     </item>
 </selector>

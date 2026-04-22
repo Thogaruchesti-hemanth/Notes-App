@@ -1,217 +1,255 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/edit_note_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorSecondary"
-    android:contentDescription="@string/text_note_add_and_edit_screen"
-    android:orientation="vertical"
-    android:paddingHorizontal="@dimen/padding_10">
+    android:background="#FDF9E1"
+    android:paddingTop="@dimen/padding_16">
 
     <LinearLayout
+        android:id="@+id/headerLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin_24"
         android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingHorizontal="@dimen/padding_16"
+        android:paddingTop="@dimen/padding_16"
+        android:paddingBottom="@dimen/padding_16">
 
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="@dimen/size_48"
+            android:layout_height="@dimen/size_48"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/text_back"
+            android:src="@drawable/ic_back_arrow"
+            app:tint="@color/black" />
+
+        <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_16"
             android:layout_weight="1"
-            android:background="@android:color/transparent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:navigationIcon="@drawable/ic_arrow_right"
-            app:title="@string/text_edit_note"
-            app:titleTextColor="?attr/colorPrimary" />
+            android:text="@string/text_edit_note"
+            android:textColor="@color/black"
+            android:textSize="@dimen/text_20"
+            android:textStyle="bold" />
+
+        <ImageButton
+            android:id="@+id/btnPin"
+            android:layout_width="@dimen/size_48"
+            android:layout_height="@dimen/size_48"
+            android:layout_marginEnd="@dimen/margin_8"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/text_note_pinned"
+            android:src="@drawable/ic_pinned"
+            app:tint="@color/black" />
 
         <Button
             android:id="@+id/btnSave"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/margin_12"
             android:backgroundTint="@color/tabSelectedTextColorLight"
             android:text="@string/text_save"
+            android:textAllCaps="false"
             android:textColor="@color/black"
-            app:rippleColor="@color/ripple_color" />
+            android:textStyle="bold"
+            app:cornerRadius="@dimen/radius_24" />
+
     </LinearLayout>
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/titleTextInputLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
-        android:hint="@string/text_enter_the_title"
-        app:boxBackgroundMode="none"
-        app:hintTextColor="@color/grey_400">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@android:color/transparent"
-            android:cursorVisible="true"
-            android:inputType="textCapSentences"
-            android:paddingVertical="@dimen/padding_12"
-            android:textColor="?attr/colorPrimary"
-            android:textSize="@dimen/text_22"
-            android:textStyle="bold" />
-
-    </com.google.android.material.textfield.TextInputLayout>
-
-
-    <LinearLayout
-        android:id="@+id/categoryLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="@dimen/margin_8"
-        android:background="@drawable/bg_secondary_rounded_stroke_4"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="@dimen/padding_12"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/titleTextInputLayout">
-
-        <ImageView
-            android:layout_width="@dimen/size_20"
-            android:layout_height="@dimen/size_20"
-            android:backgroundTint="@color/black"
-            android:contentDescription="@string/text_notes_categories"
-            android:src="@drawable/ic_category" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/margin_12"
-            android:layout_weight="1"
-            android:text="@string/text_category"
-            android:textColor="?attr/colorPrimary" />
-
-        <TextView
-            android:id="@+id/tvCategory"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/text_all"
-            android:textColor="@color/textColor"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <FrameLayout
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginVertical="@dimen/margin_16"
-        android:layout_weight="1">
-
-        <WebView
-            android:id="@+id/etNote"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@android:color/transparent" />
-    </FrameLayout>
+        android:visibility="gone" />
 
     <LinearLayout
-        android:id="@+id/ckeditor_toolbar"
+        android:id="@+id/fixedTopContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="@dimen/margin_10"
-        android:layout_marginBottom="@dimen/margin_50"
-        android:background="@drawable/bg_primary_rounded_24"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="@dimen/padding_8">
+        android:layout_below="@id/headerLayout"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/padding_20">
 
-        <!-- THIS VIEW SCROLLS -->
         <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:scrollbars="none"
-            android:overScrollMode="never">
+            android:layout_marginTop="@dimen/margin_8"
+            android:scrollbars="none">
 
-            <!-- ONLY ITEMS INSIDE SCROLL -->
-            <LinearLayout
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/categoryChipGroup"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                app:singleLine="true"
+                app:singleSelection="true">
+            </com.google.android.material.chip.ChipGroup>
+        </HorizontalScrollView>
+
+        <EditText
+            android:id="@+id/etTitle"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/size_48"
+            android:layout_marginTop="@dimen/margin_16"
+            android:autofillHints="@null"
+            android:background="@android:color/transparent"
+            android:hint="@string/text_enter_the_title"
+            android:textColorHint="@color/textColorSecondary"
+            android:inputType="textCapSentences"
+            android:maxWidth="600dp"
+            android:textColor="?attr/colorPrimary"
+            android:textSize="@dimen/text_22" />
+    </LinearLayout>
+
+    <WebView
+        android:id="@+id/etNote"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/ckeditor_toolbar_container"
+        android:layout_below="@id/fixedTopContainer"
+        android:layout_marginHorizontal="@dimen/padding_20"
+        android:layout_marginTop="@dimen/margin_8"
+        android:background="@android:color/transparent" />
+
+    <LinearLayout
+        android:id="@+id/ckeditor_toolbar_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="vertical">
+
+        <HorizontalScrollView
+            android:id="@+id/ckeditor_toolbar_scroll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/margin_16"
+            android:layout_marginBottom="@dimen/margin_16"
+            android:background="@drawable/bg_primary_rounded_24"
+            android:backgroundTint="@color/grey_900"
+            android:fillViewport="true"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/ckeditor_toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:padding="@dimen/padding_8"
+                tools:ignore="ScrollViewSize">
 
                 <ImageButton
-                    android:id="@+id/color_selection"
+                    android:id="@+id/btnUndo"
                     android:layout_width="@dimen/size_48"
                     android:layout_height="@dimen/size_48"
-                    android:layout_marginEnd="@dimen/margin_4"
-                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:layout_marginHorizontal="@dimen/margin_4"
+                    android:background="@drawable/selector_item_background"
+                    android:contentDescription="@string/text_undo"
+                    android:src="@drawable/ic_undo"
+                    app:tint="@color/white" />
+
+                <ImageButton
+                    android:id="@+id/btnRedo"
+                    android:layout_width="@dimen/size_48"
+                    android:layout_height="@dimen/size_48"
+                    android:layout_marginHorizontal="@dimen/margin_4"
+                    android:background="@drawable/selector_item_background"
+                    android:contentDescription="@string/text_redo"
+                    android:src="@drawable/ic_redo"
+                    app:tint="@color/white" />
+
+                <ImageButton
+                    android:id="@+id/btnColorPicker"
+                    android:layout_width="@dimen/size_48"
+                    android:layout_height="@dimen/size_48"
+                    android:layout_marginHorizontal="@dimen/margin_8"
+                    android:background="@drawable/bg_circle_fill"
                     android:contentDescription="@string/text_color_picker"
+                    android:padding="@dimen/padding_10"
+                    android:scaleType="centerInside"
                     android:src="@drawable/ic_color_picker" />
-
-                <View
-                    android:layout_width="@dimen/size_1"
-                    android:layout_height="match_parent"
-                    android:layout_marginEnd="@dimen/margin_4"
-                    android:background="?attr/colorSecondary" />
-
-                <ImageButton
-                    android:id="@+id/btn_h1"
-                    android:layout_width="@dimen/size_48"
-                    android:layout_height="@dimen/size_48"
-                    android:layout_marginEnd="@dimen/margin_4"
-                    android:background="@drawable/selector_item_background"
-                    android:src="@drawable/ic_h1"
-                    app:tint="@color/selector_tab_text_color" />
-
-                <ImageButton
-                    android:id="@+id/btn_h2"
-                    android:layout_width="@dimen/size_48"
-                    android:layout_height="@dimen/size_48"
-                    android:layout_marginEnd="@dimen/margin_4"
-                    android:background="@drawable/selector_item_background"
-                    android:src="@drawable/ic_h2"
-                    app:tint="@color/selector_tab_text_color" />
 
                 <ImageButton
                     android:id="@+id/btn_bold"
                     android:layout_width="@dimen/size_48"
                     android:layout_height="@dimen/size_48"
-                    android:layout_marginEnd="@dimen/margin_4"
+                    android:layout_marginHorizontal="@dimen/margin_4"
                     android:background="@drawable/selector_item_background"
+                    android:contentDescription="@string/text_text_bold"
                     android:src="@drawable/ic_format_bold"
-                    app:tint="@color/selector_tab_text_color" />
+                    app:tint="@color/white" />
 
                 <ImageButton
-                    android:id="@+id/btn_italic"
+                    android:id="@+id/btnItalic"
                     android:layout_width="@dimen/size_48"
                     android:layout_height="@dimen/size_48"
-                    android:layout_marginEnd="@dimen/margin_4"
+                    android:layout_marginHorizontal="@dimen/margin_4"
                     android:background="@drawable/selector_item_background"
+                    android:contentDescription="@string/text_text_italic"
                     android:src="@drawable/ic_format_italic"
-                    app:tint="@color/selector_tab_text_color" />
+                    app:tint="@color/white" />
 
                 <ImageButton
-                    android:id="@+id/btn_bullet_list"
+                    android:id="@+id/btnBulletList"
                     android:layout_width="@dimen/size_48"
                     android:layout_height="@dimen/size_48"
-                    android:layout_marginEnd="@dimen/margin_4"
+                    android:layout_marginHorizontal="@dimen/margin_4"
                     android:background="@drawable/selector_item_background"
+                    android:contentDescription="@string/text_bullet_list"
                     android:src="@drawable/ic_format_list_bulleted"
-                    app:tint="@color/selector_tab_text_color" />
+                    app:tint="@color/white" />
 
                 <ImageButton
-                    android:id="@+id/btn_numbered_list"
+                    android:id="@+id/btnNumberedList"
                     android:layout_width="@dimen/size_48"
                     android:layout_height="@dimen/size_48"
-                    android:layout_marginEnd="@dimen/margin_4"
+                    android:layout_marginHorizontal="@dimen/margin_4"
                     android:background="@drawable/selector_item_background"
+                    android:contentDescription="@string/text_number_list"
                     android:src="@drawable/ic_format_number_list"
-                    app:tint="@color/selector_tab_text_color" />
+                    app:tint="@color/white" />
+
+                <ImageButton
+                    android:id="@+id/btnChecklist"
+                    android:layout_width="@dimen/size_48"
+                    android:layout_height="@dimen/size_40"
+                    android:layout_marginHorizontal="@dimen/margin_4"
+                    android:background="@drawable/selector_item_background"
+                    android:contentDescription="@string/text_checkbox"
+                    android:src="@drawable/ic_check"
+                    app:tint="@color/white" />
+
+                <ImageButton
+                    android:id="@+id/btnH1"
+                    android:layout_width="@dimen/size_48"
+                    android:layout_height="@dimen/size_48"
+                    android:layout_marginHorizontal="@dimen/margin_4"
+                    android:background="@drawable/selector_item_background"
+                    android:contentDescription="@string/text_h1_format"
+                    android:src="@drawable/ic_h1"
+                    app:tint="@color/white" />
+
+                <ImageButton
+                    android:id="@+id/btnH2"
+                    android:layout_width="@dimen/size_48"
+                    android:layout_height="@dimen/size_48"
+                    android:layout_marginHorizontal="@dimen/margin_4"
+                    android:background="@drawable/selector_item_background"
+                    android:contentDescription="@string/text_h2_text"
+                    android:src="@drawable/ic_h2"
+                    app:tint="@color/white" />
 
             </LinearLayout>
-
         </HorizontalScrollView>
+
+        <View
+            android:id="@+id/keyboard_spacer"
+            android:layout_width="match_parent"
+            android:layout_height="0dp" />
+
     </LinearLayout>
 
-
-</LinearLayout>
+</RelativeLayout>
