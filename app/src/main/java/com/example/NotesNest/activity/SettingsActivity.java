@@ -13,10 +13,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -31,12 +28,15 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.NotesNest.R;
 import com.example.NotesNest.backups.ImportManager;
 import com.example.NotesNest.backups.LocalBackupManager;
+import com.example.NotesNest.databinding.ActivitySettingsBinding;
+import com.example.NotesNest.databinding.ItemSettingsOptionBinding;
+import com.example.NotesNest.databinding.ItemSupportOptionBinding;
+import com.example.NotesNest.utils.AppLog;
 import com.example.NotesNest.utils.CommonDialogs;
 import com.example.NotesNest.utils.PremiumManager;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
 import com.example.NotesNest.utils.ThemeManager;
 import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
 
 import java.util.concurrent.ExecutorService;
@@ -46,27 +46,21 @@ public class SettingsActivity extends AppCompatActivity {
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler uiHandler = new Handler(Looper.getMainLooper());
-
-    private LinearLayout notesLayout, themeLayout, localBackupLayout, driveBackupLayout, importDataLayout, manageAccountLayout;
-    private TextView versionTextView;
     private AlertDialog progressDialog;
-
-    // Launchers for Scoped Storage (No permission required)
     private ActivityResultLauncher<Intent> importLauncher;
     private ActivityResultLauncher<String> exportLauncher;
-
-    private String pendingPassword; // Temporary storage for password during export flow
+    private String pendingPassword;
     private boolean isPremiumUser;
-    private AdView adView;
-    private AdRequest adRequest;
-    private PremiumManager premiumManager;
+    private ActivitySettingsBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        PremiumManager premiumManager;
         ThemeManager.applyTheme(this);
+        binding = ActivitySettingsBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_settings);
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.settings_layout), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -88,14 +82,14 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void setupAds() {
+        AdRequest adRequest;
         if (isPremiumUser) {
-            if (adView != null) adView.setVisibility(View.GONE);
+            binding.adView1.setVisibility(View.GONE);
             return;
         }
         MobileAds.initialize(this);
-        adView = findViewById(R.id.adView1);
         adRequest = new AdRequest.Builder().build();
-        adView.loadAd(adRequest);
+        binding.adView1.loadAd(adRequest);
     }
 
     private void setupActivityResultLaunchers() {
@@ -122,15 +116,15 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void setupClickListeners() {
         // LOCAL BACKUP (EXPORT)
-        localBackupLayout.setOnClickListener(v ->
+        binding.layoutLocalBackup.getRoot().setOnClickListener(v ->
                 showPasswordDialog(this, "Set Backup Password", password -> {
-                    pendingPassword = new String(password);
+                    pendingPassword = password;
                     exportLauncher.launch("NotesNest_Backup.enc");
                 })
         );
 
         // IMPORT
-        importDataLayout.setOnClickListener(v -> {
+        binding.layoutImportData.getRoot().setOnClickListener(v -> {
             Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
             intent.addCategory(Intent.CATEGORY_OPENABLE);
             intent.setType("*/*");
@@ -138,13 +132,13 @@ public class SettingsActivity extends AppCompatActivity {
         });
 
         if (isPremiumUser) {
-            driveBackupLayout.setOnClickListener(v -> {
+            binding.layoutDiveBackup.getRoot().setOnClickListener(v -> {
                 startActivity(new Intent(this, DriveBackupActivity.class));
                 finish();
             });
         }
 
-        manageAccountLayout.setOnClickListener(v ->
+        binding.layoutManageAccount.getRoot().setOnClickListener(v ->
                 startActivity(new Intent(this, ManageAccountActivity.class)));
     }
 
@@ -172,9 +166,21 @@ public class SettingsActivity extends AppCompatActivity {
     private void startImportFromUri(Uri uri, char[] password) {
         ImportManager manager = new ImportManager(executor, uiHandler);
         manager.importFromUri(this, uri, password, new ImportManager.ImportCallback() {
-            @Override public void showProgress(String m) { showProgressDialog(m); }
-            @Override public void hideProgress() { hideProgressDialog(); }
-            @Override public void postToast(String m) { postToast(m); }
+            @Override
+            public void showProgress(String m) {
+                showProgressDialog(m);
+            }
+
+            @Override
+            public void hideProgress() {
+                hideProgressDialog();
+            }
+
+            @Override
+            public void postToast(String m) {
+                AppLog.d("SettingsActivity", "Import toast: " + m);
+            }
+
             @Override
             public void onVersionMismatch(int c, int i, Runnable ok, Runnable cancel) {
                 new AlertDialog.Builder(SettingsActivity.this)
@@ -210,36 +216,55 @@ public class SettingsActivity extends AppCompatActivity {
 
     // --- REST OF THE CODE (UI SETUP) ---
     private void setupNotesSpinner() {
-        Spinner spinner = notesLayout.findViewById(R.id.spinnerOptions);
+        Spinner spinner = binding.layoutNote.getRoot().findViewById(R.id.spinnerOptions);
         String[] options = {"Linear", "Grid"};
         spinner.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, options));
         spinner.setSelection(new SharedPreferenceUtil(this).getKeyNoteLayout().equals("Grid") ? 1 : 0);
         spinner.setOnItemSelectedListener(new SimpleItemSelectedListener() {
-            @Override public void onItemSelected(int position) {
+            @Override
+            public void onItemSelected(int position) {
                 new SharedPreferenceUtil(SettingsActivity.this).setKeyNoteLayout(options[position]);
             }
         });
     }
 
     private void setupThemeSpinner() {
-        Spinner spinner = themeLayout.findViewById(R.id.spinnerOptions);
+        Spinner spinner = binding.layoutTheme.getRoot().findViewById(R.id.spinnerOptions);
         String[] options = {"System", "Light", "Dark"};
         spinner.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, options));
         String saved = ThemeManager.getCurrentThemeMode(this);
-        spinner.setSelection("light".equals(saved) ? 1 : "dark".equals(saved) ? 2 : 0);
+        int position;
+
+        if ("light".equals(saved)) {
+            position = 1;
+        } else if ("dark".equals(saved)) {
+            position = 2;
+        } else {
+            position = 0;
+        }
+
+        spinner.setSelection(position);
 
         if (!isPremiumUser) {
             spinner.setEnabled(false);
-            themeLayout.setAlpha(0.5f);
-            themeLayout.findViewById(R.id.tvPremiumBatch).setVisibility(View.VISIBLE);
-            themeLayout.setOnClickListener(v -> CommonDialogs.showPremiumRequiredDialog(this, "Theme customization is for Premium users only."));
+            binding.layoutTheme.getRoot().setAlpha(0.5f);
+            binding.layoutTheme.getRoot().findViewById(R.id.tvPremiumBatch).setVisibility(View.VISIBLE);
+            binding.layoutTheme.getRoot().setOnClickListener(v -> CommonDialogs.showPremiumRequiredDialog(this, "Theme customization is for Premium users only."));
             return;
         }
 
         spinner.setOnItemSelectedListener(new SimpleItemSelectedListener() {
-            @Override public void onItemSelected(int position) {
-                String selected = position == 1 ? "light" : position == 2 ? "dark" : "system";
-                if (selected.equals(ThemeManager.getCurrentThemeMode(SettingsActivity.this))) return;
+            @Override
+            public void onItemSelected(int position) {
+                String selected = "system";
+
+                if (position == 1) {
+                    selected = "light";
+                } else if (position == 2) {
+                    selected = "dark";
+                }
+                if (selected.equals(ThemeManager.getCurrentThemeMode(SettingsActivity.this)))
+                    return;
                 ThemeManager.updateTheme(SettingsActivity.this, selected, SettingsActivity.this);
                 recreate();
             }
@@ -248,47 +273,51 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void setupDriveBackupPremium() {
         if (isPremiumUser) return;
-        driveBackupLayout.findViewById(R.id.tvPremiumBatch).setVisibility(View.VISIBLE);
-        driveBackupLayout.setAlpha(0.5f);
-        driveBackupLayout.setOnClickListener(v -> CommonDialogs.showPremiumRequiredDialog(this, "Drive backup is for Premium users only."));
+        binding.layoutDiveBackup.getRoot().findViewById(R.id.tvPremiumBatch).setVisibility(View.VISIBLE);
+        binding.layoutDiveBackup.getRoot().setAlpha(0.5f);
+        binding.layoutDiveBackup.getRoot().setOnClickListener(v -> CommonDialogs.showPremiumRequiredDialog(this, "Drive backup is for Premium users only."));
     }
 
     private void setupOptions() {
-        setupOptionsData(localBackupLayout, R.drawable.ic_local_backup, "Local Backup");
-        setupOptionsData(driveBackupLayout, R.drawable.ic_drive_backup, "Drive Backup");
-        setupOptionsData(importDataLayout, R.drawable.ic_import_data, "Import");
-        setupOptionsData(notesLayout, R.drawable.ic_layout, "Notes Layout");
-        setupOptionsData(themeLayout, R.drawable.ic_theme, "App Theme");
-        setupOptionsData(manageAccountLayout, R.drawable.ic_manage_account, "Manage Account");
+        setupOptionsData(binding.layoutLocalBackup, R.drawable.ic_local_backup, "Local Backup");
+        setupOptionsData(binding.layoutDiveBackup, R.drawable.ic_drive_backup, "Drive Backup");
+        setupOptionsData(binding.layoutImportData, R.drawable.ic_import_data, "Import");
+        setupOptionsData(binding.layoutNote, R.drawable.ic_layout, "Notes Layout");
+        setupOptionsData(binding.layoutTheme, R.drawable.ic_theme, "App Theme");
+        setupOptionsData(binding.layoutManageAccount, R.drawable.ic_manage_account, "Manage Account");
     }
 
-    private void setupOptionsData(LinearLayout l, int icon, String title) {
-        ((ImageView) l.findViewById(R.id.ivIcon)).setImageDrawable(AppCompatResources.getDrawable(this, icon));
-        ((TextView) l.findViewById(R.id.tvText)).setText(title);
+    private void setupOptionsData(ItemSettingsOptionBinding binding, int icon, String title) {
+        binding.ivIcon.setImageDrawable(AppCompatResources.getDrawable(this, icon));
+        binding.tvText.setText(title);
+    }
+
+    private void setupOptionsData(ItemSupportOptionBinding binding, int icon, String title) {
+        binding.ivIcon.setImageDrawable(AppCompatResources.getDrawable(this, icon));
+        binding.tvText.setText(title);
     }
 
     private void initViews() {
-        localBackupLayout = findViewById(R.id.layoutLocalBackup);
-        driveBackupLayout = findViewById(R.id.layoutDiveBackup);
-        importDataLayout = findViewById(R.id.layoutImportData);
-        notesLayout = findViewById(R.id.layoutNote);
-        themeLayout = findViewById(R.id.layoutTheme);
-        manageAccountLayout = findViewById(R.id.layoutManageAccount);
-        versionTextView = findViewById(R.id.tvVersion);
-        findViewById(R.id.layoutChangePassword).setVisibility(View.GONE);
-        findViewById(R.id.ivBackArrow).setOnClickListener(v -> finish());
-        adView = findViewById(R.id.adView1);
+        binding.layoutChangePassword.getRoot().setVisibility(View.GONE);
+        binding.ivBackArrow.setOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
 
         try {
             PackageInfo p = getPackageManager().getPackageInfo(getPackageName(), 0);
-            versionTextView.setText(p.versionName);
-        } catch (PackageManager.NameNotFoundException ignored) {}
+            binding.tvVersion.setText(p.versionName);
+        } catch (PackageManager.NameNotFoundException e) {
+            AppLog.e("SettingsActivity", "Failed to get version name", e);
+        }
     }
 
     abstract static class SimpleItemSelectedListener implements android.widget.AdapterView.OnItemSelectedListener {
-        @Override public void onNothingSelected(android.widget.AdapterView<?> parent) {}
+        @Override
+        public void onNothingSelected(android.widget.AdapterView<?> parent) {
+        }
+
         public abstract void onItemSelected(int position);
-        @Override public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
+
+        @Override
+        public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
             onItemSelected(position);
         }
     }

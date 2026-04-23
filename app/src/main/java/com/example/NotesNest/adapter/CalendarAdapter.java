@@ -1,6 +1,6 @@
 package com.example.NotesNest.adapter;
 
-
+import android.content.Context;
 import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,6 +17,7 @@ import com.example.NotesNest.models.CalendarItem;
 
 import java.util.List;
 
+
 public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.ViewHolder> {
 
     private final List<CalendarItem> list;
@@ -32,13 +33,17 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.ViewHo
     }
 
     public void setSelectedPosition(int pos) {
+        if (pos == selectedPosition || pos < 0 || pos >= list.size()) return;
+
         int oldPos = selectedPosition;
         selectedPosition = pos;
+
         if (oldPos != -1) notifyItemChanged(oldPos);
         notifyItemChanged(selectedPosition);
     }
 
     public void addNext(List<CalendarItem> next) {
+        if (next == null || next.isEmpty()) return;
         int start = list.size();
         list.addAll(next);
         notifyItemRangeInserted(start, next.size());
@@ -46,51 +51,53 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.ViewHo
 
     @NonNull
     @Override
-    public CalendarAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent,
-                                                         int viewType) {
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_reminder_date, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull CalendarAdapter.ViewHolder holder, int position) {
-
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         CalendarItem item = list.get(position);
+        Context context = holder.itemView.getContext();
 
         holder.dateText.setText(item.date);
         holder.dayText.setText(item.day);
 
-        // ✅ Highlight selected
-        if (position == selectedPosition) {
+        // Selection UI Logic
+        boolean isSelected = (position == selectedPosition);
+
+        if (isSelected) {
             holder.dateLayout.setBackgroundColor(
-                    ContextCompat.getColor(holder.itemView.getContext(), R.color.tabSelectedTextColorLight)
+                    ContextCompat.getColor(context, R.color.tabSelectedTextColorLight)
             );
             holder.dateText.setTextColor(Color.BLACK);
             holder.dayText.setTextColor(Color.BLACK);
         } else {
-            // ✅ UNSELECTED ITEM UI (IMPORTANT)
             holder.dateLayout.setBackgroundColor(
-                    ContextCompat.getColor(holder.itemView.getContext(), R.color.lightGray)
+                    ContextCompat.getColor(context, R.color.lightGray)
             );
-            holder.dateText.setTextColor(
-                    ContextCompat.getColor(holder.itemView.getContext(), R.color.textColor)
-            );
-            holder.dayText.setTextColor(
-                    ContextCompat.getColor(holder.itemView.getContext(), R.color.textColor)
-            );
+            int textColor = ContextCompat.getColor(context, R.color.textColor);
+            holder.dateText.setTextColor(textColor);
+            holder.dayText.setTextColor(textColor);
         }
 
         holder.itemView.setOnClickListener(v -> {
-            int oldPos = selectedPosition;
-            selectedPosition = holder.getAbsoluteAdapterPosition();
+            int currentPos = holder.getAbsoluteAdapterPosition();
+            if (currentPos == RecyclerView.NO_POSITION) return;
 
-            // Refresh highlight only for affected items
-            if (oldPos != -1) notifyItemChanged(oldPos);
-            notifyItemChanged(selectedPosition);
+            if (selectedPosition != currentPos) {
+                int oldPos = selectedPosition;
+                selectedPosition = currentPos;
 
-            if (listener != null)
-                listener.onDateClick(selectedPosition, item);
+                if (oldPos != -1) notifyItemChanged(oldPos);
+                notifyItemChanged(selectedPosition);
+
+                if (listener != null) {
+                    listener.onDateClick(selectedPosition, item);
+                }
+            }
         });
     }
 
@@ -104,9 +111,9 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.ViewHo
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView dateText;
-        TextView dayText;
-        LinearLayout dateLayout;
+        final TextView dateText;
+        final TextView dayText;
+        final LinearLayout dateLayout;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);

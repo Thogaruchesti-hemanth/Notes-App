@@ -1,20 +1,30 @@
 package com.example.NotesNest.activity;
 
+import static com.example.NotesNest.utils.Constants.EXTRA_REMINDER_ID;
+import static com.example.NotesNest.utils.Constants.REMINDER_NOTIFY_OPTIONS;
+import static com.example.NotesNest.utils.Constants.REMINDER_REPEAT_OPTIONS;
 import static com.example.NotesNest.utils.Constants.TYPE_BIRTHDAY;
 import static com.example.NotesNest.utils.Constants.TYPE_REMINDER;
 import static com.example.NotesNest.utils.Constants.TYPE_TASK;
 import static com.example.NotesNest.utils.Constants.professionalGradients;
 
+import android.app.AlarmManager;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -23,42 +33,37 @@ import com.example.NotesNest.databases.entities.ReminderEntity;
 import com.example.NotesNest.databinding.ActivityEditReminderBinding;
 import com.example.NotesNest.notifications.schedulers.NotificationScheduler;
 import com.example.NotesNest.utils.AnalyticsHelper;
+import com.example.NotesNest.utils.AppLog;
 import com.example.NotesNest.utils.CommonDialogs;
 import com.example.NotesNest.databases.ViewModels.ReminderViewModel;
+import com.example.NotesNest.utils.DateTimeUtils;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
 
-import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * MVVM Refactored EditReminderActivity
- * All DB operations are handled via ReminderViewModel
+ * Enhanced with Smart Time Suggestions, Conflict Detection, and Notify-Before logic.
  */
 public class EditReminderActivity extends AppCompatActivity {
 
-    public static final String EXTRA_REMINDER_ID = "reminder_id";
-    private static final String[] REPEAT_OPTIONS = {"Does not repeat", "Daily", "Weekly", "Monthly", "Yearly"};
-    private static final String[] NOTIFY_OPTIONS = {"On that day", "Day before", "2 days before", "1 week before"};
-    private final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-    private final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("hh:mm a", Locale.getDefault());
+    private static final String TAG = EditReminderActivity.class.getSimpleName();
     private final Calendar calendar = Calendar.getInstance();
-
     private ActivityEditReminderBinding binding;
     private ReminderViewModel reminderViewModel;
-
     private ReminderEntity currentEntity;
     private String selectedType = TYPE_REMINDER;
     private long selectedDateTime = -1L;
-    private String selectedRepeat = REPEAT_OPTIONS[0];
-    private String selectedNotify = NOTIFY_OPTIONS[0];
+    private String selectedRepeat = REMINDER_REPEAT_OPTIONS[0];
+    private String selectedNotify = REMINDER_NOTIFY_OPTIONS[0];
     private int selectedGradientStart = professionalGradients[0][0];
     private int selectedGradientEnd = professionalGradients[0][1];
-
     private boolean isSaving = false;
     private boolean isEditMode = false;
+    private List<ReminderEntity> allReminders = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,8 +80,14 @@ public class EditReminderActivity extends AppCompatActivity {
         calendar.add(Calendar.HOUR_OF_DAY, 1);
         selectedDateTime = calendar.getTimeInMillis();
 
+        String userId = new SharedPreferenceUtil(this).getUserId();
+        reminderViewModel.getAllReminders(userId).observe(this, reminders -> {
+            if (reminders != null) allReminders = reminders;
+        });
+
         initViews();
         bindListeners();
+        setupQuickTimeChips();
 
         int reminderId = getIntent().getIntExtra(EXTRA_REMINDER_ID, -1);
         if (reminderId != -1) {
@@ -86,7 +97,8 @@ public class EditReminderActivity extends AppCompatActivity {
             refreshDateTimeOnUi();
         }
 
-        binding.titleTextView.requestFocus();
+        binding.titleTextInputLayout.requestFocus();
+        checkExactAlarmPermission(false);
     }
 
     private void initViews() {
@@ -113,9 +125,9 @@ public class EditReminderActivity extends AppCompatActivity {
 
         binding.repeatLayout.setOnClickListener(v -> showOptionDialog(
                 "Repeat Options",
-                REPEAT_OPTIONS,
+                REMINDER_REPEAT_OPTIONS,
                 selectedRepeat,
-                (option) -> {
+                option -> {
                     if (TYPE_BIRTHDAY.equals(selectedType)) {
                         selectedRepeat = "Yearly";
                     } else {
@@ -127,9 +139,9 @@ public class EditReminderActivity extends AppCompatActivity {
 
         binding.notifyLayout.setOnClickListener(v -> showOptionDialog(
                 "Notify Options",
-                NOTIFY_OPTIONS,
+                REMINDER_NOTIFY_OPTIONS,
                 selectedNotify,
-                (option) -> {
+                option -> {
                     selectedNotify = option;
                     binding.tvNotify.setText(selectedNotify);
                 }
@@ -163,9 +175,35 @@ public class EditReminderActivity extends AppCompatActivity {
             updateTitleHint();
         });
 
-        binding.titleTextView.setOnFocusChangeListener((v, hasFocus) ->
-                binding.titleTextView.setCursorVisible(hasFocus)
+        binding.tvTitle.setOnFocusChangeListener((v, hasFocus) ->
+                binding.tvTitle.setCursorVisible(hasFocus)
         );
+    }
+
+    private void setupQuickTimeChips() {
+        binding.chipPlus1h.setOnClickListener(v -> updateCalendarAndUi(Calendar.HOUR_OF_DAY, 1));
+        binding.chipPlus3h.setOnClickListener(v -> updateCalendarAndUi(Calendar.HOUR_OF_DAY, 3));
+        binding.chipTomorrow.setOnClickListener(v -> updateCalendarAndUi(Calendar.DAY_OF_YEAR, 1));
+        binding.chipEvening.setOnClickListener(v -> {
+            calendar.setTimeInMillis(System.currentTimeMillis());
+            calendar.set(Calendar.HOUR_OF_DAY, 18); // 6 PM
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.SECOND, 0);
+            calendar.set(Calendar.MILLISECOND, 0);
+            if (calendar.getTimeInMillis() <= System.currentTimeMillis()) {
+                calendar.add(Calendar.DAY_OF_YEAR, 1);
+            }
+            selectedDateTime = calendar.getTimeInMillis();
+            refreshDateTimeOnUi();
+        });
+    }
+
+    private void updateCalendarAndUi(int field, int amount) {
+        calendar.add(field, amount);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        selectedDateTime = calendar.getTimeInMillis();
+        refreshDateTimeOnUi();
     }
 
     private void handleTypeSpecificBehaviour() {
@@ -175,9 +213,14 @@ public class EditReminderActivity extends AppCompatActivity {
                 break;
             case TYPE_BIRTHDAY:
                 selectedRepeat = "Yearly";
+                // Default birthday time to 9 AM
+                calendar.set(Calendar.HOUR_OF_DAY, 9);
+                calendar.set(Calendar.MINUTE, 0);
+                selectedDateTime = calendar.getTimeInMillis();
+                refreshDateTimeOnUi();
                 break;
             default:
-                selectedRepeat = REPEAT_OPTIONS[0];
+                selectedRepeat = REMINDER_REPEAT_OPTIONS[0];
         }
         binding.tvRepeat.setText(selectedRepeat);
         updateLayoutsVisibility();
@@ -185,20 +228,20 @@ public class EditReminderActivity extends AppCompatActivity {
 
     private void updateLayoutsVisibility() {
         binding.repeatLayout.setVisibility(
-                TYPE_REMINDER.equals(selectedType) ? android.view.View.VISIBLE : android.view.View.GONE
+                TYPE_REMINDER.equals(selectedType) ? View.VISIBLE : View.GONE
         );
     }
 
     private void updateTitleHint() {
         switch (selectedType) {
             case TYPE_TASK:
-                binding.titleTextView.setHint("Task Title");
+                binding.tvTitle.setHint("Task Title");
                 break;
             case TYPE_BIRTHDAY:
-                binding.titleTextView.setHint("Person's Name");
+                binding.tvTitle.setHint("Person's Name");
                 break;
             default:
-                binding.titleTextView.setHint("Reminder Title");
+                binding.tvTitle.setHint("Reminder Title");
         }
     }
 
@@ -242,20 +285,19 @@ public class EditReminderActivity extends AppCompatActivity {
     }
 
     private void refreshDateTimeOnUi() {
-        binding.tvTime.setText(TIME_FORMAT.format(calendar.getTime()));
-        binding.tvDate.setText(DATE_FORMAT.format(calendar.getTime()));
+        DateTimeUtils.setDateTime(selectedDateTime, binding.tvDate, binding.tvTime);
     }
 
     private void validateAndSave() {
-        final String title = binding.titleTextView.getText() == null ? "" :
-                binding.titleTextView.getText().toString().trim();
+        final String title = binding.tvTitle.getText() == null ? "" :
+                binding.tvTitle.getText().toString().trim();
         final String message = binding.etDetails.getText() == null ? "" :
                 binding.etDetails.getText().toString().trim();
 
         // Validation
         if (TextUtils.isEmpty(title)) {
             showToast("Title is required");
-            binding.titleTextView.requestFocus();
+            binding.tvTitle.requestFocus();
             return;
         }
 
@@ -270,15 +312,40 @@ public class EditReminderActivity extends AppCompatActivity {
             return;
         }
 
+        if (checkConflicts(selectedDateTime)) {
+            new AlertDialog.Builder(this)
+                    .setTitle("Schedule Conflict")
+                    .setMessage("You already have another reminder scheduled within 5 minutes of this time. Save anyway?")
+                    .setPositiveButton("Save", (dialog, which) -> proceedToSave(title, message))
+                    .setNegativeButton("Change Time", null)
+                    .show();
+        } else {
+            proceedToSave(title, message);
+        }
+    }
+
+    private boolean checkConflicts(long targetTime) {
+        for (ReminderEntity r : allReminders) {
+            if (currentEntity != null && r.id == currentEntity.id) continue;
+            // Check if within 5 minutes
+            if (Math.abs(r.notificationTime - targetTime) < 5 * 60 * 1000) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void proceedToSave(String title, String message) {
+        if (!checkExactAlarmPermission(true)) return;
+
         isSaving = true;
         binding.btnSave.setEnabled(false);
-        binding.btnSave.setText("Saving...");
+        binding.btnSave.setText(R.string.text_saving);
 
-        boolean repeated = !REPEAT_OPTIONS[0].equals(selectedRepeat);
+        boolean repeated = !REMINDER_REPEAT_OPTIONS[0].equals(selectedRepeat);
         String userId = new SharedPreferenceUtil(this).getUserId();
 
         if (currentEntity == null) {
-            // Create new reminder
             ReminderEntity entity = new ReminderEntity();
             entity.type = selectedType;
             entity.title = title;
@@ -293,7 +360,6 @@ public class EditReminderActivity extends AppCompatActivity {
 
             saveNewReminder(entity);
         } else {
-            // Update existing reminder
             currentEntity.userId = userId;
             currentEntity.type = selectedType;
             currentEntity.title = title;
@@ -313,16 +379,15 @@ public class EditReminderActivity extends AppCompatActivity {
         reminderViewModel.insertReminder(entity);
         reminderViewModel.getInsertResult().observeForever(id -> {
             if (id != null && id > 0) {
+                long triggerTime = calculateTriggerTime(entity.notificationTime, entity.notifyType);
                 NotificationScheduler.scheduleOneTime(
                         this,
                         id.intValue(),
-                        entity.notificationTime,
+                        triggerTime,
                         entity.repeatType,
                         entity.isRepeated
                 );
                 showToast("Saved successfully!");
-
-                // Properly finish the activity
                 setResult(RESULT_OK);
                 finish();
             } else {
@@ -339,16 +404,15 @@ public class EditReminderActivity extends AppCompatActivity {
         reminderViewModel.getUpdateResult().observeForever(success -> {
             if (Boolean.TRUE.equals(success)) {
                 NotificationScheduler.cancel(this, entity.id);
+                long triggerTime = calculateTriggerTime(entity.notificationTime, entity.notifyType);
                 NotificationScheduler.scheduleOneTime(
                         this,
                         entity.id,
-                        entity.notificationTime,
+                        triggerTime,
                         entity.repeatType,
                         entity.isRepeated
                 );
                 showToast("Updated successfully!");
-
-                // Properly finish the activity
                 setResult(RESULT_OK);
                 finish();
             } else {
@@ -360,9 +424,45 @@ public class EditReminderActivity extends AppCompatActivity {
         });
     }
 
+    private long calculateTriggerTime(long eventTime, String notifyType) {
+        if (TextUtils.isEmpty(notifyType) || "On that day".equals(notifyType)) {
+            return eventTime;
+        }
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(eventTime);
+        switch (notifyType) {
+            case "Day before" -> cal.add(Calendar.DAY_OF_YEAR, -1);
+            case "2 days before" -> cal.add(Calendar.DAY_OF_YEAR, -2);
+            case "1 week before" -> cal.add(Calendar.WEEK_OF_YEAR, -1);
+            default -> AppLog.w(TAG, "Unknown notifyType: " + notifyType);
+
+        }
+        return cal.getTimeInMillis();
+    }
+
+    private boolean checkExactAlarmPermission(boolean showDialog) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            if (alarmManager != null && !alarmManager.canScheduleExactAlarms()) {
+                if (showDialog) {
+                    new AlertDialog.Builder(this)
+                            .setTitle("Permission Required")
+                            .setMessage("To provide precise reminders, NotesNest needs permission to set exact alarms. Please enable this in settings.")
+                            .setPositiveButton("Settings", (dialog, which) -> {
+                                Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+                                startActivity(intent);
+                            })
+                            .setNegativeButton("Cancel", null)
+                            .show();
+                }
+                return false;
+            }
+        }
+        return true;
+    }
+
     private void loadReminder(int id) {
         String userId = new SharedPreferenceUtil(this).getUserId();
-
         reminderViewModel.getReminderById(id, userId).observe(this, entity -> {
             if (entity != null) {
                 currentEntity = entity;
@@ -375,7 +475,6 @@ public class EditReminderActivity extends AppCompatActivity {
     private void populateFromEntity(@NonNull ReminderEntity entity) {
         selectedType = entity.type == null ? TYPE_REMINDER : entity.type;
 
-        // Set chip based on type
         switch (selectedType) {
             case TYPE_TASK:
                 binding.chipGroupType.check(R.id.chipTask);
@@ -388,32 +487,26 @@ public class EditReminderActivity extends AppCompatActivity {
                 break;
         }
 
-        // Set title
-        binding.titleTextView.setText(entity.title);
+        binding.tvTitle.setText(entity.title);
 
-        // Set date/time
         if (entity.notificationTime > 0) {
             calendar.setTimeInMillis(entity.notificationTime);
             selectedDateTime = entity.notificationTime;
             refreshDateTimeOnUi();
         }
 
-        // Set repeat
         if (!TextUtils.isEmpty(entity.repeatType)) {
             selectedRepeat = entity.repeatType;
             binding.tvRepeat.setText(selectedRepeat);
         }
 
-        // Set notify
         if (!TextUtils.isEmpty(entity.notifyType)) {
             selectedNotify = entity.notifyType;
             binding.tvNotify.setText(selectedNotify);
         }
 
-        // Set message/details
         binding.etDetails.setText(entity.message);
 
-        // Set colors
         if (entity.gradientStartColor != 0 && entity.gradientEndColor != 0) {
             selectedGradientStart = entity.gradientStartColor;
             selectedGradientEnd = entity.gradientEndColor;

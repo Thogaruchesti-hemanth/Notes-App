@@ -8,6 +8,8 @@ import java.util.Locale;
 
 public class DateTimeUtils {
     // Updated method to use timestamp safely with current locale
+    private static final String TAG = DateTimeUtils.class.getSimpleName();
+
     public static void setDateTime(long timestamp, TextView dateView, TextView timeView) {
         try {
             Date date = new Date(timestamp);
@@ -24,7 +26,7 @@ public class DateTimeUtils {
             }
 
         } catch (Exception e) {
-            System.err.println("Error formatting timestamp: " + timestamp);
+            AppLog.e(TAG,"Error formatting timestamp: " + timestamp, e);
         }
     }
 

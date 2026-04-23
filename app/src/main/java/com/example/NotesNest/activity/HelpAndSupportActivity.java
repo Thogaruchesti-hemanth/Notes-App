@@ -12,7 +12,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,20 +24,12 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.NotesNest.R;
 import com.example.NotesNest.databinding.ActivityHelpAndSupportBinding;
+import com.example.NotesNest.databinding.ItemSupportOptionBinding;
 import com.example.NotesNest.utils.PremiumManager;
 import com.google.android.gms.ads.AdRequest;
 
 public class HelpAndSupportActivity extends AppCompatActivity {
 
-    private LinearLayout emailLayout;
-    private LinearLayout reportBugLayout;
-    private LinearLayout feedbackLayout;
-    private LinearLayout userGuideLayout;
-    private LinearLayout videoTutorialLayout;
-    private LinearLayout whatsNewLayout;
-    private LinearLayout aboutAppLayout;
-    private LinearLayout privacyPolicyLayout;
-    private LinearLayout termServiceLayout;
     private PremiumManager premiumManager;
     private ActivityHelpAndSupportBinding binding;
 
@@ -58,7 +49,6 @@ public class HelpAndSupportActivity extends AppCompatActivity {
         premiumManager = new PremiumManager(this);
         binding.toolbar.setNavigationOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
 
-        initViews();
         setupOptions();
         setupListeners();
         setupAds();
@@ -78,7 +68,7 @@ public class HelpAndSupportActivity extends AppCompatActivity {
     }
 
     private void setupListeners() {
-        emailLayout.setOnClickListener(view -> {
+        binding.layoutEmailSupport.getRoot().setOnClickListener(view -> {
             Intent intent = new Intent(Intent.ACTION_SENDTO);
             intent.setData(Uri.parse("mailto:")); // ensures only email apps open
             intent.putExtra(Intent.EXTRA_EMAIL, new String[]{"saihemanthhs@gmail.com"});
@@ -92,44 +82,44 @@ public class HelpAndSupportActivity extends AppCompatActivity {
             }
         });
 
-        reportBugLayout.setOnClickListener(view -> {
+        binding.layoutReportBug.getRoot().setOnClickListener(view -> {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse("https://notesnest-app.web.app/bug-report.html"));
             view.getContext().startActivity(intent);
         });
 
 
-        feedbackLayout.setOnClickListener(view -> {
+        binding.layoutFeedback.getRoot().setOnClickListener(view -> {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse("https://notesnest-app.web.app/feedback.html"));
             view.getContext().startActivity(intent);
         });
 
-        userGuideLayout.setOnClickListener(view -> {
+        binding.layoutUserGuide.getRoot().setOnClickListener(view -> {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse("https://notesnest-app.web.app/user-guide.html"));
             view.getContext().startActivity(intent);
         });
 
-        aboutAppLayout.setOnClickListener(view -> {
+        binding.layoutVideoTutorial.getRoot().setOnClickListener(view -> {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse("https://notesnest-app.web.app/index.html"));
             view.getContext().startActivity(intent);
         });
 
-        privacyPolicyLayout.setOnClickListener(view -> {
+        binding.layoutWhatsNew.getRoot().setOnClickListener(view -> {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse("https://notesnest-app.web.app/privacy.html"));
             view.getContext().startActivity(intent);
         });
 
-        termServiceLayout.setOnClickListener(view -> {
+        binding.layoutAboutApp.getRoot().setOnClickListener(view -> {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse("https://notesnest-app.web.app/terms.html"));
             view.getContext().startActivity(intent);
         });
 
-        whatsNewLayout.setOnClickListener(view -> {
+        binding.layoutWhatsNew.getRoot().setOnClickListener(view -> {
             String updateMessage = "• Added Ad support for free users.\n• Implemented professional subscription management.\n• Improved Cloud Backup security and feature locking.\n• Fixed memory leaks in settings management.\n• General performance improvements.";
             showWhatsNewDialog(this, updateMessage);
         });
@@ -167,39 +157,21 @@ public class HelpAndSupportActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    private void initViews() {
-
-        emailLayout = findViewById(R.id.layoutEmailSupport);
-        reportBugLayout = findViewById(R.id.layoutReportBug);
-        feedbackLayout = findViewById(R.id.layoutFeedback);
-
-        userGuideLayout = findViewById(R.id.layoutUserGuide);
-        videoTutorialLayout = findViewById(R.id.layoutVideoTutorial);
-        whatsNewLayout = findViewById(R.id.layoutWhatsNew);
-
-        aboutAppLayout = findViewById(R.id.layoutAboutApp);
-        privacyPolicyLayout = findViewById(R.id.layoutPrivacyPolicy);
-        termServiceLayout = findViewById(R.id.layoutTermsOfService);
-
-    }
-
     private void setupOptions() {
 
-        setupOptionsData(emailLayout, R.drawable.ic_email, "Email Support");
-        setupOptionsData(reportBugLayout, R.drawable.ic_report_bug, "Report a Bug");
-        setupOptionsData(feedbackLayout, R.drawable.ic_feedback, "Send Feedback");
-        setupOptionsData(userGuideLayout, R.drawable.ic_user_guide, "User Guide");
-        setupOptionsData(videoTutorialLayout, R.drawable.ic_video_tutorial, "Video Tutorials");
-        setupOptionsData(whatsNewLayout, R.drawable.ic_whats_new, "What's New");
-        setupOptionsData(aboutAppLayout, R.drawable.ic_about_app, "About NotesNest");
-        setupOptionsData(privacyPolicyLayout, R.drawable.ic_privacy, "Privacy Policy");
-        setupOptionsData(termServiceLayout, R.drawable.ic_terms_and_service, "Terms of Service");
+        setupOptionsData(binding.layoutEmailSupport, R.drawable.ic_email, "Email Support");
+        setupOptionsData(binding.layoutReportBug, R.drawable.ic_report_bug, "Report a Bug");
+        setupOptionsData(binding.layoutFeedback, R.drawable.ic_feedback, "Send Feedback");
+        setupOptionsData(binding.layoutUserGuide, R.drawable.ic_user_guide, "User Guide");
+        setupOptionsData(binding.layoutVideoTutorial, R.drawable.ic_video_tutorial, "Video Tutorials");
+        setupOptionsData(binding.layoutWhatsNew, R.drawable.ic_whats_new, "What's New");
+        setupOptionsData(binding.layoutAboutApp, R.drawable.ic_about_app, "About NotesNest");
+        setupOptionsData(binding.layoutPrivacyPolicy, R.drawable.ic_privacy, "Privacy Policy");
+        setupOptionsData(binding.layoutTermsOfService, R.drawable.ic_terms_and_service, "Terms of Service");
     }
 
-    private void setupOptionsData(LinearLayout layout, int iconResId, String title) {
-        ImageView iconView = layout.findViewById(R.id.ivIcon);
-        TextView titleTextView = layout.findViewById(R.id.tvText);
-        iconView.setImageDrawable(AppCompatResources.getDrawable(this, iconResId));
-        titleTextView.setText(title);
+    private void setupOptionsData(ItemSupportOptionBinding binding, int iconResId, String title) {
+        binding.ivIcon.setImageDrawable(AppCompatResources.getDrawable(this, iconResId));
+        binding.tvText.setText(title);
     }
 }

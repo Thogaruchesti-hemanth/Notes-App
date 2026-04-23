@@ -4,6 +4,12 @@ public class Constants {
     public static final String TYPE_REMINDER = "reminder";
     public static final String TYPE_TASK = "task";
     public static final String TYPE_BIRTHDAY = "birthday";
+    public static final String KEY_SELECTED_NOTE_ID = "selected_note_id";
+
+
+    // Premium Plans
+    public static final String PLAN_LIFETIME = "lifetime";
+
 
     public static final String[] DEFAULT_COLORS = {
             "#F5F5DC", // Beige
@@ -39,11 +45,14 @@ public class Constants {
             {0xFF6A11CB, 0xFF2575FC}  // Purple Ocean
     };
 
-
-
-
     //For Widgets
     public static final String ACTION_CREATE_NOTE = "ACTION_CREATE_NOTE_FROM_WIDGET";
+
+    // FOR REMINDERS
+    public static final String EXTRA_REMINDER_ID = "reminder_id";
+    public static final String[] REMINDER_REPEAT_OPTIONS = {"Does not repeat", "Daily", "Weekly", "Monthly", "Yearly"};
+    public static final String[] REMINDER_NOTIFY_OPTIONS = {"On that day", "Day before", "2 days before", "1 week before"};
+
 
 
 }

@@ -210,4 +210,9 @@
     <string name="text_h1_format">H1 text formatting</string>
     <string name="text_h2_text">H2 text formatting</string>
     <string name="text_back_button">Back Button</string>
+    <string name="text_saving">Saving...</string>
+    <string name="text_try_a_different_search_term">Try a different search term</string>
+    <string name="text_no_matches_found">No matches found</string>
+    <string name="text_processing_payment">Processing Payment...</string>
+    <string name="text_premium_active">Premium Active</string>
 </resources>
