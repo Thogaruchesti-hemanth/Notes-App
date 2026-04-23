@@ -8,8 +8,13 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.NotesNest.R;
+import com.facebook.shimmer.Shimmer;
 import com.facebook.shimmer.ShimmerFrameLayout;
 
+/**
+ * Professional Shimmer Adapter for Note loading states.
+ * Uses optimized Shimmer configurations to prevent "glitchy" visual artifacts.
+ */
 public class NoteShimmerAdapter extends RecyclerView.Adapter<NoteShimmerAdapter.ShimmerViewHolder> {
 
     private final int itemCount;
@@ -27,7 +32,16 @@ public class NoteShimmerAdapter extends RecyclerView.Adapter<NoteShimmerAdapter.
 
     @Override
     public void onBindViewHolder(@NonNull ShimmerViewHolder holder, int position) {
-        holder.shimmerLayout.startShimmer();
+        // Only start if not already running to prevent "reset" flicker
+        if (!holder.shimmerLayout.isShimmerStarted()) {
+            holder.shimmerLayout.startShimmer();
+        }
+    }
+
+    @Override
+    public void onViewDetachedFromWindow(@NonNull ShimmerViewHolder holder) {
+        super.onViewDetachedFromWindow(holder);
+        holder.shimmerLayout.stopShimmer();
     }
 
     @Override
@@ -36,11 +50,21 @@ public class NoteShimmerAdapter extends RecyclerView.Adapter<NoteShimmerAdapter.
     }
 
     public static class ShimmerViewHolder extends RecyclerView.ViewHolder {
-        ShimmerFrameLayout shimmerLayout;
+        final ShimmerFrameLayout shimmerLayout;
 
         ShimmerViewHolder(@NonNull View itemView) {
             super(itemView);
             shimmerLayout = itemView.findViewById(R.id.shimmerLayout);
+            
+            // Professional subtle shimmer configuration
+            Shimmer shimmer = new Shimmer.AlphaHighlightBuilder()
+                    .setDuration(1200L)
+                    .setBaseAlpha(0.7f)
+                    .setHighlightAlpha(0.9f)
+                    .setDirection(Shimmer.Direction.LEFT_TO_RIGHT)
+                    .setAutoStart(true)
+                    .build();
+            shimmerLayout.setShimmer(shimmer);
         }
     }
 }

@@ -1,9 +1,16 @@
 package com.example.NotesNest.utils;
 
+import static com.example.NotesNest.utils.Constants.PLAN_LIFETIME;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.example.NotesNest.utils.constants.PrefDefaults;
 import com.example.NotesNest.utils.constants.PrefKeys;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class AppPreferences {
 
@@ -135,6 +142,27 @@ public class AppPreferences {
         remove(PrefKeys.KEY_DRAFT_TITLE);
         remove(PrefKeys.KEY_DRAFT_CONTENT);
         remove(PrefKeys.KEY_DRAFT_COLOR);
+    }
+
+    public boolean isPremiumActive() {
+        // 1. Check basic boolean flag first (fastest)
+        if (!getBoolean(PrefKeys.IS_PREMIUM, false)) return false;
+
+        // 2. Check for Lifetime plan (never expires, avoids date parsing)
+        String planType = getString(PrefKeys.PLAN_TYPE, PrefDefaults.PLAN_TYPE);
+        if (PLAN_LIFETIME.equalsIgnoreCase(planType)) return true;
+
+        // 3. Validate expiry string
+        String expiryDate = getString(PrefKeys.PREMIUM_EXPIRY_DATE, "");
+        if (expiryDate.isEmpty()) return false;
+
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
+            Date expiry = sdf.parse(expiryDate);
+            return expiry != null && System.currentTimeMillis() < expiry.getTime();
+        } catch (Exception e) {
+            return false;
+        }
     }
 
 

@@ -1,4 +1,4 @@
-package com.hemanth.NotesNest.adapter;
+package com.example.NotesNest.adapter;
 
 import android.content.Context;
 import android.graphics.drawable.GradientDrawable;
@@ -18,111 +18,134 @@ import com.example.NotesNest.models.Task;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Optimized TimelineAdapter for displaying tasks across a 24-hour scale.
+ * Reduces view inflation overhead by only rendering active minutes.
+ */
 public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Holder> {
 
     private final Context context;
     private final OnTaskClickListener listener;
+    private final LayoutInflater inflater;
 
-    // hour → minute → list of tasks
+    // hour → (minute → list of tasks)
+    // Using TreeMap for minutes ensures tasks appear in chronological order
     private final Map<Integer, Map<Integer, List<Task>>> timeMap = new HashMap<>();
 
     public TimelineAdapter(Context context, List<Task> tasks, OnTaskClickListener listener) {
         this.context = context;
         this.listener = listener;
+        this.inflater = LayoutInflater.from(context);
         buildTimeMap(tasks);
     }
 
     @NonNull
     @Override
     public Holder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_timeline_hour, parent, false);
+        View v = inflater.inflate(R.layout.item_timeline_hour, parent, false);
         return new Holder(v);
     }
 
     @Override
     public void onBindViewHolder(@NonNull Holder holder, int position) {
-        int hour = position;
-        String period = (hour >= 12) ? "PM" : "AM";
-        int hour12 = hour % 12;
-        if (hour12 == 0) hour12 = 12;
 
-        holder.tvHour.setText(String.format("%02d:00 %s", hour12, period));
+        // 1. Format Time Label
+        String period = (position >= 12) ? "PM" : "AM";
+        int hour12 = (position % 12 == 0) ? 12 : position % 12;
+        holder.tvHour.setText(String.format(java.util.Locale.US, "%02d:00 %s", hour12, period));
 
+        // 2. Clear previous tasks efficiently
         holder.minuteContainer.removeAllViews();
-        LayoutInflater inflater = LayoutInflater.from(context);
-        Map<Integer, List<Task>> minuteMap = timeMap.get(hour);
 
-        for (int min = 0; min < 60; min++) {
-            // each minute = a small stacked container
-            FrameLayout minuteFrame = new FrameLayout(context);
-            LinearLayout.LayoutParams frameParams = new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-            );
-            frameParams.setMargins(4, 0, 4, 0);
-            minuteFrame.setLayoutParams(frameParams);
+        Map<Integer, List<Task>> minuteMap = timeMap.get(position);
+        if (minuteMap == null || minuteMap.isEmpty()) {
+            showEmptyHourState(holder);
+            return;
+        }
 
-            if (minuteMap != null && minuteMap.containsKey(min)) {
-                List<Task> taskList = minuteMap.get(min);
+        // 3. Render only minutes that have tasks (Efficiency improvement)
+        holder.tvHour.setTextColor(ContextCompat.getColor(context, R.color.tabSelectedTextColor));
 
-                int stackOffset = 0;
-                for (Task task : taskList) {
-                    View taskView = inflater.inflate(R.layout.item_reminder_task, minuteFrame, false);
+        // Sort minutes to ensure chronological display
+        List<Integer> sortedMinutes = new ArrayList<>(minuteMap.keySet());
+        Collections.sort(sortedMinutes);
 
-                    TextView tvTime = taskView.findViewById(R.id.tvTime);
-                    TextView tvTitle = taskView.findViewById(R.id.tvTitle);
-                    TextView tvType = taskView.findViewById(R.id.tvType);
-                    LinearLayout taskContainer = taskView.findViewById(R.id.taskContainer);
+        for (int min : sortedMinutes) {
+            List<Task> taskList = minuteMap.get(min);
+            if (taskList == null) continue;
 
-                    Calendar c = Calendar.getInstance();
-                    c.setTimeInMillis(task.getStartTime());
+            FrameLayout minuteFrame = createMinuteFrame();
+            int stackOffset = 0;
 
-                    tvTime.setText(String.format("%02d:%02d",
-                            c.get(Calendar.HOUR_OF_DAY),
-                            c.get(Calendar.MINUTE)));
-                    tvTitle.setText(task.getTitle());
-                    tvType.setText(task.getType());
+            for (Task task : taskList) {
+                View taskView = inflater.inflate(R.layout.item_reminder_task, minuteFrame, false);
+                bindTaskView(taskView, task, stackOffset);
 
-                    // gradient background
-                    GradientDrawable gradient = new GradientDrawable(
-                            GradientDrawable.Orientation.LEFT_RIGHT,
-                            new int[]{task.getStartColor(), task.getEndColor()}
-                    );
-                    gradient.setCornerRadius(50f);
-                    taskContainer.setBackground(gradient);
+                taskView.setOnClickListener(v -> {
+                    if (listener != null) listener.onTaskClick(task);
+                });
 
-                    // stack overlap
-                    taskView.setTranslationX(stackOffset);
-                    taskView.setTranslationY(stackOffset / 6f);
-                    stackOffset += 60;
-
-                    taskView.setOnClickListener(v -> {
-                        if (listener != null) listener.onTaskClick(task);
-                    });
-
-                    minuteFrame.addView(taskView);
-                    holder.tvHour.setTextColor(ContextCompat.getColor(context,R.color.tabSelectedTextColor));
-                }
-                // increase minuteFrame width so last overlapped card fits
-                minuteFrame.setMinimumWidth(stackOffset + 400);
-
-            } else {
-                TextView dash = new TextView(context);
-                dash.setText("–");
-                dash.setTextSize(10);
-                dash.setTextColor(0xFF9AA0A6);
-                dash.setPadding(4, 2, 4, 2);
-                dash.setIncludeFontPadding(false);
-                minuteFrame.addView(dash);
+                minuteFrame.addView(taskView);
+                stackOffset += 60; // Offset for stacked effect
             }
 
+            // Adjust frame width for overlaps
+            minuteFrame.setMinimumWidth(stackOffset + 400);
             holder.minuteContainer.addView(minuteFrame);
         }
+    }
+
+    private void showEmptyHourState(Holder holder) {
+        holder.tvHour.setTextColor(0xFF9AA0A6); // Default gray
+        TextView dash = new TextView(context);
+        dash.setText("–");
+        dash.setTextSize(14);
+        dash.setTextColor(0xFF9AA0A6);
+        dash.setPadding(16, 0, 16, 0);
+        holder.minuteContainer.addView(dash);
+    }
+
+    private FrameLayout createMinuteFrame() {
+        FrameLayout frame = new FrameLayout(context);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        params.setMargins(8, 0, 8, 0);
+        frame.setLayoutParams(params);
+        return frame;
+    }
+
+    private void bindTaskView(View view, Task task, int offset) {
+        TextView tvTime = view.findViewById(R.id.tvTime);
+        TextView tvTitle = view.findViewById(R.id.tvTitle);
+        TextView tvType = view.findViewById(R.id.tvType);
+        LinearLayout taskContainer = view.findViewById(R.id.taskContainer);
+
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(task.getStartTime());
+
+        tvTime.setText(String.format(java.util.Locale.US, "%02d:%02d",
+                c.get(Calendar.HOUR_OF_DAY),
+                c.get(Calendar.MINUTE)));
+        tvTitle.setText(task.getTitle());
+        tvType.setText(task.getType());
+
+        GradientDrawable gradient = new GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[]{task.getStartColor(), task.getEndColor()}
+        );
+        gradient.setCornerRadius(50f);
+        taskContainer.setBackground(gradient);
+
+        // Apply visual stacking
+        view.setTranslationX(offset);
+        view.setTranslationY(offset / 6f);
     }
 
     @Override
@@ -131,17 +154,18 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Holder
     }
 
     private void buildTimeMap(List<Task> tasks) {
+        timeMap.clear();
+        if (tasks == null) return;
+
+        Calendar c = Calendar.getInstance();
         for (Task task : tasks) {
-            Calendar c = Calendar.getInstance();
             c.setTimeInMillis(task.getStartTime());
             int hour = c.get(Calendar.HOUR_OF_DAY);
             int min = c.get(Calendar.MINUTE);
 
-            Map<Integer, List<Task>> hourMap = timeMap.getOrDefault(hour, new HashMap<>());
-            List<Task> taskList = hourMap.getOrDefault(min, new ArrayList<>());
+            Map<Integer, List<Task>> hourMap = timeMap.computeIfAbsent(hour, k -> new HashMap<>());
+            List<Task> taskList = hourMap.computeIfAbsent(min, k -> new ArrayList<>());
             taskList.add(task);
-            hourMap.put(min, taskList);
-            timeMap.put(hour, hourMap);
         }
     }
 
@@ -149,9 +173,9 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Holder
         void onTaskClick(Task task);
     }
 
-    static class Holder extends RecyclerView.ViewHolder {
-        TextView tvHour;
-        LinearLayout minuteContainer;
+    public static class Holder extends RecyclerView.ViewHolder {
+        final TextView tvHour;
+        final LinearLayout minuteContainer;
 
         public Holder(@NonNull View itemView) {
             super(itemView);

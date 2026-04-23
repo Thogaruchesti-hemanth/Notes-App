@@ -11,6 +11,8 @@ public final class PrefDefaults {
 
     // Backup related
     public static final String LAST_BACKUP_TIME = "Never backed up";
+    public static final String PLAN_TYPE = "none";
+
 
 
 

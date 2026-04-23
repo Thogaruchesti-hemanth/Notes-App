@@ -250,6 +250,54 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
+            <HorizontalScrollView
+                android:id="@+id/quickTimeScroll"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_8"
+                android:scrollbars="none"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/timeLayout">
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/quickTimeChips"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="4dp"
+                    app:singleLine="true">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipPlus1h"
+                        style="@style/Widget.Material3.Chip.Suggestion"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="+1 Hr" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipPlus3h"
+                        style="@style/Widget.Material3.Chip.Suggestion"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="+3 Hr" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipTomorrow"
+                        style="@style/Widget.Material3.Chip.Suggestion"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Tomorrow" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipEvening"
+                        style="@style/Widget.Material3.Chip.Suggestion"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Evening" />
+
+                </com.google.android.material.chip.ChipGroup>
+            </HorizontalScrollView>
+
             <LinearLayout
                 android:id="@+id/repeatLayout"
                 android:layout_width="0dp"
@@ -264,7 +312,7 @@
                 android:paddingHorizontal="@dimen/padding_16"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/timeLayout">
+                app:layout_constraintTop_toBottomOf="@id/quickTimeScroll">
 
                 <ImageView
                     android:layout_width="@dimen/size_20"

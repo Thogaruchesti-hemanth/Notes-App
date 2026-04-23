@@ -6,6 +6,7 @@ public final class PrefKeys {
         // Prevent instantiation
     }
 
+    // PREMIUM RELATED
     public static final String IS_LOGGED_IN = "is_login";
     public static final String THEME = "theme";
     public static final String SYSTEM_THEME = "system_theme";
@@ -13,15 +14,16 @@ public final class PrefKeys {
     public static final String PURCHASE_DATE = "purchase_date";
     public static final String PREMIUM_EXPIRY_DATE = "premium_expiry_date";
     public static final String PREMIUM_PLAN_TYPE = "premium_plan";
-
     public static final String IS_PREMIUM = "is_premium";
 
+    // User Related
     public static final String USER_ID = "user_id";
     public static final String USER_IMAGE = "user_image";
     public static final String USER_EMAIL = "user_email";
     public static final String USER_NAME = "user_name";
     public static final String PURCHASE_TOKEN = "purchase_token";
     public static final String ORDER_ID = "order_id";
+    public static final String IS_ONBOARDING_COMPLETED = "completed";
 
     // Backup related
     public static final String BACKUP_MODE = "backup_mode";
@@ -35,6 +37,8 @@ public final class PrefKeys {
     public static final String KEY_DRAFT_CONTENT = "draft_content";
     public static final String KEY_DRAFT_TITLE = "draft_title";
     public static final String KEY_DRAFT_COLOR = "draft_color";
+
+
 
 
 

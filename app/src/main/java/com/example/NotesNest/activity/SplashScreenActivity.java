@@ -68,7 +68,7 @@ public class SplashScreenActivity extends AppCompatActivity {
     }
 
     /**
-     * Navigate to login or main screen
+     * Navigate to log in or main screen
      */
     private void goToNextScreen() {
         Class<?> nextActivity = prefs.getLogin() ? MainActivity.class : OnboardingActivity.class;

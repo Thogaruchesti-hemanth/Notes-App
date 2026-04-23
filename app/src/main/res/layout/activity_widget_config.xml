@@ -109,20 +109,22 @@
         android:visibility="gone">
 
         <TextView
+            android:id="@+id/tvEmptyTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/margin_16"
             android:text="@string/text_no_notes_available"
-            android:textColor="@color/white"
+            android:textColor="?attr/colorPrimary"
             android:textSize="@dimen/text_16" />
 
         <TextView
+            android:id="@+id/tvEmptyDesc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/margin_8"
             android:gravity="center"
             android:text="@string/text_create_a_note_first_then_come_back_here"
-            android:textColor="@color/white"
+            android:textColor="?attr/colorPrimary"
             android:textSize="@dimen/text_14" />
     </LinearLayout>
 

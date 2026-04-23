@@ -41,6 +41,7 @@ import com.example.NotesNest.R;
 import com.example.NotesNest.SingleColorRunningBorderLayout;
 import com.example.NotesNest.databinding.ActivityLoginBinding;
 import com.example.NotesNest.utils.AnalyticsHelper;
+import com.example.NotesNest.utils.AppLog;
 import com.example.NotesNest.utils.ThemeManager;
 import com.example.NotesNest.utils.ValidationUtils;
 import com.example.NotesNest.utils.formaters.ValidationTextWatcher;
@@ -415,7 +416,7 @@ public class LoginActivity extends AppCompatActivity {
              ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
 
             if (is == null) {
-                Log.e("Profile", "❌ InputStream is null for URI: " + uri);
+                AppLog.e(TAG,"❌ InputStream is null for URI: " + uri);
                 showError("Unable to open image");
                 return;
             }
@@ -430,10 +431,10 @@ public class LoginActivity extends AppCompatActivity {
 
             binding.profileImageView.setImageURI(uri);
 
-            Log.i("Profile", "✅ Image successfully loaded & converted.");
+            AppLog.e(TAG,"✅ Image successfully loaded & converted.");
 
         } catch (IOException e) {
-            Log.e("Profile", "❌ Error loading image: " + e.getMessage(), e);
+            AppLog.e(TAG, "❌ Error loading image: " + e.getMessage());
             showError("Failed to load image");
         }
     }

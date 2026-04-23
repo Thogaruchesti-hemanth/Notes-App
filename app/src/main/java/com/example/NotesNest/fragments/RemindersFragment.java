@@ -1,6 +1,6 @@
 package com.example.NotesNest.fragments;
 
-import static com.example.NotesNest.activity.EditReminderActivity.EXTRA_REMINDER_ID;
+import static com.example.NotesNest.utils.Constants.EXTRA_REMINDER_ID;
 
 import android.app.DatePickerDialog;
 import android.content.Intent;
@@ -24,6 +24,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.NotesNest.R;
 import com.example.NotesNest.activity.EditReminderActivity;
 import com.example.NotesNest.adapter.CalendarAdapter;
+import com.example.NotesNest.adapter.TimelineAdapter;
 import com.example.NotesNest.databases.ViewModels.ReminderViewModel;
 import com.example.NotesNest.databases.entities.ReminderEntity;
 import com.example.NotesNest.models.CalendarItem;
@@ -137,7 +138,7 @@ public class RemindersFragment extends Fragment {
     /* ---------------- TIMELINE ---------------- */
 
     private void setupTimeline(List<Task> tasks) {
-        com.hemanth.NotesNest.adapter.TimelineAdapter adapter = new com.hemanth.NotesNest.adapter.TimelineAdapter(
+       TimelineAdapter adapter = new TimelineAdapter(
                 requireContext(),
                 tasks,
                 this::showReminderOptions

@@ -13,27 +13,28 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.NotesNest.R;
-import com.example.NotesNest.activity.NoteWidgetConfigureActivity;
 import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.utils.DateTimeUtils;
 import com.example.NotesNest.utils.NoteDiffCallback;
 
 import java.util.List;
 
+
 public class NoteConfigAdapter extends RecyclerView.Adapter<NoteConfigAdapter.NoteViewHolder> {
 
     private final List<NoteEntity> noteList;
     private final Context context;
     private NoteEntity selectedNote = null;
-    private NoteWidgetConfigureActivity parentActivity;
+    private final OnNoteSelectedListener listener;
 
-    public NoteConfigAdapter(List<NoteEntity> list, Context ctx) {
-        this.noteList = list;
-        this.context = ctx;
+    public interface OnNoteSelectedListener {
+        void onNoteSelected(NoteEntity note);
     }
 
-    public void setParent(NoteWidgetConfigureActivity parent) {
-        this.parentActivity = parent;
+    public NoteConfigAdapter(List<NoteEntity> list, Context ctx, OnNoteSelectedListener listener) {
+        this.noteList = list;
+        this.context = ctx;
+        this.listener = listener;
     }
 
     @NonNull
@@ -52,24 +53,21 @@ public class NoteConfigAdapter extends RecyclerView.Adapter<NoteConfigAdapter.No
         holder.tvMessage.setText(plainContent);
         holder.tvTime.setText(DateTimeUtils.getReadableDate(note.createdAt));
 
-        if (selectedNote != null && selectedNote.id == note.id) {
-            holder.ivCheck.setVisibility(View.VISIBLE);
-            holder.ivCheck.setImageResource(R.drawable.ic_black_tick);
-        } else {
-            holder.ivCheck.setVisibility(View.VISIBLE);
-            holder.ivCheck.setImageResource(R.drawable.ic_empty_circle);
-        }
+        boolean isSelected = selectedNote != null && selectedNote.id == note.id;
+        holder.ivCheck.setImageResource(isSelected ? R.drawable.ic_black_tick : R.drawable.ic_empty_circle);
+        holder.ivCheck.setVisibility(View.VISIBLE);
 
-        holder.itemView.setOnClickListener(v -> setSelectedNote(note));
+        holder.itemView.setOnClickListener(v -> {
+            setSelectedNote(note);
+            if (listener != null) {
+                listener.onNoteSelected(note);
+            }
+        });
     }
 
     public void setSelectedNote(NoteEntity note) {
-
         NoteEntity previous = selectedNote;
         selectedNote = note;
-
-        if (parentActivity != null)
-            parentActivity.selectedNote = note;
 
         if (previous != null) {
             int prevPos = findPosition(previous.id);
@@ -95,10 +93,8 @@ public class NoteConfigAdapter extends RecyclerView.Adapter<NoteConfigAdapter.No
 
     public void updateData(List<NoteEntity> newNotes) {
         DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new NoteDiffCallback(noteList, newNotes));
-
         noteList.clear();
         noteList.addAll(newNotes);
-
         diff.dispatchUpdatesTo(this);
     }
 

@@ -31,15 +31,15 @@ public class MainActivity extends AppCompatActivity {
 
     private SharedPreferenceUtil pref;
     private DrawerHelper drawerHelper;
+    private final Random random = new Random();
 
     private final BroadcastReceiver premiumReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (SharedPreferenceUtil.ACTION_PREMIUM_UPDATED.equals(intent.getAction())) {
-                if (drawerHelper != null) {
+            if (SharedPreferenceUtil.ACTION_PREMIUM_UPDATED.equals(intent.getAction()) && drawerHelper != null) {
                     drawerHelper.refreshUI();
                 }
-            }
+
         }
     };
 
@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
     private void initGreeting() {
         TextView greetingText = findViewById(R.id.tvName);
         String[] greetings = {"Hi", "Hello", "Hey", "Welcome"};
-        String greeting = greetings[new Random().nextInt(greetings.length)];
+        String greeting = greetings[random.nextInt(greetings.length)];
         greetingText.setText(String.format("%s, %s", greeting, pref.getUserName()));
     }
 

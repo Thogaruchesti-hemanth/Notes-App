@@ -3,11 +3,13 @@ package com.example.NotesNest.utils;
 import static com.example.NotesNest.utils.Constants.DEFAULT_COLORS;
 import static com.example.NotesNest.utils.Constants.professionalGradients;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.text.Html;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,10 +32,12 @@ import com.example.NotesNest.databases.entities.ReminderEntity;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.List;
+import java.util.Objects;
 
 public class CommonDialogs {
 
@@ -143,7 +147,7 @@ public class CommonDialogs {
     }
 
     public static void showConfirmDialog(Context context, String title, String message, String posBtn, String negBtn, Runnable onConfirm) {
-        new AlertDialog.Builder(context)
+        new MaterialAlertDialogBuilder(context)
                 .setTitle(title)
                 .setMessage(message)
                 .setPositiveButton(posBtn, (dialog, which) -> onConfirm.run())
@@ -213,11 +217,11 @@ public class CommonDialogs {
 
         LinearLayout container = view.findViewById(R.id.gradientContainer);
         container.setPadding(16, 16, 16, 16);
-        
+
         RecyclerView recyclerView = new RecyclerView(context);
         recyclerView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false));
-        
+
         container.removeAllViews();
         container.addView(recyclerView);
 
@@ -239,11 +243,11 @@ public class CommonDialogs {
                 GradientDrawable gd = new GradientDrawable();
                 gd.setColor(Color.parseColor(colorHex));
                 gd.setShape(GradientDrawable.OVAL);
-                
+
                 if (colorHex.equalsIgnoreCase(selectedColor)) {
                     gd.setStroke(6, Color.WHITE);
                 }
-                
+
                 holder.itemView.setBackground(gd);
                 holder.itemView.setElevation(4f);
                 holder.itemView.setOnClickListener(v -> {
@@ -364,11 +368,136 @@ public class CommonDialogs {
         dialog.show();
     }
 
+    public static AlertDialog showProgressDialog(Context context, String message) {
+        if (context instanceof Activity && ((Activity) context).isFinishing()) return null;
+
+        View view = LayoutInflater.from(context).inflate(R.layout.dialog_loading, null);
+        TextView tvMessage = view.findViewById(R.id.tvLoadingMessage);
+        if (tvMessage != null) tvMessage.setText(message);
+
+        AlertDialog dialog = new MaterialAlertDialogBuilder(context)
+                .setView(view)
+                .setCancelable(false)
+                .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        dialog.show();
+        return dialog;
+    }
+
+    public static void showErrorDialog(Context context, String title, String message) {
+        if (context instanceof Activity && ((Activity) context).isFinishing()) return;
+
+        new MaterialAlertDialogBuilder(context)
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton("Dismiss", null)
+                .setIcon(R.drawable.ic_error_outline)
+                .show();
+    }
+
+    public static void showChangePasswordDialog(Context context, ChangePasswordCallback callback) {
+        MaterialAlertDialogBuilder builder =
+                new MaterialAlertDialogBuilder(context, com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog);
+        builder.setTitle("🔐 Change Password");
+
+        LinearLayout layout = new LinearLayout(context);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        int padding = (int) (24 * context.getResources().getDisplayMetrics().density);
+        layout.setPadding(padding, padding / 2, padding, 0);
+
+        TextInputLayout currentPassLayout = createPasswordInput(context, "Current Password");
+        TextInputEditText currentPassword = (TextInputEditText) Objects.requireNonNull(currentPassLayout.getEditText());
+
+        TextInputLayout newPassLayout = createPasswordInput(context, "New Password");
+        TextInputEditText newPassword = (TextInputEditText) Objects.requireNonNull(newPassLayout.getEditText());
+
+        TextInputLayout confirmPassLayout = createPasswordInput(context, "Confirm New Password");
+        TextInputEditText confirmPassword = (TextInputEditText) Objects.requireNonNull(confirmPassLayout.getEditText());
+
+        layout.addView(currentPassLayout);
+        layout.addView(newPassLayout);
+        layout.addView(confirmPassLayout);
+
+        builder.setView(layout);
+
+        builder.setPositiveButton("Update", null);
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            String currentPass = Objects.requireNonNull(currentPassword.getText()).toString().trim();
+            String newPass = Objects.requireNonNull(newPassword.getText()).toString().trim();
+            String confirmPass = Objects.requireNonNull(confirmPassword.getText()).toString().trim();
+
+            if (currentPass.isEmpty() || newPass.isEmpty() || confirmPass.isEmpty()) {
+                Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (!newPass.equals(confirmPass)) {
+                confirmPassLayout.setError("Passwords do not match");
+                return;
+            }
+            if (newPass.length() < 6) {
+                newPassLayout.setError("Password must be at least 6 characters");
+                return;
+            }
+
+            callback.onUpdate(currentPass, newPass);
+            dialog.dismiss();
+        });
+    }
+
+    private static TextInputLayout createPasswordInput(Context context, String hint) {
+        TextInputLayout layout = new TextInputLayout(context);
+        layout.setHint(hint);
+        layout.setBoxBackgroundMode(TextInputLayout.BOX_BACKGROUND_OUTLINE);
+        layout.setEndIconMode(TextInputLayout.END_ICON_PASSWORD_TOGGLE);
+
+        TextInputEditText editText = new TextInputEditText(context);
+        editText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        layout.addView(editText);
+
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        params.setMargins(0, 0, 0, (int) (16 * context.getResources().getDisplayMetrics().density));
+        layout.setLayoutParams(params);
+        return layout;
+    }
+
+    public static void showReauthenticationDialog(Context context, ReauthCallback callback) {
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context);
+        builder.setTitle("🔒 Confirm Password");
+        builder.setMessage("Please enter your current password to continue.");
+
+        View view = LayoutInflater.from(context).inflate(R.layout.dialog_enter_password, null);
+        TextInputEditText passwordEdit = view.findViewById(R.id.passwordEdit);
+        builder.setView(view);
+
+        builder.setPositiveButton("Confirm", (dialog, which) -> {
+            String pass = Objects.requireNonNull(passwordEdit.getText()).toString().trim();
+            if (!pass.isEmpty()) {
+                callback.onConfirm(pass);
+            } else {
+                Toast.makeText(context, "Password required", Toast.LENGTH_SHORT).show();
+            }
+        });
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        builder.show();
+    }
+
     public interface PasswordCallback { void onPasswordEntered(String password); }
     public interface InputCallback { void onInput(String text); }
     public interface GradientCallback { void onGradientSelected(int startColor, int endColor); }
     public interface ColorCallback { void onColorSelected(String color); }
     public interface CategoryCallback { void onCategorySelected(String category, int position); }
+    public interface ChangePasswordCallback { void onUpdate(String currentPass, String newPass); }
+    public interface ReauthCallback { void onConfirm(String password); }
 
     public interface NoteDialogCallback {
         void setDateTime(long timeStamp, TextView dateView, TextView timeView);

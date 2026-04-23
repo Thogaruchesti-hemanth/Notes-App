@@ -4,11 +4,12 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
@@ -18,66 +19,107 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.NotesNest.R;
 import com.example.NotesNest.adapter.OnboardingAdapter;
+import com.example.NotesNest.databinding.ActivityOnboardingBinding;
 import com.example.NotesNest.models.OnBoardItem;
 import com.example.NotesNest.utils.AnalyticsHelper;
+import com.example.NotesNest.utils.AppPreferences;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
+import com.example.NotesNest.utils.constants.PrefKeys;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Robust Onboarding Activity.
+ * Added Skip, Back press handling, ViewBinding, and state persistence.
+ */
 public class OnboardingActivity extends AppCompatActivity {
 
+    private static final String KEY_CURRENT_PAGE = "current_onboarding_page";
+    private ActivityOnboardingBinding binding;
     private OnboardingAdapter onboardingAdapter;
-    private LinearLayout indicatorsLayout;
-    private Button buttonNext;
-    private ViewPager2 onboardingViewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
 
-        setContentView(R.layout.activity_onboarding);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.onBoardingActivity), (v, insets) -> {
+        // Skip onboarding if already completed
+        if (AppPreferences.getInstance().getBoolean(PrefKeys.IS_ONBOARDING_COMPLETED, false)) {
+            navigateToLogin();
+            return;
+        }
+
+        binding = ActivityOnboardingBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.onBoardingActivity, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-        // Skip onboarding if already completed
-        if (new SharedPreferenceUtil(this).isOnboardingCompleted()) {
-            startActivity(new Intent(this, LoginActivity.class));
-            finish();
-            return;
-        }
-
-        onboardingViewPager = findViewById(R.id.vpOnboarding);
-        indicatorsLayout = findViewById(R.id.layoutIndicators);
-        buttonNext = findViewById(R.id.btnNext);
 
         setupOnBoardingItems();
         setupIndicators();
-        setCurrentIndicator(0);
 
-        onboardingViewPager.registerOnPageChangeCallback(
-                new ViewPager2.OnPageChangeCallback() {
-                    @Override
-                    public void onPageSelected(int position) {
-                        setCurrentIndicator(position);
-                    }
-                });
+        // Restore page if rotated
+        int startPage = 0;
+        if (savedInstanceState != null) {
+            startPage = savedInstanceState.getInt(KEY_CURRENT_PAGE, 0);
+        }
 
-        buttonNext.setOnClickListener(v -> {
-            if (onboardingViewPager.getCurrentItem() + 1 < onboardingAdapter.getItemCount()) {
-                onboardingViewPager.setCurrentItem(onboardingViewPager.getCurrentItem() + 1);
+        setCurrentIndicator(startPage);
+        binding.vpOnboarding.setCurrentItem(startPage, false);
+
+        setupListeners();
+        setupBackPressed();
+    }
+
+    private void setupListeners() {
+        binding.vpOnboarding.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                setCurrentIndicator(position);
+            }
+        });
+
+        binding.btnNext.setOnClickListener(v -> {
+            int current = binding.vpOnboarding.getCurrentItem();
+            if (current + 1 < onboardingAdapter.getItemCount()) {
+                binding.vpOnboarding.setCurrentItem(current + 1);
             } else {
-                new SharedPreferenceUtil(this).setOnboardingCompleted(true);
-                startActivity(new Intent(getApplicationContext(), LoginActivity.class));
-                finish();
+                completeOnboarding();
+            }
+        });
+
+        binding.tvSkip.setOnClickListener(v -> completeOnboarding());
+    }
+
+    private void setupBackPressed() {
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                int current = binding.vpOnboarding.getCurrentItem();
+                if (current > 0) {
+                    binding.vpOnboarding.setCurrentItem(current - 1);
+                } else {
+                    setEnabled(false);
+                    getOnBackPressedDispatcher().onBackPressed();
+                }
             }
         });
     }
 
-    //       ViewPager data setup
+    private void completeOnboarding() {
+        new SharedPreferenceUtil(this).setOnboardingCompleted(true);
+        navigateToLogin();
+    }
+
+    private void navigateToLogin() {
+        startActivity(new Intent(this, LoginActivity.class));
+        finish();
+    }
+
     private void setupOnBoardingItems() {
         List<OnBoardItem> items = new ArrayList<>();
         items.add(new OnBoardItem(
@@ -97,19 +139,16 @@ public class OnboardingActivity extends AppCompatActivity {
         ));
 
         onboardingAdapter = new OnboardingAdapter(items);
-        onboardingViewPager.setAdapter(onboardingAdapter);
+        binding.vpOnboarding.setAdapter(onboardingAdapter);
     }
 
-    //   Indicator dots setup
     private void setupIndicators() {
         int itemCount = onboardingAdapter.getItemCount();
+        binding.layoutIndicators.removeAllViews();
 
         for (int i = 0; i < itemCount; i++) {
             ImageView dot = new ImageView(this);
-            dot.setImageDrawable(ContextCompat.getDrawable(
-                    this,
-                    R.drawable.indicator_dot_selector
-            ));
+            dot.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.indicator_dot_selector));
             dot.setEnabled(false);
 
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
@@ -117,17 +156,14 @@ public class OnboardingActivity extends AppCompatActivity {
                     ViewGroup.LayoutParams.WRAP_CONTENT
             );
             params.setMargins(8, 0, 8, 0);
-
-            indicatorsLayout.addView(dot, params);
+            binding.layoutIndicators.addView(dot, params);
         }
     }
 
-    //    Update indicator state + animation
     private void setCurrentIndicator(int index) {
-        int count = indicatorsLayout.getChildCount();
-
+        int count = binding.layoutIndicators.getChildCount();
         for (int i = 0; i < count; i++) {
-            View dot = indicatorsLayout.getChildAt(i);
+            View dot = binding.layoutIndicators.getChildAt(i);
             boolean isSelected = (i == index);
             dot.setEnabled(isSelected);
 
@@ -139,17 +175,22 @@ public class OnboardingActivity extends AppCompatActivity {
                     .start();
         }
 
-        buttonNext.setText(index == onboardingAdapter.getItemCount() - 1
-                ? R.string.text_get_started
-                : R.string.text_next);
+        boolean isLastPage = (index == onboardingAdapter.getItemCount() - 1);
+        binding.btnNext.setText(isLastPage ? R.string.text_get_started : R.string.text_next);
+        binding.tvSkip.setVisibility(isLastPage ? View.GONE : View.VISIBLE);
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (binding != null) {
+            outState.putInt(KEY_CURRENT_PAGE, binding.vpOnboarding.getCurrentItem());
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        AnalyticsHelper.logScreenView(
-                getClass().getSimpleName(),
-                getClass().getSimpleName()
-        );
+        AnalyticsHelper.logScreenView(getClass().getSimpleName(), getClass().getSimpleName());
     }
 }

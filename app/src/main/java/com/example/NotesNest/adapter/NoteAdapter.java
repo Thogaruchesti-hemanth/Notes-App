@@ -25,7 +25,6 @@ import com.example.NotesNest.utils.DateTimeUtils;
 import com.example.NotesNest.utils.HtmlListConverter;
 import com.example.NotesNest.utils.NoteDiffCallback;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder> {
@@ -33,9 +32,9 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
     private final Context context;
     private final CategoryViewModel categoryViewModel;
     private final NoteViewModel noteViewModel;
-    private final ArrayList<NoteEntity> noteList;
+    private final List<NoteEntity> noteList;
 
-    public NoteAdapter(ArrayList<NoteEntity> noteList, Context context, CategoryViewModel categoryViewModel, NoteViewModel noteViewModel) {
+    public NoteAdapter(List<NoteEntity> noteList, Context context, CategoryViewModel categoryViewModel, NoteViewModel noteViewModel) {
         this.noteList = noteList;
         this.context = context;
         this.categoryViewModel = categoryViewModel;
@@ -136,8 +135,8 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
             return;
         }
 
-        if (context instanceof LifecycleOwner) {
-            categoryViewModel.getCategoryById(categoryId).observe((LifecycleOwner) context, category -> {
+        if (context instanceof LifecycleOwner lifecycleOwner) {
+            categoryViewModel.getCategoryById(categoryId).observe(lifecycleOwner, category -> {
                 if (category != null) {
                     categoryView.setText(category.name);
                     categoryView.setVisibility(View.VISIBLE);
