@@ -38,8 +38,6 @@ public final class PrefKeys {
     public static final String KEY_DRAFT_TITLE = "draft_title";
     public static final String KEY_DRAFT_COLOR = "draft_color";
 
-
-
-
-
+    // Layout Settings
+    public static final String KEY_NOTES_LAYOUT = "notes_layout";
 }

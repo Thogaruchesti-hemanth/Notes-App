@@ -14,15 +14,35 @@
         android:orientation="vertical"
         android:padding="@dimen/padding_10">
 
-        <TextView
-            android:id="@+id/tvNoteTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="@color/black"
-            android:textSize="@dimen/text_22"
-            android:textStyle="bold" />
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/tvNoteTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_toStartOf="@+id/ivPinned"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/black"
+                android:textSize="@dimen/text_22"
+                android:textStyle="bold" />
+
+            <ImageView
+                android:id="@+id/ivPinned"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="4dp"
+                android:src="@drawable/ic_pinned"
+                android:visibility="gone"
+                app:tint="@color/black" />
+        </RelativeLayout>
 
         <TextView
             android:id="@+id/tvNoteMessage"
@@ -32,11 +52,7 @@
             android:maxHeight="@dimen/size_200"
             android:maxLines="8"
             android:textColor="@color/black"
-            android:textSize="@dimen/text_16"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:textSize="@dimen/text_16" />
 
         <ImageView
             android:id="@+id/ivReadMoreView"
@@ -49,7 +65,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="end">
+            android:gravity="end"
+            android:orientation="horizontal">
 
             <TextView
                 android:id="@+id/tvNoteDate"

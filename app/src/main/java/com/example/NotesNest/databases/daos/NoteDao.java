@@ -18,12 +18,12 @@ public interface NoteDao {
     // FETCH NOTES (LiveData)
     // ------------------------------------------
 
-    // All notes for a user
-    @Query("SELECT * FROM notes WHERE userId = :userId AND isDeleted = 0 ORDER BY updatedAt DESC")
+    // All notes for a user - ORDER BY isPinned DESC, then createdAt DESC
+    @Query("SELECT * FROM notes WHERE userId = :userId AND isDeleted = 0 ORDER BY isPinned DESC, createdAt DESC")
     LiveData<List<NoteEntity>> getAllNotes(String userId);
 
     // Notes by category
-    @Query("SELECT * FROM notes WHERE userId = :userId AND categoryId = :categoryId AND isDeleted = 0 ORDER BY updatedAt DESC")
+    @Query("SELECT * FROM notes WHERE userId = :userId AND categoryId = :categoryId AND isDeleted = 0 ORDER BY isPinned DESC, createdAt DESC")
     LiveData<List<NoteEntity>> getNotesByCategory(String userId, int categoryId);
 
     // Get note by ID
@@ -54,19 +54,19 @@ public interface NoteDao {
     // Normal LIKE search
     @Query("SELECT * FROM notes WHERE userId = :userId AND isDeleted = 0 AND " +
             "(title LIKE '%' || :keyword || '%' OR content LIKE '%' || :keyword || '%') " +
-            "ORDER BY updatedAt DESC")
+            "ORDER BY isPinned DESC, createdAt DESC")
     LiveData<List<NoteEntity>> searchNotes(String userId, String keyword);
 
     // Category-specific search
     @Query("SELECT * FROM notes WHERE userId = :userId AND categoryId = :categoryId AND isDeleted = 0 AND " +
             "(title LIKE '%' || :keyword || '%' OR content LIKE '%' || :keyword || '%') " +
-            "ORDER BY updatedAt DESC")
+            "ORDER BY isPinned DESC, createdAt DESC")
     LiveData<List<NoteEntity>> searchNotesInCategory(String userId, int categoryId, String keyword);
 
     // Full-text Search (FTS)
     @Query("SELECT notes.* FROM notes JOIN notes_fts ON notes.id = notes_fts.rowid " +
             "WHERE notes.userId = :userId AND notes.isDeleted = 0 AND notes_fts MATCH :query " +
-            "ORDER BY notes.updatedAt DESC")
+            "ORDER BY notes.isPinned DESC, notes.createdAt DESC")
     LiveData<List<NoteEntity>> fullTextSearch(String userId, String query);
 
     // ------------------------------------------

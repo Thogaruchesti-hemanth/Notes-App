@@ -25,6 +25,7 @@ import com.example.NotesNest.utils.DateTimeUtils;
 import com.example.NotesNest.utils.HtmlListConverter;
 import com.example.NotesNest.utils.NoteDiffCallback;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder> {
@@ -75,6 +76,28 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
 
         DateTimeUtils.setDateTime(note.createdAt, holder.textDate, holder.textTime);
 
+        // Pinning logic: Click on pinned icon to unpin
+        holder.ivPinned.setVisibility(note.isPinned ? View.VISIBLE : View.GONE);
+        holder.ivPinned.setOnClickListener(v -> {
+            // Create a copy to update to avoid mutating the object currently in the list
+            // which can interfere with DiffUtil detection.
+            NoteEntity updatedNote = new NoteEntity();
+            updatedNote.id = note.id;
+            updatedNote.userId = note.userId;
+            updatedNote.categoryId = note.categoryId;
+            updatedNote.title = note.title;
+            updatedNote.content = note.content;
+            updatedNote.colorHex = note.colorHex;
+            updatedNote.createdAt = note.createdAt;
+            updatedNote.isSynced = note.isSynced;
+            updatedNote.isDeleted = note.isDeleted;
+            
+            updatedNote.isPinned = false;
+            updatedNote.updatedAt = System.currentTimeMillis();
+            
+            noteViewModel.updateNote(updatedNote);
+        });
+
         // Click → show full note
         holder.mainLayout.setOnClickListener(v -> {
             int currentPos = holder.getBindingAdapterPosition();
@@ -82,7 +105,12 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
 
             NoteEntity currentNote = noteList.get(currentPos);
 
-            CommonDialogs.showNoteContentDialog(context, currentNote, categoryViewModel, new CommonDialogs.NoteDialogCallback() {
+            CommonDialogs.showNoteContentDialog(context, currentNote, categoryViewModel, new CommonDialogs.NoteActionCallback() {
+                        @Override
+                        public void onNoteUpdated(NoteEntity note) {
+                            noteViewModel.updateNote(note);
+                        }
+
                         @Override
                         public void setDateTime(long timeStamp, TextView dateView, TextView timeView) {
                             DateTimeUtils.setDateTime(timeStamp, dateView, timeView);
@@ -103,7 +131,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
 
             NoteEntity currentNote = noteList.get(currentPos);
 
-            CommonDialogs.showOptionsDialog(context, currentNote, currentPos, new CommonDialogs.NoteOptionsListener() {
+            CommonDialogs.showOptionsDialog(v, currentNote, currentPos, new CommonDialogs.NoteOptionsListener() {
                         @Override
                         public void onEdit(NoteEntity note) {
                             Intent intent = new Intent(context, EditNoteActivity.class);
@@ -160,7 +188,8 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
     public void updateData(List<NoteEntity> newNotes) {
         if (newNotes == null) return;
 
-        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new NoteDiffCallback(noteList, newNotes));
+        // Use a copy of the list for DiffUtil to avoid reference issues
+        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new NoteDiffCallback(new ArrayList<>(noteList), new ArrayList<>(newNotes)));
 
         noteList.clear();
         noteList.addAll(newNotes);
@@ -175,6 +204,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         TextView textTime;
         CardView mainLayout;
         ImageView readMoreView;
+        ImageView ivPinned;
 
         NoteViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -184,6 +214,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
             textTime = itemView.findViewById(R.id.tvNoteTime);
             mainLayout = itemView.findViewById(R.id.layoutNoteItem);
             readMoreView = itemView.findViewById(R.id.ivReadMoreView);
+            ivPinned = itemView.findViewById(R.id.ivPinned);
         }
     }
 }
