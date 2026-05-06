@@ -215,4 +215,6 @@
     <string name="text_no_matches_found">No matches found</string>
     <string name="text_processing_payment">Processing Payment...</string>
     <string name="text_premium_active">Premium Active</string>
+    <string name="text_skip">Skip</string>
+    <string name="text_loading">Loading</string>
 </resources>

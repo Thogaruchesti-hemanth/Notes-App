@@ -45,6 +45,7 @@ import com.example.NotesNest.databases.ViewModels.NoteViewModel;
 import com.example.NotesNest.databases.entities.CategoryEntity;
 import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.utils.AdManager;
+import com.example.NotesNest.utils.AppPreferences;
 import com.example.NotesNest.utils.CategoryManager;
 import com.example.NotesNest.utils.AnalyticsHelper;
 import com.example.NotesNest.utils.CommonDialogs;
@@ -52,6 +53,7 @@ import com.example.NotesNest.utils.LayoutToggleViewModel;
 import com.example.NotesNest.utils.PremiumManager;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
 import com.example.NotesNest.utils.ThemeManager;
+import com.example.NotesNest.utils.constants.PrefKeys;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.material.tabs.TabLayout;
@@ -84,12 +86,14 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
     private ActivityResultLauncher<Intent> addEditNoteLauncher;
     private String currentUserId = null;
     private SharedPreferenceUtil preferenceUtil;
+    private AppPreferences appPreferences;
     private PremiumManager premiumManager;
     private int currentNotesCount = 0;
     private Context context;
     private NoteShimmerAdapter shimmerAdapter;
     private boolean isLoading = false;
     private AdView adView;
+    private boolean isGridLayout = true;
 
     private final BroadcastReceiver premiumReceiver = new BroadcastReceiver() {
         @Override
@@ -127,8 +131,12 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
 
         context = getContext();
         preferenceUtil = new SharedPreferenceUtil(context);
+        appPreferences = AppPreferences.getInstance();
         premiumManager = new PremiumManager(context);
         currentUserId = preferenceUtil.getUserId();
+        
+        // Load initial layout preference
+        isGridLayout = appPreferences.getBoolean(PrefKeys.KEY_NOTES_LAYOUT, true);
 
         addEditNoteLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -192,15 +200,23 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         adapter = new NoteAdapter(new ArrayList<>(), requireContext(), categoryViewModel, noteViewModel);
         shimmerAdapter = new NoteShimmerAdapter(10);
 
-        recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
+        recyclerView.setLayoutManager(new StaggeredGridLayoutManager(isGridLayout ? 2 : 1, StaggeredGridLayoutManager.VERTICAL));
         recyclerView.setAdapter(shimmerAdapter);
 
         LayoutToggleViewModel layoutToggleViewModel = new ViewModelProvider(requireActivity()).get(LayoutToggleViewModel.class);
         layoutToggleViewModel.getLayoutType().observe(getViewLifecycleOwner(), isGrid -> {
-            recyclerView.setLayoutManager(isGrid ? 
+            isGridLayout = isGrid;
+            refreshLayout();
+        });
+    }
+
+    private void refreshLayout() {
+        if (!isLoading) {
+            recyclerView.setLayoutManager(isGridLayout ? 
                     new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL) : 
                     new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL));
-        });
+            if (recyclerView.getAdapter() != adapter) recyclerView.setAdapter(adapter);
+        }
     }
 
 
@@ -431,7 +447,7 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
     private void updateRecycler(List<NoteEntity> notes) {
         if (isLoading) {
             isLoading = false;
-            if (recyclerView.getAdapter() != adapter) recyclerView.setAdapter(adapter);
+            refreshLayout();
         }
         adapter.updateData(notes);
     }
@@ -446,6 +462,10 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
     @Override
     public void onResume() {
         super.onResume();
+        // Load latest preference on resume
+        isGridLayout = appPreferences.getBoolean(PrefKeys.KEY_NOTES_LAYOUT, true);
+        refreshLayout();
+
         runSearch(searchEditText.getText().toString().trim());
         updateAllTabCounts();
         AnalyticsHelper.logScreenView("Notes", "NotesFragment");

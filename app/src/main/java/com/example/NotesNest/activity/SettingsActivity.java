@@ -24,6 +24,7 @@ import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.NotesNest.R;
 import com.example.NotesNest.backups.ImportManager;
@@ -32,10 +33,12 @@ import com.example.NotesNest.databinding.ActivitySettingsBinding;
 import com.example.NotesNest.databinding.ItemSettingsOptionBinding;
 import com.example.NotesNest.databinding.ItemSupportOptionBinding;
 import com.example.NotesNest.utils.AppLog;
+import com.example.NotesNest.utils.AppPreferences;
 import com.example.NotesNest.utils.CommonDialogs;
+import com.example.NotesNest.utils.LayoutToggleViewModel;
 import com.example.NotesNest.utils.PremiumManager;
-import com.example.NotesNest.utils.SharedPreferenceUtil;
 import com.example.NotesNest.utils.ThemeManager;
+import com.example.NotesNest.utils.constants.PrefKeys;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.MobileAds;
 
@@ -52,6 +55,7 @@ public class SettingsActivity extends AppCompatActivity {
     private String pendingPassword;
     private boolean isPremiumUser;
     private ActivitySettingsBinding binding;
+    private LayoutToggleViewModel layoutToggleViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +74,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         premiumManager = new PremiumManager(this);
         isPremiumUser = premiumManager.isPremium();
+        layoutToggleViewModel = new ViewModelProvider(this).get(LayoutToggleViewModel.class);
 
         initViews();
         setupOptions();
@@ -219,11 +224,18 @@ public class SettingsActivity extends AppCompatActivity {
         Spinner spinner = binding.layoutNote.getRoot().findViewById(R.id.spinnerOptions);
         String[] options = {"Linear", "Grid"};
         spinner.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, options));
-        spinner.setSelection(new SharedPreferenceUtil(this).getKeyNoteLayout().equals("Grid") ? 1 : 0);
+        
+        AppPreferences appPreferences = AppPreferences.getInstance();
+        boolean isGrid = appPreferences.getBoolean(PrefKeys.KEY_NOTES_LAYOUT, true);
+        spinner.setSelection(isGrid ? 1 : 0);
+        
         spinner.setOnItemSelectedListener(new SimpleItemSelectedListener() {
             @Override
             public void onItemSelected(int position) {
-                new SharedPreferenceUtil(SettingsActivity.this).setKeyNoteLayout(options[position]);
+                boolean selectedIsGrid = (position == 1);
+                appPreferences.putBoolean(PrefKeys.KEY_NOTES_LAYOUT, selectedIsGrid);
+                // Also update the global ViewModel if activity is part of the same lifecycle
+                // However, since we want this persistent and shared, using AppPreferences is correct.
             }
         });
     }

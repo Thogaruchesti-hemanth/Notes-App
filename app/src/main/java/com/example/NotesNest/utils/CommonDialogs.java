@@ -7,15 +7,24 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.text.Html;
 import android.text.InputType;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.method.LinkMovementMethod;
+import android.text.style.AbsoluteSizeSpan;
+import android.text.style.ClickableSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,7 +38,6 @@ import com.example.NotesNest.activity.PremiumActivity;
 import com.example.NotesNest.databases.ViewModels.CategoryViewModel;
 import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.databases.entities.ReminderEntity;
-import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -38,6 +46,8 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CommonDialogs {
 
@@ -206,7 +216,7 @@ public class CommonDialogs {
         }
 
         // Set height to wrap_content only
-        bottomSheetDialog.getBehavior().setPeekHeight(BottomSheetBehavior.PEEK_HEIGHT_AUTO);
+        bottomSheetDialog.getBehavior().setPeekHeight(com.google.android.material.bottomsheet.BottomSheetBehavior.PEEK_HEIGHT_AUTO);
         bottomSheetDialog.getBehavior().setFitToContents(true);
 
         TextView tvTitle = view.findViewById(R.id.tvTitle);
@@ -294,10 +304,13 @@ public class CommonDialogs {
         TextView time = view.findViewById(R.id.tvTime);
         TextView category = view.findViewById(R.id.tvCategory);
         ImageButton btnShare = view.findViewById(R.id.btnShare);
+        ImageView ivPinned = view.findViewById(R.id.ivPinned);
         androidx.cardview.widget.CardView card = view.findViewById(R.id.dialogNote);
 
         title.setText(note.title);
-        content.setText(Html.fromHtml(note.content, Html.FROM_HTML_MODE_LEGACY));
+        ivPinned.setVisibility(note.isPinned ? View.VISIBLE : View.GONE);
+
+        setupResponsiveCheckboxes(context, content, note, callback);
 
         callback.setDateTime(note.createdAt, date, time);
         callback.setCategory(category, note.categoryId != null ? note.categoryId : -1);
@@ -318,15 +331,122 @@ public class CommonDialogs {
         dialog.show();
     }
 
-    public static void showOptionsDialog(Context context, NoteEntity note, int pos, NoteOptionsListener listener) {
-        String[] options = {"Edit", "Delete"};
-        new AlertDialog.Builder(context)
-                .setTitle("Select Action")
-                .setItems(options, (dialog, which) -> {
-                    if (which == 0) listener.onEdit(note);
-                    else listener.onDelete(note, pos);
-                })
-                .show();
+    private static void setupResponsiveCheckboxes(Context context, TextView tv, NoteEntity note, NoteDialogCallback callback) {
+        String converted = HtmlListConverter.convertHtmlLists(note.content);
+        SpannableStringBuilder builder = new SpannableStringBuilder(Html.fromHtml(converted, Html.FROM_HTML_MODE_LEGACY));
+
+        // Find all checkbox characters (☐ and ☑)
+        String text = builder.toString();
+        Pattern pattern = Pattern.compile("[\u2610\u2611]");
+        Matcher matcher = pattern.matcher(text);
+
+        while (matcher.find()) {
+            final int start = matcher.start();
+            final int end = matcher.end();
+            final char icon = text.charAt(start);
+
+            // Increase size of the checkbox icon
+            builder.setSpan(new AbsoluteSizeSpan(22, true), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+            builder.setSpan(new ClickableSpan() {
+                @Override
+                public void onClick(@NonNull View widget) {
+                    toggleNoteCheckbox(context, note, start, icon == '\u2610', callback, tv);
+                }
+
+                @Override
+                public void updateDrawState(@NonNull android.text.TextPaint ds) {
+                    ds.setUnderlineText(false);
+                    ds.setColor(Color.BLACK);
+                }
+            }, start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+
+        tv.setText(builder);
+        tv.setMovementMethod(LinkMovementMethod.getInstance());
+    }
+
+    private static void toggleNoteCheckbox(Context context, NoteEntity note, int charPos, boolean shouldCheck, NoteDialogCallback callback, TextView tv) {
+        String html = note.content;
+        Pattern pattern = Pattern.compile("<input[^>]*type=\"checkbox\"[^>]*>", Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(html);
+
+        int clickedIndex = 0;
+        String convertedText = tv.getText().toString();
+        for (int i = 0; i < charPos; i++) {
+            char c = convertedText.charAt(i);
+            if (c == '\u2610' || c == '\u2611') clickedIndex++;
+        }
+
+        StringBuffer sb = new StringBuffer();
+        int currentIndex = 0;
+        while (matcher.find()) {
+            if (currentIndex == clickedIndex) {
+                String tag = matcher.group();
+                String newTag;
+                if (shouldCheck) {
+                    if (!tag.toLowerCase().contains("checked")) {
+                        newTag = tag.replace(">", " checked>");
+                    } else {
+                        newTag = tag;
+                    }
+                } else {
+                    newTag = tag.replaceAll("(?i)\\s*checked(=[\"']?checked[\"']?)?", "");
+                }
+                matcher.appendReplacement(sb, Matcher.quoteReplacement(newTag));
+            } else {
+                matcher.appendReplacement(sb, Matcher.quoteReplacement(matcher.group()));
+            }
+            currentIndex++;
+        }
+        matcher.appendTail(sb);
+
+        // Update the note object
+        note.content = sb.toString();
+        note.updatedAt = System.currentTimeMillis();
+
+        // CRITICAL: Call the update on the ViewModel/Repository via callback
+        if (callback instanceof NoteActionCallback) {
+            ((NoteActionCallback) callback).onNoteUpdated(note);
+        }
+
+        // Refresh the UI in the dialog immediately
+        setupResponsiveCheckboxes(context, tv, note, callback);
+    }
+
+    public static void showOptionsDialog(View anchorView, NoteEntity note, int pos, NoteOptionsListener listener) {
+        Context context = anchorView.getContext();
+        View view = LayoutInflater.from(context).inflate(R.layout.dialog_note_options, null);
+
+        PopupWindow popupWindow = new PopupWindow(view,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                true);
+
+        popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        popupWindow.setElevation(40f);
+
+        // Make the note dull when popup is shown
+        anchorView.setAlpha(0.4f);
+
+        // Restore alpha when popup is dismissed
+        popupWindow.setOnDismissListener(() -> anchorView.setAlpha(1.0f));
+
+        view.findViewById(R.id.btnEdit).setOnClickListener(v -> {
+            listener.onEdit(note);
+            popupWindow.dismiss();
+        });
+
+        view.findViewById(R.id.btnDelete).setOnClickListener(v -> {
+            listener.onDelete(note, pos);
+            popupWindow.dismiss();
+        });
+
+        view.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+        int xOffset = (anchorView.getWidth() - view.getMeasuredWidth()) / 2;
+        int yOffset = -(anchorView.getHeight() + view.getMeasuredHeight()) / 2;
+
+        popupWindow.showAsDropDown(anchorView, xOffset, yOffset);
     }
 
     public static void showCustomDialog(Context context, ReminderEntity reminder, String posBtn, String negBtn, Runnable onEdit, Runnable onDelete) {
@@ -351,7 +471,7 @@ public class CommonDialogs {
         GradientDrawable gd = new GradientDrawable(
                 GradientDrawable.Orientation.LEFT_RIGHT,
                 new int[]{reminder.gradientStartColor, reminder.gradientEndColor}
-        );
+            );
         gd.setCornerRadius(24f);
         layout.setBackground(gd);
 
@@ -372,8 +492,8 @@ public class CommonDialogs {
         if (context instanceof Activity && ((Activity) context).isFinishing()) return null;
 
         View view = LayoutInflater.from(context).inflate(R.layout.dialog_loading, null);
-        TextView tvMessage = view.findViewById(R.id.tvLoadingMessage);
-        if (tvMessage != null) tvMessage.setText(message);
+        TextView tvLoadingMessage = view.findViewById(R.id.tvLoadingMessage);
+        if (tvLoadingMessage != null) tvLoadingMessage.setText(message);
 
         AlertDialog dialog = new MaterialAlertDialogBuilder(context)
                 .setView(view)
@@ -495,6 +615,7 @@ public class CommonDialogs {
     public interface InputCallback { void onInput(String text); }
     public interface GradientCallback { void onGradientSelected(int startColor, int endColor); }
     public interface ColorCallback { void onColorSelected(String color); }
+    public interface ProfessionalGradientCallback { void onGradientSelected(int startColor, int endColor); }
     public interface CategoryCallback { void onCategorySelected(String category, int position); }
     public interface ChangePasswordCallback { void onUpdate(String currentPass, String newPass); }
     public interface ReauthCallback { void onConfirm(String password); }
@@ -502,6 +623,10 @@ public class CommonDialogs {
     public interface NoteDialogCallback {
         void setDateTime(long timeStamp, TextView dateView, TextView timeView);
         void setCategory(TextView categoryView, int categoryId);
+    }
+
+    public interface NoteActionCallback extends NoteDialogCallback {
+        void onNoteUpdated(NoteEntity note);
     }
 
     public interface NoteOptionsListener {

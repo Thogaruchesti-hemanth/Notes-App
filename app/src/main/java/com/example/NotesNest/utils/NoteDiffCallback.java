@@ -28,11 +28,20 @@ public class NoteDiffCallback extends DiffUtil.Callback {
 
     @Override
     public boolean areItemsTheSame(int oldPos, int newPos) {
+        // Use unique ID to check if it's the same note
         return oldList.get(oldPos).id == newList.get(newPos).id;
     }
 
     @Override
     public boolean areContentsTheSame(int oldPos, int newPos) {
-        return oldList.get(oldPos).equals(newList.get(newPos));
+        NoteEntity oldNote = oldList.get(oldPos);
+        NoteEntity newNote = newList.get(newPos);
+
+        // Explicitly check pinned status and content
+        return oldNote.isPinned == newNote.isPinned &&
+               oldNote.updatedAt == newNote.updatedAt &&
+               oldNote.title.equals(newNote.title) &&
+               oldNote.content.equals(newNote.content) &&
+               oldNote.colorHex.equals(newNote.colorHex);
     }
 }

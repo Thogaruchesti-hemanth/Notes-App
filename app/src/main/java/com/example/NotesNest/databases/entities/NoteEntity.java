@@ -6,6 +6,8 @@ import androidx.room.ForeignKey;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
+import java.util.Objects;
+
 @Entity(
         tableName = "notes",
         foreignKeys = @ForeignKey(
@@ -38,4 +40,27 @@ public class NoteEntity {
     public boolean isPinned;        // pinned note flag
 
     public NoteEntity() {}
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        NoteEntity that = (NoteEntity) o;
+        return id == that.id &&
+                createdAt == that.createdAt &&
+                updatedAt == that.updatedAt &&
+                isSynced == that.isSynced &&
+                isDeleted == that.isDeleted &&
+                isPinned == that.isPinned &&
+                Objects.equals(userId, that.userId) &&
+                Objects.equals(categoryId, that.categoryId) &&
+                Objects.equals(title, that.title) &&
+                Objects.equals(content, that.content) &&
+                Objects.equals(colorHex, that.colorHex);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, userId, categoryId, title, content, colorHex, createdAt, updatedAt, isSynced, isDeleted, isPinned);
+    }
 }

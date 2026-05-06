@@ -27,8 +27,7 @@
             android:layout_marginTop="16dp"
             android:text="@string/text_loading"
             android:textColor="?attr/colorPrimary"
-            android:textSize="16sp"
-            android:textStyle="medium" />
+            android:textSize="16sp"/>
 
     </LinearLayout>
 
