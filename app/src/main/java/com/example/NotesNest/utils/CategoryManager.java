@@ -118,12 +118,15 @@ public class CategoryManager extends BottomSheetDialogFragment {
     }
 
     private void showAddCategoryDialog() {
-        if (!premiumManager.canCreateCategory(categories.size())) {
-            CommonDialogs.showPremiumRequiredDialog(requireContext(), 
-                "You've reached the free limit of " + PremiumManager.MAX_FREE_CATEGORIES + " categories. Upgrade for unlimited categories!");
-            return;
+        if (!premiumManager.isPremium()) {
+            // Requirement: On click of add category, show 30s rewarded ad for non-premium users
+            AdManager.showRewardedAd(requireActivity(), this::performAddCategory);
+        } else {
+            performAddCategory();
         }
+    }
 
+    private void performAddCategory() {
         CommonDialogs.showInputDialog(requireContext(), "Add Category", "Enter category name", "Add", "Cancel", name -> {
             if (name == null || name.trim().isEmpty()) {
                 Toast.makeText(getContext(), "Name cannot be empty", Toast.LENGTH_SHORT).show();

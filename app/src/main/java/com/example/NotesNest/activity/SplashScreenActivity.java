@@ -44,6 +44,7 @@ public class SplashScreenActivity extends AppCompatActivity {
         
         // Load Ads (Init is handled in NotesApplication)
         AdManager.loadInterstitial(this);
+        AdManager.loadRewardedAd(this);
 
         new Handler(Looper.getMainLooper()).postDelayed(this::handleStartFlow, SPLASH_DELAY_MS);
     }

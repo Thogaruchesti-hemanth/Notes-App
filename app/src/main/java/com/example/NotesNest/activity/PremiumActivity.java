@@ -59,6 +59,14 @@ public class PremiumActivity extends AppCompatActivity {
 
     private void setupListeners() {
         binding.ivClose.setOnClickListener(v -> finish());
+        binding.ivClose.setOnLongClickListener(v -> {
+            appPreferences.resetPremium();
+            currentPlan = FirebaseHelper.PLAN_NONE;
+            selectedPlan = FirebaseHelper.PLAN_NONE;
+            setupCurrentPlanState();
+            Toast.makeText(this, "Debug: Premium Reset", Toast.LENGTH_SHORT).show();
+            return true;
+        });
         binding.tvContinueWithLimited.setOnClickListener(v -> finish());
 
         View.OnClickListener planClickListener = v -> {
@@ -91,14 +99,25 @@ public class PremiumActivity extends AppCompatActivity {
             } else {
                 hideLoading();
                 if (state.planType != null && !"none".equals(state.planType)) {
-                    syncPurchaseToFirebase(state.planType, state.purchaseToken);
+                    if (state.isNewPurchase) {
+                        syncPurchaseToFirebase(state.planType, state.purchaseToken);
+                    } else {
+                        // It was a restored purchase, update UI state but don't auto-sync/finish
+                        currentPlan = state.planType;
+                        setupCurrentPlanState();
+                    }
                 }
             }
         });
 
         billingManager.getProductPrices().observe(this, prices -> {
-            if (prices != null && !prices.isEmpty()) {
-                updatePriceUI(prices);
+            if (prices != null) {
+                if (!prices.isEmpty()) {
+                    updatePriceUI(prices);
+                } else if (billingManager.isBillingReady()) {
+                     // Prices came back empty from Play Store
+                     setPricesUnavailable();
+                }
             }
         });
 
@@ -120,6 +139,14 @@ public class PremiumActivity extends AppCompatActivity {
         if (prices.containsKey(BillingManager.PRODUCT_LIFETIME)) {
             binding.tvPriceLifetime.setText(getString(R.string.price_format_lifetime, prices.get(BillingManager.PRODUCT_LIFETIME)));
         }
+    }
+
+    private void setPricesUnavailable() {
+        binding.tvPriceMonthly.setText("Monthly - Unavailable");
+        binding.tvPriceYearly.setText("Yearly - Unavailable");
+        binding.tvPriceLifetime.setText("Lifetime - Unavailable");
+        
+        Toast.makeText(this, "Could not fetch prices from Play Store. Please check your internet or Play Store account.", Toast.LENGTH_LONG).show();
     }
 
     private void syncPurchaseToFirebase(String planType, String token) {
@@ -167,11 +194,17 @@ public class PremiumActivity extends AppCompatActivity {
     }
 
     private void upgradeSelectedPlan() {
+        if (appPreferences.isPremiumActive()) {
+            Toast.makeText(this, "Premium is already active! ⭐", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
         if (selectedPlan.equals(FirebaseHelper.PLAN_NONE)) {
             Toast.makeText(this, "Please select a plan to continue", Toast.LENGTH_SHORT).show();
             return;
         }
         String productId = mapPlanToProductId(selectedPlan);
+        Toast.makeText(this, "Launching Play Store for: " + selectedPlan, Toast.LENGTH_SHORT).show();
         billingManager.launchPurchaseFlow(this, productId);
     }
 
@@ -188,7 +221,8 @@ public class PremiumActivity extends AppCompatActivity {
 
         if (hasPremium) {
             binding.btnUnlock.setText(R.string.text_premium_active);
-            binding.btnUnlock.setEnabled(false);
+            binding.btnUnlock.setEnabled(true); // Keep enabled for feedback
+            binding.btnUnlock.setAlpha(0.7f);   // Visual hint it's different
             binding.tvContinueWithLimited.setVisibility(View.GONE);
 
             switch (currentPlan) {
@@ -207,6 +241,7 @@ public class PremiumActivity extends AppCompatActivity {
         } else {
             binding.btnUnlock.setText(R.string.text_unlock_premium);
             binding.btnUnlock.setEnabled(true);
+            binding.btnUnlock.setAlpha(1.0f);
             binding.tvContinueWithLimited.setVisibility(View.VISIBLE);
 
             // Default select Yearly if no premium

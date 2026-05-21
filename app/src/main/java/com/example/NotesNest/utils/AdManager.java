@@ -13,6 +13,8 @@ import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.appopen.AppOpenAd;
 import com.google.android.gms.ads.interstitial.InterstitialAd;
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
+import com.google.android.gms.ads.rewarded.RewardedAd;
+import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
 
 /**
  * Professional Ad Manager that respects Premium status.
@@ -25,9 +27,11 @@ public class AdManager {
     // GOOGLE TEST IDs (Use these for development)
     private static final String INTERSTITIAL_ID = "ca-app-pub-4258152474007475/4793955509";
     private static final String APP_OPEN_ID = "ca-app-pub-4258152474007475/8885944453";
+    private static final String REWARDED_ID = "ca-app-pub-3940256099942544/5224354917";
 
     private static InterstitialAd mInterstitialAd;
     private static AppOpenAd mAppOpenAd;
+    private static RewardedAd mRewardedAd;
     private static boolean isAdLoading = false;
 
     /**
@@ -62,6 +66,29 @@ public class AdManager {
     }
 
     /**
+     * Load a Rewarded Ad if the user is not premium.
+     */
+    public static void loadRewardedAd(Context context) {
+        PremiumManager premiumManager = new PremiumManager(context);
+        if (premiumManager.isPremium()) return;
+
+        AdRequest adRequest = new AdRequest.Builder().build();
+        RewardedAd.load(context, REWARDED_ID, adRequest, new RewardedAdLoadCallback() {
+            @Override
+            public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                mRewardedAd = null;
+                Log.e(TAG, "Rewarded Ad Failed: " + loadAdError.getMessage());
+            }
+
+            @Override
+            public void onAdLoaded(@NonNull RewardedAd rewardedAd) {
+                mRewardedAd = rewardedAd;
+                Log.i(TAG, "Rewarded Ad Loaded");
+            }
+        });
+    }
+
+    /**
      * Show Interstitial Ad at a natural break.
      */
     public static void showInterstitial(Activity activity, AdDismissListener listener) {
@@ -88,6 +115,35 @@ public class AdManager {
         });
 
         mInterstitialAd.show(activity);
+    }
+
+    /**
+     * Show Rewarded Ad and execute action only if reward earned.
+     */
+    public static void showRewardedAd(Activity activity, AdDismissListener listener) {
+        PremiumManager premiumManager = new PremiumManager(activity);
+        if (premiumManager.isPremium() || mRewardedAd == null) {
+            if (listener != null) listener.onDismissed();
+            return;
+        }
+
+        mRewardedAd.setFullScreenContentCallback(new FullScreenContentCallback() {
+            @Override
+            public void onAdDismissedFullScreenContent() {
+                mRewardedAd = null;
+                loadRewardedAd(activity);
+            }
+
+            @Override
+            public void onAdFailedToShowFullScreenContent(@NonNull com.google.android.gms.ads.AdError adError) {
+                mRewardedAd = null;
+                if (listener != null) listener.onDismissed();
+            }
+        });
+
+        mRewardedAd.show(activity, rewardItem -> {
+            if (listener != null) listener.onDismissed();
+        });
     }
 
     /**

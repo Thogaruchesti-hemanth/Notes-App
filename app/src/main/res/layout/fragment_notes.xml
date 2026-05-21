@@ -124,7 +124,6 @@
         android:textColor="?attr/colorPrimary"
         android:textSize="@dimen/text_36"
         android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@+id/recyclerView"
         app:layout_constraintEnd_toStartOf="@+id/btnCreate"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tabContainer" />
@@ -137,7 +136,6 @@
         android:backgroundTint="@color/tabSelectedTextColor"
         android:text="@string/text_create"
         android:textColor="@color/black"
-        app:layout_constraintBottom_toTopOf="@id/recyclerView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintLeft_toRightOf="@+id/tvTitle"
         app:layout_constraintTop_toBottomOf="@id/tabContainer" />
@@ -152,6 +150,46 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvTitle" />
+
+    <LinearLayout
+        android:id="@+id/emptyStateLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/adViewNotes"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvTitle">
+
+        <ImageView
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@drawable/ic_notes"
+            app:tint="?attr/colorPrimary"
+            android:alpha="0.2"
+            android:contentDescription="@string/text_no_notes_available" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/text_your_nest_is_empty"
+            android:textColor="?attr/colorPrimary"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/text_empty_notes_subtitle"
+            android:textColor="@color/grey_400"
+            android:textSize="15sp"
+            android:paddingHorizontal="40dp"
+            android:gravity="center" />
+    </LinearLayout>
 
     <com.google.android.gms.ads.AdView
         android:id="@+id/adViewNotes"

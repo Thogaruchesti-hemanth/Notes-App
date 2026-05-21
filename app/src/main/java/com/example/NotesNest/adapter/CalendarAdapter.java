@@ -21,11 +21,17 @@ import java.util.List;
 public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.ViewHolder> {
 
     private final List<CalendarItem> list;
+    private List<java.time.LocalDate> eventDates = new java.util.ArrayList<>();
     private int selectedPosition = -1;
     private OnDateClickListener listener;
 
     public CalendarAdapter(List<CalendarItem> list) {
         this.list = list;
+    }
+
+    public void setEventDates(List<java.time.LocalDate> dates) {
+        this.eventDates = dates;
+        notifyDataSetChanged();
     }
 
     public void setOnDateClickListener(OnDateClickListener listener) {
@@ -83,6 +89,10 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.ViewHo
             holder.dayText.setTextColor(textColor);
         }
 
+        // Show dot if this date has reminders
+        boolean hasEvent = eventDates != null && eventDates.contains(item.localDate);
+        holder.viewDot.setVisibility(hasEvent ? View.VISIBLE : View.GONE);
+
         holder.itemView.setOnClickListener(v -> {
             int currentPos = holder.getAbsoluteAdapterPosition();
             if (currentPos == RecyclerView.NO_POSITION) return;
@@ -114,12 +124,14 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.ViewHo
         final TextView dateText;
         final TextView dayText;
         final LinearLayout dateLayout;
+        final View viewDot;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             dateText = itemView.findViewById(R.id.tvDate);
             dayText = itemView.findViewById(R.id.tvDay);
             dateLayout = itemView.findViewById(R.id.layoutDate);
+            viewDot = itemView.findViewById(R.id.viewDot);
         }
     }
 }

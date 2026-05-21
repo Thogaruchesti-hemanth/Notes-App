@@ -31,6 +31,16 @@
             android:layout_gravity="center"
             android:textSize="@dimen/text_18" />
 
+        <View
+            android:id="@+id/viewDot"
+            android:layout_width="6dp"
+            android:layout_height="6dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="4dp"
+            android:background="@drawable/bg_circle_fill"
+            android:backgroundTint="@color/tabSelectedTextColor"
+            android:visibility="gone" />
+
     </LinearLayout>
 
 </androidx.cardview.widget.CardView>

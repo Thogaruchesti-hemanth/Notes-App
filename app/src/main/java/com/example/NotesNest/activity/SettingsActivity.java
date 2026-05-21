@@ -12,8 +12,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -24,7 +22,6 @@ import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.lifecycle.ViewModelProvider;
 
 import com.example.NotesNest.R;
 import com.example.NotesNest.backups.ImportManager;
@@ -32,10 +29,10 @@ import com.example.NotesNest.backups.LocalBackupManager;
 import com.example.NotesNest.databinding.ActivitySettingsBinding;
 import com.example.NotesNest.databinding.ItemSettingsOptionBinding;
 import com.example.NotesNest.databinding.ItemSupportOptionBinding;
+import com.example.NotesNest.utils.AdManager;
 import com.example.NotesNest.utils.AppLog;
 import com.example.NotesNest.utils.AppPreferences;
 import com.example.NotesNest.utils.CommonDialogs;
-import com.example.NotesNest.utils.LayoutToggleViewModel;
 import com.example.NotesNest.utils.PremiumManager;
 import com.example.NotesNest.utils.ThemeManager;
 import com.example.NotesNest.utils.constants.PrefKeys;
@@ -55,7 +52,6 @@ public class SettingsActivity extends AppCompatActivity {
     private String pendingPassword;
     private boolean isPremiumUser;
     private ActivitySettingsBinding binding;
-    private LayoutToggleViewModel layoutToggleViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,14 +70,11 @@ public class SettingsActivity extends AppCompatActivity {
 
         premiumManager = new PremiumManager(this);
         isPremiumUser = premiumManager.isPremium();
-        layoutToggleViewModel = new ViewModelProvider(this).get(LayoutToggleViewModel.class);
 
         initViews();
         setupOptions();
         setupActivityResultLaunchers();
         setupClickListeners();
-        setupNotesSpinner();
-        setupThemeSpinner();
         setupDriveBackupPremium();
         setupAds();
     }
@@ -143,8 +136,69 @@ public class SettingsActivity extends AppCompatActivity {
             });
         }
 
-        binding.layoutManageAccount.getRoot().setOnClickListener(v ->
-                startActivity(new Intent(this, ManageAccountActivity.class)));
+        binding.layoutManageAccount.getRoot().setOnClickListener(v -> {
+            if (!isPremiumUser) {
+                AdManager.showInterstitial(this, () ->
+                        startActivity(new Intent(this, ManageAccountActivity.class)));
+            } else {
+                startActivity(new Intent(this, ManageAccountActivity.class));
+            }
+        });
+
+        // NOTES LAYOUT
+        binding.layoutNote.getRoot().setOnClickListener(v -> showNotesLayoutDialog());
+
+        // APP THEME
+        binding.layoutTheme.getRoot().setOnClickListener(v -> {
+            if (isPremiumUser) {
+                showThemeDialog();
+            } else {
+                CommonDialogs.showPremiumRequiredDialog(this, "Theme customization is for Premium users only.");
+            }
+        });
+    }
+
+    private void showNotesLayoutDialog() {
+        String[] options = {"Linear", "Grid"};
+        AppPreferences appPreferences = AppPreferences.getInstance();
+        boolean isGrid = appPreferences.getBoolean(PrefKeys.KEY_NOTES_LAYOUT, true);
+        int checkedItem = isGrid ? 1 : 0;
+
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                .setTitle("Select Notes Layout")
+                .setSingleChoiceItems(options, checkedItem, (dialog, which) -> {
+                    boolean selectedIsGrid = (which == 1);
+                    appPreferences.putBoolean(PrefKeys.KEY_NOTES_LAYOUT, selectedIsGrid);
+                    Toast.makeText(this, "Layout updated to " + options[which], Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void showThemeDialog() {
+        String[] options = {"System", "Light", "Dark"};
+        String saved = ThemeManager.getCurrentThemeMode(this);
+        int checkedItem;
+        if ("light".equals(saved)) checkedItem = 1;
+        else if ("dark".equals(saved)) checkedItem = 2;
+        else checkedItem = 0;
+
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                .setTitle("Select App Theme")
+                .setSingleChoiceItems(options, checkedItem, (dialog, which) -> {
+                    String selected = "system";
+                    if (which == 1) selected = "light";
+                    else if (which == 2) selected = "dark";
+
+                    if (!selected.equals(ThemeManager.getCurrentThemeMode(this))) {
+                        ThemeManager.updateTheme(this, selected, this);
+                        recreate();
+                    }
+                    dialog.dismiss();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     private void performExport(Uri uri, String password) {
@@ -220,69 +274,6 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     // --- REST OF THE CODE (UI SETUP) ---
-    private void setupNotesSpinner() {
-        Spinner spinner = binding.layoutNote.getRoot().findViewById(R.id.spinnerOptions);
-        String[] options = {"Linear", "Grid"};
-        spinner.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, options));
-        
-        AppPreferences appPreferences = AppPreferences.getInstance();
-        boolean isGrid = appPreferences.getBoolean(PrefKeys.KEY_NOTES_LAYOUT, true);
-        spinner.setSelection(isGrid ? 1 : 0);
-        
-        spinner.setOnItemSelectedListener(new SimpleItemSelectedListener() {
-            @Override
-            public void onItemSelected(int position) {
-                boolean selectedIsGrid = (position == 1);
-                appPreferences.putBoolean(PrefKeys.KEY_NOTES_LAYOUT, selectedIsGrid);
-                // Also update the global ViewModel if activity is part of the same lifecycle
-                // However, since we want this persistent and shared, using AppPreferences is correct.
-            }
-        });
-    }
-
-    private void setupThemeSpinner() {
-        Spinner spinner = binding.layoutTheme.getRoot().findViewById(R.id.spinnerOptions);
-        String[] options = {"System", "Light", "Dark"};
-        spinner.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, options));
-        String saved = ThemeManager.getCurrentThemeMode(this);
-        int position;
-
-        if ("light".equals(saved)) {
-            position = 1;
-        } else if ("dark".equals(saved)) {
-            position = 2;
-        } else {
-            position = 0;
-        }
-
-        spinner.setSelection(position);
-
-        if (!isPremiumUser) {
-            spinner.setEnabled(false);
-            binding.layoutTheme.getRoot().setAlpha(0.5f);
-            binding.layoutTheme.getRoot().findViewById(R.id.tvPremiumBatch).setVisibility(View.VISIBLE);
-            binding.layoutTheme.getRoot().setOnClickListener(v -> CommonDialogs.showPremiumRequiredDialog(this, "Theme customization is for Premium users only."));
-            return;
-        }
-
-        spinner.setOnItemSelectedListener(new SimpleItemSelectedListener() {
-            @Override
-            public void onItemSelected(int position) {
-                String selected = "system";
-
-                if (position == 1) {
-                    selected = "light";
-                } else if (position == 2) {
-                    selected = "dark";
-                }
-                if (selected.equals(ThemeManager.getCurrentThemeMode(SettingsActivity.this)))
-                    return;
-                ThemeManager.updateTheme(SettingsActivity.this, selected, SettingsActivity.this);
-                recreate();
-            }
-        });
-    }
-
     private void setupDriveBackupPremium() {
         if (isPremiumUser) return;
         binding.layoutDiveBackup.getRoot().findViewById(R.id.tvPremiumBatch).setVisibility(View.VISIBLE);
@@ -302,6 +293,7 @@ public class SettingsActivity extends AppCompatActivity {
     private void setupOptionsData(ItemSettingsOptionBinding binding, int icon, String title) {
         binding.ivIcon.setImageDrawable(AppCompatResources.getDrawable(this, icon));
         binding.tvText.setText(title);
+        binding.spinnerOptions.setVisibility(View.GONE);
     }
 
     private void setupOptionsData(ItemSupportOptionBinding binding, int icon, String title) {
@@ -318,19 +310,6 @@ public class SettingsActivity extends AppCompatActivity {
             binding.tvVersion.setText(p.versionName);
         } catch (PackageManager.NameNotFoundException e) {
             AppLog.e("SettingsActivity", "Failed to get version name", e);
-        }
-    }
-
-    abstract static class SimpleItemSelectedListener implements android.widget.AdapterView.OnItemSelectedListener {
-        @Override
-        public void onNothingSelected(android.widget.AdapterView<?> parent) {
-        }
-
-        public abstract void onItemSelected(int position);
-
-        @Override
-        public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
-            onItemSelected(position);
         }
     }
 }

@@ -38,6 +38,9 @@ import com.google.android.material.navigation.NavigationView;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Objects;
 
 public class DrawerHelper {
@@ -54,6 +57,7 @@ public class DrawerHelper {
 
     private ActivityResultLauncher<PickVisualMediaRequest> pickMedia;
     private ImageView currentDialogImageView;
+    private int menuClickCount = 0;
 
     public DrawerHelper(AppCompatActivity activity) {
         this.activity = activity;
@@ -155,7 +159,7 @@ public class DrawerHelper {
         View premiumRing = profileHeader.findViewById(R.id.premiumRing);
         ImageView premiumBadge = profileHeader.findViewById(R.id.ivPremiumBadge);
 
-        profileHeader.findViewById(R.id.btnEdit).setOnClickListener(v -> openEditDialog());
+        profileHeader.findViewById(R.id.btnEdit).setOnClickListener(v -> checkProfileEditLimit());
 
         boolean isPremiumUser = pref.isUserPremium();
 
@@ -178,7 +182,45 @@ public class DrawerHelper {
         activity.findViewById(R.id.btnMenu).setOnClickListener(v -> toggleDrawer());
     }
 
+    private void checkProfileEditLimit() {
+        if (pref.isUserPremium()) {
+            openEditDialog();
+            return;
+        }
+
+        String currentMonth = new SimpleDateFormat("MM-yyyy", Locale.getDefault()).format(new Date());
+        String lastEditMonth = pref.getProfileEditMonth();
+        int editCount = pref.getProfileEditCount();
+
+        if (!currentMonth.equals(lastEditMonth)) {
+            pref.setProfileEditMonth(currentMonth);
+            pref.setProfileEditCount(0);
+            editCount = 0;
+        }
+
+        if (editCount >= 3) {
+            CommonDialogs.showConfirmDialog(activity, "Profile Edit Limit",
+                    "You've reached your free profile edit limit (3 per month). To edit again, please watch a video ad.",
+                    "Watch Ad", "Upgrade", () -> {
+                        AdManager.showRewardedAd(activity, this::openEditDialog);
+                    }, () -> {
+                        activity.startActivity(new Intent(activity, PremiumActivity.class));
+                        drawerLayout.closeDrawer(GravityCompat.START);
+                    });
+        } else {
+            openEditDialog();
+        }
+    }
+
     private void toggleDrawer() {
+        if (!drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            menuClickCount++;
+            if (!pref.isUserPremium() && menuClickCount > 5) {
+                AdManager.showInterstitial(activity, null);
+                menuClickCount = 0; // Reset after showing
+            }
+        }
+
         if (drawerLayout.isDrawerOpen(GravityCompat.START))
             drawerLayout.closeDrawer(GravityCompat.START);
         else
@@ -231,6 +273,9 @@ public class DrawerHelper {
             String name = userNameEdit.getText().toString().trim();
             String mail = emailEdit.getText().toString().trim();
             if (!name.isEmpty() && !mail.isEmpty()) {
+                if (!pref.isUserPremium()) {
+                    pref.setProfileEditCount(pref.getProfileEditCount() + 1);
+                }
                 updateUserIfChanged(name, mail, pref.getImageUrl());
                 dialog.dismiss();
             } else {

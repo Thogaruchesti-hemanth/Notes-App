@@ -15,6 +15,7 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorSecondary"
+        android:layout_marginHorizontal="10dp"
         android:titleTextColor="@color/tabSelectedTextColor"
         app:navigationIcon="@drawable/ic_back_arrow"
         app:navigationIconTint="?attr/colorPrimary" />
@@ -130,6 +131,11 @@
                         android:id="@+id/layoutVideoTutorial"
                         layout="@layout/item_support_option"
                         android:tag="video_tutorials" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/grey_200" />
 
                     <include
                         android:id="@+id/layoutWhatsNew"

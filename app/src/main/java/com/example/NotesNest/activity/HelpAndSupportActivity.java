@@ -6,8 +6,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.StyleSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -47,6 +51,9 @@ public class HelpAndSupportActivity extends AppCompatActivity {
         });
 
         premiumManager = new PremiumManager(this);
+        SpannableString s = new SpannableString(getString(R.string.text_help_support));
+        s.setSpan(new StyleSpan(Typeface.BOLD), 0, s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        binding.toolbar.setTitle(s);
         binding.toolbar.setNavigationOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
 
         setupOptions();
@@ -107,15 +114,21 @@ public class HelpAndSupportActivity extends AppCompatActivity {
             view.getContext().startActivity(intent);
         });
 
-        binding.layoutWhatsNew.getRoot().setOnClickListener(view -> {
+        binding.layoutPrivacyPolicy.getRoot().setOnClickListener(view -> {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse("https://notesnest-app.web.app/privacy.html"));
             view.getContext().startActivity(intent);
         });
 
-        binding.layoutAboutApp.getRoot().setOnClickListener(view -> {
+        binding.layoutTermsOfService.getRoot().setOnClickListener(view -> {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse("https://notesnest-app.web.app/terms.html"));
+            view.getContext().startActivity(intent);
+        });
+
+        binding.layoutAboutApp.getRoot().setOnClickListener(view -> {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse("https://notesnest-app.web.app/"));
             view.getContext().startActivity(intent);
         });
 

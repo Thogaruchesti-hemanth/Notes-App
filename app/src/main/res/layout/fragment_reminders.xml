@@ -67,10 +67,63 @@
         android:layout_height="0dp"
         android:layout_marginTop="@dimen/margin_10"
         android:overScrollMode="always"
+        android:visibility="visible"
         app:layout_constraintBottom_toTopOf="@id/adViewReminders"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvTimeLine" />
+
+    <LinearLayout
+        android:id="@+id/emptyStateReminders"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/adViewReminders"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvTimeLine">
+
+        <ImageView
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@drawable/ic_clock"
+            app:tint="?attr/colorPrimary"
+            android:alpha="0.2"
+            android:contentDescription="@string/text_no_reminders_for_today" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/text_clear_skies"
+            android:textColor="?attr/colorPrimary"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/text_no_reminders_peace"
+            android:textColor="@color/grey_400"
+            android:textSize="15sp"
+            android:paddingHorizontal="40dp"
+            android:gravity="center" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnEmptyCreateReminder"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="@string/text_schedule_task"
+            android:textColor="@color/tabSelectedTextColor"
+            app:rippleColor="@color/tabSelectedTextColor"
+            app:icon="@drawable/ic_add"
+            app:iconPadding="8dp" />
+    </LinearLayout>
 
     <com.google.android.gms.ads.AdView
         android:id="@+id/adViewReminders"

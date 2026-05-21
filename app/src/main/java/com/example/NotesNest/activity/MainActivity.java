@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initGreeting() {
         TextView greetingText = findViewById(R.id.tvName);
-        String[] greetings = {"Hi", "Hello", "Hey", "Welcome"};
+        String[] greetings = {"Hi", "Hello", "Hey", "Welcome", "Yo", "Ola", "Hoi", "Hiya", "Hola"};
         String greeting = greetings[random.nextInt(greetings.length)];
         greetingText.setText(String.format("%s, %s", greeting, pref.getUserName()));
     }

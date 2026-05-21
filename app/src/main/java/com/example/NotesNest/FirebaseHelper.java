@@ -15,6 +15,7 @@ import androidx.credentials.ClearCredentialStateRequest;
 import androidx.credentials.CredentialManager;
 import androidx.credentials.exceptions.ClearCredentialException;
 
+import com.example.NotesNest.utils.AppPreferences;
 import com.example.NotesNest.utils.SharedPreferenceUtil;
 import com.google.firebase.FirebaseNetworkException;
 import com.google.firebase.FirebaseTooManyRequestsException;
@@ -23,6 +24,7 @@ import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 import com.google.firebase.auth.FirebaseAuthInvalidUserException;
+import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException;
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
@@ -386,21 +388,15 @@ public class FirebaseHelper {
             return;
         }
 
-        new AlertDialog.Builder(activity)
-                .setTitle("⚠️ Delete Account")
-                .setMessage("All your data will be permanently removed. This cannot be undone.")
-                .setPositiveButton("Delete Everything", (dialog, which) -> {
-                    callback.onDeletionStarted();
-                    user.getIdToken(true).addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            performDeletion(activity, user, callback);
-                        } else {
-                            callback.onReauthenticationRequired();
-                        }
-                    });
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+        callback.onDeletionStarted();
+        // Force refresh the token to check if re-authentication is needed
+        user.getIdToken(true).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                performDeletion(activity, user, callback);
+            } else {
+                callback.onReauthenticationRequired();
+            }
+        });
     }
 
     public void reauthenticateUser(String password, ReauthCallback callback) {
@@ -438,15 +434,20 @@ public class FirebaseHelper {
                 FirebaseDatabase.getInstance().getReference("Trash").child(uid).removeValue();
                 FirebaseDatabase.getInstance().getReference("Reminders").child(uid).removeValue();
 
-                user.delete().addOnCompleteListener(deleteTask -> {
-                    if (deleteTask.isSuccessful()) {
-                        SharedPreferenceUtil sp = new SharedPreferenceUtil(activity);
-                        sp.clearAllPreferences();
-                        callback.onDeletionSuccess();
-                    } else {
-                        callback.onDeletionFailure("Auth deletion failed: " + Objects.requireNonNull(deleteTask.getException()).getMessage());
-                    }
-                });
+                    user.delete().addOnCompleteListener(deleteTask -> {
+                        if (deleteTask.isSuccessful()) {
+                            AppPreferences sp = AppPreferences.getInstance();
+                            sp.clearAll();
+                            callback.onDeletionSuccess();
+                        } else {
+                            Exception e = deleteTask.getException();
+                            if (e instanceof FirebaseAuthRecentLoginRequiredException) {
+                                callback.onReauthenticationRequired();
+                            } else {
+                                callback.onDeletionFailure("Auth deletion failed: " + (e != null ? e.getMessage() : "Unknown error"));
+                            }
+                        }
+                    });
             } else {
                 callback.onDeletionFailure("Failed to delete user data");
             }
@@ -469,6 +470,18 @@ public class FirebaseHelper {
                 @Override public void onError(@NonNull ClearCredentialException e) {}
             });
         } catch (Exception ignored) {}
+    }
+
+    public boolean isGoogleUser() {
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user != null) {
+            for (com.google.firebase.auth.UserInfo profile : user.getProviderData()) {
+                if (com.google.firebase.auth.GoogleAuthProvider.PROVIDER_ID.equals(profile.getProviderId())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public void downloadImageAndConvertToBase64(String imageUrl, Base64Callback callback) {

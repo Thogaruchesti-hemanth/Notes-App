@@ -66,9 +66,9 @@ public class EditNoteActivity extends AppCompatActivity {
         try {
             binding = ActivityEditNoteBinding.inflate(getLayoutInflater());
             setContentView(binding.getRoot());
-        } catch (RuntimeException e) {
-            Log.e(TAG, "Error inflating layout, possibly WebView related", e);
-            Toast.makeText(this, "WebView error: Please update Android System WebView", Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+            Log.e(TAG, "Critical error during inflation: " + e.getMessage(), e);
+            Toast.makeText(this, "Resource loading error. Please restart the app.", Toast.LENGTH_LONG).show();
             finish();
             return;
         }
