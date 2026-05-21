@@ -1,48 +1,44 @@
 package com.example.NotesNest.notifications.receivers;
 
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.widget.Toast;
 
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
-
-import com.example.NotesNest.R;
+import com.example.NotesNest.notifications.services.AlarmSoundService;
 
 public class ReminderReceiver extends BroadcastReceiver {
 
+    public static final String ACTION_STOP_ALARM = "com.example.NotesNest.ACTION_STOP_ALARM";
+
     @Override
     public void onReceive(Context context, Intent intent) {
-        createNotificationChannel(context);
-
+        if (intent == null) return;
+        
+        String action = intent.getAction();
         int notificationId = intent.getIntExtra("NOTIFICATION_ID", 0);
-        String message = intent.getStringExtra("REMINDER_MESSAGE");
 
+        if (ACTION_STOP_ALARM.equals(action)) {
+            // Stop the alarm sound
+            Intent stopIntent = new Intent(context, AlarmSoundService.class);
+            stopIntent.setAction("STOP_ALARM");
+            context.startService(stopIntent);
+            return;
+        }
+
+        String message = intent.getStringExtra("REMINDER_MESSAGE");
         Toast.makeText(context, "Reminder: " + message, Toast.LENGTH_SHORT).show();
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "reminder_channel")
-                .setSmallIcon(R.drawable.ic_notification)
-                .setContentTitle("Reminder")
-                .setContentText(message)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true);
-
-        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-        notificationManager.notify(notificationId, builder.build());
-    }
-
-    private void createNotificationChannel(Context context) {
+        // Start Alarm Sound Service which will handle the notification and sound
+        Intent soundIntent = new Intent(context, AlarmSoundService.class);
+        soundIntent.putExtra("NOTIFICATION_ID", notificationId);
+        soundIntent.putExtra("REMINDER_MESSAGE", message);
+        
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                    "reminder_channel", "Reminder Notifications", NotificationManager.IMPORTANCE_HIGH);
-            channel.setDescription("Channel for Reminder notifications");
-
-            NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
+            context.startForegroundService(soundIntent);
+        } else {
+            context.startService(soundIntent);
         }
     }
 }

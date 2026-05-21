@@ -96,6 +96,8 @@
     <string name="text_back">back</string>
     <string name="text_create_a_note_first_then_come_back_here">Create a note first, then come back here</string>
     <string name="text_no_notes_available">No notes available</string>
+    <string name="text_your_nest_is_empty">Your Nest is Empty</string>
+    <string name="text_empty_notes_subtitle">Every great idea starts with a single note.</string>
     <string name="create_note_widget_label">Create Note Widget</string>
     <string name="widget_description">Quickly create new notes</string>
     <string name="text_create_note">Create Note</string>
@@ -217,4 +219,7 @@
     <string name="text_premium_active">Premium Active</string>
     <string name="text_skip">Skip</string>
     <string name="text_loading">Loading</string>
+    <string name="text_clear_skies">Clear Skies!</string>
+    <string name="text_no_reminders_peace">No reminders for today. Enjoy your peace.</string>
+    <string name="text_schedule_task">Schedule Task</string>
 </resources>

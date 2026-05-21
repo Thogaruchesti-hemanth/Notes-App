@@ -14,7 +14,7 @@ import java.util.Locale;
 
 public class AppPreferences {
 
-    private static final String PREF_NAME = "note_prefs";
+    private static final String PREF_NAME = "UserPreferences";
 
     private static AppPreferences instance;
     private SharedPreferences prefs;
@@ -142,6 +142,18 @@ public class AppPreferences {
         remove(PrefKeys.KEY_DRAFT_TITLE);
         remove(PrefKeys.KEY_DRAFT_CONTENT);
         remove(PrefKeys.KEY_DRAFT_COLOR);
+    }
+
+    public void resetPremium() {
+        prefs.edit()
+                .remove(PrefKeys.IS_PREMIUM)
+                .remove(PrefKeys.PLAN_TYPE)
+                .remove(PrefKeys.PREMIUM_PLAN_TYPE)
+                .remove(PrefKeys.PREMIUM_EXPIRY_DATE)
+                .remove(PrefKeys.PURCHASE_DATE)
+                .remove(PrefKeys.PURCHASE_TOKEN)
+                .remove(PrefKeys.ORDER_ID)
+                .apply();
     }
 
     public boolean isPremiumActive() {

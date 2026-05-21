@@ -5,6 +5,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="replace" />
     <!-- Required for Google Play Billing (In-App Purchases) -->
     <uses-permission android:name="com.android.vending.BILLING" />
@@ -36,6 +39,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Notes"
         android:enableOnBackInvokedCallback="true"
+        android:extractNativeLibs="true"
         tools:targetApi="34">
 
         <meta-data
@@ -131,6 +135,11 @@
         <receiver
             android:name="com.example.NotesNest.notifications.receivers.ReminderReceiver"
             android:exported="true" />
+
+        <service
+            android:name="com.example.NotesNest.notifications.services.AlarmSoundService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
 
     </application>
 

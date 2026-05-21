@@ -157,12 +157,58 @@ public class CommonDialogs {
     }
 
     public static void showConfirmDialog(Context context, String title, String message, String posBtn, String negBtn, Runnable onConfirm) {
-        new MaterialAlertDialogBuilder(context)
-                .setTitle(title)
-                .setMessage(message)
-                .setPositiveButton(posBtn, (dialog, which) -> onConfirm.run())
-                .setNegativeButton(negBtn, null)
-                .show();
+        showConfirmDialog(context, title, message, posBtn, negBtn, onConfirm, null);
+    }
+
+    public static void showConfirmDialog(Context context, String title, String message, String posBtn, String negBtn, Runnable onConfirm, Runnable onCancel) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.CustomAlertDialog);
+        View view = LayoutInflater.from(context).inflate(R.layout.dialog_confirm, null);
+        builder.setView(view);
+
+        AlertDialog dialog = builder.create();
+
+        TextView tvTitle = view.findViewById(R.id.tvTitle);
+        TextView tvMessage = view.findViewById(R.id.tvMessage);
+        Button btnPositive = view.findViewById(R.id.btnPositive);
+        Button btnNegative = view.findViewById(R.id.btnNegative);
+        ImageView ivIcon = view.findViewById(R.id.ivIcon);
+
+        if (tvTitle != null) tvTitle.setText(title);
+        if (tvMessage != null) tvMessage.setText(message);
+        if (btnPositive != null) btnPositive.setText(posBtn);
+        if (btnNegative != null) btnNegative.setText(negBtn);
+
+        // Optional: Change icon based on title keywords
+        if (ivIcon != null) {
+            if (title.toLowerCase().contains("delete") || title.toLowerCase().contains("⚠️")) {
+                ivIcon.setImageResource(R.drawable.ic_error_outline);
+                ivIcon.setColorFilter(android.graphics.Color.parseColor("#FF5252"));
+            } else if (title.toLowerCase().contains("logout")) {
+                ivIcon.setImageResource(R.drawable.ic_logout);
+            }
+        }
+
+        if (btnPositive != null) {
+            btnPositive.setOnClickListener(v -> {
+                if (onConfirm != null) onConfirm.run();
+                dialog.dismiss();
+            });
+        }
+
+        if (btnNegative != null) {
+            btnNegative.setOnClickListener(v -> {
+                if (onCancel != null) onCancel.run();
+                dialog.dismiss();
+            });
+        }
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            dialog.getWindow().setGravity(android.view.Gravity.CENTER);
+        }
+
+        dialog.show();
     }
 
     public static void showGradientPicker(Context context, int currentStart, int currentEnd, GradientCallback callback) {
@@ -502,6 +548,9 @@ public class CommonDialogs {
 
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            // Ensure the window itself doesn't have extra margins and centers correctly
+            dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            dialog.getWindow().setGravity(android.view.Gravity.CENTER);
         }
 
         dialog.show();
@@ -511,46 +560,50 @@ public class CommonDialogs {
     public static void showErrorDialog(Context context, String title, String message) {
         if (context instanceof Activity && ((Activity) context).isFinishing()) return;
 
-        new MaterialAlertDialogBuilder(context)
-                .setTitle(title)
-                .setMessage(message)
-                .setPositiveButton("Dismiss", null)
-                .setIcon(R.drawable.ic_error_outline)
-                .show();
+        AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.CustomAlertDialog);
+        View view = LayoutInflater.from(context).inflate(R.layout.dialog_error, null);
+        builder.setView(view);
+
+        AlertDialog dialog = builder.create();
+
+        TextView tvTitle = view.findViewById(R.id.tvErrorTitle);
+        TextView tvMessage = view.findViewById(R.id.tvErrorMessage);
+        Button btnDismiss = view.findViewById(R.id.btnDismiss);
+
+        if (tvTitle != null) tvTitle.setText(title);
+        if (tvMessage != null) tvMessage.setText(message);
+
+        if (btnDismiss != null) {
+            btnDismiss.setOnClickListener(v -> dialog.dismiss());
+        }
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            dialog.getWindow().setGravity(android.view.Gravity.CENTER);
+        }
+
+        dialog.show();
     }
 
     public static void showChangePasswordDialog(Context context, ChangePasswordCallback callback) {
-        MaterialAlertDialogBuilder builder =
-                new MaterialAlertDialogBuilder(context, com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog);
-        builder.setTitle("🔐 Change Password");
-
-        LinearLayout layout = new LinearLayout(context);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        int padding = (int) (24 * context.getResources().getDisplayMetrics().density);
-        layout.setPadding(padding, padding / 2, padding, 0);
-
-        TextInputLayout currentPassLayout = createPasswordInput(context, "Current Password");
-        TextInputEditText currentPassword = (TextInputEditText) Objects.requireNonNull(currentPassLayout.getEditText());
-
-        TextInputLayout newPassLayout = createPasswordInput(context, "New Password");
-        TextInputEditText newPassword = (TextInputEditText) Objects.requireNonNull(newPassLayout.getEditText());
-
-        TextInputLayout confirmPassLayout = createPasswordInput(context, "Confirm New Password");
-        TextInputEditText confirmPassword = (TextInputEditText) Objects.requireNonNull(confirmPassLayout.getEditText());
-
-        layout.addView(currentPassLayout);
-        layout.addView(newPassLayout);
-        layout.addView(confirmPassLayout);
-
-        builder.setView(layout);
-
-        builder.setPositiveButton("Update", null);
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+        AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.CustomAlertDialog);
+        View view = LayoutInflater.from(context).inflate(R.layout.dialog_change_password, null);
+        builder.setView(view);
 
         AlertDialog dialog = builder.create();
-        dialog.show();
 
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+        TextInputEditText currentPassword = view.findViewById(R.id.etCurrentPassword);
+        TextInputEditText newPassword = view.findViewById(R.id.etNewPassword);
+        TextInputEditText confirmPassword = view.findViewById(R.id.etConfirmPassword);
+        
+        TextInputLayout tilNew = view.findViewById(R.id.tilNewPassword);
+        TextInputLayout tilConfirm = view.findViewById(R.id.tilConfirmPassword);
+
+        Button btnUpdate = view.findViewById(R.id.btnUpdate);
+        Button btnCancel = view.findViewById(R.id.btnCancel);
+
+        btnUpdate.setOnClickListener(v -> {
             String currentPass = Objects.requireNonNull(currentPassword.getText()).toString().trim();
             String newPass = Objects.requireNonNull(newPassword.getText()).toString().trim();
             String confirmPass = Objects.requireNonNull(confirmPassword.getText()).toString().trim();
@@ -559,35 +612,28 @@ public class CommonDialogs {
                 Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show();
                 return;
             }
-            if (!newPass.equals(confirmPass)) {
-                confirmPassLayout.setError("Passwords do not match");
-                return;
-            }
+            
             if (newPass.length() < 6) {
-                newPassLayout.setError("Password must be at least 6 characters");
+                tilNew.setError("Password must be at least 6 characters");
                 return;
+            } else {
+                tilNew.setError(null);
+            }
+
+            if (!newPass.equals(confirmPass)) {
+                tilConfirm.setError("Passwords do not match");
+                return;
+            } else {
+                tilConfirm.setError(null);
             }
 
             callback.onUpdate(currentPass, newPass);
             dialog.dismiss();
         });
-    }
 
-    private static TextInputLayout createPasswordInput(Context context, String hint) {
-        TextInputLayout layout = new TextInputLayout(context);
-        layout.setHint(hint);
-        layout.setBoxBackgroundMode(TextInputLayout.BOX_BACKGROUND_OUTLINE);
-        layout.setEndIconMode(TextInputLayout.END_ICON_PASSWORD_TOGGLE);
-
-        TextInputEditText editText = new TextInputEditText(context);
-        editText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        layout.addView(editText);
-
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        params.setMargins(0, 0, 0, (int) (16 * context.getResources().getDisplayMetrics().density));
-        layout.setLayoutParams(params);
-        return layout;
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        
+        dialog.show();
     }
 
     public static void showReauthenticationDialog(Context context, ReauthCallback callback) {

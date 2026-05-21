@@ -43,6 +43,11 @@
 -keep class com.google.android.gms.auth.** { *; }
 -dontwarn com.google.android.gms.auth.**
 
+# Specifically keep Identity API classes for Credential Manager/One Tap
+-keep class com.google.android.gms.auth.api.identity.** { *; }
+-keep class com.google.android.gms.auth.api.credentials.** { *; }
+-keep class com.google.android.libraries.identity.googleid.** { *; }
+
 # ---------------------------------------------------------
 # Google Drive and Client API rules
 # ---------------------------------------------------------

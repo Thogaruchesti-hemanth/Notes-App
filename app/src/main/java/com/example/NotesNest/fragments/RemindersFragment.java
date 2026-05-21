@@ -52,10 +52,12 @@ public class RemindersFragment extends Fragment {
     private CalendarAdapter calendarAdapter;
     private ReminderViewModel reminderViewModel;
     private List<ReminderEntity> currentReminders = new ArrayList<>();
+    private List<ReminderEntity> allRemindersList = new ArrayList<>();
     private String currentUserId = null;
     boolean isPremium;
     private static final int FREE_REMINDER_LIMIT = 30;
     private AdView adView;
+    private View emptyStateLayout;
 
 
     @Nullable
@@ -73,6 +75,8 @@ public class RemindersFragment extends Fragment {
         promptTextView = view.findViewById(R.id.tvPrompt);
         calendarRv = view.findViewById(R.id.calendarRecyclerView);
         hourRecyclerView = view.findViewById(R.id.hourRecyclerView);
+        emptyStateLayout = view.findViewById(R.id.emptyStateReminders);
+        Button btnEmptyCreate = view.findViewById(R.id.btnEmptyCreateReminder);
         Button createButton = view.findViewById(R.id.createButton);
         adView = view.findViewById(R.id.adViewReminders);
 
@@ -83,25 +87,23 @@ public class RemindersFragment extends Fragment {
         updateSelectedDateText();
         loadMonthData();
         setupObservers();
-        loadRemindersForSelectedDate();
 
         selectedDateTv.setOnClickListener(v -> showDatePicker());
 
-        createButton.setOnClickListener(v -> {
+        View.OnClickListener createListener = v -> {
 
-            if (!isPremium && currentReminders.size() >= FREE_REMINDER_LIMIT) {
-                CommonDialogs.showPremiumRequiredDialog(requireContext(),"Free users can create up to 30 reminders.\\nUpgrade to Premium for unlimited reminders.");
+            if (!isPremium && allRemindersList.size() >= FREE_REMINDER_LIMIT) {
+                CommonDialogs.showPremiumRequiredDialog(requireContext(),"Free users can create up to 30 reminders.\nUpgrade to Premium for unlimited reminders.");
                 return;
             }
 
             Intent intent = new Intent(requireContext(), EditReminderActivity.class);
             intent.putExtra("selected_date", selectedDate.toString());
             startActivity(intent);
-        });
+        };
 
-        if(!isPremium && currentReminders.size() >= FREE_REMINDER_LIMIT){
-            createButton.setAlpha(0.5f);
-        }
+        createButton.setOnClickListener(createListener);
+        if (btnEmptyCreate != null) btnEmptyCreate.setOnClickListener(createListener);
 
         setupBannerAd();
 
@@ -120,25 +122,45 @@ public class RemindersFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        loadRemindersForSelectedDate();
+        filterRemindersForSelectedDate();
+        if (adView != null) adView.resume();
         AnalyticsHelper.logScreenView("Reminders", "RemindersFragment");
+    }
 
+    @Override
+    public void onPause() {
+        if (adView != null) adView.pause();
+        super.onPause();
+    }
+
+    @Override
+    public void onDestroyView() {
+        if (adView != null) adView.destroy();
+        super.onDestroyView();
     }
 
     /* ---------------- MVVM OBSERVERS ---------------- */
 
     private void setupObservers() {
-        // Observe reminders data changes
+        // Performance: Single observer for all reminders, filtering done locally
         reminderViewModel.getAllReminders(currentUserId).observe(getViewLifecycleOwner(), reminders -> {
-            // This LiveData observes all reminders, but we'll filter by date in loadRemindersForSelectedDate
-            // For better performance, you might want to modify the ViewModel to support date-range queries
+            allRemindersList = (reminders != null) ? reminders : new ArrayList<>();
+            filterRemindersForSelectedDate();
+            updateCalendarDots();
+            
+            // Update create button alpha based on total limit
+            if (!isPremium && allRemindersList.size() >= FREE_REMINDER_LIMIT) {
+                View createBtn = getView() != null ? getView().findViewById(R.id.createButton) : null;
+                if (createBtn != null) createBtn.setAlpha(0.5f);
+            } else {
+                View createBtn = getView() != null ? getView().findViewById(R.id.createButton) : null;
+                if (createBtn != null) createBtn.setAlpha(1.0f);
+            }
         });
     }
 
-    /* ---------------- TIMELINE ---------------- */
-
     private void setupTimeline(List<Task> tasks) {
-       TimelineAdapter adapter = new TimelineAdapter(
+        TimelineAdapter adapter = new TimelineAdapter(
                 requireContext(),
                 tasks,
                 this::showReminderOptions
@@ -149,10 +171,7 @@ public class RemindersFragment extends Fragment {
         hourRecyclerView.setAdapter(adapter);
     }
 
-    /* ---------------- LOAD REMINDERS ---------------- */
-
-    private void loadRemindersForSelectedDate() {
-        // Calculate date range for the selected date
+    private void filterRemindersForSelectedDate() {
         Calendar cal = Calendar.getInstance();
         cal.set(selectedDate.getYear(), selectedDate.getMonthValue() - 1, selectedDate.getDayOfMonth(), 0, 0, 0);
         long start = cal.getTimeInMillis();
@@ -162,18 +181,25 @@ public class RemindersFragment extends Fragment {
         cal.set(Calendar.SECOND, 59);
         long end = cal.getTimeInMillis();
 
-        // Use repository callback to get reminders for date range
-        // Note: You might want to add this method to your ViewModel and Repository
-        // For now, we'll filter from all reminders (less efficient but works with current setup)
-        reminderViewModel.getAllReminders(currentUserId).observe(getViewLifecycleOwner(), allReminders -> {
-            currentReminders = new ArrayList<>();
-            for (ReminderEntity reminder : allReminders) {
-                if (reminder.notificationTime >= start && reminder.notificationTime <= end) {
-                    currentReminders.add(reminder);
-                }
+        currentReminders = new ArrayList<>();
+        for (ReminderEntity reminder : allRemindersList) {
+            if (reminder.notificationTime >= start && reminder.notificationTime <= end) {
+                currentReminders.add(reminder);
             }
-            updateUIWithReminders();
-        });
+        }
+        updateUIWithReminders();
+    }
+
+    private void updateCalendarDots() {
+        if (calendarAdapter == null) return;
+
+        List<LocalDate> eventDates = new ArrayList<>();
+        for (ReminderEntity reminder : allRemindersList) {
+            Calendar cal = Calendar.getInstance();
+            cal.setTimeInMillis(reminder.notificationTime);
+            eventDates.add(LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH)));
+        }
+        calendarAdapter.setEventDates(eventDates);
     }
 
     private void updateUIWithReminders() {
@@ -206,8 +232,13 @@ public class RemindersFragment extends Fragment {
     private void updatePromptText() {
         int count = currentReminders.size();
         if (count == 0) {
-            promptTextView.setText("No reminders scheduled. Enjoy your day.");
+            promptTextView.setVisibility(View.GONE);
+            hourRecyclerView.setVisibility(View.GONE);
+            emptyStateLayout.setVisibility(View.VISIBLE);
         } else {
+            promptTextView.setVisibility(View.VISIBLE);
+            hourRecyclerView.setVisibility(View.VISIBLE);
+            emptyStateLayout.setVisibility(View.GONE);
             promptTextView.setText(String.format(" %d reminders are planned for this day.", count));
         }
     }
@@ -242,7 +273,7 @@ public class RemindersFragment extends Fragment {
                     selectedDate = LocalDate.of(y, m + 1, d);
                     updateSelectedDateText();
                     loadMonthData();
-                    loadRemindersForSelectedDate();
+                    filterRemindersForSelectedDate();
                 },
                 selectedDate.getYear(),
                 selectedDate.getMonthValue() - 1,
@@ -267,7 +298,7 @@ public class RemindersFragment extends Fragment {
             updateSelectedDateText();
             calendarAdapter.setSelectedPosition(pos);
             calendarRv.smoothScrollToPosition(pos);
-            loadRemindersForSelectedDate();
+            filterRemindersForSelectedDate();
         });
 
         // Load next month when scrolled to end

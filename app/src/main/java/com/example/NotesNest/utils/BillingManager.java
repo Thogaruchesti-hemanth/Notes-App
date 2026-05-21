@@ -8,6 +8,9 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.example.NotesNest.FirebaseHelper;
+import com.example.NotesNest.utils.AppPreferences;
+import com.example.NotesNest.utils.constants.PrefKeys;
 import com.android.billingclient.api.AcknowledgePurchaseParams;
 import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingClientStateListener;
@@ -39,7 +42,7 @@ public class BillingManager implements PurchasesUpdatedListener {
     public static final String PRODUCT_LIFETIME = "notesnest_premium_lifetime";
 
     private final Context context;
-    private final SharedPreferenceUtil prefs;
+    private final AppPreferences prefs;
     private BillingClient billingClient;
 
     private final MutableLiveData<PurchaseState> purchaseState = new MutableLiveData<>(new PurchaseState());
@@ -62,7 +65,7 @@ public class BillingManager implements PurchasesUpdatedListener {
 
     private BillingManager(Context context) {
         this.context = context.getApplicationContext();
-        this.prefs = new SharedPreferenceUtil(context);
+        this.prefs = AppPreferences.getInstance();
         initializeBillingClient();
     }
 
@@ -116,29 +119,58 @@ public class BillingManager implements PurchasesUpdatedListener {
         }
     }
 
+    public boolean isBillingReady() {
+        return billingClient != null && billingClient.isReady();
+    }
+
     public void queryProductPrices() {
         if (!billingClient.isReady()) return;
 
-        List<QueryProductDetailsParams.Product> productList = new ArrayList<>();
-        productList.add(createProduct(PRODUCT_MONTHLY, BillingClient.ProductType.SUBS));
-        productList.add(createProduct(PRODUCT_YEARLY, BillingClient.ProductType.SUBS));
-        productList.add(createProduct(PRODUCT_LIFETIME, BillingClient.ProductType.INAPP));
+        Map<String, String> currentPrices = productPrices.getValue();
+        if (currentPrices == null) currentPrices = new HashMap<>();
+        final Map<String, String> finalPrices = currentPrices;
 
-        QueryProductDetailsParams params = QueryProductDetailsParams.newBuilder()
-                .setProductList(productList)
-                .build();
+        // Query Subscriptions (Monthly, Yearly)
+        List<QueryProductDetailsParams.Product> subsList = new ArrayList<>();
+        subsList.add(createProduct(PRODUCT_MONTHLY, BillingClient.ProductType.SUBS));
+        subsList.add(createProduct(PRODUCT_YEARLY, BillingClient.ProductType.SUBS));
 
-        billingClient.queryProductDetailsAsync(params, (billingResult, result) -> {
-            List<ProductDetails> list = result.getProductDetailsList();
-            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && list != null) {
-                Map<String, String> prices = new HashMap<>();
-                for (ProductDetails details : list) {
-                    String price = extractPrice(details);
-                    if (price != null) prices.put(details.getProductId(), price);
+        billingClient.queryProductDetailsAsync(
+                QueryProductDetailsParams.newBuilder().setProductList(subsList).build(),
+                (billingResult, result) -> {
+                    if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && result.getProductDetailsList() != null) {
+                        for (ProductDetails details : result.getProductDetailsList()) {
+                            String price = extractPrice(details);
+                            if (price != null) finalPrices.put(details.getProductId(), price);
+                        }
+                        productPrices.postValue(finalPrices);
+                    } else {
+                        Log.e(TAG, "Subs query failed: " + billingResult.getDebugMessage());
+                        // Even on failure, post current map to stop "Fetching" state in UI if some items were found
+                        productPrices.postValue(finalPrices);
+                    }
                 }
-                productPrices.postValue(prices);
-            }
-        });
+        );
+
+        // Query In-App Products (Lifetime)
+        List<QueryProductDetailsParams.Product> inAppList = new ArrayList<>();
+        inAppList.add(createProduct(PRODUCT_LIFETIME, BillingClient.ProductType.INAPP));
+
+        billingClient.queryProductDetailsAsync(
+                QueryProductDetailsParams.newBuilder().setProductList(inAppList).build(),
+                (billingResult, result) -> {
+                    if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && result.getProductDetailsList() != null) {
+                        for (ProductDetails details : result.getProductDetailsList()) {
+                            String price = extractPrice(details);
+                            if (price != null) finalPrices.put(details.getProductId(), price);
+                        }
+                        productPrices.postValue(finalPrices);
+                    } else {
+                        Log.e(TAG, "InApp query failed: " + billingResult.getDebugMessage());
+                        productPrices.postValue(finalPrices);
+                    }
+                }
+        );
     }
 
     private String extractPrice(ProductDetails details) {
@@ -193,10 +225,10 @@ public class BillingManager implements PurchasesUpdatedListener {
 
     private synchronized void checkRevocationRequirement() {
         if (isSubsChecked && isInAppChecked && !premiumFoundInSync) {
-            if (prefs.isUserPremium()) {
+            if (prefs.isPremiumActive()) {
                 Log.w(TAG, "Revoking premium: No active purchases found.");
-                prefs.clearPremiumData();
-                updatePurchaseState(false, SharedPreferenceUtil.PLAN_NONE, null, "Expired");
+                prefs.resetPremium();
+                updatePurchaseState(false, FirebaseHelper.PLAN_NONE, null, "Expired");
             }
         }
     }
@@ -273,12 +305,12 @@ public class BillingManager implements PurchasesUpdatedListener {
         String productId = purchase.getProducts().get(0);
         String planType = getPlanTypeFromProductId(productId);
         
-        prefs.setIsPremium(true);
-        prefs.setPlanType(planType);
-        prefs.setPurchaseToken(purchase.getPurchaseToken());
-        prefs.setOrderId(purchase.getOrderId());
+        prefs.putBoolean(PrefKeys.IS_PREMIUM, true);
+        prefs.putString(PrefKeys.PLAN_TYPE, planType);
+        prefs.putString(PrefKeys.PURCHASE_TOKEN, purchase.getPurchaseToken());
+        prefs.putString(PrefKeys.ORDER_ID, purchase.getOrderId());
         
-        updatePurchaseState(false, planType, purchase.getPurchaseToken(), isNewPurchase ? "Success" : "Restored");
+        updatePurchaseState(false, planType, purchase.getPurchaseToken(), isNewPurchase ? "Success" : "Restored", isNewPurchase);
     }
 
     private QueryProductDetailsParams.Product createProduct(String id, String type) {
@@ -288,12 +320,17 @@ public class BillingManager implements PurchasesUpdatedListener {
                 .build();
     }
 
-    private void updatePurchaseState(boolean isLoading, String planType, String token, String message) {
+    private void updatePurchaseState(boolean isLoading, String planType, String token, String message, boolean isNewPurchase) {
         PurchaseState state = new PurchaseState();
         state.isLoading = isLoading;
         state.planType = planType;
         state.purchaseToken = token;
+        state.isNewPurchase = isNewPurchase;
         purchaseState.postValue(state);
+    }
+
+    private void updatePurchaseState(boolean isLoading, String planType, String token, String message) {
+        updatePurchaseState(isLoading, planType, token, message, false);
     }
 
     public LiveData<PurchaseState> getPurchaseState() { return purchaseState; }
@@ -301,15 +338,16 @@ public class BillingManager implements PurchasesUpdatedListener {
     public LiveData<Map<String, String>> getProductPrices() { return productPrices; }
 
     private String getPlanTypeFromProductId(String id) {
-        if (PRODUCT_MONTHLY.equals(id)) return SharedPreferenceUtil.PLAN_MONTHLY;
-        if (PRODUCT_YEARLY.equals(id)) return SharedPreferenceUtil.PLAN_YEARLY;
-        if (PRODUCT_LIFETIME.equals(id)) return SharedPreferenceUtil.PLAN_LIFETIME;
-        return SharedPreferenceUtil.PLAN_NONE;
+        if (PRODUCT_MONTHLY.equals(id)) return FirebaseHelper.PLAN_MONTHLY;
+        if (PRODUCT_YEARLY.equals(id)) return FirebaseHelper.PLAN_YEARLY;
+        if (PRODUCT_LIFETIME.equals(id)) return FirebaseHelper.PLAN_LIFETIME;
+        return FirebaseHelper.PLAN_NONE;
     }
 
     public static class PurchaseState {
         public boolean isLoading = false;
         public String planType = null;
         public String purchaseToken = null;
+        public boolean isNewPurchase = false;
     }
 }

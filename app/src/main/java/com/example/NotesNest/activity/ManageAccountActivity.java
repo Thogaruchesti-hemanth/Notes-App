@@ -3,8 +3,12 @@ package com.example.NotesNest.activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.StyleSpan;
 import android.util.Base64;
 import android.view.View;
 import android.widget.Toast;
@@ -52,12 +56,10 @@ public class ManageAccountActivity extends AppCompatActivity {
 
     private void setupAds() {
         if (premiumManager.isPremium()) {
-            binding.adViewManageTop.setVisibility(View.GONE);
             binding.adViewManageBottom.setVisibility(View.GONE);
             return;
         }
         AdRequest adRequest = new AdRequest.Builder().build();
-        binding.adViewManageTop.loadAd(adRequest);
         binding.adViewManageBottom.loadAd(adRequest);
     }
 
@@ -151,7 +153,10 @@ public class ManageAccountActivity extends AppCompatActivity {
     }
 
     private void setupListeners() {
-        binding.ivBackArrow.setOnClickListener(view -> getOnBackPressedDispatcher().onBackPressed());
+        SpannableString s = new SpannableString(getString(R.string.text_manage_account));
+        s.setSpan(new StyleSpan(Typeface.BOLD), 0, s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        binding.toolbar.setTitle(s);
+        binding.toolbar.setNavigationOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
 
         binding.logoutLayout.getRoot().setOnClickListener(v ->
                 CommonDialogs.showConfirmDialog(this, "Logout", "Are you sure you want to logout?", "Yes", "Cancel", this::performLogout));
@@ -161,8 +166,14 @@ public class ManageAccountActivity extends AppCompatActivity {
                         "This action is permanent and cannot be undone. All your notes and reminders will be lost forever.",
                         "Delete Everything", "Cancel", this::deleteAccount));
 
-        binding.changePasswordLayout.getRoot().setOnClickListener(v ->
-                CommonDialogs.showChangePasswordDialog(this, this::changePassword));
+        binding.changePasswordLayout.getRoot().setOnClickListener(v -> {
+            if (firebaseHelper.isGoogleUser()) {
+                CommonDialogs.showErrorDialog(this, "Action Not Supported",
+                        "This account is signed in with Google. Passwords for social accounts must be managed through Google Account settings.");
+            } else {
+                CommonDialogs.showChangePasswordDialog(this, this::changePassword);
+            }
+        });
     }
 
     private void performLogout() {

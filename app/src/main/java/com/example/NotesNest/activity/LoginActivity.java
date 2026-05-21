@@ -54,8 +54,9 @@ import com.google.firebase.auth.FirebaseUser;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.MessageDigest;
+import java.util.UUID;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 public class LoginActivity extends AppCompatActivity {
     private static final String TAG = LoginActivity.class.getSimpleName();
@@ -180,17 +181,38 @@ public class LoginActivity extends AppCompatActivity {
         binding.googleSignInButton.setTextColor(ThemeManager.getThemeColor(this, R.color.black, R.color.white));
         binding.googleSignInButton.setBackgroundColor(ThemeManager.getThemeColor(this, R.color.backgroundLight, R.color.black));
 
-        GetGoogleIdOption googleIdOption = new GetGoogleIdOption.Builder()
+        // Generate a nonce for the request
+        String rawNonce = UUID.randomUUID().toString();
+        String hashedNonce = null;
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] digest = md.digest(rawNonce.getBytes());
+            StringBuilder sb = new StringBuilder();
+            for (byte b : digest) {
+                sb.append(String.format("%02x", b));
+            }
+            hashedNonce = sb.toString();
+        } catch (Exception e) {
+            Log.e(TAG, "Error generating nonce", e);
+        }
+
+        GetGoogleIdOption.Builder googleIdOptionBuilder = new GetGoogleIdOption.Builder()
                 .setFilterByAuthorizedAccounts(false)
                 .setServerClientId(getString(R.string.default_web_client_id))
-                .setAutoSelectEnabled(true)
-                .build();
+                .setAutoSelectEnabled(false); // Changed to false to force picker if no default
+
+        if (hashedNonce != null) {
+            googleIdOptionBuilder.setNonce(hashedNonce);
+        }
+
+        GetGoogleIdOption googleIdOption = googleIdOptionBuilder.build();
 
         GetCredentialRequest request = new GetCredentialRequest.Builder()
                 .addCredentialOption(googleIdOption)
                 .build();
 
-        Executor executor = Executors.newSingleThreadExecutor();
+        // Use the main thread executor for UI-related credential requests
+        Executor executor = ContextCompat.getMainExecutor(this);
 
         credentialManager.getCredentialAsync(
                 this,
@@ -209,8 +231,14 @@ public class LoginActivity extends AppCompatActivity {
                             googleBorder.stopLoading();
                             binding.googleSignInButton.setTextColor(ThemeManager.getThemeColor(LoginActivity.this, R.color.white, R.color.black));
                             binding.googleSignInButton.setBackgroundColor(ThemeManager.getThemeColor(LoginActivity.this, R.color.black, R.color.white));
-                            Log.e(TAG, "❌ Credential Manager Error: " + e.getMessage());
-                            Toast.makeText(LoginActivity.this, "Google Sign-In failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            
+                            if (e.getMessage() != null && e.getMessage().contains("No credentials available")) {
+                                Log.e(TAG, "❌ No Google accounts found or SHA-1 mismatch.");
+                                showError("No Google accounts found. Please ensure you are signed in to your device.");
+                            } else {
+                                Log.e(TAG, "❌ Credential Manager Error: " + e.getMessage());
+                                Toast.makeText(LoginActivity.this, "Google Sign-In failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
                         });
                     }
                 }
@@ -224,8 +252,8 @@ public class LoginActivity extends AppCompatActivity {
                 idToken = googleIdTokenCredential.getIdToken();
             } else if (credential.getType().equals(GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL)) {
                 // Manually parse if it's the correct type but returned as a base Credential
-                GoogleIdTokenCredential googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.getData());
-                idToken = googleIdTokenCredential.getIdToken();
+                GoogleIdTokenCredential googleIdTokenCredentialInstance = GoogleIdTokenCredential.createFrom(credential.getData());
+                idToken = googleIdTokenCredentialInstance.getIdToken();
             }
 
             if (idToken != null) {

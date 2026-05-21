@@ -43,6 +43,9 @@ public class SharedPreferenceUtil {
     private static final String PURCHASE_TOKEN = "purchase_token";
     private static final String ORDER_ID = "order_id";
 
+    private static final String KEY_PROFILE_EDIT_COUNT = "profile_edit_count";
+    private static final String KEY_PROFILE_EDIT_MONTH = "profile_edit_month";
+
     private SharedPreferences sharedPreferences;
     private Context context;
 
@@ -257,5 +260,21 @@ public class SharedPreferenceUtil {
 
     public void setOrderId(String orderId) {
         if (isInitialized()) sharedPreferences.edit().putString(ORDER_ID, orderId).apply();
+    }
+
+    public int getProfileEditCount() {
+        return isInitialized() ? sharedPreferences.getInt(KEY_PROFILE_EDIT_COUNT, 0) : 0;
+    }
+
+    public void setProfileEditCount(int count) {
+        if (isInitialized()) sharedPreferences.edit().putInt(KEY_PROFILE_EDIT_COUNT, count).apply();
+    }
+
+    public String getProfileEditMonth() {
+        return isInitialized() ? sharedPreferences.getString(KEY_PROFILE_EDIT_MONTH, "") : "";
+    }
+
+    public void setProfileEditMonth(String month) {
+        if (isInitialized()) sharedPreferences.edit().putString(KEY_PROFILE_EDIT_MONTH, month).apply();
     }
 }
