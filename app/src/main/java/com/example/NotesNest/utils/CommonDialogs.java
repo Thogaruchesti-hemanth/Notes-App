@@ -637,24 +637,40 @@ public class CommonDialogs {
     }
 
     public static void showReauthenticationDialog(Context context, ReauthCallback callback) {
-        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context);
-        builder.setTitle("🔒 Confirm Password");
-        builder.setMessage("Please enter your current password to continue.");
-
-        View view = LayoutInflater.from(context).inflate(R.layout.dialog_enter_password, null);
-        TextInputEditText passwordEdit = view.findViewById(R.id.passwordEdit);
+        AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.CustomAlertDialog);
+        View view = LayoutInflater.from(context).inflate(R.layout.dialog_reauthenticate, null);
         builder.setView(view);
 
-        builder.setPositiveButton("Confirm", (dialog, which) -> {
-            String pass = Objects.requireNonNull(passwordEdit.getText()).toString().trim();
-            if (!pass.isEmpty()) {
-                callback.onConfirm(pass);
-            } else {
-                Toast.makeText(context, "Password required", Toast.LENGTH_SHORT).show();
-            }
-        });
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-        builder.show();
+        AlertDialog dialog = builder.create();
+
+        TextInputEditText passwordEdit = view.findViewById(R.id.etPassword);
+        TextInputLayout tilPassword = view.findViewById(R.id.tilPassword);
+        Button btnConfirm = view.findViewById(R.id.btnConfirm);
+        Button btnCancel = view.findViewById(R.id.btnCancel);
+
+        if (btnConfirm != null) {
+            btnConfirm.setOnClickListener(v -> {
+                String pass = Objects.requireNonNull(passwordEdit.getText()).toString().trim();
+                if (!pass.isEmpty()) {
+                    callback.onConfirm(pass);
+                    dialog.dismiss();
+                } else {
+                    if (tilPassword != null) tilPassword.setError("Password required");
+                }
+            });
+        }
+
+        if (btnCancel != null) {
+            btnCancel.setOnClickListener(v -> dialog.dismiss());
+        }
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            dialog.getWindow().setGravity(android.view.Gravity.CENTER);
+        }
+
+        dialog.show();
     }
 
     public interface PasswordCallback { void onPasswordEntered(String password); }

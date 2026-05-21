@@ -43,13 +43,14 @@
     </LinearLayout>
 
 
-    <Spinner
-        android:id="@+id/spinnerOptions"
+    <TextView
+        android:id="@+id/tvValue"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@null"
-        android:paddingEnd="@dimen/padding_8"
-        android:spinnerMode="dropdown" />
+        android:layout_marginEnd="@dimen/margin_8"
+        android:textColor="?attr/tabTextColor"
+        android:textSize="@dimen/text_14"
+        android:visibility="gone" />
 
     <ImageView
         android:layout_width="@dimen/size_24"

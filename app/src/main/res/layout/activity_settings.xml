@@ -8,57 +8,30 @@
     android:background="?attr/colorSecondary"
     android:orientation="vertical">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingHorizontal="@dimen/padding_24"
-            android:paddingTop="@dimen/padding_32"
-            android:paddingBottom="@dimen/padding_12">
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorSecondary"
+        android:layout_marginHorizontal="10dp"
+        android:titleTextColor="@color/tabSelectedTextColor"
+        app:navigationIcon="@drawable/ic_back_arrow"
+        app:navigationIconTint="?attr/colorPrimary" />
 
-            <ImageView
-                android:id="@+id/ivBackArrow"
-                android:layout_width="@dimen/size_32"
-                android:layout_height="@dimen/size_32"
-                android:contentDescription="@string/text_back_button"
-                android:src="@drawable/ic_back_arrow" />
-
-            <TextView
-                android:id="@+id/tvTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/size_32"
-                android:text="@string/text_settings"
-                android:textColor="?attr/colorPrimary"
-                android:textSize="@dimen/text_22"
-                android:textStyle="bold" />
-        </LinearLayout>
     <ScrollView
         android:id="@+id/scrollView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:fillViewport="true"
-        android:padding="@dimen/padding_20"
+        android:paddingHorizontal="@dimen/padding_20"
         android:scrollbars="none">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/margin_10"
             android:orientation="vertical">
-
-            <com.google.android.gms.ads.AdView
-                android:id="@+id/adView1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginBottom="16dp"
-                ads:adSize="BANNER"
-                ads:adUnitId="ca-app-pub-3940256099942544/6300978111"/>
-
-    <TextView
+                <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/text_appearance"
@@ -223,7 +196,6 @@
                         android:id="@+id/app_version_layout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="@dimen/margin_10"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
                         android:padding="@dimen/padding_10">

@@ -4,7 +4,14 @@ import static com.example.NotesNest.utils.ValidationUtils.isNetworkAvailable;
 
 import android.accounts.Account;
 import android.app.Activity;
+import android.graphics.Typeface;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.TextUtils;
+import android.text.style.StyleSpan;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.RotateAnimation;
@@ -14,6 +21,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.IntentSenderRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.credentials.ClearCredentialStateRequest;
 import androidx.credentials.Credential;
@@ -29,9 +37,9 @@ import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
-import com.example.NotesNest.FirebaseHelper;
 import com.example.NotesNest.R;
 import com.example.NotesNest.backups.DriveBackupWorker;
+import com.example.NotesNest.backups.ImportManager;
 import com.example.NotesNest.databinding.ActivityDriveBackupBinding;
 import com.example.NotesNest.models.BackupMode;
 import com.example.NotesNest.utils.AppLog;
@@ -46,14 +54,23 @@ import com.google.android.gms.auth.api.identity.Identity;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption;
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.client.util.ExponentialBackOff;
+import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
+import com.google.api.services.drive.model.FileList;
 import com.squareup.picasso.Picasso;
 
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class DriveBackupActivity extends AppCompatActivity {
@@ -63,11 +80,11 @@ public class DriveBackupActivity extends AppCompatActivity {
     private AppPreferences appPreferences;
     private boolean isSignedIn = false;
     private PremiumManager premiumManager;
-    private FirebaseHelper firebaseHelper;
     private androidx.credentials.CredentialManager credentialManager;
     private ActivityResultLauncher<IntentSenderRequest> authorizationLauncher;
     private ActivityDriveBackupBinding binding;
     private RotateAnimation syncAnimation;
+    private AlertDialog progressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,10 +94,12 @@ public class DriveBackupActivity extends AppCompatActivity {
 
         premiumManager = new PremiumManager(this);
         appPreferences = AppPreferences.getInstance();
-        firebaseHelper = new FirebaseHelper();
         credentialManager = CredentialManager.create(this);
-        binding.toolbar.setTitle(R.string.text_drive_backup);
+        SpannableString s = new SpannableString(getString(R.string.text_drive_backup));
+        s.setSpan(new StyleSpan(Typeface.BOLD), 0, s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        binding.toolbar.setTitle(s);
         binding.toolbar.setNavigationOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
+
 
         initAnimations();
         registerAuthorizationLauncher();
@@ -243,6 +262,14 @@ public class DriveBackupActivity extends AppCompatActivity {
                 CommonDialogs.showPremiumRequiredDialog(this, getString(R.string.text_manual_cloud_backup_is_a_premium_feature));
                 return;
             }
+            
+            String email = appPreferences.getString(PrefKeys.BACKUP_ACCOUNT_EMAIL, null);
+            if (TextUtils.isEmpty(email) || "null".equalsIgnoreCase(email)) {
+                AppToast.s("Please sign in to a backup account first.");
+                updateUIForSignedOut();
+                return;
+            }
+
             if (!isSignedIn) {
                 signIn();
                 return;
@@ -256,20 +283,47 @@ public class DriveBackupActivity extends AppCompatActivity {
             runBackupNow();
         });
 
+        binding.btnRestoreNow.setOnClickListener(v -> {
+            if (!premiumManager.canUseCloudBackup()) {
+                CommonDialogs.showPremiumRequiredDialog(this, "Restore from cloud is a premium feature.");
+                return;
+            }
+            
+            String email = appPreferences.getString(PrefKeys.BACKUP_ACCOUNT_EMAIL, null);
+            if (TextUtils.isEmpty(email)) {
+                AppToast.s("Please sign in first.");
+                return;
+            }
+
+            if (!isNetworkAvailable(this)) {
+                AppToast.s("No internet connection.");
+                return;
+            }
+
+            CommonDialogs.showConfirmDialog(this, "Restore Data", 
+                "This will replace your current notes with the data from Google Drive. Are you sure?", 
+                "Restore", "Cancel", this::runRestoreNow);
+        });
+
         binding.btnDisconnect.setOnClickListener(v -> signOut());
     }
 
     private void signIn() {
+        // Generate a nonce for the request (Recommended for Credential Manager)
+        String nonce = java.util.UUID.randomUUID().toString();
+
         GetGoogleIdOption googleIdOption = new GetGoogleIdOption.Builder()
                 .setFilterByAuthorizedAccounts(false)
                 .setServerClientId(getString(R.string.default_web_client_id))
+                .setAutoSelectEnabled(false)
+                .setNonce(nonce)
                 .build();
 
         GetCredentialRequest request = new GetCredentialRequest.Builder()
                 .addCredentialOption(googleIdOption)
                 .build();
 
-        credentialManager.getCredentialAsync(this, request, null, Runnable::run, new androidx.credentials.CredentialManagerCallback<>() {
+        credentialManager.getCredentialAsync(this, request, null, androidx.core.content.ContextCompat.getMainExecutor(this), new androidx.credentials.CredentialManagerCallback<>() {
             @Override
             public void onResult(GetCredentialResponse result) {
                 handleCredentialResult(result.getCredential());
@@ -286,22 +340,48 @@ public class DriveBackupActivity extends AppCompatActivity {
     }
 
     private void handleCredentialResult(Credential credential) {
-        if (credential instanceof GoogleIdTokenCredential googleIdTokenCredential) {
-            String email = googleIdTokenCredential.getId();
-            String name = googleIdTokenCredential.getDisplayName();
-            String profilePic = googleIdTokenCredential.getProfilePictureUri() != null ? googleIdTokenCredential.getProfilePictureUri().toString() : null;
+        try {
+            GoogleIdTokenCredential googleIdTokenCredential = null;
+            if (credential instanceof GoogleIdTokenCredential) {
+                googleIdTokenCredential = (GoogleIdTokenCredential) credential;
+            } else if (credential.getType().equals(GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL)) {
+                googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.getData());
+            }
 
-            appPreferences.putString(PrefKeys.BACKUP_ACCOUNT_EMAIL, email);
-            appPreferences.putString(PrefKeys.USER_NAME, name);
-            appPreferences.putString(PrefKeys.USER_IMAGE, profilePic);
-            
-            runOnUiThread(() -> requestDriveAuthorization(email));
-        } else {
-            AppLog.e(TAG, "Unexpected credential type: " + credential.getType());
+            if (googleIdTokenCredential != null) {
+                String email = googleIdTokenCredential.getId();
+                
+                if (TextUtils.isEmpty(email) || "null".equalsIgnoreCase(email)) {
+                    AppLog.e(TAG, "Invalid email from credential: " + email);
+                    runOnUiThread(() -> AppToast.s("Sign-in failed: Invalid account info."));
+                    return;
+                }
+
+                String name = googleIdTokenCredential.getDisplayName();
+                String profilePic = googleIdTokenCredential.getProfilePictureUri() != null ? googleIdTokenCredential.getProfilePictureUri().toString() : null;
+
+                appPreferences.putString(PrefKeys.BACKUP_ACCOUNT_EMAIL, email);
+                appPreferences.putString(PrefKeys.BACKUP_USER_NAME, name);
+                appPreferences.putString(PrefKeys.BACKUP_USER_IMAGE, profilePic);
+
+                runOnUiThread(() -> requestDriveAuthorization(email));
+            } else {
+                AppLog.e(TAG, "Unexpected credential type: " + credential.getType());
+                runOnUiThread(() -> AppToast.s("Unexpected login error. Please try again."));
+            }
+        } catch (Exception e) {
+            AppLog.e(TAG, "Error parsing credential", e);
+            runOnUiThread(() -> AppToast.s("Failed to parse login info."));
         }
     }
 
     private void requestDriveAuthorization(String email) {
+        if (TextUtils.isEmpty(email) || "null".equalsIgnoreCase(email)) {
+            AppLog.e(TAG, "Cannot request authorization for null/empty email");
+            AppToast.s("Authorization failed: account not found.");
+            return;
+        }
+
         AuthorizationRequest request = AuthorizationRequest.builder()
                 .setRequestedScopes(Arrays.asList(new Scope(DriveScopes.DRIVE_FILE), new Scope(DriveScopes.DRIVE_APPDATA)))
                 .setAccount(new Account(email, "com.google"))
@@ -336,8 +416,8 @@ public class DriveBackupActivity extends AppCompatActivity {
     private void updateUIForSignedIn(String email) {
         isSignedIn = true;
         
-        String name = appPreferences.getString(PrefKeys.USER_NAME, "User");
-        String profilePic = appPreferences.getString(PrefKeys.USER_IMAGE, null);
+        String name = appPreferences.getString(PrefKeys.BACKUP_USER_NAME, "User");
+        String profilePic = appPreferences.getString(PrefKeys.BACKUP_USER_IMAGE, null);
 
         binding.txtName.setText(name);
         binding.txtEmail.setText(email);
@@ -353,7 +433,7 @@ public class DriveBackupActivity extends AppCompatActivity {
         binding.layoutAccountInfo.setVisibility(View.VISIBLE);
         binding.cardSettings.setVisibility(View.VISIBLE);
         binding.cardStatus.setVisibility(View.VISIBLE);
-        binding.btnBackupNow.setVisibility(View.VISIBLE);
+        binding.layoutBackupButtons.setVisibility(View.VISIBLE);
         binding.btnBackupNow.setText(R.string.text_backup_now);
         binding.btnDisconnect.setVisibility(View.VISIBLE);
         binding.textSettingsTitle.setVisibility(View.VISIBLE);
@@ -368,7 +448,7 @@ public class DriveBackupActivity extends AppCompatActivity {
         binding.layoutAccountInfo.setVisibility(View.GONE);
         binding.cardSettings.setVisibility(View.GONE);
         binding.cardStatus.setVisibility(View.GONE);
-        binding.btnBackupNow.setVisibility(View.GONE);
+        binding.layoutBackupButtons.setVisibility(View.GONE);
         binding.btnDisconnect.setVisibility(View.GONE);
         binding.textSettingsTitle.setVisibility(View.GONE);
         binding.textStatusTitle.setVisibility(View.GONE);
@@ -383,7 +463,8 @@ public class DriveBackupActivity extends AppCompatActivity {
         binding.txtStatus.setText(R.string.text_backing_up);
         binding.imgTick.setVisibility(View.GONE);
         binding.imgStatusIcon.startAnimation(syncAnimation);
-        binding.backupProgress.setVisibility(View.VISIBLE);
+
+        progressDialog = CommonDialogs.showProgressDialog(this, getString(R.string.text_backing_up));
 
         OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(DriveBackupWorker.class).build();
         WorkManager.getInstance(this).enqueue(request);
@@ -399,12 +480,14 @@ public class DriveBackupActivity extends AppCompatActivity {
     }
 
     private void onBackupSuccess() {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
         binding.imgStatusIcon.clearAnimation();
         binding.btnBackupNow.setEnabled(true);
         binding.btnBackupNow.setText(R.string.text_backup_now);
         binding.txtStatus.setText(R.string.text_backup_complete);
         binding.imgTick.setVisibility(View.VISIBLE);
-        binding.backupProgress.setVisibility(View.GONE);
         
         String ts = new SimpleDateFormat("MMM dd, hh:mm a", Locale.getDefault()).format(new Date());
         appPreferences.putString(PrefKeys.LAST_BACKUP_TIME, ts);
@@ -414,14 +497,115 @@ public class DriveBackupActivity extends AppCompatActivity {
     }
 
     private void onBackupFailure() {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
         binding.imgStatusIcon.clearAnimation();
         binding.btnBackupNow.setEnabled(true);
         binding.btnBackupNow.setText(R.string.text_backup_now);
         binding.txtStatus.setText(R.string.text_backup_failed);
         binding.imgTick.setVisibility(View.GONE);
-        binding.backupProgress.setVisibility(View.GONE);
         
         AppToast.s("Backup failed. Please try again.");
+    }
+
+    private void runRestoreNow() {
+        progressDialog = CommonDialogs.showProgressDialog(this, getString(R.string.text_restoring_from_drive));
+        String email = appPreferences.getString(PrefKeys.BACKUP_ACCOUNT_EMAIL, null);
+        
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                Drive driveService = getDriveService(email);
+                
+                // 1. Find the backup file
+                String fileId = findBackupFile(driveService);
+                if (fileId == null) {
+                    runOnUiThread(() -> {
+                        if (progressDialog != null) progressDialog.dismiss();
+                        AppToast.s("No backup file found on Drive.");
+                    });
+                    return;
+                }
+
+                // 2. Download to cache
+                java.io.File tempFile = new java.io.File(getCacheDir(), "drive_restore.enc");
+                try (OutputStream outputStream = new FileOutputStream(tempFile)) {
+                    driveService.files().get(fileId).executeMediaAndDownloadTo(outputStream);
+                }
+
+                // 3. Use ImportManager logic to restore
+                runOnUiThread(() -> {
+                    if (progressDialog != null) progressDialog.dismiss();
+                    performRestoreFromFile(tempFile, email);
+                });
+
+            } catch (Exception e) {
+                AppLog.e(TAG, "Restore failed", e);
+                runOnUiThread(() -> {
+                    if (progressDialog != null) progressDialog.dismiss();
+                    AppToast.s("Restore failed: " + e.getMessage());
+                });
+            }
+        });
+    }
+
+    private void performRestoreFromFile(java.io.File file, String email) {
+        ImportManager manager = new ImportManager(Executors.newSingleThreadExecutor(), new Handler(Looper.getMainLooper()));
+        // Use user's email as password since that's what we used in DriveBackupWorker
+        manager.importFromUri(this, android.net.Uri.fromFile(file), email.toCharArray(), new ImportManager.ImportCallback() {
+            @Override
+            public void showProgress(String message) {
+                progressDialog = CommonDialogs.showProgressDialog(DriveBackupActivity.this, getString(R.string.text_importing_data));
+            }
+
+            @Override
+            public void hideProgress() {
+                if (progressDialog != null) progressDialog.dismiss();
+            }
+
+            @Override
+            public void postToast(String message) {
+                AppToast.s(message);
+            }
+
+            @Override
+            public void onVersionMismatch(int currentVersion, int incomingVersion, Runnable onReplaceConfirmed, Runnable onCancel) {
+                CommonDialogs.showConfirmDialog(DriveBackupActivity.this, "Version Mismatch", 
+                    "The backup file version is different from the current app database. Do you want to replace it anyway?", 
+                    "Replace", "Cancel", onReplaceConfirmed, onCancel);
+            }
+        }, binding.getRoot());
+    }
+
+    private Drive getDriveService(String email) {
+        GoogleAccountCredential credential = GoogleAccountCredential.usingOAuth2(
+                getApplicationContext(),
+                Arrays.asList(DriveScopes.DRIVE_FILE, DriveScopes.DRIVE_APPDATA)
+        )
+        .setBackOff(new ExponentialBackOff())
+        .setSelectedAccount(new android.accounts.Account(email, "com.google"));
+
+        return new Drive.Builder(
+                new NetHttpTransport(),
+                GsonFactory.getDefaultInstance(),
+                credential)
+                .setApplicationName("NotesNest")
+                .build();
+    }
+
+    private String findBackupFile(Drive driveService) throws java.io.IOException {
+        String query = "name = 'NotesNest_Backup_Data.enc' and trashed = false";
+        FileList result = driveService.files().list()
+                .setQ(query)
+                .setSpaces("drive")
+                .setFields("files(id, name)")
+                .execute();
+
+        java.util.List<com.google.api.services.drive.model.File> files = result.getFiles();
+        if (files == null || files.isEmpty()) {
+            return null;
+        }
+        return files.get(0).getId();
     }
 
     private void signOut() {
@@ -434,12 +618,11 @@ public class DriveBackupActivity extends AppCompatActivity {
                     @Override
                     public void onResult(Void result) {
                         runOnUiThread(() -> {
-                            firebaseHelper.signOut(DriveBackupActivity.this);
                             updateUIForSignedOut();
                             appPreferences.remove(PrefKeys.BACKUP_ACCOUNT_EMAIL);
+                            appPreferences.remove(PrefKeys.BACKUP_USER_NAME);
+                            appPreferences.remove(PrefKeys.BACKUP_USER_IMAGE);
                             appPreferences.remove(PrefKeys.IS_SIGNED_IN);
-                            appPreferences.remove(PrefKeys.USER_NAME);
-                            appPreferences.remove(PrefKeys.USER_IMAGE);
                             
                             // Cancel any scheduled auto backup
                             WorkManager.getInstance(DriveBackupActivity.this).cancelUniqueWork(UNIQUE_WORK_NAME);
@@ -449,9 +632,8 @@ public class DriveBackupActivity extends AppCompatActivity {
                     @Override
                     public void onError(@NonNull androidx.credentials.exceptions.ClearCredentialException e) {
                         AppLog.e(TAG, "Failed to clear credential state", e);
-                        // Still update UI and sign out from Firebase
+                        // Still update UI
                         runOnUiThread(() -> {
-                            firebaseHelper.signOut(DriveBackupActivity.this);
                             updateUIForSignedOut();
                             appPreferences.remove(PrefKeys.BACKUP_ACCOUNT_EMAIL);
                             appPreferences.remove(PrefKeys.IS_SIGNED_IN);

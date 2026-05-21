@@ -222,4 +222,7 @@
     <string name="text_clear_skies">Clear Skies!</string>
     <string name="text_no_reminders_peace">No reminders for today. Enjoy your peace.</string>
     <string name="text_schedule_task">Schedule Task</string>
+    <string name="text_restore_from_drive">Restore from Drive</string>
+    <string name="text_restoring_from_drive">Restoring from Drive...</string>
+    <string name="text_importing_data">Importing data...</string>
 </resources>

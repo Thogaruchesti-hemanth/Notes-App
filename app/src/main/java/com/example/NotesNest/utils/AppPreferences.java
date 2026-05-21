@@ -42,7 +42,11 @@ public class AppPreferences {
 
     // ----------- String -----------
     public void putString(String key, String value) {
-        prefs.edit().putString(key, value).apply();
+        if (value == null) {
+            remove(key);
+        } else {
+            prefs.edit().putString(key, value).apply();
+        }
     }
 
     public String getString(String key, String defaultValue) {

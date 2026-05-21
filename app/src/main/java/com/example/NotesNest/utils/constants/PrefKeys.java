@@ -28,6 +28,8 @@ public final class PrefKeys {
     // Backup related
     public static final String BACKUP_MODE = "backup_mode";
     public static final String BACKUP_ACCOUNT_EMAIL = "backup_account_email";
+    public static final String BACKUP_USER_NAME = "backup_user_name";
+    public static final String BACKUP_USER_IMAGE = "backup_user_image";
     public static final String IS_SIGNED_IN = "is_signed_in";
     public static final String AUTO_BACKUP_ENABLED = "auto_backup_enabled";
     public static final String INCLUDE_ATTACHMENTS = "include_attachments";

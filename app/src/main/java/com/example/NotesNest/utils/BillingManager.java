@@ -218,6 +218,9 @@ public class BillingManager implements PurchasesUpdatedListener {
                 if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
                     premiumFoundInSync = true;
                     handlePurchase(purchase, false); 
+                } else if (purchase.getPurchaseState() == Purchase.PurchaseState.PENDING) {
+                    Log.d(TAG, "Purchase is pending: " + purchase.getOrderId());
+                    // Entitlement is NOT granted for pending purchases
                 }
             }
         }
@@ -282,6 +285,10 @@ public class BillingManager implements PurchasesUpdatedListener {
             }
         } else if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.USER_CANCELED) {
             updatePurchaseState(false, null, null, "Cancelled");
+        } else if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED) {
+            purchaseError.postValue("You already own this item.");
+            queryActivePurchases(); // Sync state
+            updatePurchaseState(false, null, null, null);
         } else {
             purchaseError.postValue("Billing error: " + billingResult.getDebugMessage());
             updatePurchaseState(false, null, null, null);
@@ -289,6 +296,11 @@ public class BillingManager implements PurchasesUpdatedListener {
     }
 
     public void handlePurchase(Purchase purchase, boolean isNewPurchase) {
+        if (purchase.getPurchaseState() == Purchase.PurchaseState.PENDING) {
+            updatePurchaseState(false, null, null, "Purchase is pending. Please complete it in Play Store.", false);
+            return;
+        }
+
         if (purchase.getPurchaseState() != Purchase.PurchaseState.PURCHASED) return;
 
         if (!purchase.isAcknowledged()) {

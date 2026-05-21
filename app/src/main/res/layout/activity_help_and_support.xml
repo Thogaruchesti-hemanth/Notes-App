@@ -20,14 +20,6 @@
         app:navigationIcon="@drawable/ic_back_arrow"
         app:navigationIconTint="?attr/colorPrimary" />
 
-    <com.google.android.gms.ads.AdView
-        android:id="@+id/adViewHelpTop"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        ads:adSize="BANNER"
-        ads:adUnitId="ca-app-pub-3940256099942544/6300978111" />
-
     <ScrollView
         android:id="@+id/scrollView"
         android:layout_width="match_parent"
@@ -144,16 +136,6 @@
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.gms.ads.AdView
-                android:id="@+id/adViewHelpMid"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="16dp"
-                ads:adSize="BANNER"
-                ads:adUnitId="ca-app-pub-3940256099942544/6300978111" />
 
             <TextView
                 android:layout_width="wrap_content"

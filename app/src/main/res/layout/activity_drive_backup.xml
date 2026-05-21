@@ -13,7 +13,6 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorSecondary"
-        android:title="@string/text_drive_backup"
         android:titleTextColor="@color/tabSelectedTextColor"
         app:navigationIcon="@drawable/ic_back_arrow"
         app:navigationIconTint="?attr/colorPrimary" />
@@ -146,18 +145,6 @@
                         android:textColor="?attr/colorSecondary"
                         android:textSize="@dimen/text_12" />
             </LinearLayout>
-
-            <!-- Progress Indicator -->
-            <com.google.android.material.progressindicator.LinearProgressIndicator
-                android:id="@+id/backupProgress"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:indeterminate="true"
-                android:visibility="gone"
-                app:indicatorColor="?attr/colorPrimary"
-                app:trackColor="@color/tabSelectedTextColorLight"
-                app:trackThickness="4dp" />
 
             <!-- Settings Section -->
             <TextView
@@ -342,18 +329,37 @@
             </com.google.android.material.card.MaterialCardView>
 
             <!-- Backup Now Button -->
-            <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/btnBackupNow"
+            <LinearLayout
+                android:id="@+id/layoutBackupButtons"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:layout_marginHorizontal="40dp"
-                android:background="@drawable/btn_rounded"
-                android:text="@string/text_backup_now"
-                android:textAllCaps="false"
-                android:textColor="?attr/colorSecondary"
-                android:textSize="@dimen/text_16"
-                android:visibility="gone" />
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btnBackupNow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:layout_marginHorizontal="40dp"
+                    android:background="@drawable/btn_rounded"
+                    android:text="@string/text_backup_now"
+                    android:textAllCaps="false"
+                    android:textColor="?attr/colorSecondary"
+                    android:textSize="@dimen/text_16" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btnRestoreNow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginHorizontal="40dp"
+                    android:background="@drawable/btn_rounded_blue"
+                    android:text="@string/text_restore_from_drive"
+                    android:textAllCaps="false"
+                    android:textColor="?attr/colorSecondary"
+                    android:textSize="@dimen/text_16" />
+            </LinearLayout>
 
             <!-- Disconnect Button -->
             <TextView

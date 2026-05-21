@@ -389,14 +389,7 @@ public class FirebaseHelper {
         }
 
         callback.onDeletionStarted();
-        // Force refresh the token to check if re-authentication is needed
-        user.getIdToken(true).addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                performDeletion(activity, user, callback);
-            } else {
-                callback.onReauthenticationRequired();
-            }
-        });
+        performDeletion(activity, user, callback);
     }
 
     public void reauthenticateUser(String password, ReauthCallback callback) {
@@ -409,8 +402,10 @@ public class FirebaseHelper {
         AuthCredential credential = EmailAuthProvider.getCredential(user.getEmail(), password);
         user.reauthenticate(credential).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
+                Log.d(TAG, "User re-authenticated successfully");
                 callback.onSuccess();
             } else {
+                Log.e(TAG, "Re-authentication failed", task.getException());
                 callback.onFailure(task.getException() != null ? task.getException().getMessage() : "Verification failed");
             }
         });
@@ -422,33 +417,41 @@ public class FirebaseHelper {
             callback.onDeletionFailure("User session invalid");
             return;
         }
+        // Since we just re-authenticated, we don't need to call onDeletionStarted again 
+        // as it's already showing from the ManageAccountActivity side (or will be soon)
         performDeletion(activity, user, callback);
     }
 
     private void performDeletion(Activity activity, FirebaseUser user, DeletionCallback callback) {
         String uid = user.getUid();
+        Log.d(TAG, "Starting account deletion for UID: " + uid);
+        
         databaseReference.child(uid).removeValue().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
+                Log.d(TAG, "User primary data removed");
                 FirebaseDatabase.getInstance().getReference("Notes").child(uid).removeValue();
                 FirebaseDatabase.getInstance().getReference("Categories").child(uid).removeValue();
                 FirebaseDatabase.getInstance().getReference("Trash").child(uid).removeValue();
                 FirebaseDatabase.getInstance().getReference("Reminders").child(uid).removeValue();
 
-                    user.delete().addOnCompleteListener(deleteTask -> {
-                        if (deleteTask.isSuccessful()) {
-                            AppPreferences sp = AppPreferences.getInstance();
-                            sp.clearAll();
-                            callback.onDeletionSuccess();
+                user.delete().addOnCompleteListener(deleteTask -> {
+                    if (deleteTask.isSuccessful()) {
+                        Log.d(TAG, "Firebase Auth account deleted");
+                        AppPreferences sp = AppPreferences.getInstance();
+                        sp.clearAll();
+                        callback.onDeletionSuccess();
+                    } else {
+                        Exception e = deleteTask.getException();
+                        Log.e(TAG, "Auth deletion failed", e);
+                        if (e instanceof FirebaseAuthRecentLoginRequiredException) {
+                            callback.onReauthenticationRequired();
                         } else {
-                            Exception e = deleteTask.getException();
-                            if (e instanceof FirebaseAuthRecentLoginRequiredException) {
-                                callback.onReauthenticationRequired();
-                            } else {
-                                callback.onDeletionFailure("Auth deletion failed: " + (e != null ? e.getMessage() : "Unknown error"));
-                            }
+                            callback.onDeletionFailure("Auth deletion failed: " + (e != null ? e.getMessage() : "Unknown error"));
                         }
-                    });
+                    }
+                });
             } else {
+                Log.e(TAG, "Failed to remove database data", task.getException());
                 callback.onDeletionFailure("Failed to delete user data");
             }
         });

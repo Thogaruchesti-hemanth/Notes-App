@@ -3,20 +3,29 @@ package com.example.NotesNest.activity;
 import static com.example.NotesNest.utils.CommonDialogs.showPasswordDialog;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.StyleSpan;
 import android.view.View;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.graphics.Insets;
@@ -36,7 +45,6 @@ import com.example.NotesNest.utils.CommonDialogs;
 import com.example.NotesNest.utils.PremiumManager;
 import com.example.NotesNest.utils.ThemeManager;
 import com.example.NotesNest.utils.constants.PrefKeys;
-import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.MobileAds;
 
 import java.util.concurrent.ExecutorService;
@@ -55,20 +63,19 @@ public class SettingsActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        PremiumManager premiumManager;
         ThemeManager.applyTheme(this);
+        EdgeToEdge.enable(this);
+        super.onCreate(savedInstanceState);
         binding = ActivitySettingsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-        super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.settings_layout), (v, insets) -> {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.settingsLayout, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
+            return WindowInsetsCompat.CONSUMED;
         });
 
-        premiumManager = new PremiumManager(this);
+        PremiumManager premiumManager = new PremiumManager(this);
         isPremiumUser = premiumManager.isPremium();
 
         initViews();
@@ -80,14 +87,10 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void setupAds() {
-        AdRequest adRequest;
         if (isPremiumUser) {
-            binding.adView1.setVisibility(View.GONE);
             return;
         }
         MobileAds.initialize(this);
-        adRequest = new AdRequest.Builder().build();
-        binding.adView1.loadAd(adRequest);
     }
 
     private void setupActivityResultLaunchers() {
@@ -121,7 +124,6 @@ public class SettingsActivity extends AppCompatActivity {
                 })
         );
 
-        // IMPORT
         binding.layoutImportData.getRoot().setOnClickListener(v -> {
             Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
             intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -164,16 +166,12 @@ public class SettingsActivity extends AppCompatActivity {
         boolean isGrid = appPreferences.getBoolean(PrefKeys.KEY_NOTES_LAYOUT, true);
         int checkedItem = isGrid ? 1 : 0;
 
-        new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
-                .setTitle("Select Notes Layout")
-                .setSingleChoiceItems(options, checkedItem, (dialog, which) -> {
-                    boolean selectedIsGrid = (which == 1);
-                    appPreferences.putBoolean(PrefKeys.KEY_NOTES_LAYOUT, selectedIsGrid);
-                    Toast.makeText(this, "Layout updated to " + options[which], Toast.LENGTH_SHORT).show();
-                    dialog.dismiss();
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+        showSelectionDialog("Select Notes Layout", options, checkedItem, which -> {
+            boolean selectedIsGrid = (which == 1);
+            appPreferences.putBoolean(PrefKeys.KEY_NOTES_LAYOUT, selectedIsGrid);
+            Toast.makeText(this, "Layout updated to " + options[which], Toast.LENGTH_SHORT).show();
+            setupOptions(); // Refresh UI values
+        });
     }
 
     private void showThemeDialog() {
@@ -184,38 +182,68 @@ public class SettingsActivity extends AppCompatActivity {
         else if ("dark".equals(saved)) checkedItem = 2;
         else checkedItem = 0;
 
-        new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
-                .setTitle("Select App Theme")
-                .setSingleChoiceItems(options, checkedItem, (dialog, which) -> {
-                    String selected = "system";
-                    if (which == 1) selected = "light";
-                    else if (which == 2) selected = "dark";
+        showSelectionDialog("Select App Theme", options, checkedItem, which -> {
+            String selected = "system";
+            if (which == 1) selected = "light";
+            else if (which == 2) selected = "dark";
 
-                    if (!selected.equals(ThemeManager.getCurrentThemeMode(this))) {
-                        ThemeManager.updateTheme(this, selected, this);
-                        recreate();
-                    }
-                    dialog.dismiss();
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+            if (!selected.equals(ThemeManager.getCurrentThemeMode(this))) {
+                ThemeManager.updateTheme(this, selected);
+                Intent intent = new Intent(this, SettingsActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                finish();
+                overridePendingTransition(0, 0);
+                startActivity(intent);
+                overridePendingTransition(0, 0);
+            }
+        });
+    }
+
+    private void showSelectionDialog(String title, String[] options, int checkedItem, SelectionCallback callback) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomAlertDialog);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_selection, null);
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        TextView tvTitle = dialogView.findViewById(R.id.tvTitle);
+        tvTitle.setText(title);
+
+        RadioGroup radioGroup = dialogView.findViewById(R.id.radioGroup);
+        for (int i = 0; i < options.length; i++) {
+            RadioButton radioButton = (RadioButton) getLayoutInflater().inflate(R.layout.item_selection_radio, radioGroup, false);
+            radioButton.setText(options[i]);
+            radioButton.setId(i);
+            if (i == checkedItem) {
+                radioButton.setChecked(true);
+            }
+            int finalI = i;
+            radioButton.setOnClickListener(v -> {
+                callback.onSelected(finalI);
+                dialog.dismiss();
+            });
+            radioGroup.addView(radioButton);
+        }
+        dialog.show();
     }
 
     private void performExport(Uri uri, String password) {
         new LocalBackupManager(this).startBackup(password.toCharArray(), new LocalBackupManager.BackupCallback() {
             @Override
             public void showProgress(String m) {
-                showProgressDialog(m);
+                showLoading("Exporting...");
             }
 
             @Override
             public void hideProgress() {
-                hideProgressDialog();
+                hideLoading();
             }
 
             @Override
             public void postToast(String m) {
-                // FIX: Use SettingsActivity.this to avoid recursion
                 SettingsActivity.this.postToast(m);
             }
         }, uri);
@@ -227,17 +255,17 @@ public class SettingsActivity extends AppCompatActivity {
         manager.importFromUri(this, uri, password, new ImportManager.ImportCallback() {
             @Override
             public void showProgress(String m) {
-                showProgressDialog(m);
+                showLoading("Importing...");
             }
 
             @Override
             public void hideProgress() {
-                hideProgressDialog();
+                hideLoading();
             }
 
             @Override
             public void postToast(String m) {
-                AppLog.d("SettingsActivity", "Import toast: " + m);
+                SettingsActivity.this.postToast(m);
             }
 
             @Override
@@ -253,19 +281,23 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     // --- UI HELPERS ---
-    private void showProgressDialog(String message) {
+    private void showLoading(String message) {
         uiHandler.post(() -> {
-            if (progressDialog == null) {
-                progressDialog = new AlertDialog.Builder(this)
-                        .setMessage(message).setCancelable(false).create();
+            if (progressDialog == null || !progressDialog.isShowing()) {
+                progressDialog = CommonDialogs.showProgressDialog(this, message);
+            } else {
+                TextView tv = progressDialog.findViewById(R.id.tvLoadingMessage);
+                if (tv != null) tv.setText(message);
             }
-            progressDialog.show();
         });
     }
 
-    private void hideProgressDialog() {
+    private void hideLoading() {
         uiHandler.post(() -> {
-            if (progressDialog != null) progressDialog.dismiss();
+            if (progressDialog != null && progressDialog.isShowing()) {
+                progressDialog.dismiss();
+            }
+            progressDialog = null;
         });
     }
 
@@ -282,18 +314,29 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void setupOptions() {
+        AppPreferences appPreferences = AppPreferences.getInstance();
+        boolean isGrid = appPreferences.getBoolean(PrefKeys.KEY_NOTES_LAYOUT, true);
+        String currentTheme = ThemeManager.getCurrentThemeMode(this);
+        String themeText = currentTheme.substring(0, 1).toUpperCase() + currentTheme.substring(1);
+
         setupOptionsData(binding.layoutLocalBackup, R.drawable.ic_local_backup, "Local Backup");
         setupOptionsData(binding.layoutDiveBackup, R.drawable.ic_drive_backup, "Drive Backup");
         setupOptionsData(binding.layoutImportData, R.drawable.ic_import_data, "Import");
-        setupOptionsData(binding.layoutNote, R.drawable.ic_layout, "Notes Layout");
-        setupOptionsData(binding.layoutTheme, R.drawable.ic_theme, "App Theme");
         setupOptionsData(binding.layoutManageAccount, R.drawable.ic_manage_account, "Manage Account");
+
+        setupOptionsData(binding.layoutNote, R.drawable.ic_layout, "Notes Layout", isGrid ? "Grid" : "Linear");
+        setupOptionsData(binding.layoutTheme, R.drawable.ic_theme, "App Theme", themeText);
     }
 
-    private void setupOptionsData(ItemSettingsOptionBinding binding, int icon, String title) {
+    private void setupOptionsData(ItemSettingsOptionBinding binding, int icon, String title, String value) {
         binding.ivIcon.setImageDrawable(AppCompatResources.getDrawable(this, icon));
         binding.tvText.setText(title);
-        binding.spinnerOptions.setVisibility(View.GONE);
+        if (value != null) {
+            binding.tvValue.setVisibility(View.VISIBLE);
+            binding.tvValue.setText(value);
+        } else {
+            binding.tvValue.setVisibility(View.GONE);
+        }
     }
 
     private void setupOptionsData(ItemSupportOptionBinding binding, int icon, String title) {
@@ -303,7 +346,11 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void initViews() {
         binding.layoutChangePassword.getRoot().setVisibility(View.GONE);
-        binding.ivBackArrow.setOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
+        SpannableString s = new SpannableString(getString(R.string.text_settings));
+        s.setSpan(new StyleSpan(Typeface.BOLD), 0, s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        binding.toolbar.setTitle(s);
+        binding.toolbar.setNavigationOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
+
 
         try {
             PackageInfo p = getPackageManager().getPackageInfo(getPackageName(), 0);
@@ -311,5 +358,9 @@ public class SettingsActivity extends AppCompatActivity {
         } catch (PackageManager.NameNotFoundException e) {
             AppLog.e("SettingsActivity", "Failed to get version name", e);
         }
+    }
+
+    private interface SelectionCallback {
+        void onSelected(int index);
     }
 }

@@ -95,8 +95,14 @@ public class ManageAccountActivity extends AppCompatActivity {
                 @Override
                 public void onReauthenticationRequired() {
                     hideProgress();
-                    CommonDialogs.showReauthenticationDialog(ManageAccountActivity.this,
-                            password -> reauthenticateUser(password));
+                    if (firebaseHelper.isGoogleUser()) {
+                        CommonDialogs.showErrorDialog(ManageAccountActivity.this, "Re-authentication Required",
+                                "To delete your account, please log out and log in again, then immediately perform the deletion. " +
+                                        "This is a security requirement for Google-linked accounts.");
+                    } else {
+                        CommonDialogs.showReauthenticationDialog(ManageAccountActivity.this,
+                                password -> reauthenticateUser(password));
+                    }
                 }
 
                 @Override
@@ -209,7 +215,8 @@ public class ManageAccountActivity extends AppCompatActivity {
         firebaseHelper.reauthenticateUser(password, new FirebaseHelper.ReauthCallback() {
             @Override
             public void onSuccess() {
-                hideProgress();
+                // Identity verified, now start the actual deletion process
+                showProgress("Deleting your account...");
                 firebaseHelper.retryDeletionAfterReauth(ManageAccountActivity.this, deletionCallback);
             }
 

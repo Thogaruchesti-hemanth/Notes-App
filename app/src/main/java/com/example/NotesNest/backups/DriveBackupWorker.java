@@ -1,6 +1,7 @@
 package com.example.NotesNest.backups;
 
 import android.content.Context;
+import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -9,10 +10,14 @@ import androidx.work.WorkerParameters;
 
 import com.example.NotesNest.utils.AppPreferences;
 import com.example.NotesNest.utils.constants.PrefKeys;
+import com.example.NotesNest.utils.CryptoUtils;
+import com.example.NotesNest.utils.ZipUtils;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.http.FileContent;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
@@ -29,7 +34,8 @@ import java.util.Locale;
 public class DriveBackupWorker extends Worker {
 
     private static final String TAG = "DriveBackupWorker";
-    private static final String BACKUP_FILE_NAME = "NotesNest_Backup_Data.txt";
+    private static final String BACKUP_FOLDER_NAME = "NotesNest_Backups";
+    private static final String BACKUP_FILE_NAME = "NotesNest_Backup_Data.enc";
 
     public DriveBackupWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -43,11 +49,14 @@ public class DriveBackupWorker extends Worker {
         AppPreferences.init(getApplicationContext());
         AppPreferences appPrefs = AppPreferences.getInstance();
 
-        String email = appPrefs.getString(PrefKeys.BACKUP_ACCOUNT_EMAIL, null);
+        String rawEmail = appPrefs.getString(PrefKeys.BACKUP_ACCOUNT_EMAIL, null);
+        String email = rawEmail != null ? rawEmail.trim() : null;
         boolean isSignedIn = appPrefs.getBoolean(PrefKeys.IS_SIGNED_IN, false);
 
-        if (email == null || !isSignedIn) {
-            Log.e(TAG, "Backup failed: User not signed in.");
+        Log.d(TAG, "Worker account check - Email: " + email + ", SignedIn: " + isSignedIn);
+
+        if (TextUtils.isEmpty(email) || "null".equalsIgnoreCase(email) || !isSignedIn) {
+            Log.e(TAG, "Backup failed: User not signed in or invalid account. Email: " + email);
             return Result.failure();
         }
 
@@ -59,16 +68,23 @@ public class DriveBackupWorker extends Worker {
 
             if (localBackupFile == null) return Result.failure();
 
-            // Professional Approach: Update if exists, Create if not.
-            String existingFileId = findExistingBackupFile(driveService);
+            // 1. Get or Create the dedicated folder
+            String folderId = getOrCreateBackupFolder(driveService);
+            if (folderId == null) {
+                Log.e(TAG, "Failed to create/find backup folder.");
+                return Result.failure();
+            }
+
+            // 2. Find existing backup file INSIDE that folder
+            String existingFileId = findFileInFolder(driveService, folderId, BACKUP_FILE_NAME);
             
             boolean success;
             if (existingFileId != null) {
-                Log.d(TAG, "Existing backup found. Updating file ID: " + existingFileId);
+                Log.d(TAG, "Existing backup found in folder. Updating file ID: " + existingFileId);
                 success = updateExistingFile(driveService, existingFileId, localBackupFile);
             } else {
-                Log.d(TAG, "No existing backup found. Creating new file.");
-                success = createNewFile(driveService, localBackupFile);
+                Log.d(TAG, "No existing backup found in folder. Creating new file.");
+                success = createFileInFolder(driveService, folderId, localBackupFile);
             }
 
             if (success) {
@@ -78,6 +94,10 @@ public class DriveBackupWorker extends Worker {
                 return Result.failure();
             }
 
+        } catch (UserRecoverableAuthIOException e) {
+            Log.e(TAG, "User action required for Drive access: " + e.getMessage());
+            // In a real app, you might want to show a notification to the user here
+            return Result.failure();
         } catch (Exception e) {
             Log.e(TAG, "Worker Exception: " + e.getMessage(), e);
             return shouldRetry(e) ? Result.retry() : Result.failure();
@@ -89,22 +109,60 @@ public class DriveBackupWorker extends Worker {
     }
 
     private Drive getDriveService(String email) {
-        GoogleAccountCredential credential = GoogleAccountCredential.usingOAuth2(
-                getApplicationContext(),
-                Arrays.asList(DriveScopes.DRIVE_FILE, DriveScopes.DRIVE_APPDATA)
-        );
-        credential.setSelectedAccountName(email);
+        if (TextUtils.isEmpty(email) || "null".equalsIgnoreCase(email)) {
+            Log.e(TAG, "getDriveService: Invalid email provided: " + email);
+            throw new IllegalArgumentException("Valid email is required for Drive service");
+        }
 
-        return new Drive.Builder(
-                new NetHttpTransport(),
-                GsonFactory.getDefaultInstance(),
-                credential)
-                .setApplicationName("NotesNest")
-                .build();
+        Log.d(TAG, "Initializing Drive service for: " + email);
+
+        try {
+            GoogleAccountCredential credential = GoogleAccountCredential.usingOAuth2(
+                    getApplicationContext(),
+                    Arrays.asList(DriveScopes.DRIVE_FILE, DriveScopes.DRIVE_APPDATA)
+            )
+            .setBackOff(new ExponentialBackOff())
+            .setSelectedAccount(new android.accounts.Account(email, "com.google"));
+
+            return new Drive.Builder(
+                    new NetHttpTransport(),
+                    GsonFactory.getDefaultInstance(),
+                    credential)
+                    .setApplicationName("NotesNest")
+                    .build();
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to create Drive service: " + e.getMessage());
+            throw e;
+        }
     }
 
-    private String findExistingBackupFile(Drive driveService) throws IOException {
-        String query = "name = '" + BACKUP_FILE_NAME + "' and trashed = false";
+    private String getOrCreateBackupFolder(Drive driveService) throws IOException {
+        String query = "name = '" + BACKUP_FOLDER_NAME + "' and mimeType = 'application/vnd.google-apps.folder' and trashed = false";
+        FileList result = driveService.files().list()
+                .setQ(query)
+                .setSpaces("drive")
+                .setFields("files(id, name)")
+                .execute();
+
+        List<File> files = result.getFiles();
+        if (files != null && !files.isEmpty()) {
+            return files.get(0).getId();
+        }
+
+        // Create folder if not exists
+        File folderMetadata = new File();
+        folderMetadata.setName(BACKUP_FOLDER_NAME);
+        folderMetadata.setMimeType("application/vnd.google-apps.folder");
+
+        File folder = driveService.files().create(folderMetadata)
+                .setFields("id")
+                .execute();
+
+        return folder.getId();
+    }
+
+    private String findFileInFolder(Drive driveService, String folderId, String fileName) throws IOException {
+        String query = "'" + folderId + "' in parents and name = '" + fileName + "' and trashed = false";
         FileList result = driveService.files().list()
                 .setQ(query)
                 .setSpaces("drive")
@@ -118,13 +176,13 @@ public class DriveBackupWorker extends Worker {
         return files.get(0).getId();
     }
 
-    private boolean createNewFile(Drive driveService, java.io.File localFile) throws IOException {
+    private boolean createFileInFolder(Drive driveService, String folderId, java.io.File localFile) throws IOException {
         File fileMetadata = new File();
         fileMetadata.setName(BACKUP_FILE_NAME);
-        fileMetadata.setDescription("NotesNest Cloud Backup");
-        fileMetadata.setMimeType("text/plain");
+        fileMetadata.setParents(java.util.Collections.singletonList(folderId));
+        fileMetadata.setMimeType("application/octet-stream");
 
-        FileContent mediaContent = new FileContent("text/plain", localFile);
+        FileContent mediaContent = new FileContent("application/octet-stream", localFile);
         File file = driveService.files().create(fileMetadata, mediaContent)
                 .setFields("id")
                 .execute();
@@ -137,7 +195,7 @@ public class DriveBackupWorker extends Worker {
         // Update timestamp in description to show progress in Drive info
         fileMetadata.setDescription("Last Updated: " + new Date().toString());
 
-        FileContent mediaContent = new FileContent("text/plain", localFile);
+        FileContent mediaContent = new FileContent("application/octet-stream", localFile);
         File updatedFile = driveService.files().update(fileId, fileMetadata, mediaContent)
                 .setFields("id")
                 .execute();
@@ -147,22 +205,31 @@ public class DriveBackupWorker extends Worker {
 
     private java.io.File createLocalBackupFile(String email) {
         try {
-            java.io.File cacheDir = getApplicationContext().getCacheDir();
-            java.io.File backupFile = new java.io.File(cacheDir, "temp_backup.txt");
-
-            try (FileWriter writer = new FileWriter(backupFile)) {
-                writer.write("NotesNest Professional Backup\n");
-                writer.write("User: " + email + "\n");
-                writer.write("Backup Date: " + new Date() + "\n");
-                writer.write("----------------------------\n");
-                writer.write("SYNC DATA START\n");
-                // TODO: Replace with real JSON serialization of user notes
-                writer.write("Real-time note data would go here...\n");
-                writer.write("SYNC DATA END\n");
+            Context context = getApplicationContext();
+            java.io.File dbFile = context.getDatabasePath("notesnest.db");
+            if (!dbFile.exists()) {
+                Log.e(TAG, "Database file not found!");
+                return null;
             }
-            return backupFile;
-        } catch (IOException e) {
-            Log.e(TAG, "Local file creation failed", e);
+
+            java.io.File cacheDir = context.getCacheDir();
+            java.io.File tempZip = new java.io.File(cacheDir, "drive_temp.zip");
+            java.io.File encryptedFile = new java.io.File(cacheDir, "drive_backup.enc");
+
+            // 1. Zip the database
+            ZipUtils.zipSingleFile(dbFile, tempZip, dbFile.getName());
+
+            // 2. Encrypt the zip file
+            // Using a derived key from email for now as a consistent password for Drive sync
+            char[] password = email.toCharArray(); 
+            CryptoUtils.encryptFileToFile(tempZip, encryptedFile, password);
+
+            // Cleanup temp zip
+            if (tempZip.exists()) tempZip.delete();
+
+            return encryptedFile;
+        } catch (Exception e) {
+            Log.e(TAG, "Local backup creation failed", e);
             return null;
         }
     }

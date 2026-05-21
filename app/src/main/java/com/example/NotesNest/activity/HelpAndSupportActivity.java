@@ -29,7 +29,9 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.NotesNest.R;
 import com.example.NotesNest.databinding.ActivityHelpAndSupportBinding;
 import com.example.NotesNest.databinding.ItemSupportOptionBinding;
+import com.example.NotesNest.utils.AdManager;
 import com.example.NotesNest.utils.PremiumManager;
+import com.example.NotesNest.utils.ThemeManager;
 import com.google.android.gms.ads.AdRequest;
 
 public class HelpAndSupportActivity extends AppCompatActivity {
@@ -39,6 +41,7 @@ public class HelpAndSupportActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeManager.applyTheme(this);
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         binding = ActivityHelpAndSupportBinding.inflate(getLayoutInflater());
@@ -51,6 +54,7 @@ public class HelpAndSupportActivity extends AppCompatActivity {
         });
 
         premiumManager = new PremiumManager(this);
+        AdManager.loadInterstitial(this);
         SpannableString s = new SpannableString(getString(R.string.text_help_support));
         s.setSpan(new StyleSpan(Typeface.BOLD), 0, s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         binding.toolbar.setTitle(s);
@@ -63,19 +67,15 @@ public class HelpAndSupportActivity extends AppCompatActivity {
 
     private void setupAds() {
         if (premiumManager.isPremium()) {
-            binding.adViewHelpTop.setVisibility(View.GONE);
-            binding.adViewHelpMid.setVisibility(View.GONE);
             binding.adViewHelpBottom.setVisibility(View.GONE);
             return;
         }
         AdRequest adRequest = new AdRequest.Builder().build();
-        binding.adViewHelpTop.loadAd(adRequest);
-        binding.adViewHelpMid.loadAd(adRequest);
         binding.adViewHelpBottom.loadAd(adRequest);
     }
 
     private void setupListeners() {
-        binding.layoutEmailSupport.getRoot().setOnClickListener(view -> {
+        binding.layoutEmailSupport.getRoot().setOnClickListener(view -> AdManager.showInterstitial(this, () -> {
             Intent intent = new Intent(Intent.ACTION_SENDTO);
             intent.setData(Uri.parse("mailto:")); // ensures only email apps open
             intent.putExtra(Intent.EXTRA_EMAIL, new String[]{"saihemanthhs@gmail.com"});
@@ -87,55 +87,55 @@ public class HelpAndSupportActivity extends AppCompatActivity {
             } catch (Exception e) {
                 Toast.makeText(this, "No email app found", Toast.LENGTH_SHORT).show();
             }
-        });
+        }));
 
-        binding.layoutReportBug.getRoot().setOnClickListener(view -> {
+        binding.layoutReportBug.getRoot().setOnClickListener(view -> AdManager.showInterstitial(this, () -> {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse("https://notesnest-app.web.app/bug-report.html"));
             view.getContext().startActivity(intent);
-        });
+        }));
 
 
-        binding.layoutFeedback.getRoot().setOnClickListener(view -> {
+        binding.layoutFeedback.getRoot().setOnClickListener(view -> AdManager.showInterstitial(this, () -> {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse("https://notesnest-app.web.app/feedback.html"));
             view.getContext().startActivity(intent);
-        });
+        }));
 
-        binding.layoutUserGuide.getRoot().setOnClickListener(view -> {
+        binding.layoutUserGuide.getRoot().setOnClickListener(view -> AdManager.showInterstitial(this, () -> {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse("https://notesnest-app.web.app/user-guide.html"));
             view.getContext().startActivity(intent);
-        });
+        }));
 
-        binding.layoutVideoTutorial.getRoot().setOnClickListener(view -> {
+        binding.layoutVideoTutorial.getRoot().setOnClickListener(view -> AdManager.showInterstitial(this, () -> {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse("https://notesnest-app.web.app/index.html"));
             view.getContext().startActivity(intent);
-        });
+        }));
 
-        binding.layoutPrivacyPolicy.getRoot().setOnClickListener(view -> {
+        binding.layoutPrivacyPolicy.getRoot().setOnClickListener(view -> AdManager.showInterstitial(this, () -> {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse("https://notesnest-app.web.app/privacy.html"));
             view.getContext().startActivity(intent);
-        });
+        }));
 
-        binding.layoutTermsOfService.getRoot().setOnClickListener(view -> {
+        binding.layoutTermsOfService.getRoot().setOnClickListener(view -> AdManager.showInterstitial(this, () -> {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse("https://notesnest-app.web.app/terms.html"));
             view.getContext().startActivity(intent);
-        });
+        }));
 
-        binding.layoutAboutApp.getRoot().setOnClickListener(view -> {
+        binding.layoutAboutApp.getRoot().setOnClickListener(view -> AdManager.showInterstitial(this, () -> {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse("https://notesnest-app.web.app/"));
             view.getContext().startActivity(intent);
-        });
+        }));
 
-        binding.layoutWhatsNew.getRoot().setOnClickListener(view -> {
+        binding.layoutWhatsNew.getRoot().setOnClickListener(view -> AdManager.showInterstitial(this, () -> {
             String updateMessage = "• Added Ad support for free users.\n• Implemented professional subscription management.\n• Improved Cloud Backup security and feature locking.\n• Fixed memory leaks in settings management.\n• General performance improvements.";
             showWhatsNewDialog(this, updateMessage);
-        });
+        }));
     }
 
     private void showWhatsNewDialog(Context context, String content) {

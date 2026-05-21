@@ -59,14 +59,16 @@ public class PremiumActivity extends AppCompatActivity {
 
     private void setupListeners() {
         binding.ivClose.setOnClickListener(v -> finish());
-        binding.ivClose.setOnLongClickListener(v -> {
-            appPreferences.resetPremium();
-            currentPlan = FirebaseHelper.PLAN_NONE;
-            selectedPlan = FirebaseHelper.PLAN_NONE;
-            setupCurrentPlanState();
-            Toast.makeText(this, "Debug: Premium Reset", Toast.LENGTH_SHORT).show();
-            return true;
-        });
+        if (com.example.NotesNest.BuildConfig.DEBUG) {
+            binding.ivClose.setOnLongClickListener(v -> {
+                appPreferences.resetPremium();
+                currentPlan = FirebaseHelper.PLAN_NONE;
+                selectedPlan = FirebaseHelper.PLAN_NONE;
+                setupCurrentPlanState();
+                Toast.makeText(this, "Debug: Premium Reset", Toast.LENGTH_SHORT).show();
+                return true;
+            });
+        }
         binding.tvContinueWithLimited.setOnClickListener(v -> finish());
 
         View.OnClickListener planClickListener = v -> {

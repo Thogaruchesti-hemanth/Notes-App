@@ -69,6 +69,9 @@ public class MainActivity extends AppCompatActivity {
         drawerHelper = new DrawerHelper(this);
         AppDatabase.getInstance(this);
         pref = new SharedPreferenceUtil(this);
+        
+        // Initialize Billing and Sync status
+        com.example.NotesNest.utils.BillingManager.getInstance(this).syncPurchases();
 
         initGreeting();
 

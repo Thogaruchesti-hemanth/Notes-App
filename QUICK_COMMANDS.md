@@ -239,11 +239,6 @@ adb shell dumpsys batterystats | grep com.hemanth.NotesNest
 
 ## Documentation Navigation
 
-### View README
-```bash
-cat 00_START_HERE.md | less
-```
-
 ### Search All Docs for Keyword
 ```bash
 grep -r "premium" *.md
