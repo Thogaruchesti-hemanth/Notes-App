@@ -92,6 +92,10 @@
             android:exported="true" />
 
         <activity
+            android:name="com.example.NotesNest.activity.SyncOverlayActivity"
+            android:exported="false" />
+
+        <activity
             android:name="com.example.NotesNest.activity.NoteWidgetConfigureActivity"
             android:exported="true">
             <intent-filter>

@@ -2,6 +2,7 @@ package com.example.NotesNest.backups;
 
 import android.content.Context;
 import android.net.Uri;
+import com.example.NotesNest.databases.AppDatabase;
 import com.example.NotesNest.utils.CryptoUtils;
 import com.example.NotesNest.utils.ZipUtils;
 import java.io.File;
@@ -26,6 +27,9 @@ public class LocalBackupManager {
 
         executor.execute(() -> {
             try {
+                // 0) Perform Checkpoint to flush WAL data into the main .db file
+                AppDatabase.checkpoint(context);
+
                 File dbFile = context.getDatabasePath(DB_NAME);
                 if (!dbFile.exists()) {
                     callback.postToast("Database file not found.");

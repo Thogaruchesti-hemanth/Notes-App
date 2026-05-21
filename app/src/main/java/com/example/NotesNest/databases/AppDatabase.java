@@ -46,20 +46,20 @@ public abstract class AppDatabase extends RoomDatabase {
         return INSTANCE;
     }
 
-    public static synchronized void resetInstance(Context context) {
+    public static synchronized void destroyInstance() {
         if (INSTANCE != null) {
-            INSTANCE.close();
+            if (INSTANCE.isOpen()) {
+                INSTANCE.close();
+            }
             INSTANCE = null;
         }
+    }
 
-        // Recreate Room DB instance immediately
-        INSTANCE = Room.databaseBuilder(
-                        context.getApplicationContext(),
-                        AppDatabase.class,
-                        "notesnest.db"
-                )
-                .fallbackToDestructiveMigration()
-                .build();
+    public static void checkpoint(Context context) {
+        AppDatabase db = getInstance(context);
+        if (db != null && db.isOpen()) {
+            db.getOpenHelper().getWritableDatabase().query("PRAGMA wal_checkpoint(FULL)").close();
+        }
     }
 
 

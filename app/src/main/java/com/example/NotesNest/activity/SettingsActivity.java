@@ -270,12 +270,9 @@ public class SettingsActivity extends AppCompatActivity {
 
             @Override
             public void onVersionMismatch(int c, int i, Runnable ok, Runnable cancel) {
-                new AlertDialog.Builder(SettingsActivity.this)
-                        .setTitle("DB version mismatch")
-                        .setMessage("Current: " + c + "\nIncoming: " + i)
-                        .setPositiveButton("Replace", (d, w) -> ok.run())
-                        .setNegativeButton("Cancel", (d, w) -> cancel.run())
-                        .setCancelable(false).show();
+                CommonDialogs.showConfirmDialog(SettingsActivity.this, "DB Version Mismatch",
+                        "The backup version (" + i + ") differs from current (" + c + "). Replace anyway?",
+                        "Replace", "Cancel", ok, cancel);
             }
         }, findViewById(android.R.id.content));
     }

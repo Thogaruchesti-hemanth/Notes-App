@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import com.example.NotesNest.databases.AppDatabase;
 import com.example.NotesNest.utils.AppPreferences;
 import com.example.NotesNest.utils.constants.PrefKeys;
 import com.example.NotesNest.utils.CryptoUtils;
@@ -206,6 +207,10 @@ public class DriveBackupWorker extends Worker {
     private java.io.File createLocalBackupFile(String email) {
         try {
             Context context = getApplicationContext();
+            
+            // 0. Perform Checkpoint to flush WAL data
+            AppDatabase.checkpoint(context);
+
             java.io.File dbFile = context.getDatabasePath("notesnest.db");
             if (!dbFile.exists()) {
                 Log.e(TAG, "Database file not found!");

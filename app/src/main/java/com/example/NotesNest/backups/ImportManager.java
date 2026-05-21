@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.Handler;
 import android.view.View;
 
+import com.example.NotesNest.activity.SyncOverlayActivity;
 import com.example.NotesNest.databases.AppDatabase;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -47,6 +48,7 @@ public class ImportManager {
 
         File tempZip = new File(context.getCacheDir(), "import_temp.zip");
         File tempDb = new File(context.getCacheDir(), DB_NAME);
+        boolean handoffDone = false;
 
         try {
             // 1. Decrypt encrypted backup → ZIP file
@@ -60,19 +62,39 @@ public class ImportManager {
             int currentVersion = getDbVersionSafe(currentDb);
             int incomingVersion = getDbVersionSafe(tempDb);
 
+            android.util.Log.d("ImportManager", "Current DB version: " + currentVersion);
+            android.util.Log.d("ImportManager", "Incoming DB version: " + incomingVersion);
+
             if (incomingVersion == -1) {
-                postUI(() -> callback.postToast("Import failed: Backup file is invalid."));
+                postUI(() -> {
+                    callback.hideProgress();
+                    callback.postToast("Import failed: Backup file is invalid.");
+                });
                 return;
             }
 
             // 4. Version mismatch → ask user
-            if (currentVersion != incomingVersion) {
-                postUI(() -> callback.onVersionMismatch(
-                        currentVersion,
-                        incomingVersion,
-                        () -> executor.execute(() -> replaceDatabase(context, tempDb, password, callback, snackBarAnchor)),
-                        () -> cleanup(tempZip, tempDb)
-                ));
+            // Check if currentVersion is -1 (meaning fresh app with no notes yet)
+            // or if they are truly different
+            if (currentVersion != -1 && currentVersion != incomingVersion) {
+                handoffDone = true;
+                postUI(() -> {
+                    callback.hideProgress();
+                    callback.onVersionMismatch(
+                            currentVersion,
+                            incomingVersion,
+                            () -> executor.execute(() -> {
+                                callback.showProgress("Importing...");
+                                replaceDatabase(context, tempDb, password, callback, snackBarAnchor);
+                                cleanup(tempZip, tempDb);
+                                clearPassword(password);
+                            }),
+                            () -> {
+                                cleanup(tempZip, tempDb);
+                                clearPassword(password);
+                            }
+                    );
+                });
                 return;
             }
 
@@ -80,13 +102,21 @@ public class ImportManager {
             replaceDatabase(context, tempDb, password, callback, snackBarAnchor);
 
         } catch (AEADBadTagException wrongPw) {
-            postUI(() -> callback.postToast("Wrong password or corrupted file."));
+            postUI(() -> {
+                callback.hideProgress();
+                callback.postToast("Wrong password or corrupted file.");
+            });
         } catch (Exception e) {
-            postUI(() -> callback.postToast("Import failed: " + e.getMessage()));
+            postUI(() -> {
+                callback.hideProgress();
+                callback.postToast("Import failed: " + e.getMessage());
+            });
         } finally {
-            cleanup(tempZip, tempDb);
-            postUI(callback::hideProgress);
-            clearPassword(password);
+            if (!handoffDone) {
+                cleanup(tempZip, tempDb);
+                postUI(callback::hideProgress);
+                clearPassword(password);
+            }
         }
     }
 
@@ -94,28 +124,26 @@ public class ImportManager {
     private void replaceDatabase(Context context, File tempDb, char[] password, ImportCallback callback, View snackBarAnchor) {
 
         try {
+            // 1. Close the database instance before swapping files
+            AppDatabase.destroyInstance();
+
+            // 2. Perform the file swap
             boolean success = safeReplaceDb(context, tempDb);
 
             if (success) {
-                // Close + recreate Room instance
-                AppDatabase.resetInstance(context);
-
                 // Show SnackBar asking user to restart
                 postUI(() -> {
                     if (snackBarAnchor != null && context instanceof Activity) {
                         Snackbar.make(snackBarAnchor,
-                                        "Import successful. Please restart the app.",
+                                        "Import successful. Finalize update?",
                                         Snackbar.LENGTH_INDEFINITE)
-                                .setAction("Restart", v -> {
-                                    // Relaunch main activity
-                                    Intent intent = context.getPackageManager()
-                                            .getLaunchIntentForPackage(context.getPackageName());
-                                    if (intent != null) {
-                                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                                        context.startActivity(intent);
-                                        if (context instanceof Activity) {
-                                            ((Activity) context).finish();
-                                        }
+                                .setAction("Finalize", v -> {
+                                    // Start the premium sync overlay instead of hard exit
+                                    Intent intent = new Intent(context, SyncOverlayActivity.class);
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                    context.startActivity(intent);
+                                    if (context instanceof Activity) {
+                                        ((Activity) context).finish();
                                     }
                                 }).show();
                     } else {
@@ -138,33 +166,50 @@ public class ImportManager {
 
     private boolean safeReplaceDb(Context context, File tempDb) {
         File targetDb = context.getDatabasePath(DB_NAME);
+        File targetWal = new File(targetDb.getAbsolutePath() + "-wal");
+        File targetShm = new File(targetDb.getAbsolutePath() + "-shm");
 
         try {
-            // Backup old DB
+            // 1. Force delete journals before replacement
+            if (targetWal.exists()) {
+                boolean delWal = targetWal.delete();
+                android.util.Log.d("ImportManager", "Deleted WAL: " + delWal);
+            }
+            if (targetShm.exists()) {
+                boolean delShm = targetShm.delete();
+                android.util.Log.d("ImportManager", "Deleted SHM: " + delShm);
+            }
+
+            // 2. Delete existing database file
             if (targetDb.exists()) {
-                File backup = new File(
-                        targetDb.getParentFile(),
-                        targetDb.getName() + ".bak_" + System.currentTimeMillis()
-                );
-
-                boolean renamed = targetDb.renameTo(backup);
-
-                if (!renamed) {
-                    copyFile(targetDb, backup);
-                    targetDb.delete();
+                if (!targetDb.delete()) {
+                    android.util.Log.w("ImportManager", "Failed to delete target DB, trying rename fallback");
+                    File trash = new File(targetDb.getParentFile(), targetDb.getName() + ".trash_" + System.currentTimeMillis());
+                    if (!targetDb.renameTo(trash)) {
+                        android.util.Log.e("ImportManager", "Critical: Could not remove old DB file");
+                        return false;
+                    }
+                } else {
+                    android.util.Log.d("ImportManager", "Deleted target DB successfully");
                 }
             }
 
-            // Copy new DB
+            // 3. Copy new database into place
             copyFile(tempDb, targetDb);
+            android.util.Log.d("ImportManager", "Copy successful, new size: " + targetDb.length());
+            
+            // 4. Set permissions
+            targetDb.setReadable(true);
+            targetDb.setWritable(true);
 
-            // Delete leftover WAL/SHM files from old DB
-            new File(targetDb.getAbsolutePath() + "-wal").delete();
-            new File(targetDb.getAbsolutePath() + "-shm").delete();
+            // 5. Cleanup journals again
+            if (targetWal.exists()) targetWal.delete();
+            if (targetShm.exists()) targetShm.delete();
 
             return true;
 
         } catch (Exception e) {
+            android.util.Log.e("ImportManager", "Replacement error: " + e.getMessage(), e);
             return false;
         }
     }
@@ -200,10 +245,11 @@ public class ImportManager {
             db = SQLiteDatabase.openDatabase(
                     dbFile.getAbsolutePath(),
                     null,
-                    SQLiteDatabase.OPEN_READONLY
+                    SQLiteDatabase.OPEN_READONLY | SQLiteDatabase.NO_LOCALIZED_COLLATORS
             );
             return db.getVersion();
         } catch (Exception e) {
+            android.util.Log.e("ImportManager", "Error reading DB version: " + e.getMessage());
             return -1;
         } finally {
             if (db != null && db.isOpen()) db.close();
