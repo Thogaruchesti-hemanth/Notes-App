@@ -3,7 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSecondary"
-    android:padding="@dimen/padding_16"
+    android:paddingHorizontal="@dimen/padding_20"
+    android:paddingVertical="@dimen/padding_16"
     android:scrollbars="none">
 
     <LinearLayout
@@ -15,6 +16,8 @@
             android:id="@+id/ivClose"
             android:layout_width="@dimen/size_30"
             android:layout_height="@dimen/size_30"
+            android:layout_gravity="end"
+            android:layout_marginTop="@dimen/margin_10"
             android:contentDescription="@string/text_close"
             android:src="@drawable/ic_close" />
 
@@ -22,6 +25,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
+            android:layout_marginTop="@dimen/margin_30"
             android:text="@string/text_unlock_your_full_potential"
             android:textSize="@dimen/text_28"
             android:textStyle="bold" />
@@ -41,7 +45,9 @@
             android:id="@+id/features_recyclerView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingLeft="@dimen/padding_10" />
+            android:clipToPadding="false"
+            android:orientation="horizontal"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
         <!-- MONTHLY -->
         <LinearLayout
@@ -67,7 +73,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/margin_12"
-                android:text="Monthly - Fetching..."
+                android:text="Monthly - ₹50 / month"
+                android:textColor="?attr/colorPrimary"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -96,7 +103,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/margin_12"
-                android:text="Yearly - Fetching..."
+                android:text="Yearly - ₹299 / year"
+                android:textColor="?attr/colorPrimary"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -124,7 +132,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/margin_12"
-                android:text="Lifetime - Fetching..."
+                android:text="Lifetime - ₹499 / one-time"
+                android:textColor="?attr/colorPrimary"
                 android:textStyle="bold" />
         </LinearLayout>
 

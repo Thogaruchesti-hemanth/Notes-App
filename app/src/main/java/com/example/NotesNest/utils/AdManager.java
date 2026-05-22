@@ -27,7 +27,7 @@ public class AdManager {
     // GOOGLE TEST IDs (Use these for development)
     private static final String INTERSTITIAL_ID = "ca-app-pub-4258152474007475/4793955509";
     private static final String APP_OPEN_ID = "ca-app-pub-4258152474007475/8885944453";
-    private static final String REWARDED_ID = "ca-app-pub-3940256099942544/5224354917";
+    private static final String REWARDED_ID = "ca-app-pub-4258152474007475~9583641622";
 
     private static InterstitialAd mInterstitialAd;
     private static AppOpenAd mAppOpenAd;

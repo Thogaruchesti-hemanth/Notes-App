@@ -2,6 +2,7 @@ package com.example.NotesNest.utils.formaters;
 
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.View;
 import android.widget.TextView;
 
 import com.example.NotesNest.utils.ValidationUtils;
@@ -39,34 +40,53 @@ public class ValidationTextWatcher implements TextWatcher {
 
     @Override
     public void onTextChanged(CharSequence s, int start, int before, int count) {
-        errorTextView.setText("");
+        if (errorTextView != null) {
+            errorTextView.setText("");
+            errorTextView.setVisibility(View.GONE);
+        }
     }
 
     @Override
     public void afterTextChanged(Editable editable) {
         String text = editable.toString().trim();
-        inputLayout.setError(null); // clear old error
+
+        // Check if empty (optional: might want to clear error if empty without showing new error)
+        if (text.isEmpty()) {
+            inputLayout.setError(null);
+            inputLayout.setErrorEnabled(false);
+            return;
+        }
+
+        String errorMsg = null;
 
         switch (fieldType) {
             case EMAIL:
                 if (!ValidationUtils.isValidEmail(text))
-                    inputLayout.setError("Enter a valid email address");
+                    errorMsg = "Enter a valid email address";
                 break;
 
             case USERNAME:
                 if (!ValidationUtils.isValidUsername(text))
-                    inputLayout.setError("3–15 chars, letters/numbers/underscore only");
+                    errorMsg = "3–15 chars, letters/numbers/underscore only";
                 break;
 
             case PASSWORD:
                 if (!ValidationUtils.isValidPassword(text))
-                    inputLayout.setError("8+ chars, upper & lower case, number, symbol");
+                    errorMsg = "8+ chars, upper & lower case, number, symbol";
                 break;
 
             case CONFIRM_PASSWORD:
                 if (passwordField != null && !text.equals(passwordField.getText().toString().trim()))
-                    inputLayout.setError("Passwords do not match");
+                    errorMsg = "Passwords do not match";
                 break;
+        }
+
+        if (errorMsg != null) {
+            inputLayout.setError(errorMsg);
+            inputLayout.setErrorEnabled(true);
+        } else {
+            inputLayout.setError(null);
+            inputLayout.setErrorEnabled(false);
         }
     }
 

@@ -44,7 +44,9 @@
 
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713"/>
+            android:value="ca-app-pub-4258152474007475~9583641622"/>
+        <!-- DEBUG id
+         android:value="ca-app-pub-3940256099942544~3347511713"/>-->
 
         <activity
             android:name="com.example.NotesNest.activity.ManageAccountActivity"

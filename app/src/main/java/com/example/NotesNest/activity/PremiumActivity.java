@@ -14,7 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.NotesNest.FirebaseHelper;
@@ -51,7 +51,8 @@ public class PremiumActivity extends AppCompatActivity {
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            int horizontalPadding = getResources().getDimensionPixelSize(R.dimen.padding_20);
+            v.setPadding(systemBars.left + horizontalPadding, systemBars.top, systemBars.right + horizontalPadding, systemBars.bottom);
             return insets;
         });
 
@@ -59,8 +60,7 @@ public class PremiumActivity extends AppCompatActivity {
         appPreferences = AppPreferences.getInstance();
         billingManager = BillingManager.getInstance(this);
         currentPlan = appPreferences.getString(PrefKeys.PLAN_TYPE, PrefDefaults.PLAN_TYPE);
-
-        binding.featuresRecyclerView.setLayoutManager(new GridLayoutManager(this, 2, RecyclerView.HORIZONTAL, false));
+        binding.featuresRecyclerView.setLayoutManager(new LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
 
         setupFeatures();
         setupCurrentPlanState();
