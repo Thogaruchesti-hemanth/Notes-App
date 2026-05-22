@@ -30,8 +30,8 @@ import com.example.NotesNest.databases.entities.ReminderEntity;
 import com.example.NotesNest.models.CalendarItem;
 import com.example.NotesNest.models.Task;
 import com.example.NotesNest.utils.AnalyticsHelper;
+import com.example.NotesNest.utils.AppPreferences;
 import com.example.NotesNest.utils.CommonDialogs;
-import com.example.NotesNest.utils.SharedPreferenceUtil;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 
@@ -80,8 +80,8 @@ public class RemindersFragment extends Fragment {
         Button createButton = view.findViewById(R.id.createButton);
         adView = view.findViewById(R.id.adViewReminders);
 
-        currentUserId = new SharedPreferenceUtil(getContext()).getUserId();
-        isPremium = new SharedPreferenceUtil(requireContext()).isUserPremium();
+        currentUserId = AppPreferences.getInstance().getUserId();
+        isPremium = AppPreferences.getInstance().isUserPremium();
 
         setupCalendar();
         updateSelectedDateText();

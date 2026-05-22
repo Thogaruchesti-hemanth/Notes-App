@@ -33,6 +33,7 @@ import com.example.NotesNest.activity.HelpAndSupportActivity;
 import com.example.NotesNest.activity.PremiumActivity;
 import com.example.NotesNest.activity.SettingsActivity;
 import com.example.NotesNest.adapter.MainPagerAdapter;
+import com.example.NotesNest.utils.AppPreferences;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 
@@ -48,7 +49,7 @@ public class DrawerHelper {
     private final AppCompatActivity activity;
     private final DrawerLayout drawerLayout;
     private final NavigationView navigationView;
-    private final SharedPreferenceUtil pref;
+    private final AppPreferences pref;
     private final FirebaseHelper firebaseHelper;
     private ViewPager2 viewPager;
     private LinearLayout selectedTopMenuItem;
@@ -63,7 +64,7 @@ public class DrawerHelper {
         this.activity = activity;
         this.drawerLayout = activity.findViewById(R.id.mainLayout);
         this.navigationView = activity.findViewById(R.id.navigationView);
-        this.pref = new SharedPreferenceUtil(activity);
+        this.pref = AppPreferences.getInstance();
         this.firebaseHelper = new FirebaseHelper();
 
         setDrawerWidth();
@@ -162,6 +163,7 @@ public class DrawerHelper {
         profileHeader.findViewById(R.id.btnEdit).setOnClickListener(v -> checkProfileEditLimit());
 
         boolean isPremiumUser = pref.isUserPremium();
+        android.util.Log.d("DrawerHelper", "setupHeaderViews: isPremiumUser = " + isPremiumUser);
 
         if (isPremiumUser) {
             premiumButton.setVisibility(View.GONE);
@@ -238,7 +240,7 @@ public class DrawerHelper {
     private void loadUserData() {
         userNameTextView.setText(pref.getUserName() != null ? pref.getUserName() : "User Name");
         emailTextView.setText(pref.getUserEmail() != null ? pref.getUserEmail() : "user@email.com");
-        updateDrawerHeaderImage(pref.getImageUrl());
+        updateDrawerHeaderImage(pref.getUserImage());
     }
 
     private void openEditDialog() {

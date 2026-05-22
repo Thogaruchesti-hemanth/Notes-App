@@ -11,19 +11,20 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.splashscreen.SplashScreen;
 
+import com.example.NotesNest.FirebaseHelper;
 import com.example.NotesNest.R;
 import com.example.NotesNest.utils.AdManager;
 import com.example.NotesNest.utils.AnalyticsHelper;
+import com.example.NotesNest.utils.AppPreferences;
 import com.example.NotesNest.utils.DBSeedUtil;
 import com.example.NotesNest.utils.PremiumManager;
-import com.example.NotesNest.utils.SharedPreferenceUtil;
 import com.example.NotesNest.utils.ThemeManager;
 
 @SuppressLint("CustomSplashScreen")
 public class SplashScreenActivity extends AppCompatActivity {
 
     private static final int SPLASH_DELAY_MS = 1500;
-    private SharedPreferenceUtil prefs;
+    private AppPreferences prefs;
     private PremiumManager premiumManager;
 
     @Override
@@ -35,14 +36,36 @@ public class SplashScreenActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_splash_screen);
 
-        prefs = new SharedPreferenceUtil(this);
+        prefs = AppPreferences.getInstance();
         premiumManager = new PremiumManager(this);
 
         ThemeManager.applyTheme(this);
         updateLogo();
         
         if (prefs.getLogin()) {
-            DBSeedUtil.seedDefaultCategories(this, prefs.getUserId());
+            String userId = prefs.getUserId();
+            DBSeedUtil.seedDefaultCategories(this, userId);
+            
+            // Critical industry-standard fix: Fetch real premium status from DB on startup
+            // to ensure multi-account device safety and handle expirations.
+            FirebaseHelper firebaseHelper = new FirebaseHelper();
+            firebaseHelper.checkPremiumStatus(userId, (isPremium, planType, expiryDate) -> {
+                boolean isActive = isPremium;
+                
+                // If cloud says premium, double check the date locally
+                if (isPremium && !planType.equalsIgnoreCase("lifetime")) {
+                    if (expiryDate == null || expiryDate.isEmpty() || isDateExpired(expiryDate)) {
+                        isActive = false;
+                        // Auto-sync revocation back to Firebase if it expired
+                        firebaseHelper.revokePremium(userId);
+                    }
+                }
+
+                prefs.setIsPremium(isActive);
+                prefs.setPlanType(isActive ? planType : "none");
+                prefs.setPremiumExpiryDate(isActive ? expiryDate : "");
+                android.util.Log.i("SplashScreen", "Verified Premium Status from Cloud for: " + userId + " | Active: " + isActive);
+            });
         }
         
         // Load Ads (Init is handled in NotesApplication)
@@ -81,6 +104,16 @@ public class SplashScreenActivity extends AppCompatActivity {
         startActivity(intent);
         overridePendingTransition(R.anim.zoom_in, R.anim.zoom_out);
         finish();
+    }
+
+    private boolean isDateExpired(String dateStr) {
+        try {
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US);
+            java.util.Date expiry = sdf.parse(dateStr);
+            return expiry != null && System.currentTimeMillis() > expiry.getTime();
+        } catch (Exception e) {
+            return true; // If format is wrong, safer to assume expired for security
+        }
     }
 
     @Override

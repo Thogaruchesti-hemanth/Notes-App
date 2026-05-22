@@ -16,7 +16,6 @@ import androidx.credentials.CredentialManager;
 import androidx.credentials.exceptions.ClearCredentialException;
 
 import com.example.NotesNest.utils.AppPreferences;
-import com.example.NotesNest.utils.SharedPreferenceUtil;
 import com.google.firebase.FirebaseNetworkException;
 import com.google.firebase.FirebaseTooManyRequestsException;
 import com.google.firebase.auth.AuthCredential;
@@ -72,15 +71,16 @@ public class FirebaseHelper {
     // Firebase instances
     private final DatabaseReference databaseReference;
     private final FirebaseAuth mAuth;
-    private final FirebaseFunctions mFunctions;
 
     public FirebaseHelper() {
         databaseReference = FirebaseDatabase.getInstance().getReference("Users");
         mAuth = FirebaseAuth.getInstance();
-        mFunctions = FirebaseFunctions.getInstance();
     }
 
     public void firebaseAuthWithGoogle(String idToken, Context context, GoogleLoginCallback callback) {
+        // Professional Reset: Clear local premium data before login to avoid "Ghost Premium" from previous sessions
+        AppPreferences.getInstance().resetPremium();
+
         AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
         mAuth.signInWithCredential(credential).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
@@ -155,6 +155,9 @@ public class FirebaseHelper {
     // ==================== EMAIL & PASSWORD AUTHENTICATION ====================
 
     public void loginUser(String email, String password, Context context, LoginCallback callback) {
+        // Professional Reset: Clear local premium data before login to avoid "Ghost Premium" from previous sessions
+        AppPreferences.getInstance().resetPremium();
+
         mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 String uid = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
@@ -244,6 +247,9 @@ public class FirebaseHelper {
     // ==================== USER SIGNUP ====================
 
     public void signupUser(String username, String email, String password, String base64Image, Context context, SignupCallback callback) {
+        // Professional Reset: Clear local premium data before signup
+        AppPreferences.getInstance().resetPremium();
+
         mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 String uid = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
@@ -366,17 +372,30 @@ public class FirebaseHelper {
         databaseReference.child(uid).updateChildren(updates)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        SharedPreferenceUtil sp = new SharedPreferenceUtil(context);
+                        AppPreferences sp = AppPreferences.getInstance();
                         sp.setIsPremium(true);
-                        sp.setPremiumPlan(planType);
                         sp.setPlanType(planType);
-                        sp.setPurchaseDate(currentDate);
                         sp.setPremiumExpiryDate(expiryDate);
                         callback.onPremiumUpdateSuccess(planType, expiryDate);
                     } else {
                         callback.onPremiumUpdateFailure("Failed to update premium plan");
                     }
                 });
+    }
+
+    public void revokePremium(String uid) {
+        if (uid == null || uid.isEmpty()) return;
+        Map<String, Object> updates = new HashMap<>();
+        updates.put(IS_PREMIUM, false);
+        updates.put(PLAN_TYPE, PLAN_NONE);
+        updates.put(PREMIUM_PLAN, PLAN_NONE);
+        updates.put(PREMIUM_EXPIRY, "");
+
+        databaseReference.child(uid).updateChildren(updates).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Log.i(TAG, "Successfully revoked expired premium for user: " + uid);
+            }
+        });
     }
 
     // ==================== ACCOUNT DELETION ====================
@@ -467,6 +486,11 @@ public class FirebaseHelper {
 
     public void signOut(Context context) {
         mAuth.signOut();
+        
+        // Clear all local session data professionally
+        AppPreferences sp = AppPreferences.getInstance();
+        sp.clearUserData();
+
         try {
             CredentialManager.create(context).clearCredentialStateAsync(new ClearCredentialStateRequest(), null, Runnable::run, new androidx.credentials.CredentialManagerCallback<Void, ClearCredentialException>() {
                 @Override public void onResult(Void result) {}
@@ -531,74 +555,8 @@ public class FirebaseHelper {
     private void saveToLocal(Context context, String name, String email, String image, String uid,
                              boolean isPremium, String premiumPlan, String premiumExpiry,
                              String purchaseDate, String planType) {
-        SharedPreferenceUtil sp = new SharedPreferenceUtil(context);
-        sp.setUserName(name != null ? name : "User");
-        sp.setUserEmail(email);
-        sp.setUserImage(image != null ? image : "");
-        sp.setUserId(uid);
-        sp.setKeyLogin(true);
-        sp.setIsPremium(isPremium);
-        sp.setPremiumPlan(premiumPlan);
-        sp.setPremiumExpiryDate(premiumExpiry);
-        sp.setPurchaseDate(purchaseDate);
-        sp.setPlanType(planType);
-    }
-
-    /**
-     * VERIFY AND ACTIVATE PREMIUM (SECURE)
-     * This method calls a Firebase Cloud Function to verify the purchase token
-     * with Google Play servers. No local database update fallback is allowed for security.
-     */
-    public void verifyAndActivatePremium(Context context, String purchaseToken, String planType, PremiumUpdateCallback callback) {
-        Map<String, Object> data = new HashMap<>();
-        data.put("purchaseToken", purchaseToken);
-        data.put("planType", planType);
-
-        mFunctions
-                .getHttpsCallable("verifyAndActivatePremium")
-                .call(data)
-                .addOnSuccessListener(result -> {
-                    @SuppressWarnings("unchecked")
-                    Map<String, Object> map = (Map<String, Object>) result.getData();
-                    if (map == null) {
-                        callback.onPremiumUpdateFailure("Invalid server response");
-                        return;
-                    }
-
-                    boolean success = (boolean) map.get("success");
-                    if (success) {
-                        Log.d(TAG, "✅ Premium verified via cloud function.");
-                        
-                        // Extract expiry from millis returned by server
-                        Object expiryObj = map.get("expiryDate");
-                        long expiryMillis = 0;
-                        if (expiryObj instanceof Number) {
-                            expiryMillis = ((Number) expiryObj).longValue();
-                        }
-                        
-                        // Format date for local storage consistency
-                        String expiryDateStr = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-                                .format(new Date(expiryMillis));
-
-                        SharedPreferenceUtil sp = new SharedPreferenceUtil(context);
-                        sp.setIsPremium(true);
-                        sp.setPremiumPlan(planType);
-                        sp.setPlanType(planType);
-                        sp.setPremiumExpiryDate(expiryDateStr);
-                        callback.onPremiumUpdateSuccess(planType, expiryDateStr);
-                    } else {
-                        callback.onPremiumUpdateFailure("Verification failed");
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "❌ Cloud function error: " + e.getMessage());
-                    if (e instanceof FirebaseFunctionsException) {
-                        FirebaseFunctionsException ffe = (FirebaseFunctionsException) e;
-                        callback.onPremiumUpdateFailure(ffe.getMessage());
-                    } else {
-                        callback.onPremiumUpdateFailure("Server error. Please try again later.");
-                    }
-                });
+        AppPreferences sp = AppPreferences.getInstance();
+        sp.saveUserSession(name, email, image, uid, isPremium, premiumPlan, premiumExpiry, purchaseDate, planType);
     }
 
     // ==================== INTERFACES ====================
