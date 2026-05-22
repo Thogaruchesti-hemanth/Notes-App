@@ -42,6 +42,7 @@ import com.example.NotesNest.SingleColorRunningBorderLayout;
 import com.example.NotesNest.databinding.ActivityLoginBinding;
 import com.example.NotesNest.utils.AnalyticsHelper;
 import com.example.NotesNest.utils.AppLog;
+import com.example.NotesNest.utils.SharedPreferenceUtil;
 import com.example.NotesNest.utils.ThemeManager;
 import com.example.NotesNest.utils.ValidationUtils;
 import com.example.NotesNest.utils.formaters.ValidationTextWatcher;
@@ -560,6 +561,9 @@ public class LoginActivity extends AppCompatActivity {
 
 
     private void navigateToMain() {
+        String userId = new SharedPreferenceUtil(this).getUserId();
+        com.example.NotesNest.utils.DBSeedUtil.seedDefaultCategories(this, userId);
+
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);

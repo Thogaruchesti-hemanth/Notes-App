@@ -32,33 +32,33 @@ public interface CategoryDao {
     void delete(CategoryEntity category);
 
     // 🔹 Delete category by ID
-    @Query("DELETE FROM categories WHERE id = :categoryId")
-    void deleteCategoryById(int categoryId);
+    @Query("DELETE FROM categories WHERE id = :categoryId AND userId = :userId")
+    void deleteCategoryById(int categoryId, String userId);
 
     // 🔹 Get all categories as LiveData (reactive, offline-friendly)
-    @Query("SELECT * FROM categories ORDER BY name ASC")
-    LiveData<List<CategoryEntity>> getAllCategories();
+    @Query("SELECT * FROM categories WHERE userId = :userId ORDER BY name ASC")
+    LiveData<List<CategoryEntity>> getAllCategories(String userId);
 
     // 🔹 Get category by ID
-    @Query("SELECT * FROM categories WHERE id = :categoryId LIMIT 1")
-    LiveData<CategoryEntity> getCategoryById(int categoryId);
+    @Query("SELECT * FROM categories WHERE id = :categoryId AND userId = :userId LIMIT 1")
+    LiveData<CategoryEntity> getCategoryById(int categoryId, String userId);
 
     // 🔹 Check if category exists by name
-    @Query("SELECT COUNT(*) FROM categories WHERE name = :categoryName")
-    int countCategoryByName(String categoryName);
+    @Query("SELECT COUNT(*) FROM categories WHERE name = :categoryName AND userId = :userId")
+    int countCategoryByName(String categoryName, String userId);
 
     // 🔹 Get category by name
-    @Query("SELECT * FROM categories WHERE name = :categoryName LIMIT 1")
-    LiveData<CategoryEntity> getCategoryByName(String categoryName);
+    @Query("SELECT * FROM categories WHERE name = :categoryName AND userId = :userId LIMIT 1")
+    LiveData<CategoryEntity> getCategoryByName(String categoryName, String userId);
 
     // 🔹 Delete by name
-    @Query("DELETE FROM categories WHERE name = :categoryName")
-    void deleteByName(String categoryName);
+    @Query("DELETE FROM categories WHERE name = :categoryName AND userId = :userId")
+    void deleteByName(String categoryName, String userId);
 
-    // 🔹 Delete all categories
-    @Query("DELETE FROM categories")
-    void deleteAll();
+    // 🔹 Delete all categories for a user
+    @Query("DELETE FROM categories WHERE userId = :userId")
+    void deleteAll(String userId);
 
-    @Query("SELECT name FROM categories WHERE id = :categoryId LIMIT 1")
-    String getCategoryName(int categoryId);
+    @Query("SELECT name FROM categories WHERE id = :categoryId AND userId = :userId LIMIT 1")
+    String getCategoryName(int categoryId, String userId);
 }

@@ -108,6 +108,14 @@ public class SharedPreferenceUtil {
         if (isInitialized()) sharedPreferences.edit().putBoolean(KEY_CATEGORY_SEED_DONE, done).apply();
     }
 
+    public boolean isCategorySeedDoneForUser(String userId) {
+        return isInitialized() && sharedPreferences.getBoolean(KEY_CATEGORY_SEED_DONE + "_" + userId, false);
+    }
+
+    public void setCategorySeedDoneForUser(String userId, boolean done) {
+        if (isInitialized()) sharedPreferences.edit().putBoolean(KEY_CATEGORY_SEED_DONE + "_" + userId, done).apply();
+    }
+
     public boolean isSystemTheme() {
         return isInitialized() && sharedPreferences.getBoolean(KEY_SYSTEM_THEME, false);
     }

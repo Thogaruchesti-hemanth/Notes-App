@@ -76,13 +76,14 @@ public class CategoryManager extends BottomSheetDialogFragment {
             showEditCategoryDialog(category);
         }, (category, position) -> {
             // Delete category
+            noteViewModel.resetCategoryNotes(currentUserId, category.id);
             categoryViewModel.deleteCategory(category);
         });
         recyclerView.setAdapter(adapter);
 
         setupItemTouchHelper(recyclerView);
 
-        categoryViewModel.getAllCategories().observe(getViewLifecycleOwner(), list -> {
+        categoryViewModel.getAllCategories(currentUserId).observe(getViewLifecycleOwner(), list -> {
             categories.clear();
             if (list != null) {
                 categories.addAll(list);
@@ -135,6 +136,7 @@ public class CategoryManager extends BottomSheetDialogFragment {
             CategoryEntity entity = new CategoryEntity();
             entity.name = name.trim();
             entity.order = categories.size();
+            entity.userId = currentUserId;
             categoryViewModel.insertCategory(entity);
         });
     }

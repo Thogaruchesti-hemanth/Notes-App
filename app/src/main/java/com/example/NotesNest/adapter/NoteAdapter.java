@@ -118,7 +118,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
 
                         @Override
                         public void setCategory(TextView categoryView, int categoryId) {
-                            bindCategory(categoryId, categoryView);
+                            bindCategory(categoryId, currentNote.userId, categoryView);
                         }
                     }
             );
@@ -157,14 +157,14 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         holder.readMoreView.setVisibility(View.GONE);
     }
 
-    private void bindCategory(Integer categoryId, TextView categoryView) {
+    private void bindCategory(Integer categoryId, String userId, TextView categoryView) {
         if (categoryView == null || categoryId == null) {
             if (categoryView != null) categoryView.setVisibility(View.GONE);
             return;
         }
 
         if (context instanceof LifecycleOwner lifecycleOwner) {
-            categoryViewModel.getCategoryById(categoryId).observe(lifecycleOwner, category -> {
+            categoryViewModel.getCategoryById(categoryId, userId).observe(lifecycleOwner, category -> {
                 if (category != null) {
                     categoryView.setText(category.name);
                     categoryView.setVisibility(View.VISIBLE);
