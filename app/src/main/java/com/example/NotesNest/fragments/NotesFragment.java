@@ -282,7 +282,7 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
     }
 
     private void observeCategories() {
-        categoryViewModel.getAllCategories().observe(getViewLifecycleOwner(), categories -> {
+        categoryViewModel.getAllCategories(currentUserId).observe(getViewLifecycleOwner(), categories -> {
             List<CategoryEntity> list = new ArrayList<>();
             if (categories != null) list.addAll(categories);
             list.sort(Comparator.comparingInt(c -> c.order));

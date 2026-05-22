@@ -20,12 +20,12 @@ public class CategoryViewModel extends AndroidViewModel {
         categoryRepository = new CategoryRepository(application);
     }
 
-    public LiveData<List<CategoryEntity>> getAllCategories() {
-        return categoryRepository.getAllCategories();
+    public LiveData<List<CategoryEntity>> getAllCategories(String userId) {
+        return categoryRepository.getAllCategories(userId);
     }
 
-    public LiveData<CategoryEntity> getCategoryById(int categoryId) {
-        return categoryRepository.getCategoryById(categoryId);
+    public LiveData<CategoryEntity> getCategoryById(int categoryId, String userId) {
+        return categoryRepository.getCategoryById(categoryId, userId);
     }
 
     public void insertCategory(CategoryEntity category) {
@@ -36,16 +36,16 @@ public class CategoryViewModel extends AndroidViewModel {
         categoryRepository.delete(category);
     }
 
-    public void deleteCategoryByName(String categoryName) {
-        categoryRepository.deleteByName(categoryName);
+    public void deleteCategoryByName(String categoryName, String userId) {
+        categoryRepository.deleteByName(categoryName, userId);
     }
 
     public void updateCategory(CategoryEntity category) {
         categoryRepository.update(category);
     }
 
-    public void getCategoryName(int categoryId, CategoryRepository.CategoryNameCallback callback) {
-        categoryRepository.getCategoryName(categoryId, callback);
+    public void getCategoryName(int categoryId, String userId, CategoryRepository.CategoryNameCallback callback) {
+        categoryRepository.getCategoryName(categoryId, userId, callback);
     }
 
 }

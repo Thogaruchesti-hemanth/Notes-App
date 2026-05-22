@@ -233,7 +233,8 @@ public class EditNoteActivity extends AppCompatActivity {
     }
 
     private void observeViewModels() {
-        categoryViewModel.getAllCategories().observe(this, loaded -> {
+        String userId = new SharedPreferenceUtil(this).getUserId();
+        categoryViewModel.getAllCategories(userId).observe(this, loaded -> {
             if (loaded == null) return;
             categories.clear();
             categories.addAll(loaded);

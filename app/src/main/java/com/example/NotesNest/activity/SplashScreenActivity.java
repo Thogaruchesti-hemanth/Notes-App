@@ -40,7 +40,10 @@ public class SplashScreenActivity extends AppCompatActivity {
 
         ThemeManager.applyTheme(this);
         updateLogo();
-        DBSeedUtil.seedDefaultCategories(this);
+        
+        if (prefs.getLogin()) {
+            DBSeedUtil.seedDefaultCategories(this, prefs.getUserId());
+        }
         
         // Load Ads (Init is handled in NotesApplication)
         AdManager.loadInterstitial(this);

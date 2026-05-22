@@ -11,10 +11,12 @@ public class CategoryEntity {
 
     public String name;  // Work, Ideas, Personal…
     public int order;
+    public String userId;
 
-    public CategoryEntity(String name, int order) {
+    public CategoryEntity(String name, int order, String userId) {
         this.name = name;
         this.order = order;
+        this.userId = userId;
     }
 
     public CategoryEntity() {

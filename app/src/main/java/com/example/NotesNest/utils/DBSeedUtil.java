@@ -13,25 +13,25 @@ public class DBSeedUtil {
 
     private static Context context;
 
-    public static void seedDefaultCategories(Context context) {
+    public static void seedDefaultCategories(Context context, String userId) {
+        if (userId == null || userId.isEmpty()) return;
+        
         DBSeedUtil.context = context;
         SharedPreferenceUtil pref = new SharedPreferenceUtil(context);
-        if (pref.isCategorySeedDone()) return;   // ✅ Already seeded → skip
+        if (pref.isCategorySeedDoneForUser(userId)) return;   // ✅ Already seeded for this user → skip
 
         AppDatabase db = AppDatabase.getInstance(context);
 
         Executors.newSingleThreadExecutor().execute(() -> {
-
             List<CategoryEntity> defaultCategories = Arrays.asList(
-                    new CategoryEntity("All", 1),
-                    new CategoryEntity("Work", 2),
-                    new CategoryEntity("Professional", 3),
-                    new CategoryEntity("Ideas", 4)
+                    new CategoryEntity("All", 1, userId),
+                    new CategoryEntity("Work", 2, userId),
+                    new CategoryEntity("Professional", 3, userId),
+                    new CategoryEntity("Ideas", 4, userId)
             );
 
             db.categoryDao().insertAll(defaultCategories);
-
-            pref.setCategorySeedDone(true);  // ✅ Save flag
+            pref.setCategorySeedDoneForUser(userId, true);  // ✅ Save flag per user
         });
     }
 
