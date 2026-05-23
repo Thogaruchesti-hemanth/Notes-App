@@ -92,8 +92,8 @@ public class PremiumActivity extends AppCompatActivity {
         binding.planYearly.setOnClickListener(planClickListener);
         binding.planLifetime.setOnClickListener(planClickListener);
         binding.btnUnlock.setOnClickListener(v -> upgradeSelectedPlan());
-        binding.tvTermsAndConditions.setOnClickListener(v -> openUrl("https://example.com/terms"));
-        binding.tvPrivacyPolicy.setOnClickListener(v -> openUrl("https://example.com/privacy"));
+        binding.tvTermsAndConditions.setOnClickListener(v -> openUrl("https://notesnest-app.web.app/terms.html"));
+        binding.tvPrivacyPolicy.setOnClickListener(v -> openUrl("https://notesnest-app.web.app/privacy.html"));
     }
 
     private void openUrl(String url) {

@@ -33,12 +33,54 @@ public class AdManager {
     private static AppOpenAd mAppOpenAd;
     private static RewardedAd mRewardedAd;
     private static boolean isAdLoading = false;
+    private static long loadTime = 0;
 
     /**
-     * Initialize Mobile Ads SDK.
+     * Initialize Mobile Ads SDK and start preloading.
      */
     public static void init(Context context) {
-        MobileAds.initialize(context, initializationStatus -> {});
+        MobileAds.initialize(context, initializationStatus -> {
+            loadAppOpenAd(context);
+        });
+    }
+
+    /**
+     * Load an App Open Ad to be ready for the next startup.
+     */
+    public static void loadAppOpenAd(Context context) {
+        if (mAppOpenAd != null || isAdLoading) return;
+
+        isAdLoading = true;
+        AdRequest request = new AdRequest.Builder().build();
+        AppOpenAd.load(context, APP_OPEN_ID, request,
+                new AppOpenAd.AppOpenAdLoadCallback() {
+                    @Override
+                    public void onAdLoaded(@NonNull AppOpenAd ad) {
+                        isAdLoading = false;
+                        mAppOpenAd = ad;
+                        loadTime = System.currentTimeMillis();
+                        Log.i(TAG, "App Open Ad Loaded");
+                    }
+
+                    @Override
+                    public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                        isAdLoading = false;
+                        Log.e(TAG, "App Open Ad Load Failed: " + loadAdError.getMessage());
+                    }
+                });
+    }
+
+    /**
+     * Check if ad was loaded recently (less than 4 hours ago).
+     */
+    private static boolean wasLoadTimeLessThanNHoursAgo(long numHours) {
+        long dateDifference = System.currentTimeMillis() - loadTime;
+        long numMilliSecondsPerHour = 3600000;
+        return (dateDifference < (numMilliSecondsPerHour * numHours));
+    }
+
+    private static boolean isAppOpenAdAvailable() {
+        return mAppOpenAd != null && wasLoadTimeLessThanNHoursAgo(4);
     }
 
     /**
@@ -132,6 +174,7 @@ public class AdManager {
             public void onAdDismissedFullScreenContent() {
                 mRewardedAd = null;
                 loadRewardedAd(activity);
+                if (listener != null) listener.onDismissed();
             }
 
             @Override
@@ -142,51 +185,40 @@ public class AdManager {
         });
 
         mRewardedAd.show(activity, rewardItem -> {
-            if (listener != null) listener.onDismissed();
+            // Reward earned
         });
     }
 
     /**
-     * Load and show App Open Ad during splash/startup.
+     * Show App Open Ad during splash if it is ready.
+     * This avoids the disruptive "pop-up" effect of loading it on demand.
      */
     public static void showAppOpenAd(Activity activity, AdDismissListener listener) {
         PremiumManager premiumManager = new PremiumManager(activity);
-        if (premiumManager.isPremium() || isAdLoading) {
+        if (premiumManager.isPremium() || !isAppOpenAdAvailable()) {
             if (listener != null) listener.onDismissed();
+            // Preload for next time if not available
+            if (!premiumManager.isPremium()) loadAppOpenAd(activity);
             return;
         }
 
-        isAdLoading = true;
-        AdRequest request = new AdRequest.Builder().build();
-        AppOpenAd.load(activity, APP_OPEN_ID, request,
-                new AppOpenAd.AppOpenAdLoadCallback() {
-                    @Override
-                    public void onAdLoaded(@NonNull AppOpenAd ad) {
-                        isAdLoading = false;
-                        mAppOpenAd = ad;
-                        mAppOpenAd.setFullScreenContentCallback(new FullScreenContentCallback() {
-                            @Override
-                            public void onAdDismissedFullScreenContent() {
-                                mAppOpenAd = null;
-                                if (listener != null) listener.onDismissed();
-                            }
+        mAppOpenAd.setFullScreenContentCallback(new FullScreenContentCallback() {
+            @Override
+            public void onAdDismissedFullScreenContent() {
+                mAppOpenAd = null;
+                loadAppOpenAd(activity); // Preload next
+                if (listener != null) listener.onDismissed();
+            }
 
-                            @Override
-                            public void onAdFailedToShowFullScreenContent(@NonNull com.google.android.gms.ads.AdError adError) {
-                                mAppOpenAd = null;
-                                if (listener != null) listener.onDismissed();
-                            }
-                        });
-                        mAppOpenAd.show(activity);
-                    }
+            @Override
+            public void onAdFailedToShowFullScreenContent(@NonNull com.google.android.gms.ads.AdError adError) {
+                mAppOpenAd = null;
+                loadAppOpenAd(activity);
+                if (listener != null) listener.onDismissed();
+            }
+        });
 
-                    @Override
-                    public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
-                        isAdLoading = false;
-                        Log.e(TAG, "App Open Ad Failed: " + loadAdError.getMessage());
-                        if (listener != null) listener.onDismissed();
-                    }
-                });
+        mAppOpenAd.show(activity);
     }
 
     public interface AdDismissListener {

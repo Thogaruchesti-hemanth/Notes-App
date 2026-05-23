@@ -19,6 +19,7 @@ import com.example.NotesNest.utils.AppPreferences;
 import com.example.NotesNest.utils.DBSeedUtil;
 import com.example.NotesNest.utils.PremiumManager;
 import com.example.NotesNest.utils.ThemeManager;
+import com.example.NotesNest.utils.constants.PrefKeys;
 
 @SuppressLint("CustomSplashScreen")
 public class SplashScreenActivity extends AppCompatActivity {
@@ -86,8 +87,11 @@ public class SplashScreenActivity extends AppCompatActivity {
     }
 
     private void handleStartFlow() {
-        if (!premiumManager.isPremium()) {
-            // Show App Open Ad for free users
+        boolean isOnboardingCompleted = prefs.getBoolean(PrefKeys.IS_ONBOARDING_COMPLETED, false);
+
+        // SHOW AD ONLY IF: Not Premium AND Onboarding is already completed AND user is logged in
+        // This prevents disruptive ads on the first launch or during onboarding walkthrough.
+        if (!premiumManager.isPremium() && isOnboardingCompleted && prefs.getLogin()) {
             AdManager.showAppOpenAd(this, this::goToNextScreen);
         } else {
             goToNextScreen();
