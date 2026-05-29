@@ -361,8 +361,10 @@ public class EditNoteActivity extends AppCompatActivity {
 
     private void updatePinUI() {
         if (isPinned) {
+            binding.btnPin.setImageResource(R.drawable.ic_pinned);
             binding.btnPin.setColorFilter(ContextCompat.getColor(this, R.color.tabSelectedTextColor));
         } else {
+            binding.btnPin.setImageResource(R.drawable.ic_unpinned);
             binding.btnPin.clearColorFilter();
         }
     }

@@ -225,4 +225,6 @@
     <string name="text_restore_from_drive">Restore from Drive</string>
     <string name="text_restoring_from_drive">Restoring from Drive...</string>
     <string name="text_importing_data">Importing data...</string>
+    <string name="text_pin">Pin</string>
+    <string name="text_unpin">Unpin</string>
 </resources>

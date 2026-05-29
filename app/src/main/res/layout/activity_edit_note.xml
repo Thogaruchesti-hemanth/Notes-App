@@ -44,7 +44,7 @@
             android:layout_marginEnd="@dimen/margin_8"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/text_note_pinned"
-            android:src="@drawable/ic_pinned"
+            android:src="@drawable/ic_unpinned"
             app:tint="@color/black" />
 
         <Button
