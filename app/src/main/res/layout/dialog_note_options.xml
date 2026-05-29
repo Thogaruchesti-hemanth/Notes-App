@@ -6,13 +6,13 @@
     android:background="@android:color/transparent"
     android:gravity="center"
     android:orientation="horizontal"
-    android:padding="8dp">
+    android:padding="4dp">
 
     <LinearLayout
         android:id="@+id/btnEdit"
-        android:layout_width="70dp"
-        android:layout_height="70dp"
-        android:layout_margin="10dp"
+        android:layout_width="65dp"
+        android:layout_height="65dp"
+        android:layout_margin="4dp"
         android:background="@drawable/bg_glass_circle"
         android:clickable="true"
         android:focusable="true"
@@ -20,8 +20,8 @@
         android:orientation="vertical">
 
         <ImageView
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
             android:src="@drawable/ic_edit"
             app:tint="@color/black" />
 
@@ -30,15 +30,15 @@
             android:layout_height="wrap_content"
             android:text="Edit"
             android:textColor="@color/black"
-            android:textSize="12sp"
+            android:textSize="11sp"
             android:textStyle="bold" />
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/btnDelete"
-        android:layout_width="70dp"
-        android:layout_height="70dp"
-        android:layout_margin="10dp"
+        android:id="@+id/btnPin"
+        android:layout_width="65dp"
+        android:layout_height="65dp"
+        android:layout_margin="4dp"
         android:background="@drawable/bg_glass_circle"
         android:clickable="true"
         android:focusable="true"
@@ -46,8 +46,36 @@
         android:orientation="vertical">
 
         <ImageView
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:id="@+id/ivPinIcon"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:src="@drawable/ic_pinned"
+            app:tint="@color/black" />
+
+        <TextView
+            android:id="@+id/tvPinText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/text_pin"
+            android:textColor="@color/black"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/btnDelete"
+        android:layout_width="65dp"
+        android:layout_height="65dp"
+        android:layout_margin="4dp"
+        android:background="@drawable/bg_glass_circle"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <ImageView
+            android:layout_width="28dp"
+            android:layout_height="28dp"
             android:src="@drawable/ic_delete"
             app:tint="@color/red" />
 
@@ -56,7 +84,7 @@
             android:layout_height="wrap_content"
             android:text="Delete"
             android:textColor="@color/red"
-            android:textSize="12sp"
+            android:textSize="11sp"
             android:textStyle="bold" />
     </LinearLayout>
 
