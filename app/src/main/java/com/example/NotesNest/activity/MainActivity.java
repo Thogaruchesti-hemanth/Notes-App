@@ -22,21 +22,21 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.example.NotesNest.R;
 import com.example.NotesNest.databases.AppDatabase;
 import com.example.NotesNest.utils.AnalyticsHelper;
+import com.example.NotesNest.utils.AppPreferences;
 import com.example.NotesNest.utils.DrawerHelper;
-import com.example.NotesNest.utils.SharedPreferenceUtil;
 
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
-    private SharedPreferenceUtil pref;
+    private AppPreferences pref;
     private DrawerHelper drawerHelper;
     private final Random random = new Random();
 
     private final BroadcastReceiver premiumReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (SharedPreferenceUtil.ACTION_PREMIUM_UPDATED.equals(intent.getAction()) && drawerHelper != null) {
+            if (AppPreferences.ACTION_PREMIUM_UPDATED.equals(intent.getAction()) && drawerHelper != null) {
                     drawerHelper.refreshUI();
                 }
 
@@ -50,6 +50,10 @@ public class MainActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Register receiver early to catch status updates from BillingManager sync
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                premiumReceiver, new IntentFilter(AppPreferences.ACTION_PREMIUM_UPDATED));
 
         ViewGroup drawerLayout = findViewById(R.id.mainLayout);
         View contentContainer = drawerLayout.getChildAt(0);
@@ -68,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
 
         drawerHelper = new DrawerHelper(this);
         AppDatabase.getInstance(this);
-        pref = new SharedPreferenceUtil(this);
+        pref = AppPreferences.getInstance();
         
         // Initialize Billing and Sync status
         com.example.NotesNest.utils.BillingManager.getInstance(this).syncPurchases();
@@ -76,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
         initGreeting();
 
         LocalBroadcastManager.getInstance(this).registerReceiver(
-                premiumReceiver, new IntentFilter(SharedPreferenceUtil.ACTION_PREMIUM_UPDATED));
+                premiumReceiver, new IntentFilter(AppPreferences.ACTION_PREMIUM_UPDATED));
     }
 
     private void initGreeting() {

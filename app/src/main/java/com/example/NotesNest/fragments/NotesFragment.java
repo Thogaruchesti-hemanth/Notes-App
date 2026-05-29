@@ -52,7 +52,6 @@ import com.example.NotesNest.utils.AnalyticsHelper;
 import com.example.NotesNest.utils.CommonDialogs;
 import com.example.NotesNest.utils.LayoutToggleViewModel;
 import com.example.NotesNest.utils.PremiumManager;
-import com.example.NotesNest.utils.SharedPreferenceUtil;
 import com.example.NotesNest.utils.ThemeManager;
 import com.example.NotesNest.utils.constants.PrefKeys;
 import com.google.android.gms.ads.AdRequest;
@@ -87,7 +86,6 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
     private Observer<List<NoteEntity>> currentNotesObserver;
     private ActivityResultLauncher<Intent> addEditNoteLauncher;
     private String currentUserId = null;
-    private SharedPreferenceUtil preferenceUtil;
     private AppPreferences appPreferences;
     private PremiumManager premiumManager;
     private int currentNotesCount = 0;
@@ -103,13 +101,22 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
     private final BroadcastReceiver premiumReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (SharedPreferenceUtil.ACTION_PREMIUM_UPDATED.equals(intent.getAction())) {
-                if (adView != null) {
-                    adView.setVisibility(View.GONE);
-                    adView.destroy();
-                }
-                if (createButton != null) {
-                    createButton.setAlpha(1.0f);
+            if (AppPreferences.ACTION_PREMIUM_UPDATED.equals(intent.getAction())) {
+                boolean isPremium = AppPreferences.getInstance().isUserPremium();
+                if (isPremium) {
+                    if (adView != null) {
+                        adView.setVisibility(View.GONE);
+                        adView.destroy();
+                    }
+                    if (createButton != null) {
+                        createButton.setAlpha(1.0f);
+                    }
+                } else {
+                    if (adView != null && adView.getVisibility() == View.GONE) {
+                        adView.setVisibility(View.VISIBLE);
+                        setupBannerAd();
+                    }
+                    observeNoteCount(); // Re-check limits
                 }
             }
         }
@@ -136,13 +143,12 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         emptyStateLayout = view.findViewById(R.id.emptyStateLayout);
 
         context = getContext();
-        preferenceUtil = new SharedPreferenceUtil(context);
         appPreferences = AppPreferences.getInstance();
         premiumManager = new PremiumManager(context);
-        currentUserId = preferenceUtil.getUserId();
+        currentUserId = appPreferences.getUserId();
 
         // Load initial layout preference
-        isGridLayout = appPreferences.getBoolean(PrefKeys.KEY_NOTES_LAYOUT, true);
+        isGridLayout = appPreferences.getString(PrefKeys.KEY_NOTES_LAYOUT, "Grid").equals("Grid");
 
         addEditNoteLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -172,7 +178,7 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         setupBannerAd();
 
         LocalBroadcastManager.getInstance(requireContext()).registerReceiver(
-                premiumReceiver, new IntentFilter(SharedPreferenceUtil.ACTION_PREMIUM_UPDATED));
+                premiumReceiver, new IntentFilter(AppPreferences.ACTION_PREMIUM_UPDATED));
 
         return view;
     }

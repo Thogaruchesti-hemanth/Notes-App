@@ -17,7 +17,7 @@ public class DBSeedUtil {
         if (userId == null || userId.isEmpty()) return;
         
         DBSeedUtil.context = context;
-        SharedPreferenceUtil pref = new SharedPreferenceUtil(context);
+        AppPreferences pref = AppPreferences.getInstance();
         if (pref.isCategorySeedDoneForUser(userId)) return;   // ✅ Already seeded for this user → skip
 
         AppDatabase db = AppDatabase.getInstance(context);

@@ -32,7 +32,6 @@ import com.example.NotesNest.databinding.ActivityEditNoteBinding;
 import com.example.NotesNest.editor.CKEditorHelper;
 import com.example.NotesNest.utils.AppPreferences;
 import com.example.NotesNest.utils.CommonDialogs;
-import com.example.NotesNest.utils.SharedPreferenceUtil;
 import com.example.NotesNest.utils.constants.PrefKeys;
 import com.google.android.material.chip.Chip;
 
@@ -233,7 +232,7 @@ public class EditNoteActivity extends AppCompatActivity {
     }
 
     private void observeViewModels() {
-        String userId = new SharedPreferenceUtil(this).getUserId();
+        String userId = preferences.getUserId();
         categoryViewModel.getAllCategories(userId).observe(this, loaded -> {
             if (loaded == null) return;
             categories.clear();
@@ -339,7 +338,7 @@ public class EditNoteActivity extends AppCompatActivity {
 
     private void performSave(String title, String htmlContent) {
         long timestamp = System.currentTimeMillis();
-        String userId = new SharedPreferenceUtil(this).getUserId();
+        String userId = preferences.getUserId();
 
         NoteEntity note = new NoteEntity();
         if (isEditing) note.id = noteId;
@@ -362,8 +361,10 @@ public class EditNoteActivity extends AppCompatActivity {
 
     private void updatePinUI() {
         if (isPinned) {
+            binding.btnPin.setImageResource(R.drawable.ic_pinned);
             binding.btnPin.setColorFilter(ContextCompat.getColor(this, R.color.tabSelectedTextColor));
         } else {
+            binding.btnPin.setImageResource(R.drawable.ic_unpinned);
             binding.btnPin.clearColorFilter();
         }
     }

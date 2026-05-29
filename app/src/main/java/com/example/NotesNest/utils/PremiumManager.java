@@ -13,12 +13,12 @@ public class PremiumManager {
     public static final int MAX_FREE_NOTES = 30;
     public static final int MAX_FREE_CATEGORIES = 3;
     
-    private final SharedPreferenceUtil prefs;
+    private final AppPreferences prefs;
     private final Context context;
 
     public PremiumManager(Context context) {
         this.context = context;
-        this.prefs = new SharedPreferenceUtil(context);
+        this.prefs = AppPreferences.getInstance();
     }
 
     /**
@@ -75,9 +75,9 @@ public class PremiumManager {
         
         String type = prefs.getPlanType();
         switch (type) {
-            case SharedPreferenceUtil.PLAN_MONTHLY: return "Premium Monthly";
-            case SharedPreferenceUtil.PLAN_YEARLY: return "Premium Yearly";
-            case SharedPreferenceUtil.PLAN_LIFETIME: return "Premium Lifetime";
+            case AppPreferences.PLAN_MONTHLY: return "Premium Monthly";
+            case AppPreferences.PLAN_YEARLY: return "Premium Yearly";
+            case AppPreferences.PLAN_LIFETIME: return "Premium Lifetime";
             default: return "Premium User";
         }
     }

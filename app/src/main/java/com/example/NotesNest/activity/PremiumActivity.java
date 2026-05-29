@@ -8,9 +8,13 @@ import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.Toast;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.NotesNest.FirebaseHelper;
@@ -40,16 +44,23 @@ public class PremiumActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
         binding = ActivityPremiumBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            int horizontalPadding = getResources().getDimensionPixelSize(R.dimen.padding_20);
+            v.setPadding(systemBars.left + horizontalPadding, systemBars.top, systemBars.right + horizontalPadding, systemBars.bottom);
+            return insets;
+        });
 
         firebaseHelper = new FirebaseHelper();
         appPreferences = AppPreferences.getInstance();
         billingManager = BillingManager.getInstance(this);
         currentPlan = appPreferences.getString(PrefKeys.PLAN_TYPE, PrefDefaults.PLAN_TYPE);
-
-        binding.featuresRecyclerView.setLayoutManager(new GridLayoutManager(this, 2, RecyclerView.HORIZONTAL, false));
+        binding.featuresRecyclerView.setLayoutManager(new LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
 
         setupFeatures();
         setupCurrentPlanState();
@@ -81,8 +92,8 @@ public class PremiumActivity extends AppCompatActivity {
         binding.planYearly.setOnClickListener(planClickListener);
         binding.planLifetime.setOnClickListener(planClickListener);
         binding.btnUnlock.setOnClickListener(v -> upgradeSelectedPlan());
-        binding.tvTermsAndConditions.setOnClickListener(v -> openUrl("https://example.com/terms"));
-        binding.tvPrivacyPolicy.setOnClickListener(v -> openUrl("https://example.com/privacy"));
+        binding.tvTermsAndConditions.setOnClickListener(v -> openUrl("https://notesnest-app.web.app/terms.html"));
+        binding.tvPrivacyPolicy.setOnClickListener(v -> openUrl("https://notesnest-app.web.app/privacy.html"));
     }
 
     private void openUrl(String url) {
@@ -144,46 +155,43 @@ public class PremiumActivity extends AppCompatActivity {
     }
 
     private void setPricesUnavailable() {
-        binding.tvPriceMonthly.setText("Monthly - Unavailable");
-        binding.tvPriceYearly.setText("Yearly - Unavailable");
-        binding.tvPriceLifetime.setText("Lifetime - Unavailable");
+        binding.tvPriceMonthly.setText(getString(R.string.price_format_monthly, "₹50"));
+        binding.tvPriceYearly.setText(getString(R.string.price_format_yearly, "₹299"));
+        binding.tvPriceLifetime.setText(getString(R.string.price_format_lifetime, "₹499"));
         
-        Toast.makeText(this, "Could not fetch prices from Play Store. Please check your internet or Play Store account.", Toast.LENGTH_LONG).show();
+        if (billingManager.isBillingReady()) {
+            Toast.makeText(this, "Product details not found in Play Console. Please check Product IDs.", Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(this, "Connecting to Play Store...", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void syncPurchaseToFirebase(String planType, String token) {
         showLoading("Syncing premium status...");
-        firebaseHelper.verifyAndActivatePremium(this, token, planType,
-                new FirebaseHelper.PremiumUpdateCallback() {
-                    @Override
-                    public void onPremiumUpdateSuccess(String updatedPlanType, String expiryDate) {
-                        handleSuccess(updatedPlanType, expiryDate);
-                    }
+        // Bypassing Cloud Function as it's not setup. 
+        // Using direct update with local security verification (handled in BillingManager)
+        firebaseHelper.updatePremiumPlan(PremiumActivity.this, planType, new FirebaseHelper.PremiumUpdateCallback() {
+            @Override
+            public void onPremiumUpdateSuccess(String updatedPlanType, String expiryDate) {
+                handleSuccess(updatedPlanType, expiryDate);
+            }
 
-                    @Override
-                    public void onPremiumUpdateFailure(String error) {
-                        // Fallback update if verification fails but purchase is valid locally
-                        firebaseHelper.updatePremiumPlan(PremiumActivity.this, planType, new FirebaseHelper.PremiumUpdateCallback() {
-                            @Override
-                            public void onPremiumUpdateSuccess(String type, String date) {
-                                handleSuccess(type, date);
-                            }
-
-                            @Override
-                            public void onPremiumUpdateFailure(String e) {
-                                hideLoading();
-                                CommonDialogs.showErrorDialog(PremiumActivity.this, "Sync Error", "Failed to sync purchase: " + e);
-                            }
-                        });
-                    }
-                });
+            @Override
+            public void onPremiumUpdateFailure(String e) {
+                hideLoading();
+                CommonDialogs.showErrorDialog(PremiumActivity.this, "Sync Error", "Failed to sync purchase: " + e);
+            }
+        });
     }
 
     private void handleSuccess(String updatedPlanType, String expiryDate) {
+        String userId = appPreferences.getUserId();
+        android.util.Log.i("PremiumActivity", "✨ VERIFICATION SUCCESS for user: " + userId + " | New Plan: " + updatedPlanType + " | Expiry: " + expiryDate);
+        
         hideLoading();
-        appPreferences.putBoolean(PrefKeys.IS_PREMIUM, true);
-        appPreferences.putString(PrefKeys.PLAN_TYPE, updatedPlanType);
-        appPreferences.putString(PrefKeys.PREMIUM_EXPIRY_DATE, expiryDate);
+        appPreferences.putBoolean(PrefKeys.IS_PREMIUM + "_" + userId, true);
+        appPreferences.putString(PrefKeys.PLAN_TYPE + "_" + userId, updatedPlanType);
+        appPreferences.putString(PrefKeys.PREMIUM_EXPIRY_DATE + "_" + userId, expiryDate);
 
         currentPlan = updatedPlanType;
         selectedPlan = FirebaseHelper.PLAN_NONE;

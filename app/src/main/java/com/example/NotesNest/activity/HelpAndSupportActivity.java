@@ -31,7 +31,6 @@ import com.example.NotesNest.databinding.ActivityHelpAndSupportBinding;
 import com.example.NotesNest.databinding.ItemSupportOptionBinding;
 import com.example.NotesNest.utils.AdManager;
 import com.example.NotesNest.utils.PremiumManager;
-import com.example.NotesNest.utils.ThemeManager;
 import com.google.android.gms.ads.AdRequest;
 
 public class HelpAndSupportActivity extends AppCompatActivity {
@@ -41,13 +40,12 @@ public class HelpAndSupportActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        ThemeManager.applyTheme(this);
-        super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
+        super.onCreate(savedInstanceState);
         binding = ActivityHelpAndSupportBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.help_and_support_activity), (v, insets) -> {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;

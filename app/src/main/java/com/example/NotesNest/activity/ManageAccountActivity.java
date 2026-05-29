@@ -13,10 +13,14 @@ import android.util.Base64;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.example.NotesNest.FirebaseHelper;
 import com.example.NotesNest.R;
@@ -40,9 +44,16 @@ public class ManageAccountActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
         binding = ActivityManageAccountBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
 
         firebaseHelper = new FirebaseHelper();
         premiumManager = new PremiumManager(this);
@@ -122,7 +133,7 @@ public class ManageAccountActivity extends AppCompatActivity {
         String name = appPreferences.getString(PrefKeys.USER_NAME,"Guest User");
         String email = appPreferences.getString(PrefKeys.USER_EMAIL,"guest@email.com");
         String base64Image = appPreferences.getString(PrefKeys.USER_IMAGE,"User Image");
-        boolean isPremium = appPreferences.getBoolean(PrefKeys.IS_PREMIUM, false);
+        boolean isPremium = appPreferences.isUserPremium();
 
         binding.tvUserName.setText(name != null && !name.isEmpty() ? name : "Guest User");
         binding.tvUserEmail.setText(email != null && !email.isEmpty() ? email : "guest@email.com");

@@ -63,16 +63,15 @@ public class SettingsActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        ThemeManager.applyTheme(this);
         EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
         binding = ActivitySettingsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        ViewCompat.setOnApplyWindowInsetsListener(binding.settingsLayout, (v, insets) -> {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return WindowInsetsCompat.CONSUMED;
+            return insets;
         });
 
         PremiumManager premiumManager = new PremiumManager(this);
@@ -82,7 +81,7 @@ public class SettingsActivity extends AppCompatActivity {
         setupOptions();
         setupActivityResultLaunchers();
         setupClickListeners();
-        setupDriveBackupPremium();
+        setupPremiumOptionsUI();
         setupAds();
     }
 
@@ -131,12 +130,14 @@ public class SettingsActivity extends AppCompatActivity {
             importLauncher.launch(intent);
         });
 
-        if (isPremiumUser) {
-            binding.layoutDiveBackup.getRoot().setOnClickListener(v -> {
+        binding.layoutDiveBackup.getRoot().setOnClickListener(v -> {
+            if (isPremiumUser) {
                 startActivity(new Intent(this, DriveBackupActivity.class));
                 finish();
-            });
-        }
+            } else {
+                CommonDialogs.showPremiumRequiredDialog(this, "Drive backup is for Premium users only.");
+            }
+        });
 
         binding.layoutManageAccount.getRoot().setOnClickListener(v -> {
             if (!isPremiumUser) {
@@ -303,11 +304,16 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     // --- REST OF THE CODE (UI SETUP) ---
-    private void setupDriveBackupPremium() {
+    private void setupPremiumOptionsUI() {
         if (isPremiumUser) return;
-        binding.layoutDiveBackup.getRoot().findViewById(R.id.tvPremiumBatch).setVisibility(View.VISIBLE);
+
+        // Drive Backup
+        binding.layoutDiveBackup.tvPremiumBatch.setVisibility(View.VISIBLE);
         binding.layoutDiveBackup.getRoot().setAlpha(0.5f);
-        binding.layoutDiveBackup.getRoot().setOnClickListener(v -> CommonDialogs.showPremiumRequiredDialog(this, "Drive backup is for Premium users only."));
+
+        // App Theme
+        binding.layoutTheme.tvPremiumBatch.setVisibility(View.VISIBLE);
+        binding.layoutTheme.getRoot().setAlpha(0.5f);
     }
 
     private void setupOptions() {

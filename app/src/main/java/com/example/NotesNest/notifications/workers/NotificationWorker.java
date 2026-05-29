@@ -15,7 +15,7 @@ import com.example.NotesNest.databases.entities.ReminderEntity;
 import com.example.NotesNest.databases.repositories.ReminderRepository;
 import com.example.NotesNest.notifications.helper.NotificationHelper;
 import com.example.NotesNest.notifications.schedulers.NotificationScheduler;
-import com.example.NotesNest.utils.SharedPreferenceUtil;
+import com.example.NotesNest.utils.AppPreferences;
 
 import java.util.Calendar;
 import java.util.Locale;
@@ -59,7 +59,7 @@ public class NotificationWorker extends Worker {
         }
 
         ReminderRepository repo = new ReminderRepository((Application) context.getApplicationContext());
-        String userId = new SharedPreferenceUtil(context).getUserId();
+        String userId = AppPreferences.getInstance().getUserId();
         ReminderEntity entity = repo.getReminderById(userId,reminderId);
 
         if (entity == null) {

@@ -355,6 +355,7 @@ public class CommonDialogs {
 
         title.setText(note.title);
         ivPinned.setVisibility(note.isPinned ? View.VISIBLE : View.GONE);
+        ivPinned.setImageResource(note.isPinned ? R.drawable.ic_pinned : R.drawable.ic_unpinned);
 
         setupResponsiveCheckboxes(context, content, note, callback);
 
@@ -480,6 +481,23 @@ public class CommonDialogs {
 
         view.findViewById(R.id.btnEdit).setOnClickListener(v -> {
             listener.onEdit(note);
+            popupWindow.dismiss();
+        });
+
+        LinearLayout btnPin = view.findViewById(R.id.btnPin);
+        TextView tvPinText = view.findViewById(R.id.tvPinText);
+        ImageView ivPinIcon = view.findViewById(R.id.ivPinIcon);
+
+        if (note.isPinned) {
+            tvPinText.setText(R.string.text_unpin);
+            ivPinIcon.setImageResource(R.drawable.ic_unpinned);
+        } else {
+            tvPinText.setText(R.string.text_pin);
+            ivPinIcon.setImageResource(R.drawable.ic_pinned);
+        }
+
+        btnPin.setOnClickListener(v -> {
+            listener.onPin(note);
             popupWindow.dismiss();
         });
 
@@ -694,5 +712,6 @@ public class CommonDialogs {
     public interface NoteOptionsListener {
         void onEdit(NoteEntity note);
         void onDelete(NoteEntity note, int pos);
+        default void onPin(NoteEntity note) {}
     }
 }

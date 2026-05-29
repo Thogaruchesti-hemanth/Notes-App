@@ -1,7 +1,6 @@
 package com.example.NotesNest.activity;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -32,8 +31,6 @@ import androidx.credentials.CredentialManager;
 import androidx.credentials.GetCredentialRequest;
 import androidx.credentials.GetCredentialResponse;
 import androidx.credentials.exceptions.GetCredentialException;
-import androidx.security.crypto.EncryptedSharedPreferences;
-import androidx.security.crypto.MasterKey;
 
 import com.example.NotesNest.AnimatedRunningBorderLayout;
 import com.example.NotesNest.FirebaseHelper;
@@ -41,8 +38,8 @@ import com.example.NotesNest.R;
 import com.example.NotesNest.SingleColorRunningBorderLayout;
 import com.example.NotesNest.databinding.ActivityLoginBinding;
 import com.example.NotesNest.utils.AnalyticsHelper;
+import com.example.NotesNest.utils.AppPreferences;
 import com.example.NotesNest.utils.AppLog;
-import com.example.NotesNest.utils.SharedPreferenceUtil;
 import com.example.NotesNest.utils.ThemeManager;
 import com.example.NotesNest.utils.ValidationUtils;
 import com.example.NotesNest.utils.formaters.ValidationTextWatcher;
@@ -68,6 +65,7 @@ public class LoginActivity extends AppCompatActivity {
     private SingleColorRunningBorderLayout loginBorder;
     private AnimatedRunningBorderLayout googleBorder;
     private CredentialManager credentialManager;
+    private AppPreferences appPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +83,7 @@ public class LoginActivity extends AppCompatActivity {
 
         firebaseHelper = new FirebaseHelper();
         credentialManager = CredentialManager.create(this);
+        appPreferences = AppPreferences.getInstance();
 
         initUi();
         registerLaunchers();
@@ -510,58 +509,22 @@ public class LoginActivity extends AppCompatActivity {
 
 
     /**
-     * Save session securely (stores email, uid, username) using EncryptedSharedPreferences.
-     * It prefers values from FirebaseAuth currentUser; falls back to SharedPreferenceUtil if needed.
+     * Save session using AppPreferences.
      */
     private void saveSession() {
-        try {
-            // Try getting info from Firebase currentUser first
-            FirebaseUser current = FirebaseAuth.getInstance().getCurrentUser();
+        FirebaseUser current = FirebaseAuth.getInstance().getCurrentUser();
 
-            String email = null;
-            String uid = null;
-            String username;
+        String email = current != null ? current.getEmail() : appPreferences.getUserEmail();
+        String uid = current != null ? current.getUid() : appPreferences.getUserId();
+        String username = appPreferences.getUserName();
 
-            if (current != null) {
-                email = current.getEmail();
-                uid = current.getUid();
-            }
-
-            // If any value missing, fall back to SharedPreferenceUtil (FirebaseHelper saves there)
-            com.example.NotesNest.utils.SharedPreferenceUtil sp = new com.example.NotesNest.utils.SharedPreferenceUtil(this);
-            if (email == null || email.isEmpty()) email = sp.getUserEmail();
-            if (uid == null || uid.isEmpty()) uid = sp.getUserId();
-            username = sp.getUserName();
-
-            // Create or retrieve the MasterKey (AES256_GCM)
-            MasterKey masterKey = new MasterKey.Builder(this)
-                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                    .build();
-
-            SharedPreferences securePrefs = EncryptedSharedPreferences.create(
-                    this,
-                    "secure_prefs",
-                    masterKey,
-                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-            );
-
-            SharedPreferences.Editor editor = securePrefs.edit();
-            if (email != null) editor.putString("user_email", email);
-            if (uid != null) editor.putString("user_uid", uid);
-            if (username != null) editor.putString("user_name", username);
-            editor.apply();
-
-            Log.i(TAG, "✅ Session saved securely: uid=" + (uid != null ? uid : "null"));
-
-        } catch (Exception e) {
-            Log.e(TAG, "❌ Failed to save user session securely", e);
-        }
+        appPreferences.saveLoginSession(uid, email, username);
+        Log.i(TAG, "✅ Session saved successfully via AppPreferences: uid=" + uid);
     }
 
 
     private void navigateToMain() {
-        String userId = new SharedPreferenceUtil(this).getUserId();
+        String userId = appPreferences.getUserId();
         com.example.NotesNest.utils.DBSeedUtil.seedDefaultCategories(this, userId);
 
         Intent intent = new Intent(this, MainActivity.class);

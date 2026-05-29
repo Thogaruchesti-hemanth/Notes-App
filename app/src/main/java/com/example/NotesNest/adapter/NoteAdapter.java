@@ -76,11 +76,17 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
 
         DateTimeUtils.setDateTime(note.createdAt, holder.textDate, holder.textTime);
 
-        // Pinning logic: Click on pinned icon to unpin
-        holder.ivPinned.setVisibility(note.isPinned ? View.VISIBLE : View.GONE);
+        // Pinning logic: Toggle pin status from the icon
+        holder.ivPinned.setVisibility(View.VISIBLE);
+        holder.ivPinned.setImageResource(note.isPinned ? R.drawable.ic_pinned : R.drawable.ic_unpinned);
+        
+        if (note.isPinned) {
+            holder.ivPinned.setAlpha(1.0f);
+        } else {
+            holder.ivPinned.setAlpha(0.3f); // Make unpinned icon subtle in the list
+        }
+        
         holder.ivPinned.setOnClickListener(v -> {
-            // Create a copy to update to avoid mutating the object currently in the list
-            // which can interfere with DiffUtil detection.
             NoteEntity updatedNote = new NoteEntity();
             updatedNote.id = note.id;
             updatedNote.userId = note.userId;
@@ -92,7 +98,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
             updatedNote.isSynced = note.isSynced;
             updatedNote.isDeleted = note.isDeleted;
             
-            updatedNote.isPinned = false;
+            updatedNote.isPinned = !note.isPinned;
             updatedNote.updatedAt = System.currentTimeMillis();
             
             noteViewModel.updateNote(updatedNote);
@@ -143,6 +149,25 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
                         @Override
                         public void onDelete(NoteEntity note, int pos) {
                             deleteNote(note, pos);
+                        }
+
+                        @Override
+                        public void onPin(NoteEntity note) {
+                            NoteEntity updatedNote = new NoteEntity();
+                            updatedNote.id = note.id;
+                            updatedNote.userId = note.userId;
+                            updatedNote.categoryId = note.categoryId;
+                            updatedNote.title = note.title;
+                            updatedNote.content = note.content;
+                            updatedNote.colorHex = note.colorHex;
+                            updatedNote.createdAt = note.createdAt;
+                            updatedNote.isSynced = note.isSynced;
+                            updatedNote.isDeleted = note.isDeleted;
+
+                            updatedNote.isPinned = !note.isPinned;
+                            updatedNote.updatedAt = System.currentTimeMillis();
+
+                            noteViewModel.updateNote(updatedNote);
                         }
                     }
             );

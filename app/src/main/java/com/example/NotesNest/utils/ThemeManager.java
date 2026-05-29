@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Production-ready ThemeManager
  * <p>
  * Responsibilities:
- * - Persist & apply theme (light / dark / system) via SharedPreferenceUtil
+ * - Persist & apply theme (light / dark / system) via AppPreferences
  * - Query current theme
  * - Notify registered listeners on change
  * - Offer smooth cross-fade animation when toggling themes (uses ViewCompat)
@@ -56,7 +56,7 @@ public final class ThemeManager {
      * Safe to call from non-UI contexts.
      */
     public static void applyTheme(@NonNull Context context) {
-        SharedPreferenceUtil pref = new SharedPreferenceUtil(context.getApplicationContext());
+        AppPreferences pref = AppPreferences.getInstance();
         String theme = pref.isSystemTheme() ? "system" : pref.getTheme();
 
         // Avoid re-applying same theme repeatedly
@@ -80,7 +80,7 @@ public final class ThemeManager {
      */
     @NonNull
     public static String getCurrentThemeMode(@NonNull Context context) {
-        SharedPreferenceUtil pref = new SharedPreferenceUtil(context.getApplicationContext());
+        AppPreferences pref = AppPreferences.getInstance();
         return pref.isSystemTheme() ? "system" : pref.getTheme();
     }
 
@@ -88,7 +88,7 @@ public final class ThemeManager {
      * Checks if current theme is dark.
      */
     public static boolean isDarkTheme(@NonNull Context context) {
-        SharedPreferenceUtil pref = new SharedPreferenceUtil(context.getApplicationContext());
+        AppPreferences pref = AppPreferences.getInstance();
         if (pref.isSystemTheme()) {
             int nightModeFlags =
                     context.getResources().getConfiguration().uiMode &
@@ -151,7 +151,7 @@ public final class ThemeManager {
     private static void updateThemeInternal(@NonNull Context context, @NonNull String newTheme,
                                             Activity activityToAnimate, boolean animate) {
 
-        SharedPreferenceUtil pref = new SharedPreferenceUtil(context.getApplicationContext());
+        AppPreferences pref = AppPreferences.getInstance();
         // Persist preference
         if ("dark".equals(newTheme)) {
             pref.setTheme("dark");

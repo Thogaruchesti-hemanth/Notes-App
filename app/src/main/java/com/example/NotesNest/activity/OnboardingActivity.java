@@ -23,7 +23,6 @@ import com.example.NotesNest.databinding.ActivityOnboardingBinding;
 import com.example.NotesNest.models.OnBoardItem;
 import com.example.NotesNest.utils.AnalyticsHelper;
 import com.example.NotesNest.utils.AppPreferences;
-import com.example.NotesNest.utils.SharedPreferenceUtil;
 import com.example.NotesNest.utils.constants.PrefKeys;
 
 import java.util.ArrayList;
@@ -111,7 +110,7 @@ public class OnboardingActivity extends AppCompatActivity {
     }
 
     private void completeOnboarding() {
-        new SharedPreferenceUtil(this).setOnboardingCompleted(true);
+        AppPreferences.getInstance().setOnboardingCompleted(true);
         navigateToLogin();
     }
 

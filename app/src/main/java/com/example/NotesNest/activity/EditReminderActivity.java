@@ -23,9 +23,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.NotesNest.R;
@@ -37,7 +41,7 @@ import com.example.NotesNest.utils.AppLog;
 import com.example.NotesNest.utils.CommonDialogs;
 import com.example.NotesNest.databases.ViewModels.ReminderViewModel;
 import com.example.NotesNest.utils.DateTimeUtils;
-import com.example.NotesNest.utils.SharedPreferenceUtil;
+import com.example.NotesNest.utils.AppPreferences;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,9 +71,16 @@ public class EditReminderActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
         binding = ActivityEditReminderBinding.inflate(LayoutInflater.from(this));
         setContentView(binding.getRoot());
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
 
         reminderViewModel = new ViewModelProvider(this).get(ReminderViewModel.class);
 
@@ -80,7 +91,7 @@ public class EditReminderActivity extends AppCompatActivity {
         calendar.add(Calendar.HOUR_OF_DAY, 1);
         selectedDateTime = calendar.getTimeInMillis();
 
-        String userId = new SharedPreferenceUtil(this).getUserId();
+        String userId = AppPreferences.getInstance().getUserId();
         reminderViewModel.getAllReminders(userId).observe(this, reminders -> {
             if (reminders != null) allReminders = reminders;
         });
@@ -343,7 +354,7 @@ public class EditReminderActivity extends AppCompatActivity {
         binding.btnSave.setText(R.string.text_saving);
 
         boolean repeated = !REMINDER_REPEAT_OPTIONS[0].equals(selectedRepeat);
-        String userId = new SharedPreferenceUtil(this).getUserId();
+        String userId = AppPreferences.getInstance().getUserId();
 
         if (currentEntity == null) {
             ReminderEntity entity = new ReminderEntity();
@@ -462,7 +473,7 @@ public class EditReminderActivity extends AppCompatActivity {
     }
 
     private void loadReminder(int id) {
-        String userId = new SharedPreferenceUtil(this).getUserId();
+        String userId = AppPreferences.getInstance().getUserId();
         reminderViewModel.getReminderById(id, userId).observe(this, entity -> {
             if (entity != null) {
                 currentEntity = entity;

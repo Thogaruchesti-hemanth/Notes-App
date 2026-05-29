@@ -24,8 +24,6 @@ import com.example.NotesNest.databases.ViewModels.NoteViewModel;
 import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.databinding.ActivityWidgetConfigBinding;
 import com.example.NotesNest.utils.AppPreferences;
-import com.example.NotesNest.utils.SharedPreferenceUtil;
-import com.example.NotesNest.utils.constants.PrefKeys;
 import com.example.NotesNest.widgets.NoteWidgetUpdateService;
 
 import java.util.ArrayList;
@@ -51,7 +49,7 @@ public class NoteWidgetConfigureActivity extends AppCompatActivity implements No
         setContentView(binding.getRoot());
 
 
-        if (!AppPreferences.getInstance().getBoolean(PrefKeys.IS_PREMIUM, false)) {
+        if (!AppPreferences.getInstance().isUserPremium()) {
             Toast.makeText(this, "Upgrade to Premium to use widgets.", Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(this, PremiumActivity.class);
             intent.putExtra("show_upgrade", true);
@@ -151,7 +149,7 @@ public class NoteWidgetConfigureActivity extends AppCompatActivity implements No
     private void loadNotes() {
         NoteViewModel noteViewModel;
         noteViewModel = new ViewModelProvider(this).get(NoteViewModel.class);
-        String userId = new SharedPreferenceUtil(this).getUserId();
+        String userId = AppPreferences.getInstance().getUserId();
 
         noteViewModel.getAllNotes(userId).observe(this, noteEntities -> {
             if (noteEntities != null) {
@@ -200,7 +198,7 @@ public class NoteWidgetConfigureActivity extends AppCompatActivity implements No
     }
 
     private void saveNoteSelectionAndFinish() {
-        new SharedPreferenceUtil(this).saveWidgetNoteId(this, appWidgetId, selectedNote.id);
+        AppPreferences.getInstance().saveWidgetNoteId(this, appWidgetId, selectedNote.id);
 
         AppWidgetManager manager = AppWidgetManager.getInstance(this);
         NoteWidgetUpdateService.updateWidget(this, manager, appWidgetId);

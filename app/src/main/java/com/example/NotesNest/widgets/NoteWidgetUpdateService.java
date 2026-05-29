@@ -17,8 +17,8 @@ import com.example.NotesNest.R;
 import com.example.NotesNest.activity.MainActivity;
 import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.databases.repositories.NoteRepository;
+import com.example.NotesNest.utils.AppPreferences;
 import com.example.NotesNest.utils.HtmlListConverter;
-import com.example.NotesNest.utils.SharedPreferenceUtil;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -59,8 +59,7 @@ public class NoteWidgetUpdateService extends Worker {
             AppWidgetManager appWidgetManager,
             int widgetId
     ) {
-        SharedPreferenceUtil pref =
-                new SharedPreferenceUtil(context);
+        AppPreferences pref = AppPreferences.getInstance();
 
         boolean isPremium = pref.isUserPremium();
 
@@ -149,8 +148,7 @@ public class NoteWidgetUpdateService extends Worker {
             Context context,
             int widgetId
     ) {
-        SharedPreferenceUtil pref =
-                new SharedPreferenceUtil(context);
+        AppPreferences pref = AppPreferences.getInstance();
 
         if (!pref.isUserPremium()) {
             return null; // HARD BLOCK
