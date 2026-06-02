@@ -227,4 +227,10 @@
     <string name="text_importing_data">Importing data...</string>
     <string name="text_pin">Pin</string>
     <string name="text_unpin">Unpin</string>
+
+    <!-- AdMob Unit IDs (Replace with real IDs for release) -->
+    <string name="banner_ad_unit_id">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="interstitial_ad_unit_id">ca-app-pub-3940256099942544/1033173712</string>
+    <string name="app_open_ad_unit_id">ca-app-pub-3940256099942544/3419835294</string>
+    <string name="rewarded_ad_unit_id">ca-app-pub-3940256099942544/5224354917</string>
 </resources>
