@@ -30,11 +30,11 @@ public class SplashScreenActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        EdgeToEdge.enable(this);
         // Install the splash screen before calling super.onCreate()
         SplashScreen.installSplashScreen(this);
 
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_splash_screen);
 
         prefs = AppPreferences.getInstance();

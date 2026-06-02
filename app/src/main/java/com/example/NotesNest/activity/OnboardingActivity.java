@@ -40,8 +40,8 @@ public class OnboardingActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
+        super.onCreate(savedInstanceState);
 
         // Skip onboarding if already completed
         if (AppPreferences.getInstance().getBoolean(PrefKeys.IS_ONBOARDING_COMPLETED, false)) {
