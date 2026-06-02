@@ -59,8 +59,8 @@ public class EditNoteActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
+        super.onCreate(savedInstanceState);
 
         try {
             binding = ActivityEditNoteBinding.inflate(getLayoutInflater());

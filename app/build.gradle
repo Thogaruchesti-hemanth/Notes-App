@@ -32,8 +32,8 @@ android {
         minSdk 29 // Android 10
         targetSdk 35 // Targeting Android 15
 
-        versionCode 13
-        versionName "3.2.0"
+        versionCode 15
+        versionName "3.2.2"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
