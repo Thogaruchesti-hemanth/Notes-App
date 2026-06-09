@@ -18,6 +18,7 @@ import com.example.NotesNest.activity.MainActivity;
 import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.databases.repositories.NoteRepository;
 import com.example.NotesNest.utils.AppPreferences;
+import com.example.NotesNest.utils.ColorUtils;
 import com.example.NotesNest.utils.HtmlListConverter;
 
 import java.text.SimpleDateFormat;
@@ -108,7 +109,13 @@ public class NoteWidgetUpdateService extends Worker {
             );
             views.setTextViewText(R.id.tvTime, dateText);
 
-            applyColors(views, note.colorHex);
+            int bgColor = ColorUtils.parseColor(note.colorHex, android.graphics.Color.WHITE);
+            int textColor = ColorUtils.getContrastColor(bgColor);
+
+            views.setInt(R.id.widget_root, "setBackgroundColor", bgColor);
+            views.setTextColor(R.id.tvTitle, textColor);
+            views.setTextColor(R.id.tvMessage, textColor);
+            views.setTextColor(R.id.tvTime, textColor);
 
         } else {
             views.setTextViewText(
@@ -165,38 +172,6 @@ public class NoteWidgetUpdateService extends Worker {
             return repository.getNoteByIdSync(noteId);
         } catch (Exception e) {
             return null;
-        }
-    }
-
-    /* -----------------------------------------
-       COLOR / CONTRAST HANDLING
-       ----------------------------------------- */
-
-    private static void applyColors(RemoteViews views, String colorHex) {
-        try {
-            int bg = android.graphics.Color.parseColor(colorHex);
-            views.setInt(R.id.widget_root, "setBackgroundColor", bg);
-
-            double brightness =
-                    android.graphics.Color.red(bg) * 0.299 +
-                            android.graphics.Color.green(bg) * 0.587 +
-                            android.graphics.Color.blue(bg) * 0.114;
-
-            int textColor =
-                    brightness > 186 ?
-                            android.graphics.Color.BLACK :
-                            android.graphics.Color.WHITE;
-
-            views.setTextColor(R.id.tvTitle, textColor);
-            views.setTextColor(R.id.tvMessage, textColor);
-            views.setTextColor(R.id.tvTime, textColor);
-
-        } catch (Exception e) {
-            views.setInt(
-                    R.id.widget_root,
-                    "setBackgroundColor",
-                    android.graphics.Color.WHITE
-            );
         }
     }
 

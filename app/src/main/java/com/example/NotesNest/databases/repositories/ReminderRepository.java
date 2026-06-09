@@ -8,19 +8,19 @@ import com.example.NotesNest.databases.AppDatabase;
 import com.example.NotesNest.databases.daos.ReminderDao;
 import com.example.NotesNest.databases.entities.ReminderEntity;
 
+import com.example.NotesNest.utils.AppExecutors;
+
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class ReminderRepository {
 
     private final ReminderDao reminderDao;
-    private final ExecutorService executorService;
+    private final AppExecutors executors;
 
     public ReminderRepository(Application application) {
         AppDatabase db = AppDatabase.getInstance(application);
         reminderDao = db.reminderDao();
-        executorService = Executors.newFixedThreadPool(4);
+        executors = AppExecutors.getInstance();
     }
 
 // -------------------- READ --------------------
@@ -29,28 +29,28 @@ public class ReminderRepository {
 // -------------------- WRITE --------------------
 
     public void insert(ReminderEntity reminder) {
-        executorService.execute(() -> reminderDao.insertReminder(reminder));
+        executors.diskIO().execute(() -> reminderDao.insertReminder(reminder));
     }
 
     public void update(ReminderEntity reminder) {
-        executorService.execute(() -> reminderDao.updateReminder(reminder));
+        executors.diskIO().execute(() -> reminderDao.updateReminder(reminder));
     }
 
     public void delete(ReminderEntity reminder) {
-        executorService.execute(() -> reminderDao.deleteReminder(reminder));
+        executors.diskIO().execute(() -> reminderDao.deleteReminder(reminder));
     }
 
     // -------------------- WRITE WITH CALLBACK --------------------
 
     public void insert(ReminderEntity reminder, OnInsertCallback callback) {
-        executorService.execute(() -> {
+        executors.diskIO().execute(() -> {
             long id = reminderDao.insertReminder(reminder);
             if (callback != null) callback.onInsert(id);
         });
     }
 
     public void update(ReminderEntity reminder, OnUpdateCallback callback) {
-        executorService.execute(() -> {
+        executors.diskIO().execute(() -> {
             int rows = reminderDao.updateReminder(reminder);
             if (callback != null) callback.onUpdate(rows > 0);
         });
@@ -61,7 +61,7 @@ public class ReminderRepository {
     }
 
     public void getAllReminders(String userID, Callback callback) {
-        executorService.execute(() -> {
+        executors.diskIO().execute(() -> {
             List<ReminderEntity> list = reminderDao.getAllReminders(userID);
             if (callback != null) callback.onResult(list);
         });
@@ -71,6 +71,10 @@ public class ReminderRepository {
 
     public LiveData<ReminderEntity> getReminderById(int id, String userId) {
         return reminderDao.getReminderByIdLive(id, userId);
+    }
+
+    public LiveData<List<ReminderEntity>> getUpcomingReminders(String userId) {
+        return reminderDao.getUpcomingRemindersLive(userId, System.currentTimeMillis());
     }
 
     public ReminderEntity getReminderById(String userId, int id){

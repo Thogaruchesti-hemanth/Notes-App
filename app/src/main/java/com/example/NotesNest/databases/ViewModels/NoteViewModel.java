@@ -6,7 +6,9 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 
+import com.example.NotesNest.databases.entities.CategoryCount;
 import com.example.NotesNest.databases.entities.NoteEntity;
+import com.example.NotesNest.databases.entities.NoteWithCategory;
 import com.example.NotesNest.databases.repositories.NoteRepository;
 
 import java.util.List;
@@ -22,12 +24,12 @@ public class NoteViewModel extends AndroidViewModel {
 
     // -------------------- READ --------------------
 
-    public LiveData<List<NoteEntity>> getAllNotes(String userId) {
-        return noteRepository.getAllNotes(userId);
+    public LiveData<List<NoteWithCategory>> getAllNotesWithCategory(String userId) {
+        return noteRepository.getAllNotesWithCategory(userId);
     }
 
-    public LiveData<List<NoteEntity>> getNotesByCategory(String userId, int categoryId) {
-        return noteRepository.getNotesByCategory(userId, categoryId);
+    public LiveData<List<NoteWithCategory>> getNotesByCategoryWithCategory(String userId, int categoryId) {
+        return noteRepository.getNotesByCategoryWithCategory(userId, categoryId);
     }
 
     public LiveData<NoteEntity> getNoteById(int noteId) {
@@ -49,12 +51,12 @@ public class NoteViewModel extends AndroidViewModel {
     }
     // SEARCH
 
-    public LiveData<List<NoteEntity>> searchNotes(String userId, String keyword) {
-        return noteRepository.searchNotes(userId, keyword);
+    public LiveData<List<NoteWithCategory>> searchNotesWithCategory(String userId, String keyword) {
+        return noteRepository.searchNotesWithCategory(userId, keyword);
     }
 
-    public LiveData<List<NoteEntity>> searchNotesInCategory(String userId, int categoryId, String keyword) {
-        return noteRepository.searchNotesInCategory(userId, categoryId, keyword);
+    public LiveData<List<NoteWithCategory>> searchNotesInCategoryWithCategory(String userId, int categoryId, String keyword) {
+        return noteRepository.searchNotesInCategoryWithCategory(userId, categoryId, keyword);
     }
 
     // -------------------- OFFLINE-FIRST / SYNC --------------------
@@ -65,6 +67,10 @@ public class NoteViewModel extends AndroidViewModel {
     }
 
     // In your NoteViewModel class
+    public LiveData<List<CategoryCount>> getAllCategoryCounts(String userId) {
+        return noteRepository.getAllCategoryCounts(userId);
+    }
+
     public LiveData<Integer> getNotesCount(String userId) {
         return noteRepository.getNotesCount(userId);
     }

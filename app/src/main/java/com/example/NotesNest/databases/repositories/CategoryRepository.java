@@ -1,8 +1,6 @@
 package com.example.NotesNest.databases.repositories;
 
 import android.app.Application;
-import android.os.Handler;
-import android.os.Looper;
 
 import androidx.lifecycle.LiveData;
 
@@ -10,19 +8,19 @@ import com.example.NotesNest.databases.AppDatabase;
 import com.example.NotesNest.databases.daos.CategoryDao;
 import com.example.NotesNest.databases.entities.CategoryEntity;
 
+import com.example.NotesNest.utils.AppExecutors;
+
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class CategoryRepository {
 
     private final CategoryDao categoryDao;
-    private final ExecutorService executorService;
+    private final AppExecutors executors;
 
     public CategoryRepository(Application application) {
         AppDatabase db = AppDatabase.getInstance(application);
         categoryDao = db.categoryDao();
-        executorService = Executors.newFixedThreadPool(4);
+        executors = AppExecutors.getInstance();
     }
 
     // -------------------- READ --------------------
@@ -42,31 +40,31 @@ public class CategoryRepository {
     // -------------------- WRITE --------------------
 
     public void insert(CategoryEntity category) {
-        executorService.execute(() -> categoryDao.insert(category));
+        executors.diskIO().execute(() -> categoryDao.insert(category));
     }
 
     public void insertAll(List<CategoryEntity> categories) {
-        executorService.execute(() -> categoryDao.insertAll(categories));
+        executors.diskIO().execute(() -> categoryDao.insertAll(categories));
     }
 
     public void update(CategoryEntity category) {
-        executorService.execute(() -> categoryDao.update(category));
+        executors.diskIO().execute(() -> categoryDao.update(category));
     }
 
     public void delete(CategoryEntity category) {
-        executorService.execute(() -> categoryDao.delete(category));
+        executors.diskIO().execute(() -> categoryDao.delete(category));
     }
 
     public void deleteById(int categoryId, String userId) {
-        executorService.execute(() -> categoryDao.deleteCategoryById(categoryId, userId));
+        executors.diskIO().execute(() -> categoryDao.deleteCategoryById(categoryId, userId));
     }
 
     public void deleteByName(String categoryName, String userId) {
-        executorService.execute(() -> categoryDao.deleteByName(categoryName, userId));
+        executors.diskIO().execute(() -> categoryDao.deleteByName(categoryName, userId));
     }
 
     public void deleteAll(String userId) {
-        executorService.execute(() -> categoryDao.deleteAll(userId));
+        executors.diskIO().execute(() -> categoryDao.deleteAll(userId));
     }
 
     // -------------------- UTILITIES --------------------
@@ -76,12 +74,12 @@ public class CategoryRepository {
     }
 
     public void getCategoryName(int categoryId, String userId, CategoryNameCallback callback) {
-        executorService.execute(() -> {
+        executors.diskIO().execute(() -> {
             String name = categoryDao.getCategoryName(categoryId, userId);
             if (name == null) name = "Uncategorized";
 
             String finalName = name;
-            new Handler(Looper.getMainLooper()).post(() -> {
+            executors.mainThread().execute(() -> {
                 callback.onResult(finalName);
             });
         });

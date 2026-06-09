@@ -45,6 +45,10 @@ public class ReminderViewModel extends AndroidViewModel {
         return reminderRepository.getReminderById(id, userId);
     }
 
+    public LiveData<List<ReminderEntity>> getUpcomingReminders(String userId) {
+        return reminderRepository.getUpcomingReminders(userId);
+    }
+
     // -------------------- WRITE (with results) --------------------
 
     /**

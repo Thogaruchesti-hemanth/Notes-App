@@ -7,7 +7,9 @@ import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Update;
 
+import com.example.NotesNest.databases.entities.CategoryCount;
 import com.example.NotesNest.databases.entities.NoteEntity;
+import com.example.NotesNest.databases.entities.NoteWithCategory;
 
 import java.util.List;
 
@@ -83,6 +85,44 @@ public interface NoteDao {
 
     @Query("UPDATE notes SET categoryId = NULL WHERE userId = :userId AND categoryId = :categoryId")
     void resetCategoryNotes(String userId, int categoryId);
+
+    // All notes for a user with category names
+    @Query("SELECT notes.*, categories.name as categoryName FROM notes " +
+            "LEFT JOIN categories ON notes.categoryId = categories.id " +
+            "WHERE notes.userId = :userId AND notes.isDeleted = 0 " +
+            "ORDER BY notes.isPinned DESC, notes.createdAt DESC")
+    LiveData<List<NoteWithCategory>> getAllNotesWithCategory(String userId);
+
+    // Notes by category with category names
+    @Query("SELECT notes.*, categories.name as categoryName FROM notes " +
+            "LEFT JOIN categories ON notes.categoryId = categories.id " +
+            "WHERE notes.userId = :userId AND notes.categoryId = :categoryId AND notes.isDeleted = 0 " +
+            "ORDER BY notes.isPinned DESC, notes.createdAt DESC")
+    LiveData<List<NoteWithCategory>> getNotesByCategoryWithCategory(String userId, int categoryId);
+
+    // Search results with category names
+    @Query("SELECT notes.*, categories.name as categoryName FROM notes " +
+            "LEFT JOIN categories ON notes.categoryId = categories.id " +
+            "WHERE notes.userId = :userId AND notes.isDeleted = 0 AND " +
+            "(notes.title LIKE '%' || :keyword || '%' OR notes.content LIKE '%' || :keyword || '%') " +
+            "ORDER BY notes.isPinned DESC, notes.createdAt DESC")
+    LiveData<List<NoteWithCategory>> searchNotesWithCategory(String userId, String keyword);
+
+    @Query("SELECT notes.*, categories.name as categoryName FROM notes " +
+            "LEFT JOIN categories ON notes.categoryId = categories.id " +
+            "WHERE notes.userId = :userId AND notes.categoryId = :categoryId AND notes.isDeleted = 0 AND " +
+            "(notes.title LIKE '%' || :keyword || '%' OR notes.content LIKE '%' || :keyword || '%') " +
+            "ORDER BY notes.isPinned DESC, notes.createdAt DESC")
+    LiveData<List<NoteWithCategory>> searchNotesInCategoryWithCategory(String userId, int categoryId, String keyword);
+
+    // ------------------------------------------
+    // COUNTS
+    // ------------------------------------------
+
+    @Query("SELECT categoryId, COUNT(*) as count FROM notes " +
+            "WHERE userId = :userId AND isDeleted = 0 " +
+            "GROUP BY categoryId")
+    LiveData<List<CategoryCount>> getAllCategoryCounts(String userId);
 
     // Get total count of notes for a user (excluding deleted)
     @Query("SELECT COUNT(*) FROM notes WHERE userId = :userId AND isDeleted = 0")

@@ -38,6 +38,16 @@
             android:textStyle="bold" />
 
         <ImageButton
+            android:id="@+id/btnReminder"
+            android:layout_width="@dimen/size_48"
+            android:layout_height="@dimen/size_48"
+            android:layout_marginEnd="@dimen/margin_8"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/text_add_reminder"
+            android:src="@drawable/ic_clock"
+            app:tint="@color/black" />
+
+        <ImageButton
             android:id="@+id/btnPin"
             android:layout_width="@dimen/size_48"
             android:layout_height="@dimen/size_48"

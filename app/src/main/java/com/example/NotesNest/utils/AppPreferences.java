@@ -96,13 +96,28 @@ public class AppPreferences {
     }
 
     public void clearUserData() {
-        prefs.edit()
-                .remove(PrefKeys.USER_ID)
+        String userId = getUserId();
+        SharedPreferences.Editor editor = prefs.edit();
+        
+        // Remove general keys
+        editor.remove(PrefKeys.USER_ID)
                 .remove(PrefKeys.USER_EMAIL)
                 .remove(PrefKeys.USER_NAME)
                 .remove(PrefKeys.USER_IMAGE)
-                .remove(PrefKeys.IS_LOGGED_IN)
-                .remove(PrefKeys.IS_PREMIUM)
+                .remove(PrefKeys.IS_LOGGED_IN);
+        
+        // Remove user-specific premium keys
+        if (!userId.equals("-1")) {
+            editor.remove(PrefKeys.IS_PREMIUM + "_" + userId)
+                    .remove(PrefKeys.PLAN_TYPE + "_" + userId)
+                    .remove(PrefKeys.PREMIUM_PLAN_TYPE + "_" + userId)
+                    .remove(PrefKeys.PREMIUM_EXPIRY_DATE + "_" + userId)
+                    .remove(PrefKeys.PURCHASE_DATE + "_" + userId)
+                    .remove("CATEGORY_SEED_DONE_" + userId);
+        }
+        
+        // Remove global premium keys
+        editor.remove(PrefKeys.IS_PREMIUM)
                 .remove(PrefKeys.PLAN_TYPE)
                 .remove(PrefKeys.PREMIUM_PLAN_TYPE)
                 .remove(PrefKeys.PREMIUM_EXPIRY_DATE)
@@ -110,6 +125,7 @@ public class AppPreferences {
                 .remove(PrefKeys.PURCHASE_TOKEN)
                 .remove(PrefKeys.ORDER_ID)
                 .apply();
+                
         notifyPremiumChanged();
     }
 
@@ -143,9 +159,7 @@ public class AppPreferences {
     public void setUserId(String uid) { putString(PrefKeys.USER_ID, uid); }
 
     public boolean isLoggedIn() { return prefs.getBoolean(PrefKeys.IS_LOGGED_IN, false); }
-    public boolean getLogin() { return isLoggedIn(); }
     public void setLoggedIn(boolean value) { putBoolean(PrefKeys.IS_LOGGED_IN, value); }
-    public void setKeyLogin(boolean value) { setLoggedIn(value); }
 
     // ----------- Premium -----------
     public boolean isUserPremium() {
@@ -279,9 +293,7 @@ public class AppPreferences {
     public void setOnboardingCompleted(boolean value) { putBoolean(PrefKeys.IS_ONBOARDING_COMPLETED, value); }
 
     public String getNotesLayout() { return prefs.getString(PrefKeys.KEY_NOTES_LAYOUT, "Grid"); }
-    public String getKeyNoteLayout() { return getNotesLayout(); }
     public void setNotesLayout(String layout) { putString(PrefKeys.KEY_NOTES_LAYOUT, layout); }
-    public void setKeyNoteLayout(String layout) { setNotesLayout(layout); }
 
     // ----------- Drafts -----------
     public boolean hasValidDraft() {

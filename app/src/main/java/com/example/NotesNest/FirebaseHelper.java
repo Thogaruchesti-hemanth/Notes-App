@@ -15,6 +15,7 @@ import androidx.credentials.ClearCredentialStateRequest;
 import androidx.credentials.CredentialManager;
 import androidx.credentials.exceptions.ClearCredentialException;
 
+import com.example.NotesNest.utils.AppExecutors;
 import com.example.NotesNest.utils.AppPreferences;
 import com.google.firebase.FirebaseNetworkException;
 import com.google.firebase.FirebaseTooManyRequestsException;
@@ -45,7 +46,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.Executors;
 
 public class FirebaseHelper {
 
@@ -376,6 +376,8 @@ public class FirebaseHelper {
                         sp.setIsPremium(true);
                         sp.setPlanType(planType);
                         sp.setPremiumExpiryDate(expiryDate);
+                        sp.setPremiumPlan(planType); // Consistency fix
+                        sp.setPurchaseDate(currentDate); // Consistency fix
                         callback.onPremiumUpdateSuccess(planType, expiryDate);
                     } else {
                         callback.onPremiumUpdateFailure("Failed to update premium plan");
@@ -488,8 +490,7 @@ public class FirebaseHelper {
         mAuth.signOut();
         
         // Clear all local session data professionally
-        AppPreferences sp = AppPreferences.getInstance();
-        sp.clearUserData();
+        AppPreferences.getInstance().clearUserData();
 
         try {
             CredentialManager.create(context).clearCredentialStateAsync(new ClearCredentialStateRequest(), null, Runnable::run, new androidx.credentials.CredentialManagerCallback<Void, ClearCredentialException>() {
@@ -517,7 +518,7 @@ public class FirebaseHelper {
             return;
         }
 
-        Executors.newSingleThreadExecutor().execute(() -> {
+        AppExecutors.getInstance().networkIO().execute(() -> {
             String base64 = "";
             try {
                 URL url = new URL(imageUrl);
@@ -533,7 +534,7 @@ public class FirebaseHelper {
                 }
             } catch (Exception ignored) {}
             String finalBase64 = base64;
-            new Handler(Looper.getMainLooper()).post(() -> callback.onBase64Ready(finalBase64));
+            AppExecutors.getInstance().mainThread().execute(() -> callback.onBase64Ready(finalBase64));
         });
     }
 

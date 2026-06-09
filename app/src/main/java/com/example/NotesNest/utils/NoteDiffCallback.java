@@ -2,16 +2,17 @@ package com.example.NotesNest.utils;
 
 import androidx.recyclerview.widget.DiffUtil;
 
-import com.example.NotesNest.databases.entities.NoteEntity;
+import com.example.NotesNest.databases.entities.NoteWithCategory;
 
 import java.util.List;
+import java.util.Objects;
 
 public class NoteDiffCallback extends DiffUtil.Callback {
 
-    private final List<NoteEntity> oldList;
-    private final List<NoteEntity> newList;
+    private final List<NoteWithCategory> oldList;
+    private final List<NoteWithCategory> newList;
 
-    public NoteDiffCallback(List<NoteEntity> oldList, List<NoteEntity> newList) {
+    public NoteDiffCallback(List<NoteWithCategory> oldList, List<NoteWithCategory> newList) {
         this.oldList = oldList;
         this.newList = newList;
     }
@@ -29,19 +30,14 @@ public class NoteDiffCallback extends DiffUtil.Callback {
     @Override
     public boolean areItemsTheSame(int oldPos, int newPos) {
         // Use unique ID to check if it's the same note
-        return oldList.get(oldPos).id == newList.get(newPos).id;
+        return oldList.get(oldPos).note.id == newList.get(newPos).note.id;
     }
 
     @Override
     public boolean areContentsTheSame(int oldPos, int newPos) {
-        NoteEntity oldNote = oldList.get(oldPos);
-        NoteEntity newNote = newList.get(newPos);
+        NoteWithCategory oldNoteWC = oldList.get(oldPos);
+        NoteWithCategory newNoteWC = newList.get(newPos);
 
-        // Explicitly check pinned status and content
-        return oldNote.isPinned == newNote.isPinned &&
-               oldNote.updatedAt == newNote.updatedAt &&
-               oldNote.title.equals(newNote.title) &&
-               oldNote.content.equals(newNote.content) &&
-               oldNote.colorHex.equals(newNote.colorHex);
+        return Objects.equals(oldNoteWC, newNoteWC);
     }
 }

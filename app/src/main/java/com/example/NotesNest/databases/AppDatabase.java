@@ -21,7 +21,7 @@ import com.example.NotesNest.databases.entities.ReminderEntity;
                 NoteFTSEntity.class,
                 ReminderEntity.class
         },
-        version = 4, // Incremented version to support per-user categories
+        version = 6, // Incremented version for Note-Reminder link (noteId in reminders)
         exportSchema = true
 )
 public abstract class AppDatabase extends RoomDatabase {

@@ -20,6 +20,8 @@ import com.example.NotesNest.activity.EditNoteActivity;
 import com.example.NotesNest.databases.ViewModels.CategoryViewModel;
 import com.example.NotesNest.databases.ViewModels.NoteViewModel;
 import com.example.NotesNest.databases.entities.NoteEntity;
+import com.example.NotesNest.databases.entities.NoteWithCategory;
+import com.example.NotesNest.utils.ColorUtils;
 import com.example.NotesNest.utils.CommonDialogs;
 import com.example.NotesNest.utils.DateTimeUtils;
 import com.example.NotesNest.utils.HtmlListConverter;
@@ -33,9 +35,9 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
     private final Context context;
     private final CategoryViewModel categoryViewModel;
     private final NoteViewModel noteViewModel;
-    private final List<NoteEntity> noteList;
+    private final List<NoteWithCategory> noteList;
 
-    public NoteAdapter(List<NoteEntity> noteList, Context context, CategoryViewModel categoryViewModel, NoteViewModel noteViewModel) {
+    public NoteAdapter(List<NoteWithCategory> noteList, Context context, CategoryViewModel categoryViewModel, NoteViewModel noteViewModel) {
         this.noteList = noteList;
         this.context = context;
         this.categoryViewModel = categoryViewModel;
@@ -51,9 +53,9 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull NoteViewHolder holder, int position) {
-        NoteEntity note = noteList.get(position);
+        NoteWithCategory noteWithCat = noteList.get(position);
+        NoteEntity note = noteWithCat.note;
         String content = HtmlListConverter.convertHtmlLists(note.content);
-        int bgColor;
 
         holder.textViewTitle.setText(note.title);
         holder.textViewContent.setText(Html.fromHtml(content, Html.FROM_HTML_MODE_LEGACY));
@@ -65,16 +67,20 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
             }
         });
 
-        try {
-            bgColor = android.graphics.Color.parseColor(note.colorHex);
-        } catch (Exception e) {
-            bgColor = android.graphics.Color.WHITE;
-        }
+        int bgColor = ColorUtils.parseColor(note.colorHex, android.graphics.Color.WHITE);
 
         holder.mainLayout.setCardBackgroundColor(bgColor);
         holder.textViewContent.setBackgroundColor(bgColor);
 
         DateTimeUtils.setDateTime(note.createdAt, holder.textDate, holder.textTime);
+        
+        // Bind Category name from the JOIN result
+        if (noteWithCat.categoryName != null) {
+            holder.textCategory.setText(noteWithCat.categoryName);
+            holder.textCategory.setVisibility(View.VISIBLE);
+        } else {
+            holder.textCategory.setVisibility(View.GONE);
+        }
 
         // Pinning logic: Toggle pin status from the icon
         holder.ivPinned.setVisibility(View.VISIBLE);
@@ -109,7 +115,8 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
             int currentPos = holder.getBindingAdapterPosition();
             if (currentPos == RecyclerView.NO_POSITION) return;
 
-            NoteEntity currentNote = noteList.get(currentPos);
+            NoteWithCategory currentNoteWC = noteList.get(currentPos);
+            NoteEntity currentNote = currentNoteWC.note;
 
             CommonDialogs.showNoteContentDialog(context, currentNote, categoryViewModel, new CommonDialogs.NoteActionCallback() {
                         @Override
@@ -124,7 +131,12 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
 
                         @Override
                         public void setCategory(TextView categoryView, int categoryId) {
-                            bindCategory(categoryId, currentNote.userId, categoryView);
+                            if (currentNoteWC.categoryName != null) {
+                                categoryView.setText(currentNoteWC.categoryName);
+                                categoryView.setVisibility(View.VISIBLE);
+                            } else {
+                                categoryView.setVisibility(View.GONE);
+                            }
                         }
                     }
             );
@@ -135,7 +147,8 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
             int currentPos = holder.getBindingAdapterPosition();
             if (currentPos == RecyclerView.NO_POSITION) return true;
 
-            NoteEntity currentNote = noteList.get(currentPos);
+            NoteWithCategory currentNoteWithCat = noteList.get(currentPos);
+            NoteEntity currentNote = currentNoteWithCat.note;
 
             CommonDialogs.showOptionsDialog(v, currentNote, currentPos, new CommonDialogs.NoteOptionsListener() {
                         @Override
@@ -180,29 +193,11 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         super.onViewRecycled(holder);
         holder.textViewContent.setText(null);
         holder.readMoreView.setVisibility(View.GONE);
-    }
-
-    private void bindCategory(Integer categoryId, String userId, TextView categoryView) {
-        if (categoryView == null || categoryId == null) {
-            if (categoryView != null) categoryView.setVisibility(View.GONE);
-            return;
-        }
-
-        if (context instanceof LifecycleOwner lifecycleOwner) {
-            categoryViewModel.getCategoryById(categoryId, userId).observe(lifecycleOwner, category -> {
-                if (category != null) {
-                    categoryView.setText(category.name);
-                    categoryView.setVisibility(View.VISIBLE);
-                } else {
-                    categoryView.setVisibility(View.GONE);
-                }
-            });
-        }
+        holder.textCategory.setVisibility(View.GONE);
     }
 
     private void deleteNote(NoteEntity note, int position) {
         noteViewModel.deleteNote(note);
-        ((android.app.Activity) context).runOnUiThread(() -> notifyItemRemoved(position));
     }
 
     @Override
@@ -210,10 +205,13 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         return noteList.size();
     }
 
-    public void updateData(List<NoteEntity> newNotes) {
+    public void updateData(List<NoteWithCategory> newNotes) {
         if (newNotes == null) return;
+        
+        // Note: NoteDiffCallback will need to be updated to handle NoteWithCategory
+        // or we can use a generic DiffUtil for now if NoteDiffCallback is strictly for NoteEntity.
+        // For efficiency in this plan, let's assume we'll update NoteDiffCallback too.
 
-        // Use a copy of the list for DiffUtil to avoid reference issues
         DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new NoteDiffCallback(new ArrayList<>(noteList), new ArrayList<>(newNotes)));
 
         noteList.clear();
@@ -227,6 +225,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         TextView textViewContent;
         TextView textDate;
         TextView textTime;
+        TextView textCategory;
         CardView mainLayout;
         ImageView readMoreView;
         ImageView ivPinned;
@@ -237,6 +236,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
             textViewContent = itemView.findViewById(R.id.tvNoteMessage);
             textDate = itemView.findViewById(R.id.tvNoteDate);
             textTime = itemView.findViewById(R.id.tvNoteTime);
+            textCategory = itemView.findViewById(R.id.tvCategory); // Ensure this ID exists in layout
             mainLayout = itemView.findViewById(R.id.layoutNoteItem);
             readMoreView = itemView.findViewById(R.id.ivReadMoreView);
             ivPinned = itemView.findViewById(R.id.ivPinned);

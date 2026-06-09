@@ -17,6 +17,7 @@ public class ReminderEntity {
     public int id;
 
     public String userId;                 // 👈 support multiple users
+    public Integer noteId;                // 👈 link to a specific note
     public String type;                // reminder | task | birthday
 
     // Common fields

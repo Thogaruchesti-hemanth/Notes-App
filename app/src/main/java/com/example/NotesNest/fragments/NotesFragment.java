@@ -43,8 +43,10 @@ import com.example.NotesNest.adapter.NoteAdapter;
 import com.example.NotesNest.adapter.NoteShimmerAdapter;
 import com.example.NotesNest.databases.ViewModels.CategoryViewModel;
 import com.example.NotesNest.databases.ViewModels.NoteViewModel;
+import com.example.NotesNest.databases.entities.CategoryCount;
 import com.example.NotesNest.databases.entities.CategoryEntity;
 import com.example.NotesNest.databases.entities.NoteEntity;
+import com.example.NotesNest.databases.entities.NoteWithCategory;
 import com.example.NotesNest.utils.AdManager;
 import com.example.NotesNest.utils.AppPreferences;
 import com.example.NotesNest.utils.CategoryManager;
@@ -82,8 +84,8 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
     private String selectedCategory = "All";
     private List<CategoryEntity> categoryList = new ArrayList<>();
     private int unselectedTabColor = -1;
-    private LiveData<List<NoteEntity>> currentNotesLiveData;
-    private Observer<List<NoteEntity>> currentNotesObserver;
+    private LiveData<List<NoteWithCategory>> currentNotesLiveData;
+    private Observer<List<NoteWithCategory>> currentNotesObserver;
     private ActivityResultLauncher<Intent> addEditNoteLauncher;
     private String currentUserId = null;
     private AppPreferences appPreferences;
@@ -321,24 +323,30 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
 
     private void setupCountObservers() {
         categoryNoteCounts.clear();
-        noteViewModel.getNotesCount(currentUserId).observe(getViewLifecycleOwner(), count -> {
-            if (count != null) {
-                categoryNoteCounts.put("All", count);
-                updateTabCountDisplay("All", count);
+        
+        noteViewModel.getAllCategoryCounts(currentUserId).observe(getViewLifecycleOwner(), counts -> {
+            if (counts == null) return;
+            
+            // Clear current counts and update with new ones
+            categoryNoteCounts.clear();
+            
+            int totalCount = 0;
+            for (CategoryCount cc : counts) {
+                totalCount += cc.count;
+                
+                // Find category name by ID
+                for (CategoryEntity ce : categoryList) {
+                    if (ce.id == cc.categoryId) {
+                        categoryNoteCounts.put(ce.name, cc.count);
+                        updateTabCountDisplay(ce.name, cc.count);
+                        break;
+                    }
+                }
             }
+            
+            categoryNoteCounts.put("All", totalCount);
+            updateTabCountDisplay("All", totalCount);
         });
-
-        for (CategoryEntity category : categoryList) {
-            if (!"All".equals(category.name)) {
-                noteViewModel.getNotesCountByCategory(currentUserId, category.id)
-                        .observe(getViewLifecycleOwner(), count -> {
-                            if (count != null) {
-                                categoryNoteCounts.put(category.name, count);
-                                updateTabCountDisplay(category.name, count);
-                            }
-                        });
-            }
-        }
     }
 
     private boolean isCategoryListSame(List<CategoryEntity> oldList, List<CategoryEntity> newList) {
@@ -482,24 +490,24 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
 
         if (query.isEmpty()) {
             if ("All".equalsIgnoreCase(selectedCategory)) {
-                currentNotesLiveData = noteViewModel.getAllNotes(currentUserId);
+                currentNotesLiveData = noteViewModel.getAllNotesWithCategory(currentUserId);
             } else {
                 int catId = getCategoryIdByName(selectedCategory);
                 if (catId == -1) {
-                    currentNotesLiveData = noteViewModel.getAllNotes(currentUserId);
+                    currentNotesLiveData = noteViewModel.getAllNotesWithCategory(currentUserId);
                 } else {
-                    currentNotesLiveData = noteViewModel.getNotesByCategory(currentUserId, catId);
+                    currentNotesLiveData = noteViewModel.getNotesByCategoryWithCategory(currentUserId, catId);
                 }
             }
         } else {
             if ("All".equalsIgnoreCase(selectedCategory)) {
-                currentNotesLiveData = noteViewModel.searchNotes(currentUserId, query);
+                currentNotesLiveData = noteViewModel.searchNotesWithCategory(currentUserId, query);
             } else {
                 int catId = getCategoryIdByName(selectedCategory);
                 if (catId == -1) {
-                    currentNotesLiveData = noteViewModel.searchNotes(currentUserId, query);
+                    currentNotesLiveData = noteViewModel.searchNotesWithCategory(currentUserId, query);
                 } else {
-                    currentNotesLiveData = noteViewModel.searchNotesInCategory(currentUserId, catId, query);
+                    currentNotesLiveData = noteViewModel.searchNotesInCategoryWithCategory(currentUserId, catId, query);
                 }
             }
         }
@@ -516,7 +524,7 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         }
     }
 
-    private void updateRecycler(List<NoteEntity> notes) {
+    private void updateRecycler(List<NoteWithCategory> notes) {
         if (shimmerRunnable != null) shimmerHandler.removeCallbacks(shimmerRunnable);
 
         if (isLoading) {

@@ -5,6 +5,7 @@ import static com.example.NotesNest.utils.Constants.DEFAULT_COLORS;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -170,11 +171,27 @@ public class EditNoteActivity extends AppCompatActivity {
 
     private void setupListeners() {
         setBackListener();
+        setReminderListener();
         setPinListener();
         setSaveListener();
         setUndoRedoListeners();
         setColorPickerListener();
         setFormattingListeners();
+    }
+
+    private void setReminderListener() {
+        binding.btnReminder.setOnClickListener(v -> {
+            String title = binding.etTitle.getText().toString().trim();
+            String htmlContent = editorHelper.getHtml();
+            
+            Intent intent = new Intent(this, EditReminderActivity.class);
+            intent.putExtra("PREFILL_TITLE", title);
+            intent.putExtra("PREFILL_CONTENT", htmlContent);
+            if (isEditing && noteId != -1) {
+                intent.putExtra("LINKED_NOTE_ID", noteId);
+            }
+            startActivity(intent);
+        });
     }
 
     private void setBackListener() {
