@@ -60,6 +60,10 @@ public class ReminderRepository {
         return reminderDao.getAllRemindersLive(userId);
     }
 
+    public LiveData<List<ReminderEntity>> getRemindersByNoteId(int noteId) {
+        return reminderDao.getRemindersByNoteId(noteId);
+    }
+
     public void getAllReminders(String userID, Callback callback) {
         executors.diskIO().execute(() -> {
             List<ReminderEntity> list = reminderDao.getAllReminders(userID);

@@ -5,7 +5,7 @@ import static com.example.NotesNest.utils.Constants.DEFAULT_COLORS;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
-import android.content.Intent;
+
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -29,6 +29,7 @@ import com.example.NotesNest.databases.entities.CategoryEntity;
 import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.databases.ViewModels.CategoryViewModel;
 import com.example.NotesNest.databases.ViewModels.NoteViewModel;
+import com.example.NotesNest.databases.ViewModels.ReminderViewModel;
 import com.example.NotesNest.databinding.ActivityEditNoteBinding;
 import com.example.NotesNest.editor.CKEditorHelper;
 import com.example.NotesNest.utils.AppPreferences;
@@ -49,6 +50,7 @@ public class EditNoteActivity extends AppCompatActivity {
     private AppPreferences preferences;
     private NoteViewModel noteViewModel;
     private CategoryViewModel categoryViewModel;
+    private ReminderViewModel reminderViewModel;
     private boolean isEditing = false;
     private int noteId = -1;
     private String selectedColor = defaultColor;
@@ -167,6 +169,7 @@ public class EditNoteActivity extends AppCompatActivity {
     private void initViewModels() {
         noteViewModel = new ViewModelProvider(this).get(NoteViewModel.class);
         categoryViewModel = new ViewModelProvider(this).get(CategoryViewModel.class);
+        reminderViewModel = new ViewModelProvider(this).get(ReminderViewModel.class);
     }
 
     private void setupListeners() {
@@ -182,16 +185,35 @@ public class EditNoteActivity extends AppCompatActivity {
     private void setReminderListener() {
         binding.btnReminder.setOnClickListener(v -> {
             String title = binding.etTitle.getText().toString().trim();
-            String htmlContent = editorHelper.getHtml();
-            
-            Intent intent = new Intent(this, EditReminderActivity.class);
-            intent.putExtra("PREFILL_TITLE", title);
-            intent.putExtra("PREFILL_CONTENT", htmlContent);
-            if (isEditing && noteId != -1) {
-                intent.putExtra("LINKED_NOTE_ID", noteId);
+            if (title.isEmpty()) {
+                Toast.makeText(this, "Please enter a title before adding a reminder", Toast.LENGTH_SHORT).show();
+                binding.etTitle.requestFocus();
+                return;
             }
-            startActivity(intent);
+
+            if (editorHelper != null) {
+                editorHelper.getContent(htmlContent -> {
+                    if (isEditing && noteId != -1) {
+                        openReminderActivity(title, htmlContent, noteId);
+                    } else {
+                        // Auto-save to establish the link
+                        saveNoteInternal(true, id -> {
+                            if (id != -1) {
+                                openReminderActivity(title, htmlContent, (int) id);
+                            }
+                        });
+                    }
+                });
+            }
         });
+    }
+
+    private void openReminderActivity(String title, String content, int linkedNoteId) {
+        Intent intent = new Intent(this, EditReminderActivity.class);
+        intent.putExtra("PREFILL_TITLE", title);
+        intent.putExtra("PREFILL_CONTENT", content);
+        intent.putExtra("LINKED_NOTE_ID", linkedNoteId);
+        startActivity(intent);
     }
 
     private void setBackListener() {
@@ -273,6 +295,17 @@ public class EditNoteActivity extends AppCompatActivity {
                 updateBackgroundColor();
                 updateSelectedChip();
             });
+
+            // Observe linked reminders
+            reminderViewModel.getRemindersByNoteId(noteId).observe(this, reminders -> {
+                if (reminders != null && !reminders.isEmpty()) {
+                    // Update UI to show there's a reminder
+                    binding.btnReminder.setColorFilter(ContextCompat.getColor(this, R.color.tabSelectedTextColor));
+                    // Maybe show a tooltip or toast?
+                } else {
+                    binding.btnReminder.clearColorFilter();
+                }
+            });
         }
     }
 
@@ -340,6 +373,14 @@ public class EditNoteActivity extends AppCompatActivity {
     }
 
     private void saveNote() {
+        saveNoteInternal(false, id -> {
+            isNoteSaved = true;
+            preferences.clearDraft();
+            finish();
+        });
+    }
+
+    private void saveNoteInternal(boolean stayOnActivity, OnNoteSavedCallback callback) {
         final String title = binding.etTitle.getText().toString().trim();
         if (title.isEmpty()) {
             Toast.makeText(this, "Please enter a title", Toast.LENGTH_SHORT).show();
@@ -347,13 +388,13 @@ public class EditNoteActivity extends AppCompatActivity {
         }
 
         if (editorHelper != null) {
-            editorHelper.getContent(htmlContent -> performSave(title, htmlContent));
+            editorHelper.getContent(htmlContent -> performSave(title, htmlContent, stayOnActivity, callback));
         } else {
-            performSave(title, "");
+            performSave(title, "", stayOnActivity, callback);
         }
     }
 
-    private void performSave(String title, String htmlContent) {
+    private void performSave(String title, String htmlContent, boolean stayOnActivity, OnNoteSavedCallback callback) {
         long timestamp = System.currentTimeMillis();
         String userId = preferences.getUserId();
 
@@ -368,12 +409,21 @@ public class EditNoteActivity extends AppCompatActivity {
         note.colorHex = selectedColor;
         note.isPinned = isPinned;
 
-        if (isEditing) noteViewModel.updateNote(note);
-        else noteViewModel.insertNote(note);
+        if (isEditing) {
+            noteViewModel.updateNote(note);
+            if (callback != null) callback.onNoteSaved(noteId);
+        } else {
+            noteViewModel.insertNote(note, id -> {
+                noteId = (int) id;
+                isEditing = true;
+                observeViewModels(); // Start observing reminders for the new ID
+                if (callback != null) callback.onNoteSaved(id);
+            });
+        }
+    }
 
-        isNoteSaved = true;
-        preferences.clearDraft();
-        finish();
+    private interface OnNoteSavedCallback {
+        void onNoteSaved(long id);
     }
 
     private void updatePinUI() {

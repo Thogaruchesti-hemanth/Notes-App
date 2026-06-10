@@ -153,17 +153,46 @@ public class AdManager {
             return;
         }
 
+        // --- FIX FOR FULL SCREEN APP BAR ---
+        // Safely hide the ActionBar if the activity has one active
+        if (activity.getActionBar() != null) {
+            activity.getActionBar().hide();
+        } else if (activity instanceof androidx.appcompat.app.AppCompatActivity) {
+            if (((androidx.appcompat.app.AppCompatActivity) activity).getSupportActionBar() != null) {
+                ((androidx.appcompat.app.AppCompatActivity) activity).getSupportActionBar().hide();
+            }
+        }
+        // -----------------------------------
+
         mInterstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
             @Override
             public void onAdDismissedFullScreenContent() {
                 mInterstitialAd = null;
                 loadInterstitial(activity); // Preload next
+
+                // --- RESTORE APP BAR ON CLOSE ---
+                if (activity instanceof androidx.appcompat.app.AppCompatActivity) {
+                    if (((androidx.appcompat.app.AppCompatActivity) activity).getSupportActionBar() != null) {
+                        ((androidx.appcompat.app.AppCompatActivity) activity).getSupportActionBar().show();
+                    }
+                }
+                // ---------------------------------
+
                 if (listener != null) listener.onDismissed();
             }
 
             @Override
             public void onAdFailedToShowFullScreenContent(@NonNull com.google.android.gms.ads.AdError adError) {
                 mInterstitialAd = null;
+
+                // --- RESTORE APP BAR ON CLOSE ---
+                if (activity instanceof androidx.appcompat.app.AppCompatActivity) {
+                    if (((androidx.appcompat.app.AppCompatActivity) activity).getSupportActionBar() != null) {
+                        ((androidx.appcompat.app.AppCompatActivity) activity).getSupportActionBar().show();
+                    }
+                }
+                // ---------------------------------
+
                 if (listener != null) listener.onDismissed();
             }
         });

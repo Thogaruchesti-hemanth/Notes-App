@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.NotesNest.R;
 import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.utils.DateTimeUtils;
-import com.example.NotesNest.utils.NoteDiffCallback;
+import com.example.NotesNest.utils.NoteEntityDiffCallback;
 
 import java.util.List;
 
@@ -92,7 +92,7 @@ public class NoteConfigAdapter extends RecyclerView.Adapter<NoteConfigAdapter.No
     }
 
     public void updateData(List<NoteEntity> newNotes) {
-        DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new NoteDiffCallback(noteList, newNotes));
+        DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new NoteEntityDiffCallback(noteList, newNotes));
         noteList.clear();
         noteList.addAll(newNotes);
         diff.dispatchUpdatesTo(this);

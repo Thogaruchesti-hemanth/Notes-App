@@ -21,7 +21,7 @@ public class BootReceiver extends BroadcastReceiver {
         if (!Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction()) && !Intent.ACTION_LOCKED_BOOT_COMPLETED.equals(intent.getAction()))
             return;
 
-        Log.d(TAG, "Device booted — rescheduling reminders");
+        Log.d(TAG, "Device booted — rescheduling reminders using AlarmManager");
 
         ReminderRepository repo = new ReminderRepository((Application) context.getApplicationContext());
         String currentUserId = AppPreferences.getInstance().getUserId();
@@ -31,16 +31,30 @@ public class BootReceiver extends BroadcastReceiver {
             for (ReminderEntity r : reminders) {
                 long notifyAt = r.notificationTime;
 
-                if (r.isRepeated) {
-                    long next = Math.max(now + 1000, notifyAt);
-                    NotificationScheduler.scheduleOneTime(
-                            context,
-                            r.id,
-                            next,
-                            r.type,
-                            true
-                    );
+                if (r.isRepeated && r.repeatType != null && !"Does not repeat".equalsIgnoreCase(r.repeatType)) {
+                    // If it's repeating, find the next occurrence in the future
+                    long next = notifyAt;
+                    if (next <= now) {
+                        next = NotificationScheduler.computeNextTrigger(next, r.repeatType);
+                    }
+                    
+                    if (next > 0) {
+                        NotificationScheduler.scheduleOneTime(
+                                context,
+                                r.id,
+                                next,
+                                r.repeatType,
+                                true
+                        );
+                        
+                        // Update the DB if the time changed
+                        if (next != r.notificationTime) {
+                            r.notificationTime = next;
+                            repo.update(r);
+                        }
+                    }
                 } else if (notifyAt > now) {
+                    // One-time future reminder
                     NotificationScheduler.scheduleOneTime(
                             context,
                             r.id,

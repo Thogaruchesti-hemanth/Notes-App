@@ -1,0 +1,57 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="AndroidLintAccessibilityPolicy" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintAdvertisingIdPolicy" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintAllFilesAccessPolicy" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintBackgroundLocationPolicy" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintBadConfigurationProvider" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintBadPeriodicWorkRequestEnqueue" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintDetachAndAttachSameFragment" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintDialogFragmentCallbacksDetector" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintEnsureInitializerMetadata" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintEnsureInitializerNoArgConstr" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintExactAlarmPolicy" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintExperimentalAnnotationRetention" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintForegroundServicesPolicy" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintFragmentAddMenuProvider" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintFragmentBackPressedCallback" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintFragmentLiveDataObserve" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintFragmentTagUsage" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintFullScreenIntentPolicy" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintHealthConnectPolicy" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintIdleBatteryChargingConstraints" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintInvalidFragmentVersionForActivityResult" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintInvalidPeriodicWorkRequestInterval" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintInvalidSetHasFixedSize" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintInvalidUseOfOnBackPressed" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintLoginCredentials" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintPackageVisibilityPolicy" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintPhotoAndVideoPolicy" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintRemoveWorkManagerInitializer" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintRequestInstallPackagesPolicy" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintSmsAndCallLogPolicy" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintSpecifyForegroundServiceType" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintSpecifyJobSchedulerIdRange" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintUnsafeOptInUsageError" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintUnsafeOptInUsageWarning" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintUnsafeRepeatOnLifecycleDetector" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintUseAndroidAlpha" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintUseAppTint" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintUseCompatLoadingForColorStateLists" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintUseCompatLoadingForDrawables" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintUseCompatTextViewDrawableApis" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintUseCompatTextViewDrawableXml" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintUseGetLayoutInflater" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintUseRequireInsteadOfGet" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintUseRxSetProgress2" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintUseSupportActionBar" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintUseSwitchCompatOrMaterialCode" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintUseSwitchCompatOrMaterialXml" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintUsingOnClickInXml" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintVpnServicePolicy" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintWorkerHasAPublicModifier" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="AndroidLintWrongRequiresOptIn" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="FakeIssue30" enabled="true" level="WARNING" enabled_by_default="true" />
+  </profile>
+</component>

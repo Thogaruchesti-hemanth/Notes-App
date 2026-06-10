@@ -26,6 +26,10 @@ public class NoteRepository {
     }
 
     // READ — Room handles async & lifecycle & continuous updates
+    public LiveData<List<NoteEntity>> getAllNotes(String userId) {
+        return noteDao.getAllNotes(userId);
+    }
+
     public LiveData<List<NoteWithCategory>> getAllNotesWithCategory(String userId) {
         return noteDao.getAllNotesWithCategory(userId);
     }
@@ -39,8 +43,17 @@ public class NoteRepository {
     }
 
     // WRITE (manually async)
-    public void insert(NoteEntity note) {
-        executors.diskIO().execute(() -> noteDao.insert(note));
+    public void insert(NoteEntity note, OnNoteInsertedCallback callback) {
+        executors.diskIO().execute(() -> {
+            long id = noteDao.insert(note);
+            if (callback != null) {
+                new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> callback.onNoteInserted(id));
+            }
+        });
+    }
+
+    public interface OnNoteInsertedCallback {
+        void onNoteInserted(long id);
     }
 
     public void update(NoteEntity note) {

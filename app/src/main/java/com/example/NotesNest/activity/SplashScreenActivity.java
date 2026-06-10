@@ -31,19 +31,27 @@ public class SplashScreenActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         EdgeToEdge.enable(this);
+        // Important: Apply theme mode BEFORE super.onCreate to avoid recreation flicker
+        ThemeManager.applyTheme(this);
         // Install the splash screen before calling super.onCreate()
         SplashScreen.installSplashScreen(this);
 
+        supportRequestWindowFeature(android.view.Window.FEATURE_NO_TITLE);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash_screen);
+        
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
+        if (getActionBar() != null) {
+            getActionBar().hide();
+        }
 
         prefs = AppPreferences.getInstance();
         premiumManager = new PremiumManager(this);
-
-        ThemeManager.applyTheme(this);
         updateLogo();
         
-        if (prefs.getLogin()) {
+        if (prefs.isLoggedIn()) {
             String userId = prefs.getUserId();
             DBSeedUtil.seedDefaultCategories(this, userId);
             
@@ -91,7 +99,7 @@ public class SplashScreenActivity extends AppCompatActivity {
 
         // SHOW AD ONLY IF: Not Premium AND Onboarding is already completed AND user is logged in
         // This prevents disruptive ads on the first launch or during onboarding walkthrough.
-        if (!premiumManager.isPremium() && isOnboardingCompleted && prefs.getLogin()) {
+        if (!premiumManager.isPremium() && isOnboardingCompleted && prefs.isLoggedIn()) {
             AdManager.showAppOpenAd(this, this::goToNextScreen);
         } else {
             goToNextScreen();
@@ -102,7 +110,7 @@ public class SplashScreenActivity extends AppCompatActivity {
      * Navigate to log in or main screen
      */
     private void goToNextScreen() {
-        Class<?> nextActivity = prefs.getLogin() ? MainActivity.class : OnboardingActivity.class;
+        Class<?> nextActivity = prefs.isLoggedIn() ? MainActivity.class : OnboardingActivity.class;
 
         Intent intent = new Intent(this, nextActivity);
         startActivity(intent);

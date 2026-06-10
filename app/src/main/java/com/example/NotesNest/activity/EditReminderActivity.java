@@ -8,11 +8,13 @@ import static com.example.NotesNest.utils.Constants.TYPE_REMINDER;
 import static com.example.NotesNest.utils.Constants.TYPE_TASK;
 import static com.example.NotesNest.utils.Constants.professionalGradients;
 
+import android.Manifest;
 import android.app.AlarmManager;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -24,9 +26,12 @@ import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -67,7 +72,15 @@ public class EditReminderActivity extends AppCompatActivity {
     private int selectedGradientEnd = professionalGradients[0][1];
     private boolean isSaving = false;
     private boolean isEditMode = false;
+    private Integer linkedNoteId = null;
     private List<ReminderEntity> allReminders = new ArrayList<>();
+
+    private final ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (!isGranted) {
+                    showToast("Notification permission is required for reminders.");
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,11 +118,33 @@ public class EditReminderActivity extends AppCompatActivity {
             isEditMode = true;
             loadReminder(reminderId);
         } else {
+            handlePrefillData();
             refreshDateTimeOnUi();
         }
 
         binding.titleTextInputLayout.requestFocus();
         checkExactAlarmPermission(false);
+    }
+
+    private void handlePrefillData() {
+        Intent intent = getIntent();
+        if (intent == null) return;
+
+        String prefillTitle = intent.getStringExtra("PREFILL_TITLE");
+        String prefillContent = intent.getStringExtra("PREFILL_CONTENT");
+        int noteId = intent.getIntExtra("LINKED_NOTE_ID", -1);
+
+        if (!TextUtils.isEmpty(prefillTitle)) {
+            binding.titleTextView.setText(prefillTitle);
+        }
+        if (!TextUtils.isEmpty(prefillContent)) {
+            // Strip HTML tags for the details field if it's plain text, 
+            // or just set it if it supports basic HTML
+            binding.etDetails.setText(android.text.Html.fromHtml(prefillContent, android.text.Html.FROM_HTML_MODE_COMPACT));
+        }
+        if (noteId != -1) {
+            linkedNoteId = noteId;
+        }
     }
 
     private void initViews() {
@@ -186,8 +221,8 @@ public class EditReminderActivity extends AppCompatActivity {
             updateTitleHint();
         });
 
-        binding.tvTitle.setOnFocusChangeListener((v, hasFocus) ->
-                binding.tvTitle.setCursorVisible(hasFocus)
+        binding.titleTextView.setOnFocusChangeListener((v, hasFocus) ->
+                binding.titleTextView.setCursorVisible(hasFocus)
         );
     }
 
@@ -246,13 +281,13 @@ public class EditReminderActivity extends AppCompatActivity {
     private void updateTitleHint() {
         switch (selectedType) {
             case TYPE_TASK:
-                binding.tvTitle.setHint("Task Title");
+                binding.titleTextView.setHint("Task Title");
                 break;
             case TYPE_BIRTHDAY:
-                binding.tvTitle.setHint("Person's Name");
+                binding.titleTextView.setHint("Person's Name");
                 break;
             default:
-                binding.tvTitle.setHint("Reminder Title");
+                binding.titleTextView.setHint("Reminder Title");
         }
     }
 
@@ -300,8 +335,8 @@ public class EditReminderActivity extends AppCompatActivity {
     }
 
     private void validateAndSave() {
-        final String title = binding.tvTitle.getText() == null ? "" :
-                binding.tvTitle.getText().toString().trim();
+        final String title = binding.titleTextView.getText() == null ? "" :
+                binding.titleTextView.getText().toString().trim();
         final String message = binding.etDetails.getText() == null ? "" :
                 binding.etDetails.getText().toString().trim();
 
@@ -348,6 +383,7 @@ public class EditReminderActivity extends AppCompatActivity {
 
     private void proceedToSave(String title, String message) {
         if (!checkExactAlarmPermission(true)) return;
+        if (!checkNotificationPermission()) return;
 
         isSaving = true;
         binding.btnSave.setEnabled(false);
@@ -361,6 +397,7 @@ public class EditReminderActivity extends AppCompatActivity {
             entity.type = selectedType;
             entity.title = title;
             entity.userId = userId;
+            entity.noteId = linkedNoteId;
             entity.notificationTime = selectedDateTime;
             entity.isRepeated = repeated;
             entity.repeatType = selectedRepeat;
@@ -372,6 +409,7 @@ public class EditReminderActivity extends AppCompatActivity {
             saveNewReminder(entity);
         } else {
             currentEntity.userId = userId;
+            currentEntity.noteId = linkedNoteId;
             currentEntity.type = selectedType;
             currentEntity.title = title;
             currentEntity.notificationTime = selectedDateTime;
@@ -472,6 +510,17 @@ public class EditReminderActivity extends AppCompatActivity {
         return true;
     }
 
+    private boolean checkNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
+                    PackageManager.PERMISSION_GRANTED) {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+                return false;
+            }
+        }
+        return true;
+    }
+
     private void loadReminder(int id) {
         String userId = AppPreferences.getInstance().getUserId();
         reminderViewModel.getReminderById(id, userId).observe(this, entity -> {
@@ -485,6 +534,7 @@ public class EditReminderActivity extends AppCompatActivity {
 
     private void populateFromEntity(@NonNull ReminderEntity entity) {
         selectedType = entity.type == null ? TYPE_REMINDER : entity.type;
+        linkedNoteId = entity.noteId;
 
         switch (selectedType) {
             case TYPE_TASK:
@@ -498,7 +548,7 @@ public class EditReminderActivity extends AppCompatActivity {
                 break;
         }
 
-        binding.tvTitle.setText(entity.title);
+        binding.titleTextView.setText(entity.title);
 
         if (entity.notificationTime > 0) {
             calendar.setTimeInMillis(entity.notificationTime);

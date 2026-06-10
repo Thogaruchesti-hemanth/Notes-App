@@ -24,6 +24,10 @@ public class NoteViewModel extends AndroidViewModel {
 
     // -------------------- READ --------------------
 
+    public LiveData<List<NoteEntity>> getAllNotes(String userId) {
+        return noteRepository.getAllNotes(userId);
+    }
+
     public LiveData<List<NoteWithCategory>> getAllNotesWithCategory(String userId) {
         return noteRepository.getAllNotesWithCategory(userId);
     }
@@ -38,8 +42,8 @@ public class NoteViewModel extends AndroidViewModel {
 
     // -------------------- WRITE --------------------
 
-    public void insertNote(NoteEntity note) {
-        noteRepository.insert(note);
+    public void insertNote(NoteEntity note, NoteRepository.OnNoteInsertedCallback callback) {
+        noteRepository.insert(note, callback);
     }
 
     public void updateNote(NoteEntity note) {

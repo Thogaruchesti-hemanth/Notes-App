@@ -37,7 +37,7 @@ public interface NoteDao {
     // ------------------------------------------
 
     @Insert
-    void insert(NoteEntity note);
+    long insert(NoteEntity note);
 
     @Update
     void update(NoteEntity note);

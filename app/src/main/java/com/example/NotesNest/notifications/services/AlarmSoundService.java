@@ -5,6 +5,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.media.AudioAttributes;
 import android.media.Ringtone;
@@ -14,18 +15,21 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.Vibrator;
+import android.os.VibrationEffect;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
 import com.example.NotesNest.R;
-import com.example.NotesNest.notifications.receivers.ReminderReceiver;
+import com.example.NotesNest.notifications.receivers.ExactAlarmBroadcastReceiver;
 
 public class AlarmSoundService extends Service {
     private Ringtone ringtone;
+    private Vibrator vibrator;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable stopRunnable = this::stopSelf;
-    private static final String CHANNEL_ID = "reminder_channel";
+    private static final String CHANNEL_ID = "reminder_alarm_channel";
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -40,48 +44,50 @@ public class AlarmSoundService extends Service {
             return START_NOT_STICKY;
         }
 
-        int notificationId = intent.getIntExtra("NOTIFICATION_ID", 0);
+        int notificationId = intent.getIntExtra("NOTIFICATION_ID", 1001);
+        String title = intent.getStringExtra("REMINDER_TITLE");
         String message = intent.getStringExtra("REMINDER_MESSAGE");
 
-        showForegroundNotification(notificationId, message);
+        showForegroundNotification(notificationId, title, message);
         playAlarm();
+        startVibration();
         
-        // Auto-stop after 15 seconds to give user time to see it
+        // Auto-stop after 1 minute
         handler.removeCallbacks(stopRunnable);
-        handler.postDelayed(stopRunnable, 15000);
+        handler.postDelayed(stopRunnable, 60000);
 
         return START_NOT_STICKY;
     }
 
-    private void showForegroundNotification(int notificationId, String message) {
+    private void showForegroundNotification(int notificationId, String title, String message) {
         createNotificationChannel();
 
-        Intent stopAlarmIntent = new Intent(this, ReminderReceiver.class);
-        stopAlarmIntent.setAction(ReminderReceiver.ACTION_STOP_ALARM);
-        stopAlarmIntent.putExtra("NOTIFICATION_ID", notificationId);
-        
-        PendingIntent stopPendingIntent = PendingIntent.getBroadcast(this, notificationId, stopAlarmIntent, 
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        Intent dismissIntent = new Intent(this, ExactAlarmBroadcastReceiver.class);
+        dismissIntent.setAction(ExactAlarmBroadcastReceiver.ACTION_DISMISS);
+        dismissIntent.putExtra("reminder_id", notificationId);
+        PendingIntent dismissPendingIntent = PendingIntent.getBroadcast(this, notificationId + 20000,
+                dismissIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_notification)
-                .setContentTitle("Reminder")
+                .setSmallIcon(R.drawable.splash_logo_dark)
+                .setContentTitle(title != null ? title : "Reminder")
                 .setContentText(message)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
                 .setAutoCancel(true)
-                .setOngoing(true) // Keep it while ringing
-                .addAction(R.drawable.ic_close, "Turn Off Alarm", stopPendingIntent)
+                .setOngoing(true)
+                .addAction(R.drawable.ic_close, "Dismiss", dismissPendingIntent)
                 .build();
         
-        startForeground(notificationId != 0 ? notificationId : 1001, notification);
+        startForeground(notificationId, notification);
     }
 
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
-                    CHANNEL_ID, "Reminder Notifications", NotificationManager.IMPORTANCE_HIGH);
-            channel.setDescription("Channel for Reminder alarms");
+                    CHANNEL_ID, "Reminder Alarms", NotificationManager.IMPORTANCE_HIGH);
+            channel.setDescription("Channel for high-priority reminder alarms");
+            channel.setSound(null, null); // Sound handled by service
             NotificationManager manager = getSystemService(NotificationManager.class);
             if (manager != null) {
                 manager.createNotificationChannel(channel);
@@ -111,10 +117,25 @@ public class AlarmSoundService extends Service {
         }
     }
 
+    private void startVibration() {
+        vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        if (vibrator != null && vibrator.hasVibrator()) {
+            long[] pattern = {0, 500, 500}; // vibrate 500ms, sleep 500ms
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                vibrator.vibrate(VibrationEffect.createWaveform(pattern, 0));
+            } else {
+                vibrator.vibrate(pattern, 0);
+            }
+        }
+    }
+
     @Override
     public void onDestroy() {
         if (ringtone != null && ringtone.isPlaying()) {
             ringtone.stop();
+        }
+        if (vibrator != null) {
+            vibrator.cancel();
         }
         handler.removeCallbacks(stopRunnable);
         super.onDestroy();
