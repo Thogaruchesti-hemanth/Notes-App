@@ -89,6 +89,7 @@ public class DriveBackupActivity extends AppCompatActivity {
     private ActivityDriveBackupBinding binding;
     private RotateAnimation syncAnimation;
     private AlertDialog progressDialog;
+    private java.util.concurrent.ExecutorService backgroundExecutor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,6 +119,15 @@ public class DriveBackupActivity extends AppCompatActivity {
         setupDropdown();
         restoreUIState();
         setupClickListeners();
+        backgroundExecutor = Executors.newSingleThreadExecutor();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (backgroundExecutor != null) {
+            backgroundExecutor.shutdown();
+        }
+        super.onDestroy();
     }
 
     private void initAnimations() {
@@ -343,8 +353,15 @@ public class DriveBackupActivity extends AppCompatActivity {
             @Override
             public void onError(@NonNull GetCredentialException e) {
                 runOnUiThread(() -> {
-                    AppLog.e(TAG, "Credential Manager Error: " + e.getMessage());
-                    AppToast.s("Sign-in failed: " + e.getMessage());
+                    if (e instanceof androidx.credentials.exceptions.NoCredentialException) {
+                        AppLog.w(TAG, "No credentials found on device: " + e.getMessage());
+                        AppToast.s("No Google account found. Please add an account in device settings.");
+                    } else if (e instanceof androidx.credentials.exceptions.GetCredentialCancellationException) {
+                        AppLog.d(TAG, "Sign-in cancelled by user.");
+                    } else {
+                        AppLog.e(TAG, "Credential Manager Error: " + e.getMessage(), e);
+                        AppToast.s("Sign-in failed: " + e.getMessage());
+                    }
                 });
             }
         });
@@ -360,7 +377,7 @@ public class DriveBackupActivity extends AppCompatActivity {
             }
 
             if (googleIdTokenCredential != null) {
-                String email = googleIdTokenCredential.getId();
+                String email = googleIdTokenCredential.getEmail();
                 
                 if (TextUtils.isEmpty(email) || "null".equalsIgnoreCase(email)) {
                     AppLog.e(TAG, "Invalid email from credential: " + email);
@@ -524,7 +541,7 @@ public class DriveBackupActivity extends AppCompatActivity {
         progressDialog = CommonDialogs.showProgressDialog(this, getString(R.string.text_restoring_from_drive));
         String email = appPreferences.getString(PrefKeys.BACKUP_ACCOUNT_EMAIL, null);
         
-        Executors.newSingleThreadExecutor().execute(() -> {
+        backgroundExecutor.execute(() -> {
             try {
                 Drive driveService = getDriveService(email);
                 
@@ -561,7 +578,7 @@ public class DriveBackupActivity extends AppCompatActivity {
     }
 
     private void performRestoreFromFile(java.io.File file, String email) {
-        ImportManager manager = new ImportManager(Executors.newSingleThreadExecutor(), new Handler(Looper.getMainLooper()));
+        ImportManager manager = new ImportManager(backgroundExecutor, new Handler(Looper.getMainLooper()));
         // Use user's email as password since that's what we used in DriveBackupWorker
         manager.importFromUri(this, android.net.Uri.fromFile(file), email.toCharArray(), new ImportManager.ImportCallback() {
             @Override
@@ -577,13 +594,6 @@ public class DriveBackupActivity extends AppCompatActivity {
             @Override
             public void postToast(String message) {
                 AppToast.s(message);
-            }
-
-            @Override
-            public void onVersionMismatch(int currentVersion, int incomingVersion, Runnable onReplaceConfirmed, Runnable onCancel) {
-                CommonDialogs.showConfirmDialog(DriveBackupActivity.this, "Version Mismatch", 
-                    "The backup file version is different from the current app database. Do you want to replace it anyway?", 
-                    "Replace", "Cancel", onReplaceConfirmed, onCancel);
             }
         }, binding.getRoot());
     }

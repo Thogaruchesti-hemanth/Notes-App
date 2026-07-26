@@ -21,8 +21,7 @@ import com.example.NotesNest.databases.entities.ReminderEntity;
                 NoteFTSEntity.class,
                 ReminderEntity.class
         },
-        version = 4, // Incremented version to support per-user categories
-        exportSchema = true
+        version = 5
 )
 public abstract class AppDatabase extends RoomDatabase {
 
@@ -38,30 +37,12 @@ public abstract class AppDatabase extends RoomDatabase {
                                     AppDatabase.class,
                                     "notesnest.db"
                             )
-                            .fallbackToDestructiveMigration()
                             .build();
                 }
             }
         }
         return INSTANCE;
     }
-
-    public static synchronized void destroyInstance() {
-        if (INSTANCE != null) {
-            if (INSTANCE.isOpen()) {
-                INSTANCE.close();
-            }
-            INSTANCE = null;
-        }
-    }
-
-    public static void checkpoint(Context context) {
-        AppDatabase db = getInstance(context);
-        if (db != null && db.isOpen()) {
-            db.getOpenHelper().getWritableDatabase().query("PRAGMA wal_checkpoint(FULL)").close();
-        }
-    }
-
 
     // ------------------- DAOs -------------------
     public abstract NoteDao noteDao();

@@ -26,11 +26,11 @@ public class NoteViewModel extends AndroidViewModel {
         return noteRepository.getAllNotes(userId);
     }
 
-    public LiveData<List<NoteEntity>> getNotesByCategory(String userId, int categoryId) {
+    public LiveData<List<NoteEntity>> getNotesByCategory(String userId, String categoryId) {
         return noteRepository.getNotesByCategory(userId, categoryId);
     }
 
-    public LiveData<NoteEntity> getNoteById(int noteId) {
+    public LiveData<NoteEntity> getNoteById(String noteId) {
         return noteRepository.getNoteById(noteId);
     }
 
@@ -53,14 +53,14 @@ public class NoteViewModel extends AndroidViewModel {
         return noteRepository.searchNotes(userId, keyword);
     }
 
-    public LiveData<List<NoteEntity>> searchNotesInCategory(String userId, int categoryId, String keyword) {
+    public LiveData<List<NoteEntity>> searchNotesInCategory(String userId, String categoryId, String keyword) {
         return noteRepository.searchNotesInCategory(userId, categoryId, keyword);
     }
 
     // -------------------- OFFLINE-FIRST / SYNC --------------------
 
     // RESET CATEGORY → Set categoryId null for all notes
-    public void resetCategoryNotes(String userId, int categoryId) {
+    public void resetCategoryNotes(String userId, String categoryId) {
         noteRepository.resetCategoryNotes(userId, categoryId);
     }
 
@@ -69,7 +69,7 @@ public class NoteViewModel extends AndroidViewModel {
         return noteRepository.getNotesCount(userId);
     }
 
-    public LiveData<Integer> getNotesCountByCategory(String userId, int categoryId) {
+    public LiveData<Integer> getNotesCountByCategory(String userId, String categoryId) {
         return noteRepository.getNotesCountByCategory(userId, categoryId);
     }
 

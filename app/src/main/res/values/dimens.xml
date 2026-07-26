@@ -8,7 +8,6 @@
     <dimen name="padding_8">8dp</dimen>
     <dimen name="padding_10">10dp</dimen>
     <dimen name="padding_12">12dp</dimen>
-    <dimen name="padding_15">15dp</dimen>
     <dimen name="padding_16">16dp</dimen>
     <dimen name="padding_20">20dp</dimen>
     <dimen name="padding_24">24dp</dimen>
@@ -43,12 +42,10 @@
     <dimen name="text_22">22sp</dimen>
     <dimen name="text_24">24sp</dimen>
     <dimen name="text_28">28sp</dimen>
-    <dimen name="text_30">30sp</dimen>
     <dimen name="text_36">36sp</dimen>
     <dimen name="text_48">48sp</dimen>
 
     <!-- Rounded corners -->
-    <dimen name="radius_2">2dp</dimen>
     <dimen name="radius_4">4dp</dimen>
     <dimen name="radius_8">8dp</dimen>
     <dimen name="radius_12">12dp</dimen>
@@ -62,28 +59,20 @@
 
     <!-- Common sizes -->
     <dimen name="size_1">1dp</dimen>
-    <dimen name="size_2">2dp</dimen>
     <dimen name="size_3">3dp</dimen>
     <dimen name="size_5">5dp</dimen>
-    <dimen name="size_6">5dp</dimen>
-    <dimen name="size_8">8dp</dimen>
-    <dimen name="size_12">12dp</dimen>
     <dimen name="size_16">16dp</dimen>
     <dimen name="size_20">20dp</dimen>
     <dimen name="size_22">22dp</dimen>
     <dimen name="size_24">24dp</dimen>
-    <dimen name="size_28">28dp</dimen>
     <dimen name="size_30">30dp</dimen>
     <dimen name="size_32">32dp</dimen>
-    <dimen name="size_36">36dp</dimen>
     <dimen name="size_40">40dp</dimen>
     <dimen name="size_48">48dp</dimen>
     <dimen name="size_50">50dp</dimen>
-    <dimen name="size_56">56dp</dimen>
     <dimen name="size_60">60dp</dimen>
     <dimen name="size_72">72dp</dimen>
     <dimen name="size_80">80dp</dimen>
-    <dimen name="size_90">90dp</dimen>
     <dimen name="size_100">100dp</dimen>
     <dimen name="size_120">120dp</dimen>
     <dimen name="size_130">130dp</dimen>
@@ -98,10 +87,4 @@
     <dimen name="elevation_4">4dp</dimen>
     <dimen name="elevation_6">6dp</dimen>
     <dimen name="elevation_8">8dp</dimen>
-
-    <!-- Common component sizes -->
-    <dimen name="button_height">48dp</dimen>
-    <dimen name="input_height">52dp</dimen>
-    <dimen name="appbar_height">56dp</dimen>
-
 </resources>

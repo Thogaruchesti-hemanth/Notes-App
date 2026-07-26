@@ -1,7 +1,9 @@
 package com.example.NotesNest.activity;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -53,7 +55,7 @@ public class SplashScreenActivity extends AppCompatActivity {
             firebaseHelper.checkPremiumStatus(userId, (isPremium, planType, expiryDate) -> {
                 boolean isActive = isPremium;
                 
-                // If cloud says premium, double check the date locally
+                // If cloud says premium, double-check the date locally
                 if (isPremium && !planType.equalsIgnoreCase("lifetime")) {
                     if (expiryDate == null || expiryDate.isEmpty() || isDateExpired(expiryDate)) {
                         isActive = false;
@@ -106,7 +108,9 @@ public class SplashScreenActivity extends AppCompatActivity {
 
         Intent intent = new Intent(this, nextActivity);
         startActivity(intent);
-        overridePendingTransition(R.anim.zoom_in, R.anim.zoom_out);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            overrideActivityTransition(Activity.OVERRIDE_TRANSITION_OPEN, R.anim.zoom_in, R.anim.zoom_out);
+        }
         finish();
     }
 

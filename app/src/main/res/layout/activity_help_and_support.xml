@@ -6,7 +6,6 @@
     android:id="@+id/help_and_support_activity"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorSecondary"
     android:orientation="vertical"
     tools:context=".activity.HelpAndSupportActivity">
 

@@ -28,6 +28,8 @@ import com.example.NotesNest.widgets.NoteWidgetUpdateService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 
 
 public class NoteWidgetConfigureActivity extends AppCompatActivity implements NoteConfigAdapter.OnNoteSelectedListener {
@@ -36,7 +38,7 @@ public class NoteWidgetConfigureActivity extends AppCompatActivity implements No
     private final List<NoteEntity> allNotes = new ArrayList<>();
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
     private NoteEntity selectedNote = null;
-    private long restoredNoteId = -1;
+    private String restoredNoteId = null;
     private int appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
     private NoteConfigAdapter adapter;
     private Runnable searchRunnable;
@@ -76,7 +78,7 @@ public class NoteWidgetConfigureActivity extends AppCompatActivity implements No
         setResult(RESULT_CANCELED);
 
         if (savedInstanceState != null) {
-            restoredNoteId = savedInstanceState.getLong(KEY_SELECTED_NOTE_ID, -1);
+            restoredNoteId = savedInstanceState.getString(KEY_SELECTED_NOTE_ID);
         }
 
         initViews();
@@ -128,15 +130,15 @@ public class NoteWidgetConfigureActivity extends AppCompatActivity implements No
     }
 
     private void runSearch(String query) {
-        String finalQuery = query.toLowerCase().trim();
+        String finalQuery = query.toLowerCase(Locale.ROOT).trim();
         List<NoteEntity> filtered = new ArrayList<>();
 
         if (finalQuery.isEmpty()) {
             filtered.addAll(allNotes);
         } else {
             for (NoteEntity note : allNotes) {
-                if ((note.title != null && note.title.toLowerCase().contains(finalQuery)) ||
-                        (note.content != null && note.content.toLowerCase().contains(finalQuery))) {
+                if ((note.title != null && note.title.toLowerCase(Locale.ROOT).contains(finalQuery)) ||
+                        (note.content != null && note.content.toLowerCase(Locale.ROOT).contains(finalQuery))) {
                     filtered.add(note);
                 }
             }
@@ -156,15 +158,15 @@ public class NoteWidgetConfigureActivity extends AppCompatActivity implements No
                 allNotes.clear();
                 allNotes.addAll(noteEntities);
 
-                if (restoredNoteId != -1) {
+                if (restoredNoteId != null) {
                     for (NoteEntity n : allNotes) {
-                        if (n.id == restoredNoteId) {
+                        if (Objects.equals(n.id, restoredNoteId)) {
                             selectedNote = n;
                             adapter.setSelectedNote(n);
                             break;
                         }
                     }
-                    restoredNoteId = -1;
+                    restoredNoteId = null;
                 }
 
                 runSearch(binding.etSearch.getText().toString());
@@ -218,7 +220,7 @@ public class NoteWidgetConfigureActivity extends AppCompatActivity implements No
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         if (selectedNote != null) {
-            outState.putLong(KEY_SELECTED_NOTE_ID, selectedNote.id);
+            outState.putString(KEY_SELECTED_NOTE_ID, selectedNote.id);
         }
     }
 

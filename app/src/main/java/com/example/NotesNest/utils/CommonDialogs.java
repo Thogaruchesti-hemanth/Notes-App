@@ -10,7 +10,6 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.text.Html;
-import android.text.InputType;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.method.LinkMovementMethod;
@@ -19,7 +18,6 @@ import android.text.style.ClickableSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -38,6 +36,8 @@ import com.example.NotesNest.activity.PremiumActivity;
 import com.example.NotesNest.databases.ViewModels.CategoryViewModel;
 import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.databases.entities.ReminderEntity;
+import com.example.NotesNest.databinding.BottomSheetGradientPickerBinding;
+import com.example.NotesNest.databinding.DialogNoteOptionsBinding;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -45,6 +45,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -114,7 +115,7 @@ public class CommonDialogs {
         }
     }
 
-    public static void showInputDialog(Context context, String title, String hint,
+    public static void showInputDialog(Context context, String hint,
                                        String posBtn, String negBtn, InputCallback callback) {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
@@ -180,10 +181,10 @@ public class CommonDialogs {
 
         // Optional: Change icon based on title keywords
         if (ivIcon != null) {
-            if (title.toLowerCase().contains("delete") || title.toLowerCase().contains("⚠️")) {
+            if (title.toLowerCase(Locale.ROOT).contains("delete") || title.toLowerCase(Locale.ROOT).contains("⚠️")) {
                 ivIcon.setImageResource(R.drawable.ic_error_outline);
                 ivIcon.setColorFilter(android.graphics.Color.parseColor("#FF5252"));
-            } else if (title.toLowerCase().contains("logout")) {
+            } else if (title.toLowerCase(Locale.ROOT).contains("logout")) {
                 ivIcon.setImageResource(R.drawable.ic_logout);
             }
         }
@@ -211,12 +212,14 @@ public class CommonDialogs {
         dialog.show();
     }
 
-    public static void showGradientPicker(Context context, int currentStart, int currentEnd, GradientCallback callback) {
+    public static void showGradientPicker(Context context, GradientCallback callback) {
         BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(context, R.style.BottomSheetDialogTheme);
-        View view = LayoutInflater.from(context).inflate(R.layout.bottom_sheet_gradient_picker, null);
-        bottomSheetDialog.setContentView(view);
+        BottomSheetGradientPickerBinding binding = BottomSheetGradientPickerBinding.inflate(
+                LayoutInflater.from(context)
+        );
+        bottomSheetDialog.setContentView(binding.getRoot());
 
-        LinearLayout container = view.findViewById(R.id.gradientContainer);
+        LinearLayout container = binding.gradientContainer;
 
         for (int[] colors : professionalGradients) {
             View gradientItem = new View(context);
@@ -243,16 +246,13 @@ public class CommonDialogs {
         bottomSheetDialog.show();
     }
 
-    /**
-     * Shows a color picker dialog for note background (Horizontal Scroll).
-     */
     public static void showColorPicker(Context context, String selectedColor, ColorCallback callback) {
         BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(context, R.style.BottomSheetDialogTheme);
-        View view = LayoutInflater.from(context).inflate(R.layout.bottom_sheet_gradient_picker, null);
-        bottomSheetDialog.setContentView(view);
+        BottomSheetGradientPickerBinding binding = BottomSheetGradientPickerBinding.inflate(LayoutInflater.from(context));
+        bottomSheetDialog.setContentView(binding.getRoot());
 
         // Rounded corners and background color
-        View root = view.findViewById(R.id.bottom_gradient_picker_root);
+        View root = binding.bottomGradientPickerRoot;
         if (root != null) {
             GradientDrawable background = new GradientDrawable();
             background.setColor(Color.parseColor(selectedColor));
@@ -265,13 +265,11 @@ public class CommonDialogs {
         bottomSheetDialog.getBehavior().setPeekHeight(com.google.android.material.bottomsheet.BottomSheetBehavior.PEEK_HEIGHT_AUTO);
         bottomSheetDialog.getBehavior().setFitToContents(true);
 
-        TextView tvTitle = view.findViewById(R.id.tvTitle);
-        if (tvTitle != null) {
-            tvTitle.setText("Choose Note Color");
-            tvTitle.setTextColor(Color.BLACK);
-        }
+        TextView tvTitle = binding.tvTitle;
+        tvTitle.setText(R.string.text_choose_note_color);
+        tvTitle.setTextColor(Color.BLACK);
 
-        LinearLayout container = view.findViewById(R.id.gradientContainer);
+        LinearLayout container = binding.gradientContainer;
         container.setPadding(16, 16, 16, 16);
 
         RecyclerView recyclerView = new RecyclerView(context);
@@ -360,7 +358,7 @@ public class CommonDialogs {
         setupResponsiveCheckboxes(context, content, note, callback);
 
         callback.setDateTime(note.createdAt, date, time);
-        callback.setCategory(category, note.categoryId != null ? note.categoryId : -1);
+        callback.setCategory(category, note.categoryId);
 
         try {
             int color = android.graphics.Color.parseColor(note.colorHex);
@@ -432,7 +430,7 @@ public class CommonDialogs {
                 String tag = matcher.group();
                 String newTag;
                 if (shouldCheck) {
-                    if (!tag.toLowerCase().contains("checked")) {
+                    if (!tag.toLowerCase(Locale.ROOT).contains("checked")) {
                         newTag = tag.replace(">", " checked>");
                     } else {
                         newTag = tag;
@@ -463,7 +461,8 @@ public class CommonDialogs {
 
     public static void showOptionsDialog(View anchorView, NoteEntity note, int pos, NoteOptionsListener listener) {
         Context context = anchorView.getContext();
-        View view = LayoutInflater.from(context).inflate(R.layout.dialog_note_options, null);
+        DialogNoteOptionsBinding binding = DialogNoteOptionsBinding.inflate(LayoutInflater.from(context));
+        View view = binding.getRoot();
 
         PopupWindow popupWindow = new PopupWindow(view,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -702,7 +701,7 @@ public class CommonDialogs {
 
     public interface NoteDialogCallback {
         void setDateTime(long timeStamp, TextView dateView, TextView timeView);
-        void setCategory(TextView categoryView, int categoryId);
+        void setCategory(TextView categoryView, String categoryId);
     }
 
     public interface NoteActionCallback extends NoteDialogCallback {

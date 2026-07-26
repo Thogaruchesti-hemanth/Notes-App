@@ -44,12 +44,12 @@ public final class NotificationScheduler {
      */
     public static void scheduleOneTime(
             @NonNull Context context,
-            int reminderId,
+            String reminderId,
             long timeInMillis,
             String type,
             boolean isRepeat
     ) {
-        if (reminderId < 0) {
+        if (reminderId == null) {
             Log.w(TAG, "scheduleOneTime: invalid reminderId=" + reminderId);
             return;
         }
@@ -61,10 +61,12 @@ public final class NotificationScheduler {
 
         long delay = Math.max(MIN_DELAY_MS, timeInMillis - now);
 
+        int notificationId = reminderId.hashCode();
+
         Data input = new Data.Builder()
-                .putInt(NotificationWorker.KEY_REMINDER_ID, reminderId)
+                .putString(NotificationWorker.KEY_REMINDER_ID, reminderId)
                 .putString(NotificationWorker.KEY_CHANNEL, NotificationHelper.CHANNEL_ID_REMINDERS)
-                .putInt(NotificationWorker.KEY_NOTIFICATION_ID, reminderId)
+                .putInt(NotificationWorker.KEY_NOTIFICATION_ID, notificationId)
                 .putString(NotificationWorker.KEY_REPEAT_TYPE, type != null ? type : "")
                 .putBoolean(NotificationWorker.KEY_IS_REPEAT_FLAG, isRepeat)
                 .build();
@@ -85,7 +87,7 @@ public final class NotificationScheduler {
 
         Log.d(TAG,
                 String.format(Locale.US,
-                        "Scheduled one-time work (id=%d) at %d (delay=%d ms) repeat=%s isRepeat=%b",
+                        "Scheduled one-time work (id=%s) at %d (delay=%d ms) repeat=%s isRepeat=%b",
                         reminderId, timeInMillis, delay, type, isRepeat));
     }
 
@@ -94,11 +96,11 @@ public final class NotificationScheduler {
      */
     public static long scheduleNextOccurrence(
             @NonNull Context context,
-            int reminderId,
+            String reminderId,
             long lastTriggerMillis,
             String repeatType
     ) {
-        if (reminderId < 0) {
+        if (reminderId == null) {
             Log.w(TAG, "scheduleNextOccurrence: invalid reminderId=" + reminderId);
             return -1;
         }
@@ -180,8 +182,8 @@ public final class NotificationScheduler {
     /**
      * Cancels pending work + alarms
      */
-    public static void cancel(@NonNull Context context, int reminderId) {
-        if (reminderId < 0) return;
+    public static void cancel(@NonNull Context context, String reminderId) {
+        if (reminderId == null) return;
 
         try {
             WorkManager.getInstance(context).cancelUniqueWork(getUniqueName(reminderId));
@@ -198,12 +200,14 @@ public final class NotificationScheduler {
     @SuppressWarnings("unused")
     public static void scheduleExactIfNeeded(
             @NonNull Context context,
-            int reminderId,
+            String reminderId,
             long timeInMillis
     ) {
         AlarmManager am =
                 (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (am == null) return;
+
+        int notificationId = reminderId.hashCode();
 
         // Android 12+ exact alarms permission check
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -211,7 +215,7 @@ public final class NotificationScheduler {
                 Log.w(TAG, "Cannot schedule exact alarms, permission not granted");
                 // Optionally: fallback to inexact alarm
                 am.set(AlarmManager.RTC_WAKEUP, timeInMillis,
-                        PendingIntent.getBroadcast(context, reminderId,
+                        PendingIntent.getBroadcast(context, notificationId,
                                 new Intent(context, ExactAlarmBroadcastReceiver.class),
                                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE));
                 return;
@@ -225,18 +229,12 @@ public final class NotificationScheduler {
 
             PendingIntent pi =
                     (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
-                            ? PendingIntent.getBroadcast(context, reminderId, intent,
+                            ? PendingIntent.getBroadcast(context, notificationId, intent,
                             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE)
-                            : PendingIntent.getBroadcast(context, reminderId, intent,
+                            : PendingIntent.getBroadcast(context, notificationId, intent,
                             PendingIntent.FLAG_UPDATE_CURRENT);
 
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                am.setExactAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP, timeInMillis, pi);
-            } else {
-                am.setExact(AlarmManager.RTC_WAKEUP, timeInMillis, pi);
-            }
+            am.setExact(AlarmManager.RTC_WAKEUP, timeInMillis, pi);
 
             Log.d(TAG,
                     "scheduleExactIfNeeded: alarm set for id=" + reminderId);
@@ -245,24 +243,25 @@ public final class NotificationScheduler {
             Log.e(TAG, "scheduleExactIfNeeded: SecurityException, falling back to inexact", ex);
             // Fallback to inexact alarm
             am.set(AlarmManager.RTC_WAKEUP, timeInMillis,
-                    PendingIntent.getBroadcast(context, reminderId,
+                    PendingIntent.getBroadcast(context, notificationId,
                             new Intent(context, ExactAlarmBroadcastReceiver.class),
                             PendingIntent.FLAG_UPDATE_CURRENT));
         }
     }
 
-    private static void cancelExactIfAny(Context context, int reminderId) {
+    private static void cancelExactIfAny(Context context, String reminderId) {
         try {
             AlarmManager am =
                     (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 
             Intent intent = new Intent(context, ExactAlarmBroadcastReceiver.class);
+            int notificationId = reminderId.hashCode();
 
             PendingIntent pi =
                     (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
-                            ? PendingIntent.getBroadcast(context, reminderId, intent,
+                            ? PendingIntent.getBroadcast(context, notificationId, intent,
                             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE)
-                            : PendingIntent.getBroadcast(context, reminderId, intent,
+                            : PendingIntent.getBroadcast(context, notificationId, intent,
                             PendingIntent.FLAG_UPDATE_CURRENT);
 
             if (am != null) am.cancel(pi);
@@ -272,11 +271,11 @@ public final class NotificationScheduler {
         }
     }
 
-    private static String getUniqueName(int id) {
+    private static String getUniqueName(String id) {
         return UNIQUE_WORK_PREFIX + id;
     }
 
-    private static String getTag(int id) {
+    private static String getTag(String id) {
         return "nn_tag_" + id;
     }
 }

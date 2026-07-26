@@ -9,6 +9,8 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import androidx.annotation.Keep;
+
 import java.util.ArrayDeque;
 import java.util.Objects;
 import java.util.Queue;
@@ -47,16 +49,13 @@ public class CKEditorHelper {
         webSettings.setAllowContentAccess(true);
 
         webView.addJavascriptInterface(new Object() {
+            @Keep
             @JavascriptInterface
+            @SuppressWarnings("unused")
             public void onFormatStateChanged(boolean bold, boolean italic, String listType, String headingLevel) {
                 if (formatStateChangeListener != null) {
                     formatStateChangeListener.onFormatStateChanged(bold, italic, listType, headingLevel);
                 }
-            }
-
-            @JavascriptInterface
-            public void onContentChanged() {
-                // Optional: Keep your existing content change listener
             }
         }, "Android");
 

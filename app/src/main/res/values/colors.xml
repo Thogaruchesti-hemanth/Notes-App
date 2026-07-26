@@ -3,38 +3,19 @@
     <color name="black">#0d0d0d</color>
     <color name="white">#FFFFFF</color>
     <color name="grey">#1D1E1D</color>
-    <!-- Primary Colors -->
-    <color name="colorPrimary">#6200EE</color>
-    <color name="colorPrimaryDark">#3700B3</color>
-    <color name="colorAccent">#03DAC5</color>
 
     <!-- Text Colors -->
-    <color name="textColorPrimary">#000000</color>
     <color name="textColorSecondary">#757575</color>
 
     <!-- Background Colors -->
     <color name="backgroundLight">#FFFFFF</color>
-    <color name="backgroundDark">#121212</color>
 
     <!-- Additional Colors -->
-    <color name="tabIndicatorColor">#FF5722</color>
     <color name="tabSelectedTextColor">#FFF3B64D</color>
     <color name="tabSelectedTextColorLight">#FFF3B64D</color>
     <color name="darkGrey">#9E9E9E</color>
 
-    <color name="layout_background">#EADFCD</color>
-
-    <color name="lightBlue">#87CEFA</color>  <!-- Soft Light Blue -->
-    <color name="lightPurple">#D8BFD8</color>  <!-- Light Lavender Purple -->
-    <color name="primaryColor">#6200EE</color>  <!-- Deep Purple for buttons/icons -->
-    <color name="errorColor">#D32F2F</color>  <!-- Red for delete button -->
-    <color name="outlineColor">#E0E0E0</color>  <!-- Light Gray border -->
-    <color name="onPrimary">#FFFFFF</color>  <!-- White text/icons on dark backgrounds -->
     <color name="lightGray">#F5F5F5</color>  <!-- Soft Gray for date chip -->
-    <color name="priority_high">#D32F2F</color>  <!-- Red -->
-    <color name="priority_medium">#FFA000</color>  <!-- Orange -->
-    <color name="priority_low">#388E3C</color>  <!-- Green -->
-    <color name="priority_default">#BDBDBD</color>  <!-- Gray -->
 
     <color name="textselectedColor">#121212</color>
     <color name="textColor">#757575</color>
@@ -43,51 +24,19 @@
     <color name="google_yellow">#F4B400</color>
     <color name="google_green">#0F9D58</color>
 
-    <color name="dark_gray">#444444</color>
-
     <color name="shimmer_placeholder">#E0E0E0</color>
 
     <color name="chip_bg_color">#EDEDED</color>
-    <color name="chip_text_color">#212121</color>
-    <color name="chip_stroke_color">#D3D3D3</color>
-    <color name="chip_ripple_color">#B0BEC5</color>
-
-    <color name="reminder_color">#FF6B6B</color>
-    <color name="task_color">#4ECDC4</color>
-    <color name="birthday_color">#FFD166</color>
-    <color name="default_reminder_color">#118AB2</color>
-
-    <!-- Switch Colors -->
-    <color name="switch_thumb_color">#FFFFFF</color>
-    <color name="switch_track_checked">#2196F3</color>
-    <color name="switch_track_unchecked">#BDBDBD</color>
 
     <color name="grey_100">#F5F5F5</color>
     <color name="grey_200">#DBD8D8</color>
     <color name="grey_400">#9F9C9C</color>
     <color name="grey_900">#1D1E1D</color>
 
-    <color name="coral_red">#FF6B6B</color>
-    <color name="soft_pink">#FF8E8E</color>
-
     <color name="white_alpha_12">#20FFFFFF</color>
-
-    <color name="light_gray_edf">#EDEFF2</color>
-
-    <color name="google_blue_light">#E8F0FE</color>
-    <color name="google_green_light">#E6F4EA</color>
-    <color name="google_red_light">#FCE8E6</color>
-    <color name="google_orange_light">#FEF3E0</color>
-
 
     <color name="ripple_color">#33000000</color>
 
-    <color name="background">#F5F5F5</color>
-    <color name="textSecondary">#666666</color>
-    <color name="blue">#4285F4</color>
     <color name="red">#EA4335</color>
-    <color name="green">#34A853</color>
-    <color name="orange">#FBBC05</color>
-    <color name="infoBackground">#E3F2FD</color>
 
 </resources>

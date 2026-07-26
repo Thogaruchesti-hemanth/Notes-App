@@ -245,11 +245,7 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
                     } else {
                         CommonDialogs.showConfirmDialog(context, "Note Limit Reached", 
                                 "You have reached the limit of 30 notes. To add more notes, you need to upgrade to Premium. Would you like to watch an ad to add this note?", 
-                                "Watch Ad", "Upgrade", () -> {
-                                    AdManager.showRewardedAd(requireActivity(), this::openCreateItem);
-                                }, () -> {
-                                    premiumManager.showUpgradeScreen();
-                                });
+                                "Watch Ad", "Upgrade", () -> AdManager.showRewardedAd(requireActivity(), this::openCreateItem), () -> premiumManager.showUpgradeScreen());
                     }
                 } else {
                     openCreateItem();
@@ -302,7 +298,7 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
             }
             if (!hasAll) {
                 CategoryEntity all = new CategoryEntity();
-                all.id = 0;
+                all.id = "all";
                 all.name = "All";
                 list.add(0, all);
             }
@@ -344,7 +340,8 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
     private boolean isCategoryListSame(List<CategoryEntity> oldList, List<CategoryEntity> newList) {
         if (oldList.size() != newList.size()) return false;
         for (int i = 0; i < oldList.size(); i++) {
-            if (oldList.get(i).id != newList.get(i).id || !oldList.get(i).name.equals(newList.get(i).name)) {
+            if (!java.util.Objects.equals(oldList.get(i).id, newList.get(i).id) || 
+                !java.util.Objects.equals(oldList.get(i).name, newList.get(i).name)) {
                 return false;
             }
         }
@@ -484,8 +481,8 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
             if ("All".equalsIgnoreCase(selectedCategory)) {
                 currentNotesLiveData = noteViewModel.getAllNotes(currentUserId);
             } else {
-                int catId = getCategoryIdByName(selectedCategory);
-                if (catId == -1) {
+                String catId = getCategoryIdByName(selectedCategory);
+                if ("all".equals(catId) || catId == null) {
                     currentNotesLiveData = noteViewModel.getAllNotes(currentUserId);
                 } else {
                     currentNotesLiveData = noteViewModel.getNotesByCategory(currentUserId, catId);
@@ -495,8 +492,8 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
             if ("All".equalsIgnoreCase(selectedCategory)) {
                 currentNotesLiveData = noteViewModel.searchNotes(currentUserId, query);
             } else {
-                int catId = getCategoryIdByName(selectedCategory);
-                if (catId == -1) {
+                String catId = getCategoryIdByName(selectedCategory);
+                if ("all".equals(catId) || catId == null) {
                     currentNotesLiveData = noteViewModel.searchNotes(currentUserId, query);
                 } else {
                     currentNotesLiveData = noteViewModel.searchNotesInCategory(currentUserId, catId, query);
@@ -533,11 +530,11 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
         }
     }
 
-    private int getCategoryIdByName(String name) {
+    private String getCategoryIdByName(String name) {
         for (CategoryEntity c : categoryList) {
             if (c != null && name.equals(c.name)) return c.id;
         }
-        return -1;
+        return null;
     }
 
     @Override

@@ -5,6 +5,7 @@ import static com.example.NotesNest.utils.CommonDialogs.showPasswordDialog;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
+import android.os.Build;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -47,6 +48,7 @@ import com.example.NotesNest.utils.ThemeManager;
 import com.example.NotesNest.utils.constants.PrefKeys;
 import com.google.android.gms.ads.MobileAds;
 
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -193,9 +195,13 @@ public class SettingsActivity extends AppCompatActivity {
                 Intent intent = new Intent(this, SettingsActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 finish();
-                overridePendingTransition(0, 0);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    overrideActivityTransition(Activity.OVERRIDE_TRANSITION_CLOSE, 0, 0);
+                }
                 startActivity(intent);
-                overridePendingTransition(0, 0);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    overrideActivityTransition(Activity.OVERRIDE_TRANSITION_OPEN, 0, 0);
+                }
             }
         });
     }
@@ -268,13 +274,6 @@ public class SettingsActivity extends AppCompatActivity {
             public void postToast(String m) {
                 SettingsActivity.this.postToast(m);
             }
-
-            @Override
-            public void onVersionMismatch(int c, int i, Runnable ok, Runnable cancel) {
-                CommonDialogs.showConfirmDialog(SettingsActivity.this, "DB Version Mismatch",
-                        "The backup version (" + i + ") differs from current (" + c + "). Replace anyway?",
-                        "Replace", "Cancel", ok, cancel);
-            }
         }, findViewById(android.R.id.content));
     }
 
@@ -320,7 +319,7 @@ public class SettingsActivity extends AppCompatActivity {
         AppPreferences appPreferences = AppPreferences.getInstance();
         boolean isGrid = appPreferences.getBoolean(PrefKeys.KEY_NOTES_LAYOUT, true);
         String currentTheme = ThemeManager.getCurrentThemeMode(this);
-        String themeText = currentTheme.substring(0, 1).toUpperCase() + currentTheme.substring(1);
+        String themeText = currentTheme.substring(0, 1).toUpperCase(Locale.ROOT) + currentTheme.substring(1);
 
         setupOptionsData(binding.layoutLocalBackup, R.drawable.ic_local_backup, "Local Backup");
         setupOptionsData(binding.layoutDiveBackup, R.drawable.ic_drive_backup, "Drive Backup");

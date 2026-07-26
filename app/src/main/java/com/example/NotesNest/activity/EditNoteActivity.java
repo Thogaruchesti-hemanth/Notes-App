@@ -37,21 +37,23 @@ import com.google.android.material.chip.Chip;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Random;
 
 public class EditNoteActivity extends AppCompatActivity {
 
     private static final String TAG = "EditNoteActivity";
     public static final String EXTRA_ITEM_ID = "itemId";
-    private final String defaultColor = DEFAULT_COLORS[0];
+    private final String defaultColor = DEFAULT_COLORS[new Random().nextInt(DEFAULT_COLORS.length)];
     private final List<CategoryEntity> categories = new ArrayList<>();
     private CKEditorHelper editorHelper;
     private AppPreferences preferences;
     private NoteViewModel noteViewModel;
     private CategoryViewModel categoryViewModel;
     private boolean isEditing = false;
-    private int noteId = -1;
+    private String noteId = null;
     private String selectedColor = defaultColor;
-    private Integer selectedCategoryId = null;
+    private String selectedCategoryId = null;
     private long originalCreatedAt = -1;
     private boolean isPinned = false;
     private boolean isNoteSaved = false;
@@ -78,7 +80,7 @@ public class EditNoteActivity extends AppCompatActivity {
         binding.etNote.setNestedScrollingEnabled(false);
         binding.etNote.setOverScrollMode(View.OVER_SCROLL_NEVER);
 
-        noteId = getIntent().getIntExtra(EXTRA_ITEM_ID, -1);
+        noteId = getIntent().getStringExtra(EXTRA_ITEM_ID);
 
         applyWindowInsets();
         setupEditorHelper();
@@ -87,11 +89,10 @@ public class EditNoteActivity extends AppCompatActivity {
         observeViewModels();
 
         if (savedInstanceState != null) {
-            noteId = savedInstanceState.getInt("noteId", -1);
+            noteId = savedInstanceState.getString("noteId");
             isEditing = savedInstanceState.getBoolean("isEditing", false);
             selectedColor = savedInstanceState.getString("selectedColor", defaultColor);
-            int savedCatId = savedInstanceState.getInt("selectedCategoryId", -1);
-            selectedCategoryId = (savedCatId == -1) ? null : savedCatId;
+            selectedCategoryId = savedInstanceState.getString("selectedCategoryId");
             isPinned = savedInstanceState.getBoolean("isPinned", false);
             updatePinUI();
         }
@@ -135,10 +136,10 @@ public class EditNoteActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putInt("noteId", noteId);
+        outState.putString("noteId", noteId);
         outState.putBoolean("isEditing", isEditing);
         outState.putString("selectedColor", selectedColor);
-        outState.putInt("selectedCategoryId", (selectedCategoryId == null) ? -1 : selectedCategoryId);
+        outState.putString("selectedCategoryId", selectedCategoryId);
         outState.putBoolean("isPinned", isPinned);
     }
 
@@ -240,7 +241,7 @@ public class EditNoteActivity extends AppCompatActivity {
             populateCategoryChips();
         });
 
-        if (noteId != -1) {
+        if (noteId != null) {
             noteViewModel.getNoteById(noteId).observe(this, note -> {
                 if (note == null) return;
                 isEditing = true;
@@ -264,12 +265,12 @@ public class EditNoteActivity extends AppCompatActivity {
         LayoutInflater inflater = LayoutInflater.from(this);
         for (CategoryEntity category : categories) {
             Chip chip = (Chip) inflater.inflate(R.layout.item_category_chip, binding.categoryChipGroup, false);
-            chip.setText(category.name.toUpperCase());
+            chip.setText(category.name.toUpperCase(Locale.ROOT));
             chip.setTag(category.id);
             chip.setId(View.generateViewId()); // Ensure unique ID for ChipGroup single selection
             chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 if (isChecked) {
-                    selectedCategoryId = (Integer) chip.getTag();
+                    selectedCategoryId = (String) chip.getTag();
                 } else if (binding.categoryChipGroup.getCheckedChipId() == View.NO_ID) {
                     selectedCategoryId = null;
                 }
@@ -317,8 +318,8 @@ public class EditNoteActivity extends AppCompatActivity {
     private void handleIncomingIntent() {
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra(EXTRA_ITEM_ID)) {
-            noteId = intent.getIntExtra(EXTRA_ITEM_ID, -1);
-            isEditing = noteId != -1;
+            noteId = intent.getStringExtra(EXTRA_ITEM_ID);
+            isEditing = noteId != null;
         }
     }
 
@@ -394,7 +395,7 @@ public class EditNoteActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         // Only save draft if it's a new note, and it hasn't been saved yet
-        if (!isEditing && noteId == -1 && !isNoteSaved && editorHelper != null) {
+        if (!isEditing && noteId == null && !isNoteSaved && editorHelper != null) {
             editorHelper.getContent(htmlContent -> preferences.saveDraft(
                     binding.etTitle.getText().toString(), htmlContent, selectedColor
             ));

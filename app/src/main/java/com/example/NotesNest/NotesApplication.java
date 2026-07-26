@@ -2,7 +2,6 @@ package com.example.NotesNest;
 
 import android.app.Application;
 import android.content.Intent;
-import android.os.Build;
 import android.util.Log;
 import android.webkit.WebView;
 
@@ -24,12 +23,9 @@ public class NotesApplication extends Application {
     public void onCreate() {
         super.onCreate();
 
-        // 0. Initialize WebView Data Directory (fixes rare Resource Manager IOException)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            String processName = getProcessName();
-            if (!getPackageName().equals(processName)) {
-                WebView.setDataDirectorySuffix(processName);
-            }
+        String processName = getProcessName();
+        if (!getPackageName().equals(processName)) {
+            WebView.setDataDirectorySuffix(processName);
         }
 
         // 0. Initialize App Preferences

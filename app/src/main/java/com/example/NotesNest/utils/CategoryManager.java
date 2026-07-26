@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -75,9 +74,15 @@ public class CategoryManager extends BottomSheetDialogFragment {
             // Edit category name
             showEditCategoryDialog(category);
         }, (category, position) -> {
-            // Delete category
-            noteViewModel.resetCategoryNotes(currentUserId, category.id);
-            categoryViewModel.deleteCategory(category);
+            // Delete category with confirmation
+            CommonDialogs.showConfirmDialog(requireContext(),
+                    "Delete Category?",
+                    String.format("Are you sure you want to delete '%s'? Any notes in this category will be moved to 'Uncategorized'.", category.name),
+                    "Delete", "Keep",
+                    () -> {
+                        noteViewModel.resetCategoryNotes(currentUserId, category.id);
+                        categoryViewModel.deleteCategory(category);
+                    });
         });
         recyclerView.setAdapter(adapter);
 
@@ -128,7 +133,7 @@ public class CategoryManager extends BottomSheetDialogFragment {
     }
 
     private void performAddCategory() {
-        CommonDialogs.showInputDialog(requireContext(), "Add Category", "Enter category name", "Add", "Cancel", name -> {
+        CommonDialogs.showInputDialog(requireContext(), "Enter category name", "Add", "Cancel", name -> {
             if (name == null || name.trim().isEmpty()) {
                 Toast.makeText(getContext(), "Name cannot be empty", Toast.LENGTH_SHORT).show();
                 return;
@@ -142,7 +147,7 @@ public class CategoryManager extends BottomSheetDialogFragment {
     }
 
     private void showEditCategoryDialog(CategoryEntity category) {
-        CommonDialogs.showInputDialog(requireContext(), "Edit Category", "Enter category name", "Update", "Cancel", name -> {
+        CommonDialogs.showInputDialog(requireContext(), "Enter category name", "Update", "Cancel", name -> {
             if (name == null || name.trim().isEmpty()) {
                 Toast.makeText(getContext(), "Name cannot be empty", Toast.LENGTH_SHORT).show();
                 return;

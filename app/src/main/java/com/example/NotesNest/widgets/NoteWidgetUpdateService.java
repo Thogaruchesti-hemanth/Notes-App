@@ -154,8 +154,8 @@ public class NoteWidgetUpdateService extends Worker {
             return null; // HARD BLOCK
         }
 
-        int noteId = pref.getWidgetNoteId(context, widgetId);
-        if (noteId == -1) return null;
+        String noteId = pref.getWidgetNoteId(context, widgetId);
+        if (noteId == null) return null;
 
         try {
             NoteRepository repository =

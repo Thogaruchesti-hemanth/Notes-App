@@ -123,7 +123,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
                         }
 
                         @Override
-                        public void setCategory(TextView categoryView, int categoryId) {
+                        public void setCategory(TextView categoryView, String categoryId) {
                             bindCategory(categoryId, currentNote.userId, categoryView);
                         }
                     }
@@ -182,7 +182,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         holder.readMoreView.setVisibility(View.GONE);
     }
 
-    private void bindCategory(Integer categoryId, String userId, TextView categoryView) {
+    private void bindCategory(String categoryId, String userId, TextView categoryView) {
         if (categoryView == null || categoryId == null) {
             if (categoryView != null) categoryView.setVisibility(View.GONE);
             return;

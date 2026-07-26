@@ -34,7 +34,7 @@ public class NoteShareManager {
 
     // 1. SHARE AS TEXT
     public void shareAsText(NoteEntity note, CategoryViewModel categoryViewModel) {
-        int categoryId = note.categoryId != null ? note.categoryId : -1;
+        String categoryId = note.categoryId;
         categoryViewModel.getCategoryName(categoryId, note.userId, categoryName -> {
 
             String title = note.title;

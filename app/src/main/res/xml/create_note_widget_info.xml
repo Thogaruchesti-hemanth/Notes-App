@@ -4,7 +4,5 @@
     android:initialLayout="@layout/widget_create_note"
     android:minWidth="50dp"
     android:resizeMode="horizontal|vertical"
-    android:targetCellWidth="1"
-    android:targetCellHeight="1"
     android:updatePeriodMillis="0"
     android:widgetCategory="home_screen" />

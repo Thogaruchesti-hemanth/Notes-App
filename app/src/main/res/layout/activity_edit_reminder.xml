@@ -3,8 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/addEditReminder"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="?attr/colorSecondary">
+    android:layout_height="match_parent">
 
     <!-- Fixed Header -->
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -271,28 +270,28 @@
                         style="@style/Widget.Material3.Chip.Suggestion"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="+1 Hr" />
+                        android:text="@string/text_1_hr" />
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chipPlus3h"
                         style="@style/Widget.Material3.Chip.Suggestion"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="+3 Hr" />
+                        android:text="@string/text_3_hr" />
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chipTomorrow"
                         style="@style/Widget.Material3.Chip.Suggestion"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Tomorrow" />
+                        android:text="@string/text_tomorrow" />
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chipEvening"
                         style="@style/Widget.Material3.Chip.Suggestion"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Evening" />
+                        android:text="@string/text_evening" />
 
                 </com.google.android.material.chip.ChipGroup>
             </HorizontalScrollView>

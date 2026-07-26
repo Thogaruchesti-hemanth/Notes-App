@@ -1,24 +1,8 @@
 <resources>
 
-
-    // Web app link
-    <string name="text_https_notesnest_app_web_app">https://notesnest-app.web.app/</string>
-
-
-    //back-up array
-    <string-array name="backup_frequency_options">
-        <item>On when click backup</item>
-        <item>Off</item>
-        <item>Daily</item>
-        <item>Weekly</item>
-        <item>Monthly</item>
-    </string-array>
-
-
     <string name="app_name">NotesNest</string>
     <string name="default_web_client_id">787609574642-ri3pfeqei3mcoboka870jfms2e97grn3.apps.googleusercontent.com</string>
     <string name="text_splash_screen_logo">Splash Screen Logo</string>
-    <string name="text_nest_your_ideas_let_them_take_flight">Nest your ideas, let them take flight.</string>
     <string name="text_continue_with_google">Continue with Google</string>
     <string name="text_login">Login</string>
     <string name="text_confirm_password">Confirm Password</string>
@@ -32,7 +16,6 @@
     <string name="text_hey_login_now">Hey,\nLogin Now!</string>
     <string name="text_upload_image">Upload Image</string>
     <string name="text_profile_image">Profile Image</string>
-    <string name="edit_reminder_title_placeholder">Reminder Title\n</string>
     <string name="text_edit_reminder">Edit Reminder</string>
     <string name="create_an_account">Create an Account</string>
     <string name="sign_up_now">Sign Up Now!</string>
@@ -43,15 +26,7 @@
     <string name="text_edit_note">Edit Note</string>
     <string name="text_save">Save</string>
     <string name="text_enter_the_title">Enter the title</string>
-    <string name="text_notes_categories">notes categories</string>
-    <string name="text_category">Category</string>
-    <string name="text_all">All</string>
-    <string name="text_text_bold_format">text bold format</string>
-    <string name="text_text_italic_format">text italic format</string>
-    <string name="text_text_bullet_points_format">text bullet points format</string>
-    <string name="text_text_format_number_list">text format number list</string>
-    <string name="text_note_add_and_edit_screen">note Add and Edit screen</string>
-    <string name="text_add_a_message_or_details">Add a message or details...</string>
+    <string name="text_add_a_message_or_details">Add a message or details&#8230;</string>
     <string name="text_navigate_to_previous_screen_icon">navigate to previous screen icon</string>
     <string name="text_add_reminder">Add Reminder</string>
     <string name="text_reminder_title">Reminder Title</string>
@@ -77,7 +52,6 @@
     <string name="text_add">add</string>
     <string name="text_create">create</string>
     <string name="text_timelines">Timelines</string>
-    <string name="text_colors">Colors</string>
     <string name="text_done">Done</string>
     <string name="text_on_boarding_image">onBoarding image</string>
     <string name="text_next">Next</string>
@@ -89,9 +63,6 @@
     <string name="text_reorder_categories_icon">reorder Categories icon</string>
     <string name="text_delete_category_icon">delete category icon</string>
     <string name="text_share_note_icon">Share note Icon</string>
-    <string name="text_share_note">Share Note</string>
-    <string name="text_share_as_image">Share as Image</string>
-    <string name="text_share_as_pdf">Share as Pdf</string>
     <string name="text_select_note">Select Note</string>
     <string name="text_back">back</string>
     <string name="text_create_a_note_first_then_come_back_here">Create a note first, then come back here</string>
@@ -101,9 +72,7 @@
     <string name="create_note_widget_label">Create Note Widget</string>
     <string name="widget_description">Quickly create new notes</string>
     <string name="text_create_note">Create Note</string>
-    <string name="text_edit_profile">Edit Profile</string>
     <string name="text_edit_icon">edit icon</string>
-    <string name="text_go_pro">Go Pro</string>
     <string name="text_all_notes">All Notes</string>
     <string name="text_reminders">Reminders</string>
     <string name="text_reminder_icon">reminder icon</string>
@@ -112,19 +81,15 @@
     <string name="text_help_support"><![CDATA[Help & Support]]></string>
     <string name="text_help_and_support_icon">help and support icon</string>
     <string name="text_settings_icon">settings icon</string>
-    <string name="text_down_arrow_icon">arrow icon</string>
     <string name="text_email_support">Email Support</string>
-    <string name="text_faqs">FAQs</string>
     <string name="text_get_in_touch">Get in Touch</string>
     <string name="text_resources">Resources</string>
     <string name="text_about">About</string>
-    <string name="text_working">Working...</string>
     <string name="text_enter_password">Enter password</string>
     <string name="text_premium_access">Premium Access</string>
-    <string name="text_help_amp_support"><![CDATA[Help & Support]]></string>
     <string name="text_backup_sync"><![CDATA[Backup & Sync]]></string>
+    <string name="text_caps_backup_sync">BACKUP &amp; SYNC</string>
     <string name="text_not_connected_to_drive">Not connected to Drive</string>
-    <string name="text_99">99+</string>
     <string name="text_cancel">Cancel</string>
     <string name="text_unlock_your_full_potential">Unlock Your Full\nPotential</string>
     <string name="text_get_access_to_exclusive_features_to_supercharge_your_note_taking">Get access to exclusive features to supercharge your note-taking.</string>
@@ -132,9 +97,6 @@
     <string name="text_privacy_policy">Privacy Policy</string>
     <string name="text_terms_of_service">Terms of Service</string>
     <string name="text_unlock_premium">Unlock Premium</string>
-    <string name="text_lifetime_499_one_time">Lifetime\n₹499 one-time</string>
-    <string name="text_yearly_299_year">Yearly\n₹299 / year</string>
-    <string name="text_monthly_50_month">Monthly\n₹50 / month</string>
     <string name="price_format_monthly">Monthly - %s / month</string>
     <string name="price_format_yearly">Yearly - %s / year</string>
     <string name="price_format_lifetime">Lifetime - %s / one-time</string>
@@ -143,20 +105,14 @@
     <string name="text_about_app_icon">about app icon</string>
     <string name="text_no_note_selected">No note selected</string>
     <string name="text_tap_to_configure_widget_and_select_a_note">Tap to configure widget and select a note</string>
-    <string name="text_share_as_text">Share as Text</string>
-    <string name="text_premium_required_to_share_as_image">Premium required to share as Image</string>
-    <string name="text_premium_required_to_share_as_pdf">Premium required to share as PDF</string>
     <string name="text_premium_badge">Premium Badge</string>
     <string name="text_delete">Delete</string>
     <string name="text_edit">Edit</string>
     <string name="text_confirm">Confirm</string>
-    <string name="text_pdf_icon">PDF icon</string>
-    <string name="text_image_icon">image icon</string>
     <string name="text_select_gradient">Select Gradient</string>
     <string name="text_appearance">Appearance</string>
     <string name="text_account">Account</string>
     <string name="text_app_version">App Version</string>
-    <string name="text_logout">Logout</string>
     <string name="text_free_user">Free User</string>
     <string name="text_menu_button">menu button</string>
     <string name="text_manage_account">Manage Account</string>
@@ -164,14 +120,10 @@
     <string name="text_account_actions">Account Actions</string>
     <string name="upgrade_to_premium">Upgrade to Premium</string>
     <string name="text_got_it">GOT IT</string>
-    <string name="text_performance_improvements_and_bug_fixes">Performance improvements and bug fixes</string>
     <string name="text_what_s_new">What\'s New ✨</string>
-    <string name="text_version_2_1_0">Version 2.1.0</string>
-    <string name="text_heading_2">Heading 2</string>
-    <string name="text_heading_1">Heading 1</string>
     <string name="text_your_complete_productivity_hub">Your Complete Productivity Hub</string>
     <string name="text_connected">Connected</string>
-    <string name="text_backing_up">Backing up...</string>
+    <string name="text_backing_up">Backing up&#8230;</string>
     <string name="text_backup_complete">✓ Backup complete</string>
     <string name="text_cloud_backup_is_a_premium_feature_secure_your_notes_across_all_your_devices_by_upgrading_today">Cloud Backup is a Premium feature. Secure your notes across all your devices by upgrading today!</string>
     <string name="text_auto_backup_enabled">Auto backup enabled</string>
@@ -186,7 +138,6 @@
     <string name="text_backup_status">BACKUP STATUS</string>
     <string name="text_include_attachments">Include Attachments</string>
     <string name="text_enable_automatic_backups">Enable Automatic Backups</string>
-    <string name="text_backup_mode">Backup Mode</string>
     <string name="text_backup_settings">BACKUP SETTINGS</string>
     <string name="text_not_signed_in">Not signed in</string>
     <string name="text_your_notes_will_be_backed_up_based_on_your_selected_mode">Your notes will be backed up based on your selected mode</string>
@@ -212,10 +163,9 @@
     <string name="text_h1_format">H1 text formatting</string>
     <string name="text_h2_text">H2 text formatting</string>
     <string name="text_back_button">Back Button</string>
-    <string name="text_saving">Saving...</string>
+    <string name="text_saving">Saving&#8230;</string>
     <string name="text_try_a_different_search_term">Try a different search term</string>
     <string name="text_no_matches_found">No matches found</string>
-    <string name="text_processing_payment">Processing Payment...</string>
     <string name="text_premium_active">Premium Active</string>
     <string name="text_skip">Skip</string>
     <string name="text_loading">Loading</string>
@@ -223,14 +173,55 @@
     <string name="text_no_reminders_peace">No reminders for today. Enjoy your peace.</string>
     <string name="text_schedule_task">Schedule Task</string>
     <string name="text_restore_from_drive">Restore from Drive</string>
-    <string name="text_restoring_from_drive">Restoring from Drive...</string>
-    <string name="text_importing_data">Importing data...</string>
+    <string name="text_restoring_from_drive">Restoring from Drive&#8230;</string>
+    <string name="text_importing_data">Importing data&#8230;</string>
     <string name="text_pin">Pin</string>
     <string name="text_unpin">Unpin</string>
 
     <!-- AdMob Unit IDs (Replace with real IDs for release) -->
-    <string name="banner_ad_unit_id">ca-app-pub-3940256099942544/6300978111</string>
     <string name="interstitial_ad_unit_id">ca-app-pub-3940256099942544/1033173712</string>
     <string name="app_open_ad_unit_id">ca-app-pub-3940256099942544/3419835294</string>
     <string name="rewarded_ad_unit_id">ca-app-pub-3940256099942544/5224354917</string>
+    <string name="text_1_hr">+1 Hr</string>
+    <string name="text_3_hr">+3 Hr</string>
+    <string name="text_tomorrow">Tomorrow</string>
+    <string name="text_evening">Evening</string>
+    <string name="text_monthly_50">Monthly - ₹50 / month</string>
+    <string name="text_yearly_299">Yearly - ₹299 / year</string>
+    <string name="text_lifetime_499">Lifetime - ₹499 / one-time</string>
+    <string name="text_capital_reminder">REMINDER</string>
+    <string name="text_focus_mode">FOCUS MODE</string>
+    <string name="text_quarterly_strategy_review_with_leadership_team">Quarterly Strategy Review with Leadership Team</string>
+    <string name="text_prepare_the_detailed_revenue_projections_and_market_analysis_reports">Prepare the detailed revenue projections and market analysis reports.</string>
+    <string name="text_pst_time">PST TIME</string>
+    <string name="text_daily">Daily</string>
+    <string name="text_recurring">RECURRING</string>
+    <string name="text_dismiss_reminder">Dismiss Reminder</string>
+    <string name="text_syncing_your_notes">Syncing your notes&#8230;</string>
+    <string name="text_finalizing_database_update">Finalizing database update</string>
+    <string name="text_change_password">🔐 Change Password</string>
+    <string name="text_current_password">Current Password</string>
+    <string name="text_new_password">New Password</string>
+    <string name="text_confirm_new_password">Confirm New Password</string>
+    <string name="text_update">Update</string>
+    <string name="text_confirm_action">Confirm Action</string>
+    <string name="text_are_you_sure_you_want_to_proceed">Are you sure you want to proceed?</string>
+    <string name="text_ok">OK</string>
+    <string name="text_error_title">Error Title</string>
+    <string name="text_something_went_wrong_please_try_again_later">Something went wrong. Please try again later.</string>
+    <string name="text_dismiss">Dismiss</string>
+    <string name="text_premium_feature">Premium Feature</string>
+    <string name="text_this_feature_is_only_available_for_premium_users">This feature is only available for premium users.</string>
+    <string name="text_upgrade_to_premium">Upgrade to Premium</string>
+    <string name="text_maybe_later">Maybe Later</string>
+    <string name="text_premium_icon">Premium Icon</string>
+    <string name="text_confirm_identity">🔒 Confirm Identity</string>
+    <string name="text_please_enter_your_current_password_to_confirm_account_deletion">Please enter your current password to confirm account deletion.</string>
+    <string name="text_verify">Verify</string>
+    <string name="text_select_option">Select Option</string>
+    <string name="text_pinned_icon">Pinned Icon</string>
+    <string name="text_delete_icon">Delete Icon</string>
+    <string name="text_checked_icon">checked Icon</string>
+    <string name="text_read_more_icon">Read More Icon</string>
+    <string name="text_choose_note_color">Choose Note Color</string>
 </resources>

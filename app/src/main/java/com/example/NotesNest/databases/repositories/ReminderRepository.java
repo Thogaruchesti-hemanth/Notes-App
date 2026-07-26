@@ -23,30 +23,12 @@ public class ReminderRepository {
         executorService = Executors.newFixedThreadPool(4);
     }
 
-// -------------------- READ --------------------
-// ... existing read methods remain unchanged ...
-
-// -------------------- WRITE --------------------
-
-    public void insert(ReminderEntity reminder) {
-        executorService.execute(() -> reminderDao.insertReminder(reminder));
-    }
-
     public void update(ReminderEntity reminder) {
         executorService.execute(() -> reminderDao.updateReminder(reminder));
     }
 
     public void delete(ReminderEntity reminder) {
         executorService.execute(() -> reminderDao.deleteReminder(reminder));
-    }
-
-    // -------------------- WRITE WITH CALLBACK --------------------
-
-    public void insert(ReminderEntity reminder, OnInsertCallback callback) {
-        executorService.execute(() -> {
-            long id = reminderDao.insertReminder(reminder);
-            if (callback != null) callback.onInsert(id);
-        });
     }
 
     public void update(ReminderEntity reminder, OnUpdateCallback callback) {
@@ -69,11 +51,11 @@ public class ReminderRepository {
 
     // In ReminderRepository class - add this method:
 
-    public LiveData<ReminderEntity> getReminderById(int id, String userId) {
+    public LiveData<ReminderEntity> getReminderById(String id, String userId) {
         return reminderDao.getReminderByIdLive(id, userId);
     }
 
-    public ReminderEntity getReminderById(String userId, int id){
+    public ReminderEntity getReminderByIdSync(String userId, String id){
         return reminderDao.getById(id,userId);
     }
 
@@ -91,12 +73,6 @@ public class ReminderRepository {
      */
     public int updateAndGetCount(ReminderEntity reminder) {
         return reminderDao.updateReminder(reminder);
-    }
-
-// -------------------- CALLBACK INTERFACES --------------------
-
-    public interface OnInsertCallback {
-        void onInsert(long id);
     }
 
     public interface OnUpdateCallback {

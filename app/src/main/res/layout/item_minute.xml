@@ -1,6 +1,0 @@
-<View xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/minuteBlock"
-    android:layout_width="@dimen/size_6"
-    android:layout_height="@dimen/size_1"
-    android:layout_margin="@dimen/size_1"
-    android:background="@drawable/bg_grey_rounded" />

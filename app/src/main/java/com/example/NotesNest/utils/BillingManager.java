@@ -171,7 +171,7 @@ public class BillingManager implements PurchasesUpdatedListener {
                 if (!hasPremiumFound[0]) {
                     // Only auto-revoke if we definitely found NO purchases on the device
                     Log.d(TAG, "Revoking local premium state as no valid Play Store purchase exists on this device.");
-                    updatePremiumStatus(false, FirebaseHelper.PLAN_NONE);
+                    updatePremiumStatus(FirebaseHelper.PLAN_NONE);
                 }
 
                 purchaseState.postValue(new PurchaseState(false, foundPlan[0], false, foundToken[0]));
@@ -244,7 +244,7 @@ public class BillingManager implements PurchasesUpdatedListener {
                 else currentPrices = new HashMap<>(currentPrices);
 
                 List<ProductDetails> detailsList = result.getProductDetailsList();
-                if (detailsList != null && !detailsList.isEmpty()) {
+                if (!detailsList.isEmpty()) {
                     for (ProductDetails details : detailsList) {
                         String pid = details.getProductId();
                         productDetailsMap.put(pid, details);
@@ -356,12 +356,12 @@ public class BillingManager implements PurchasesUpdatedListener {
         return false;
     }
 
-    private void updatePremiumStatus(boolean isPremium, String planType) {
+    private void updatePremiumStatus(String planType) {
         String userId = pref.getUserId();
-        Log.i(TAG, "👤 Syncing Premium Status to LOCAL STORAGE ONLY | User: " + userId + " | Premium: " + isPremium);
+        Log.i(TAG, "👤 Syncing Premium Status to LOCAL STORAGE ONLY | User: " + userId + " | Premium: " + false);
         
         // This is primarily for queryPurchases (restoring local device state)
-        pref.setIsPremium(isPremium);
+        pref.setIsPremium(false);
         pref.setPlanType(planType);
     }
 

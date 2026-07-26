@@ -31,22 +31,14 @@ public class CategoryRepository {
         return categoryDao.getAllCategories(userId);
     }
 
-    public LiveData<CategoryEntity> getCategoryById(int categoryId, String userId) {
+    public LiveData<CategoryEntity> getCategoryById(String categoryId, String userId) {
         return categoryDao.getCategoryById(categoryId, userId);
-    }
-
-    public LiveData<CategoryEntity> getCategoryByName(String categoryName, String userId) {
-        return categoryDao.getCategoryByName(categoryName, userId);
     }
 
     // -------------------- WRITE --------------------
 
     public void insert(CategoryEntity category) {
         executorService.execute(() -> categoryDao.insert(category));
-    }
-
-    public void insertAll(List<CategoryEntity> categories) {
-        executorService.execute(() -> categoryDao.insertAll(categories));
     }
 
     public void update(CategoryEntity category) {
@@ -57,33 +49,17 @@ public class CategoryRepository {
         executorService.execute(() -> categoryDao.delete(category));
     }
 
-    public void deleteById(int categoryId, String userId) {
-        executorService.execute(() -> categoryDao.deleteCategoryById(categoryId, userId));
-    }
-
     public void deleteByName(String categoryName, String userId) {
         executorService.execute(() -> categoryDao.deleteByName(categoryName, userId));
     }
 
-    public void deleteAll(String userId) {
-        executorService.execute(() -> categoryDao.deleteAll(userId));
-    }
-
-    // -------------------- UTILITIES --------------------
-
-    public boolean isCategoryExists(String categoryName, String userId) {
-        return categoryDao.countCategoryByName(categoryName, userId) > 0;
-    }
-
-    public void getCategoryName(int categoryId, String userId, CategoryNameCallback callback) {
+    public void getCategoryName(String categoryId, String userId, CategoryNameCallback callback) {
         executorService.execute(() -> {
             String name = categoryDao.getCategoryName(categoryId, userId);
             if (name == null) name = "Uncategorized";
 
             String finalName = name;
-            new Handler(Looper.getMainLooper()).post(() -> {
-                callback.onResult(finalName);
-            });
+            new Handler(Looper.getMainLooper()).post(() -> callback.onResult(finalName));
         });
     }
 

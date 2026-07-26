@@ -5,6 +5,8 @@ import android.content.Context;
 import android.net.Uri;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -179,6 +181,26 @@ public final class CryptoUtils {
                  FileOutputStream fos = new FileOutputStream(outFile)) {
                 // pass InputStream and OutputStream to decryptStream
                 decryptStream(in, fos, password);
+            }
+        }
+    }
+
+    public static void encryptBytesToUri(Context context, byte[] data, Uri destUri, char[] password) throws GeneralSecurityException, IOException {
+        ContentResolver resolver = context.getContentResolver();
+        try (InputStream in = new ByteArrayInputStream(data);
+             OutputStream out = resolver.openOutputStream(destUri)) {
+            if (out == null) throw new IOException("Unable to open destination URI");
+            encryptStream(in, out, password);
+        }
+    }
+
+    public static byte[] decryptUriToBytes(Context context, Uri srcUri, char[] password) throws GeneralSecurityException, IOException {
+        try (InputStream rawIn = context.getContentResolver().openInputStream(srcUri)) {
+            if (rawIn == null) throw new IOException("Cannot open source stream");
+            try (BufferedInputStream in = new BufferedInputStream(rawIn);
+                 ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                decryptStream(in, out, password);
+                return out.toByteArray();
             }
         }
     }

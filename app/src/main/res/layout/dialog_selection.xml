@@ -10,7 +10,7 @@
         android:id="@+id/tvTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Select Option"
+        android:text="@string/text_select_option"
         android:textAlignment="center"
         android:textSize="20sp"
         android:textStyle="bold"

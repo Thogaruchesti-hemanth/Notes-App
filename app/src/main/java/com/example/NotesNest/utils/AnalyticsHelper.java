@@ -16,20 +16,6 @@ public class AnalyticsHelper {
         }
     }
 
-    // Log custom events
-    public static void logEvent(String eventName, Bundle params) {
-        if (analytics != null) {
-            analytics.logEvent(eventName, params);
-        }
-    }
-
-    // Overload: log event without params
-    public static void logEvent(String eventName) {
-        if (analytics != null) {
-            analytics.logEvent(eventName, null);
-        }
-    }
-
     // Log screen view (new recommended way)
     public static void logScreenView(String screenName, String screenClass) {
         if (analytics != null) {

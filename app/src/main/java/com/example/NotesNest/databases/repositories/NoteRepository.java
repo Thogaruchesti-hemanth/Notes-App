@@ -28,11 +28,11 @@ public class NoteRepository {
         return noteDao.getAllNotes(userId);
     }
 
-    public LiveData<List<NoteEntity>> getNotesByCategory(String userId, int categoryId) {
+    public LiveData<List<NoteEntity>> getNotesByCategory(String userId, String categoryId) {
         return noteDao.getNotesByCategory(userId, categoryId);
     }
 
-    public LiveData<NoteEntity> getNoteById(int noteId) {
+    public LiveData<NoteEntity> getNoteById(String noteId) {
         return noteDao.getNoteById(noteId);
     }
 
@@ -54,25 +54,11 @@ public class NoteRepository {
         return noteDao.searchNotes(userId, keyword);
     }
 
-    public LiveData<List<NoteEntity>> searchNotesInCategory(String userId, int categoryId, String keyword) {
+    public LiveData<List<NoteEntity>> searchNotesInCategory(String userId, String categoryId, String keyword) {
         return noteDao.searchNotesInCategory(userId, categoryId, keyword);
     }
 
-    public LiveData<List<NoteEntity>> fullTextSearch(String userId, String query) {
-        return noteDao.fullTextSearch(userId, query);
-    }
-
-    // SYNC
-    public LiveData<List<NoteEntity>> getPendingSyncNotes(String userId) {
-        return noteDao.getPendingSyncNotes(userId);
-    }
-
-    public void markSynced(int noteId) {
-        long currentTime = System.currentTimeMillis();
-        executorService.execute(() -> noteDao.markSynced(noteId, currentTime));
-    }
-
-    public void resetCategoryNotes(String userId, int categoryId) {
+    public void resetCategoryNotes(String userId, String categoryId) {
         executorService.execute(() -> noteDao.resetCategoryNotes(userId, categoryId));
     }
 
@@ -81,11 +67,11 @@ public class NoteRepository {
         return noteDao.getNotesCount(userId);
     }
 
-    public LiveData<Integer> getNotesCountByCategory(String userId, int categoryId) {
+    public LiveData<Integer> getNotesCountByCategory(String userId, String categoryId) {
         return noteDao.getNotesCountByCategory(userId, categoryId);
     }
 
-    public NoteEntity getNoteByIdSync(int noteId) {
+    public NoteEntity getNoteByIdSync(String noteId) {
         try {
             return executorService.submit(() ->
                     noteDao.getNoteByIdSync(noteId)

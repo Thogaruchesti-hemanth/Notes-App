@@ -32,17 +32,17 @@ public class Constants {
     };
 
     // [startColor, endColor]
-    public static  final int[][] professionalGradients = {
-            {0xFF6A00F4, 0xFF8921F8}, // Deep Purple
-            {0xFFFF512F, 0xFFDD2476}, // Sunset
-            {0xFF2193B0, 0xFF6DD5ED}, // Ocean Blue
-            {0xFFEE9CA7, 0xFFFFDDE1}, // Pink Violet
-            {0xFF56AB2F, 0xFFA8E063}, // Green Mint
-            {0xFFBDC3C7, 0xFF2C3E50}, // Gray Silver
-            {0xFF2980B9, 0xFF6DD5FA}, // Blue Gray
-            {0xFF000000, 0xFF434343}, // Dark Night
-            {0xFFFF7E5F, 0xFFFEB47B}, // Orange Coral
-            {0xFF6A11CB, 0xFF2575FC}  // Purple Ocean
+    public static final int[][] professionalGradients = {
+            {0xFFFDFBFB, 0xFFEBEDEE}, // Soft Cloud
+            {0xFFF5F7FA, 0xFFC3CFE2}, // Light Mist
+            {0xFFE0EAFC, 0xFFCFDEF3}, // Powder Blue
+            {0xFFE0F2F1, 0xFFB2DFDB}, // Mint Whisper
+            {0xFFFFF1EB, 0xFFACE0F9}, // Morning Sky
+            {0xFFF6D365, 0xFFFDA085}, // Golden Glow
+            {0xFFEE9CA7, 0xFFFFDDE1}, // Rose Water
+            {0xFFA1C4FD, 0xFFC2E9FB}, // Winter Day
+            {0xFFD4FC79, 0xFF96E6A1}, // Fresh Mint
+            {0xFFE6E9F0, 0xFFEEF1F5}  // Elegant Pearl
     };
 
     //For Widgets

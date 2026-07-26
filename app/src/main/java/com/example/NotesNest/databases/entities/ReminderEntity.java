@@ -1,8 +1,11 @@
 package com.example.NotesNest.databases.entities;
 
+import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
+
+import java.util.UUID;
 
 @Entity(
         tableName = "reminders",
@@ -13,8 +16,9 @@ import androidx.room.PrimaryKey;
 )
 public class ReminderEntity {
 
-    @PrimaryKey(autoGenerate = true)
-    public int id;
+    @PrimaryKey
+    @NonNull
+    public String id;
 
     public String userId;                 // 👈 support multiple users
     public String type;                // reminder | task | birthday
@@ -35,12 +39,10 @@ public class ReminderEntity {
     // UI Colors
     public int gradientStartColor;
     public int gradientEndColor;
-
     // Offline-first sync fields
-    public boolean isSynced;           // sync flag
     public boolean isDeleted;          // soft-deleted
-    public long updatedAt;             // conflict resolution
 
     public ReminderEntity() {
+        this.id = UUID.randomUUID().toString();
     }
 }

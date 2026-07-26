@@ -1,5 +1,6 @@
 package com.example.NotesNest.utils;
 
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,7 +43,7 @@ public class HtmlListConverter {
         while (matcher.find()) {
             String tag = matcher.group();
             String replacement = "\u2610 "; // Unicode Ballot Box
-            if (tag.toLowerCase().contains("checked")) {
+            if (tag.toLowerCase(Locale.ROOT).contains("checked")) {
                 replacement = "\u2611 "; // Unicode Ballot Box with Check
             }
             matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
