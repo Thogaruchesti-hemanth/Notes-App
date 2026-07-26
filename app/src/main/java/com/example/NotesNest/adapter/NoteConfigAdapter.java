@@ -53,7 +53,7 @@ public class NoteConfigAdapter extends RecyclerView.Adapter<NoteConfigAdapter.No
         holder.tvMessage.setText(plainContent);
         holder.tvTime.setText(DateTimeUtils.getReadableDate(note.createdAt));
 
-        boolean isSelected = selectedNote != null && selectedNote.id == note.id;
+        boolean isSelected = selectedNote != null && java.util.Objects.equals(selectedNote.id, note.id);
         holder.ivCheck.setImageResource(isSelected ? R.drawable.ic_black_tick : R.drawable.ic_empty_circle);
         holder.ivCheck.setVisibility(View.VISIBLE);
 
@@ -79,9 +79,9 @@ public class NoteConfigAdapter extends RecyclerView.Adapter<NoteConfigAdapter.No
         }
     }
 
-    private int findPosition(long id) {
+    private int findPosition(String id) {
         for (int i = 0; i < noteList.size(); i++) {
-            if (noteList.get(i).id == id) return i;
+            if (java.util.Objects.equals(noteList.get(i).id, id)) return i;
         }
         return -1;
     }

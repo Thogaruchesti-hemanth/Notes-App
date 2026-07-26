@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
+import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
 
@@ -24,11 +25,11 @@ public interface NoteDao {
 
     // Notes by category
     @Query("SELECT * FROM notes WHERE userId = :userId AND categoryId = :categoryId AND isDeleted = 0 ORDER BY isPinned DESC, createdAt DESC")
-    LiveData<List<NoteEntity>> getNotesByCategory(String userId, int categoryId);
+    LiveData<List<NoteEntity>> getNotesByCategory(String userId, String categoryId);
 
     // Get note by ID
     @Query("SELECT * FROM notes WHERE id = :id")
-    LiveData<NoteEntity> getNoteById(int id);
+    LiveData<NoteEntity> getNoteById(String id);
 
     // ------------------------------------------
     // INSERT / UPDATE / DELETE (normal)
@@ -42,10 +43,6 @@ public interface NoteDao {
 
     @Delete
     void delete(NoteEntity note);
-
-    // Full delete
-    @Query("DELETE FROM notes WHERE id = :noteId")
-    void deleteNoteById(int noteId);
 
     // ------------------------------------------
     // SEARCH (LiveData)
@@ -61,7 +58,7 @@ public interface NoteDao {
     @Query("SELECT * FROM notes WHERE userId = :userId AND categoryId = :categoryId AND isDeleted = 0 AND " +
             "(title LIKE '%' || :keyword || '%' OR content LIKE '%' || :keyword || '%') " +
             "ORDER BY isPinned DESC, createdAt DESC")
-    LiveData<List<NoteEntity>> searchNotesInCategory(String userId, int categoryId, String keyword);
+    LiveData<List<NoteEntity>> searchNotesInCategory(String userId, String categoryId, String keyword);
 
     // Full-text Search (FTS)
     @Query("SELECT notes.* FROM notes JOIN notes_fts ON notes.id = notes_fts.rowid " +
@@ -79,10 +76,10 @@ public interface NoteDao {
 
     // Mark note as synced
     @Query("UPDATE notes SET isSynced = 1, updatedAt = :updateTime WHERE id = :noteId")
-    void markSynced(int noteId, long updateTime);
+    void markSynced(String noteId, long updateTime);
 
     @Query("UPDATE notes SET categoryId = NULL WHERE userId = :userId AND categoryId = :categoryId")
-    void resetCategoryNotes(String userId, int categoryId);
+    void resetCategoryNotes(String userId, String categoryId);
 
     // Get total count of notes for a user (excluding deleted)
     @Query("SELECT COUNT(*) FROM notes WHERE userId = :userId AND isDeleted = 0")
@@ -90,8 +87,14 @@ public interface NoteDao {
 
     // Get count of notes for a user in specific category (excluding deleted)
     @Query("SELECT COUNT(*) FROM notes WHERE userId = :userId AND categoryId = :categoryId AND isDeleted = 0")
-    LiveData<Integer> getNotesCountByCategory(String userId, int categoryId);
+    LiveData<Integer> getNotesCountByCategory(String userId, String categoryId);
 
     @Query("SELECT * FROM notes WHERE id = :noteId LIMIT 1")
-    NoteEntity getNoteByIdSync(int noteId);
+    NoteEntity getNoteByIdSync(String noteId);
+
+    @Query("SELECT * FROM notes")
+    List<NoteEntity> getAllNotesForBackup();
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertAll(List<NoteEntity> notes);
 }

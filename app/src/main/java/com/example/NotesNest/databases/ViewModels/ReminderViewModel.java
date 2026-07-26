@@ -41,7 +41,7 @@ public class ReminderViewModel extends AndroidViewModel {
     /**
      * Get a specific reminder by ID and user ID
      */
-    public LiveData<ReminderEntity> getReminderById(int id, String userId) {
+    public LiveData<ReminderEntity> getReminderById(String id, String userId) {
         return reminderRepository.getReminderById(id, userId);
     }
 
@@ -53,8 +53,8 @@ public class ReminderViewModel extends AndroidViewModel {
     public void insertReminder(ReminderEntity reminder) {
         executorService.execute(() -> {
             try {
-                long id = reminderRepository.insertAndGetId(reminder);
-                insertResult.postValue(id);
+                long rowId = reminderRepository.insertAndGetId(reminder);
+                insertResult.postValue(rowId);
             } catch (Exception e) {
                 insertResult.postValue(-1L);
             }

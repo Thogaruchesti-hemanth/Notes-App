@@ -1,4 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?attr/colorPrimary"
@@ -11,48 +13,28 @@
         android:layout_marginBottom="@dimen/margin_20"
         android:background="?attr/colorSecondary" />
 
-    <LinearLayout
+    <TextView
         android:id="@+id/layoutSettings"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:padding="@dimen/padding_12"
         android:gravity="center_vertical"
-        android:padding="@dimen/padding_12">
+        android:text="@string/text_settings"
+        android:textColor="?attr/colorSecondary"
+        android:textSize="@dimen/text_18"
+        app:drawableStartCompat="@drawable/ic_settings"
+        android:drawablePadding="@dimen/padding_16" />
 
-        <ImageView
-            android:layout_width="@dimen/size_20"
-            android:layout_height="@dimen/size_20"
-            android:contentDescription="@string/text_settings_icon"
-            android:src="@drawable/ic_settings" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingHorizontal="@dimen/padding_16"
-            android:text="@string/text_settings"
-            android:textColor="?attr/colorSecondary"
-            android:textSize="@dimen/text_18" />
-    </LinearLayout>
-
-    <LinearLayout
+    <TextView
         android:id="@+id/layoutHelpAndSupport"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:padding="@dimen/padding_12"
         android:gravity="center_vertical"
-        android:padding="@dimen/padding_12">
-
-        <ImageView
-            android:layout_width="@dimen/size_20"
-            android:layout_height="@dimen/size_20"
-            android:contentDescription="@string/text_help_and_support_icon"
-            android:src="@drawable/ic_help_and_support" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingHorizontal="@dimen/padding_16"
-            android:text="@string/text_help_support"
-            android:textColor="?attr/colorSecondary"
-            android:textSize="@dimen/text_18" />
-    </LinearLayout>
+        android:text="@string/text_help_support"
+        android:textColor="?attr/colorSecondary"
+        android:textSize="@dimen/text_18"
+        app:drawableStartCompat="@drawable/ic_help_and_support"
+        android:drawablePadding="@dimen/padding_16" />
 
 </LinearLayout>

@@ -3,21 +3,18 @@ package com.example.NotesNest.models;
 public class Task {
     private String title;
     private String type;
-    private long startTime;
-    private long endTime;
-    private long id;
-    private String description; // Add this field
+    private final long startTime;
+    private String id;
 
-    private final int startColor; // e.g., 0xFFE91E63
-    private final int endColor;   // e.g., 0xFFFFC107
+    private final int startColor;
+    private final int endColor;
 
-    public Task(String title, String type, long startTime, long endTime, long id, String description, int startColor, int endColor) {
+    public Task(String title, String type, long startTime, String id, int startColor, int endColor) {
         this.title = title;
         this.type = type;
         this.startTime = startTime;
-        this.endTime = endTime;
+
         this.id = id;
-        this.description = description;
         this.startColor = startColor;
         this.endColor = endColor;
     }
@@ -43,33 +40,12 @@ public class Task {
         return startTime;
     }
 
-    public void setStartTime(long startTime) {
-        this.startTime = startTime;
-    }
-
-    public long getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(long endTime) {
-        this.endTime = endTime;
-    }
-
-    public long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(String id) {
         this.id = id;
-    }
-
-    // Add getter and setter for description
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 
     // constructor, getters, setters

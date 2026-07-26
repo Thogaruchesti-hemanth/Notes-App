@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
+import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
 
@@ -24,11 +25,8 @@ public interface ReminderDao {
     @Delete
     void deleteReminder(ReminderEntity reminder);
 
-    @Query("DELETE FROM reminders WHERE id = :id AND userId = :userId")
-    void deleteById(int id, String userId);
-
     @Query("SELECT * FROM reminders WHERE id = :id AND userId = :userId AND isDeleted = 0")
-    ReminderEntity getById(int id, String userId);
+    ReminderEntity getById(String id, String userId);
 
     // ------------------- Get All Reminders -------------------
     @Query("SELECT * FROM reminders WHERE userId = :userId AND isDeleted = 0 ORDER BY notificationTime ASC")
@@ -37,12 +35,13 @@ public interface ReminderDao {
     @Query("SELECT * FROM reminders WHERE userId = :userId")
     LiveData<List<ReminderEntity>> getAllRemindersLive(String userId);
 
-    // ------------------- Date Range with LiveData -------------------
-    @Query("SELECT * FROM reminders WHERE userId = :userId AND notificationTime BETWEEN :startDate AND :endDate AND isDeleted = 0 ORDER BY notificationTime ASC")
-    LiveData<List<ReminderEntity>> getRemindersByDateRangeLive(String userId, long startDate, long endDate);
-
     // ------------------- Get Single Reminder with LiveData -------------------
     @Query("SELECT * FROM reminders WHERE id = :id AND userId = :userId AND isDeleted = 0")
-    LiveData<ReminderEntity> getReminderByIdLive(int id, String userId);
+    LiveData<ReminderEntity> getReminderByIdLive(String id, String userId);
 
+    @Query("SELECT * FROM reminders")
+    List<ReminderEntity> getAllRemindersForBackup();
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertAll(List<ReminderEntity> reminders);
 }

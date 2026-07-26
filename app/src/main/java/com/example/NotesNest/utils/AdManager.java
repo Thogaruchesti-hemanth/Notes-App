@@ -45,9 +45,7 @@ public class AdManager {
                 .build();
         MobileAds.setRequestConfiguration(requestConfiguration);
 
-        MobileAds.initialize(context, initializationStatus -> {
-            loadAppOpenAd(context);
-        });
+        MobileAds.initialize(context, initializationStatus -> loadAppOpenAd(context));
     }
 
     /**

@@ -14,13 +14,13 @@ import com.example.NotesNest.notifications.workers.NotificationWorker;
 public class ExactAlarmBroadcastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        int reminderId = intent.getIntExtra("reminder_id", -1);
-        if (reminderId == -1) return;
+        String reminderId = intent.getStringExtra("reminder_id");
+        if (reminderId == null) return;
 
         Data data = new Data.Builder()
-                .putInt(NotificationWorker.KEY_REMINDER_ID, reminderId)
+                .putString(NotificationWorker.KEY_REMINDER_ID, reminderId)
                 .putString(NotificationWorker.KEY_CHANNEL, NotificationHelper.CHANNEL_ID_REMINDERS)
-                .putInt(NotificationWorker.KEY_NOTIFICATION_ID, reminderId)
+                .putInt(NotificationWorker.KEY_NOTIFICATION_ID, reminderId.hashCode())
                 .build();
 
         OneTimeWorkRequest w = new OneTimeWorkRequest.Builder(NotificationWorker.class)

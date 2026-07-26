@@ -33,6 +33,8 @@ import com.example.NotesNest.utils.constants.PrefDefaults;
 import com.example.NotesNest.utils.constants.PrefKeys;
 import com.google.android.gms.ads.AdRequest;
 
+import java.util.Locale;
+
 
 public class ManageAccountActivity extends AppCompatActivity {
 
@@ -140,7 +142,7 @@ public class ManageAccountActivity extends AppCompatActivity {
 
         if (isPremium) {
             String plan = appPreferences.getString(PrefKeys.PLAN_TYPE, PrefDefaults.PLAN_TYPE);
-            binding.tvPremiumStatus.setText(String.format("Premium User ⭐ (%s)", plan != null ? plan.toUpperCase() : "PRO"));
+            binding.tvPremiumStatus.setText(String.format("Premium User ⭐ (%s)", plan != null ? plan.toUpperCase(Locale.ROOT) : "PRO"));
             binding.tvPremiumStatus.setTextColor(ContextCompat.getColor(this, R.color.tabSelectedTextColorLight));
             binding.tvPremiumStatus.setOnClickListener(v -> openPlayStoreSubscriptions());
         } else {

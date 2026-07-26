@@ -24,7 +24,7 @@ public class CategoryViewModel extends AndroidViewModel {
         return categoryRepository.getAllCategories(userId);
     }
 
-    public LiveData<CategoryEntity> getCategoryById(int categoryId, String userId) {
+    public LiveData<CategoryEntity> getCategoryById(String categoryId, String userId) {
         return categoryRepository.getCategoryById(categoryId, userId);
     }
 
@@ -36,15 +36,11 @@ public class CategoryViewModel extends AndroidViewModel {
         categoryRepository.delete(category);
     }
 
-    public void deleteCategoryByName(String categoryName, String userId) {
-        categoryRepository.deleteByName(categoryName, userId);
-    }
-
     public void updateCategory(CategoryEntity category) {
         categoryRepository.update(category);
     }
 
-    public void getCategoryName(int categoryId, String userId, CategoryRepository.CategoryNameCallback callback) {
+    public void getCategoryName(String categoryId, String userId, CategoryRepository.CategoryNameCallback callback) {
         categoryRepository.getCategoryName(categoryId, userId, callback);
     }
 

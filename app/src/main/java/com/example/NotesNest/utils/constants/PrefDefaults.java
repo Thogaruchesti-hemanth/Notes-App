@@ -7,7 +7,6 @@ public final class PrefDefaults {
     }
 
     public static final String THEME = "light";
-    public static final String SYSTEM_THEME = "system";
 
     // Backup related
     public static final String LAST_BACKUP_TIME = "Never backed up";

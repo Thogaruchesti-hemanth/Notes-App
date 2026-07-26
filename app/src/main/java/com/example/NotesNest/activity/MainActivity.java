@@ -13,6 +13,8 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -24,6 +26,7 @@ import com.example.NotesNest.databases.AppDatabase;
 import com.example.NotesNest.utils.AnalyticsHelper;
 import com.example.NotesNest.utils.AppPreferences;
 import com.example.NotesNest.utils.DrawerHelper;
+import com.example.NotesNest.utils.PermissionManager;
 
 import java.util.Random;
 
@@ -31,7 +34,17 @@ public class MainActivity extends AppCompatActivity {
 
     private AppPreferences pref;
     private DrawerHelper drawerHelper;
+    private PermissionManager permissionManager;
     private final Random random = new Random();
+
+    private final ActivityResultLauncher<String> requestNotificationPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                // Once notification permission is handled, check for the others
+                if (permissionManager != null) {
+                    permissionManager.checkExactAlarmPermission();
+                    permissionManager.checkFullScreenIntentPermission();
+                }
+            });
 
     private final BroadcastReceiver premiumReceiver = new BroadcastReceiver() {
         @Override
@@ -74,6 +87,9 @@ public class MainActivity extends AppCompatActivity {
         AppDatabase.getInstance(this);
         pref = AppPreferences.getInstance();
         
+        permissionManager = new PermissionManager(this);
+        permissionManager.checkAndRequestPermissions(requestNotificationPermissionLauncher);
+
         // Initialize Billing and Sync status
         com.example.NotesNest.utils.BillingManager.getInstance(this).syncPurchases();
 

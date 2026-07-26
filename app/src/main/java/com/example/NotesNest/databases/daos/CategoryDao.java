@@ -33,7 +33,7 @@ public interface CategoryDao {
 
     // 🔹 Delete category by ID
     @Query("DELETE FROM categories WHERE id = :categoryId AND userId = :userId")
-    void deleteCategoryById(int categoryId, String userId);
+    void deleteCategoryById(String categoryId, String userId);
 
     // 🔹 Get all categories as LiveData (reactive, offline-friendly)
     @Query("SELECT * FROM categories WHERE userId = :userId ORDER BY name ASC")
@@ -41,7 +41,7 @@ public interface CategoryDao {
 
     // 🔹 Get category by ID
     @Query("SELECT * FROM categories WHERE id = :categoryId AND userId = :userId LIMIT 1")
-    LiveData<CategoryEntity> getCategoryById(int categoryId, String userId);
+    LiveData<CategoryEntity> getCategoryById(String categoryId, String userId);
 
     // 🔹 Check if category exists by name
     @Query("SELECT COUNT(*) FROM categories WHERE name = :categoryName AND userId = :userId")
@@ -60,5 +60,11 @@ public interface CategoryDao {
     void deleteAll(String userId);
 
     @Query("SELECT name FROM categories WHERE id = :categoryId AND userId = :userId LIMIT 1")
-    String getCategoryName(int categoryId, String userId);
+    String getCategoryName(String categoryId, String userId);
+
+    @Query("SELECT * FROM categories")
+    List<CategoryEntity> getAllCategoriesForBackup();
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertAllReplace(List<CategoryEntity> categories);
 }

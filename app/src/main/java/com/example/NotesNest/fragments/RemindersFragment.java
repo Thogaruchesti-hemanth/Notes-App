@@ -41,6 +41,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class RemindersFragment extends Fragment {
@@ -215,9 +217,7 @@ public class RemindersFragment extends Fragment {
                     title,
                     r.type,
                     r.notificationTime,
-                    endTime,
                     r.id,
-                    r.message,
                     r.gradientStartColor,
                     r.gradientEndColor
             );
@@ -239,7 +239,7 @@ public class RemindersFragment extends Fragment {
             promptTextView.setVisibility(View.VISIBLE);
             hourRecyclerView.setVisibility(View.VISIBLE);
             emptyStateLayout.setVisibility(View.GONE);
-            promptTextView.setText(String.format(" %d reminders are planned for this day.", count));
+            promptTextView.setText(String.format(Locale.US," %d reminders are planned for this day.", count));
         }
     }
 
@@ -247,7 +247,7 @@ public class RemindersFragment extends Fragment {
 
     private void showReminderOptions(Task task) {
         ReminderEntity reminder =
-                currentReminders.stream().filter(r -> r.id == task.getId()).findFirst().orElse(null);
+                currentReminders.stream().filter(r -> Objects.equals(r.id, task.getId())).findFirst().orElse(null);
 
         if (reminder == null) return;
 

@@ -23,12 +23,13 @@
             android:layout_width="28dp"
             android:layout_height="28dp"
             android:src="@drawable/ic_edit"
+            android:contentDescription="@string/text_edit_icon"
             app:tint="@color/black" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Edit"
+            android:text="@string/text_edit"
             android:textColor="@color/black"
             android:textSize="11sp"
             android:textStyle="bold" />
@@ -50,6 +51,7 @@
             android:layout_width="28dp"
             android:layout_height="28dp"
             android:src="@drawable/ic_pinned"
+            android:contentDescription="@string/text_pinned_icon"
             app:tint="@color/black" />
 
         <TextView
@@ -77,12 +79,13 @@
             android:layout_width="28dp"
             android:layout_height="28dp"
             android:src="@drawable/ic_delete"
+            android:contentDescription="@string/text_delete_icon"
             app:tint="@color/red" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Delete"
+            android:text="@string/text_delete"
             android:textColor="@color/red"
             android:textSize="11sp"
             android:textStyle="bold" />

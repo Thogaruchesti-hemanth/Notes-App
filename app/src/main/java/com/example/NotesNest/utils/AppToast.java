@@ -27,11 +27,7 @@ public class AppToast {
     }
 
     public static void showShort(String message) {
-        show(message, Toast.LENGTH_SHORT);
-    }
-
-    public static void showLong(String message) {
-        show(message, Toast.LENGTH_LONG);
+        show(message);
     }
 
     /** Shortcut for showShort */
@@ -39,12 +35,7 @@ public class AppToast {
         showShort(message);
     }
 
-    /** Shortcut for showLong */
-    public static void l(String message) {
-        showLong(message);
-    }
-
-    private static void show(final String message, final int duration) {
+    private static void show(final String message) {
         if (appContext == null) {
             // Fallback or warning if not initialized
             return;
@@ -52,9 +43,9 @@ public class AppToast {
 
         // Ensure toast is shown on the Main Thread
         if (Looper.myLooper() == Looper.getMainLooper()) {
-            Toast.makeText(appContext, message, duration).show();
+            Toast.makeText(appContext, message, Toast.LENGTH_SHORT).show();
         } else {
-            mainHandler.post(() -> Toast.makeText(appContext, message, duration).show());
+            mainHandler.post(() -> Toast.makeText(appContext, message, Toast.LENGTH_SHORT).show());
         }
     }
 }

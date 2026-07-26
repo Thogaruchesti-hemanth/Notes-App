@@ -8,11 +8,9 @@ import androidx.annotation.NonNull;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import com.example.NotesNest.databases.AppDatabase;
 import com.example.NotesNest.utils.AppPreferences;
 import com.example.NotesNest.utils.constants.PrefKeys;
 import com.example.NotesNest.utils.CryptoUtils;
-import com.example.NotesNest.utils.ZipUtils;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.http.FileContent;
@@ -24,8 +22,9 @@ import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -77,7 +76,7 @@ public class DriveBackupWorker extends Worker {
             }
 
             // 2. Find existing backup file INSIDE that folder
-            String existingFileId = findFileInFolder(driveService, folderId, BACKUP_FILE_NAME);
+            String existingFileId = findFileInFolder(driveService, folderId);
             
             boolean success;
             if (existingFileId != null) {
@@ -97,14 +96,15 @@ public class DriveBackupWorker extends Worker {
 
         } catch (UserRecoverableAuthIOException e) {
             Log.e(TAG, "User action required for Drive access: " + e.getMessage());
-            // In a real app, you might want to show a notification to the user here
             return Result.failure();
         } catch (Exception e) {
             Log.e(TAG, "Worker Exception: " + e.getMessage(), e);
             return shouldRetry(e) ? Result.retry() : Result.failure();
         } finally {
             if (localBackupFile != null && localBackupFile.exists()) {
-                localBackupFile.delete();
+                if (!localBackupFile.delete()) {
+                    Log.w(TAG, "Failed to delete temporary backup file: " + localBackupFile.getAbsolutePath());
+                }
             }
         }
     }
@@ -162,8 +162,8 @@ public class DriveBackupWorker extends Worker {
         return folder.getId();
     }
 
-    private String findFileInFolder(Drive driveService, String folderId, String fileName) throws IOException {
-        String query = "'" + folderId + "' in parents and name = '" + fileName + "' and trashed = false";
+    private String findFileInFolder(Drive driveService, String folderId) throws IOException {
+        String query = "'" + folderId + "' in parents and name = '" + BACKUP_FILE_NAME + "' and trashed = false";
         FileList result = driveService.files().list()
                 .setQ(query)
                 .setSpaces("drive")
@@ -193,8 +193,7 @@ public class DriveBackupWorker extends Worker {
 
     private boolean updateExistingFile(Drive driveService, String fileId, java.io.File localFile) throws IOException {
         File fileMetadata = new File();
-        // Update timestamp in description to show progress in Drive info
-        fileMetadata.setDescription("Last Updated: " + new Date().toString());
+        fileMetadata.setDescription("Last Updated: " + new Date());
 
         FileContent mediaContent = new FileContent("application/octet-stream", localFile);
         File updatedFile = driveService.files().update(fileId, fileMetadata, mediaContent)
@@ -207,30 +206,23 @@ public class DriveBackupWorker extends Worker {
     private java.io.File createLocalBackupFile(String email) {
         try {
             Context context = getApplicationContext();
-            
-            // 0. Perform Checkpoint to flush WAL data
-            AppDatabase.checkpoint(context);
+            BackupProcessor backupProcessor = new BackupProcessor(context);
 
-            java.io.File dbFile = context.getDatabasePath("notesnest.db");
-            if (!dbFile.exists()) {
-                Log.e(TAG, "Database file not found!");
-                return null;
-            }
+            // 1. Export data to JSON
+            String json = backupProcessor.exportToJson();
+            byte[] jsonBytes = json.getBytes(StandardCharsets.UTF_8);
 
+            // 2. Encrypt JSON and save to temporary file
             java.io.File cacheDir = context.getCacheDir();
-            java.io.File tempZip = new java.io.File(cacheDir, "drive_temp.zip");
             java.io.File encryptedFile = new java.io.File(cacheDir, "drive_backup.enc");
 
-            // 1. Zip the database
-            ZipUtils.zipSingleFile(dbFile, tempZip, dbFile.getName());
-
-            // 2. Encrypt the zip file
-            // Using a derived key from email for now as a consistent password for Drive sync
-            char[] password = email.toCharArray(); 
-            CryptoUtils.encryptFileToFile(tempZip, encryptedFile, password);
-
-            // Cleanup temp zip
-            if (tempZip.exists()) tempZip.delete();
+            char[] password = email.toCharArray();
+            
+            // We use a temporary ByteArrayInputStream to encrypt to file
+            try (java.io.InputStream in = new java.io.ByteArrayInputStream(jsonBytes);
+                 FileOutputStream fos = new FileOutputStream(encryptedFile)) {
+                CryptoUtils.encryptStream(in, fos, password);
+            }
 
             return encryptedFile;
         } catch (Exception e) {

@@ -12,11 +12,9 @@ import android.app.AlarmManager;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.text.TextUtils;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
@@ -42,11 +40,13 @@ import com.example.NotesNest.utils.CommonDialogs;
 import com.example.NotesNest.databases.ViewModels.ReminderViewModel;
 import com.example.NotesNest.utils.DateTimeUtils;
 import com.example.NotesNest.utils.AppPreferences;
+import com.example.NotesNest.utils.PermissionManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * MVVM Refactored EditReminderActivity
@@ -101,9 +101,11 @@ public class EditReminderActivity extends AppCompatActivity {
         setupQuickTimeChips();
 
         int reminderId = getIntent().getIntExtra(EXTRA_REMINDER_ID, -1);
-        if (reminderId != -1) {
+        String stringId = getIntent().getStringExtra(EXTRA_REMINDER_ID);
+        if (stringId != null || (reminderId != -1 && String.valueOf(reminderId).length() > 5)) {
+            // Note: with destructive migration, old int IDs are gone, but we check just in case
             isEditMode = true;
-            loadReminder(reminderId);
+            loadReminder(stringId != null ? stringId : String.valueOf(reminderId));
         } else {
             refreshDateTimeOnUi();
         }
@@ -114,6 +116,7 @@ public class EditReminderActivity extends AppCompatActivity {
 
     private void initViews() {
         binding.tvTitle.setText(isEditMode ? R.string.text_edit_reminder : R.string.text_add_reminder);
+        binding.titleTextView.setText("");
         binding.tvRepeat.setText(selectedRepeat);
         binding.tvNotify.setText(selectedNotify);
         binding.chipGroupType.check(R.id.chipReminder);
@@ -159,7 +162,7 @@ public class EditReminderActivity extends AppCompatActivity {
         ));
 
         binding.colorLayout.setOnClickListener(v ->
-                CommonDialogs.showGradientPicker(this, selectedGradientStart, selectedGradientEnd,
+                CommonDialogs.showGradientPicker(this,
                         (startColor, endColor) -> {
                             selectedGradientStart = startColor;
                             selectedGradientEnd = endColor;
@@ -300,15 +303,15 @@ public class EditReminderActivity extends AppCompatActivity {
     }
 
     private void validateAndSave() {
-        final String title = binding.tvTitle.getText() == null ? "" :
-                binding.tvTitle.getText().toString().trim();
+        final String title = binding.titleTextView.getText() == null ? "" :
+                binding.titleTextView.getText().toString().trim();
         final String message = binding.etDetails.getText() == null ? "" :
                 binding.etDetails.getText().toString().trim();
 
         // Validation
         if (TextUtils.isEmpty(title)) {
             showToast("Title is required");
-            binding.tvTitle.requestFocus();
+            binding.titleTextView.requestFocus();
             return;
         }
 
@@ -337,7 +340,7 @@ public class EditReminderActivity extends AppCompatActivity {
 
     private boolean checkConflicts(long targetTime) {
         for (ReminderEntity r : allReminders) {
-            if (currentEntity != null && r.id == currentEntity.id) continue;
+            if (currentEntity != null && Objects.equals(r.id, currentEntity.id)) continue;
             // Check if within 5 minutes
             if (Math.abs(r.notificationTime - targetTime) < 5 * 60 * 1000) {
                 return true;
@@ -388,12 +391,12 @@ public class EditReminderActivity extends AppCompatActivity {
 
     private void saveNewReminder(ReminderEntity entity) {
         reminderViewModel.insertReminder(entity);
-        reminderViewModel.getInsertResult().observeForever(id -> {
-            if (id != null && id > 0) {
+        reminderViewModel.getInsertResult().observeForever(rowId -> {
+            if (rowId != null && rowId > 0) {
                 long triggerTime = calculateTriggerTime(entity.notificationTime, entity.notifyType);
                 NotificationScheduler.scheduleOneTime(
                         this,
-                        id.intValue(),
+                        entity.id,
                         triggerTime,
                         entity.repeatType,
                         entity.isRepeated
@@ -452,33 +455,28 @@ public class EditReminderActivity extends AppCompatActivity {
     }
 
     private boolean checkExactAlarmPermission(boolean showDialog) {
+        if (showDialog) {
+            new PermissionManager(this).checkExactAlarmPermission();
+        }
+        
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-            if (alarmManager != null && !alarmManager.canScheduleExactAlarms()) {
-                if (showDialog) {
-                    new AlertDialog.Builder(this)
-                            .setTitle("Permission Required")
-                            .setMessage("To provide precise reminders, NotesNest needs permission to set exact alarms. Please enable this in settings.")
-                            .setPositiveButton("Settings", (dialog, which) -> {
-                                Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
-                                startActivity(intent);
-                            })
-                            .setNegativeButton("Cancel", null)
-                            .show();
-                }
-                return false;
-            }
+            return alarmManager != null && alarmManager.canScheduleExactAlarms();
         }
         return true;
     }
 
-    private void loadReminder(int id) {
+    private void loadReminder(String id) {
         String userId = AppPreferences.getInstance().getUserId();
         reminderViewModel.getReminderById(id, userId).observe(this, entity -> {
             if (entity != null) {
                 currentEntity = entity;
                 populateFromEntity(entity);
-                binding.tvTitle.setText(R.string.text_edit_reminder);
+                if (entity.title != null && !entity.title.isEmpty()) {
+                    binding.tvTitle.setText(entity.title);
+                } else {
+                    binding.tvTitle.setText(R.string.text_edit_reminder);
+                }
             }
         });
     }
@@ -498,7 +496,12 @@ public class EditReminderActivity extends AppCompatActivity {
                 break;
         }
 
-        binding.tvTitle.setText(entity.title);
+        binding.titleTextView.setText(entity.title);
+        if (entity.title != null && !entity.title.isEmpty()) {
+            binding.tvTitle.setText(entity.title);
+        } else {
+            binding.tvTitle.setText(isEditMode ? R.string.text_edit_reminder : R.string.text_add_reminder);
+        }
 
         if (entity.notificationTime > 0) {
             calendar.setTimeInMillis(entity.notificationTime);

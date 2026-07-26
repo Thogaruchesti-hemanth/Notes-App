@@ -15,27 +15,16 @@
         android:gravity="center_vertical"
         android:paddingHorizontal="@dimen/padding_10">
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/tvTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <ImageView
-                android:layout_width="@dimen/size_16"
-                android:layout_height="@dimen/size_16"
-                android:contentDescription="@string/text_reminder_icon"
-                android:src="@drawable/ic_reminders"/>
-
-            <TextView
-                android:id="@+id/tvTime"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/margin_8"
-                android:textSize="@dimen/text_12"
-                android:textStyle="bold"
-                android:textColor="@color/white" />
-        </LinearLayout>
+            android:textSize="@dimen/text_12"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:gravity="center_vertical"
+            app:drawableStartCompat="@drawable/ic_reminders"
+            android:drawablePadding="@dimen/margin_8" />
 
         <View
             android:layout_width="@dimen/size_1"

@@ -11,14 +11,14 @@
         android:layout_height="64dp"
         android:layout_gravity="center"
         android:src="@drawable/ic_premium"
-        android:contentDescription="Premium Icon" />
+        android:contentDescription="@string/text_premium_icon" />
 
     <TextView
         android:id="@+id/tvTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="Premium Feature"
+        android:text="@string/text_premium_feature"
         android:textAlignment="center"
         android:textSize="20sp"
         android:textStyle="bold"
@@ -29,7 +29,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="This feature is only available for premium users."
+        android:text="@string/text_this_feature_is_only_available_for_premium_users"
         android:textAlignment="center"
         android:textSize="16sp"
         android:textColor="?attr/colorOnSurface" />
@@ -39,7 +39,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="Upgrade to Premium"
+        android:text="@string/text_upgrade_to_premium"
         android:backgroundTint="@color/google_yellow"
         android:textColor="@color/black" />
 
@@ -48,7 +48,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Maybe Later"
+        android:text="@string/text_maybe_later"
         style="@style/Widget.MaterialComponents.Button.TextButton"
         android:textColor="?attr/colorPrimary" />
 

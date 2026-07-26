@@ -19,7 +19,6 @@ public class AppPreferences {
     public static final String ACTION_PREMIUM_UPDATED = "com.hemanth.NotesNest.ACTION_PREMIUM_UPDATED";
 
     // Premium plans constants for compatibility
-    public static final String PLAN_NONE = "none";
     public static final String PLAN_MONTHLY = "monthly";
     public static final String PLAN_YEARLY = "yearly";
     public static final String PLAN_LIFETIME = "lifetime";
@@ -69,10 +68,6 @@ public class AppPreferences {
 
     public void putInt(String key, int value) {
         prefs.edit().putInt(key, value).apply();
-    }
-
-    public int getInt(String key, int defaultValue) {
-        return prefs.getInt(key, defaultValue);
     }
 
     public void remove(String key) {
@@ -144,9 +139,6 @@ public class AppPreferences {
 
     public boolean isLoggedIn() { return prefs.getBoolean(PrefKeys.IS_LOGGED_IN, false); }
     public boolean getLogin() { return isLoggedIn(); }
-    public void setLoggedIn(boolean value) { putBoolean(PrefKeys.IS_LOGGED_IN, value); }
-    public void setKeyLogin(boolean value) { setLoggedIn(value); }
-
     // ----------- Premium -----------
     public boolean isUserPremium() {
         if (!isLoggedIn()) return false;
@@ -184,49 +176,6 @@ public class AppPreferences {
         if (!userId.equals("-1")) {
             prefs.edit().putString(PrefKeys.PREMIUM_EXPIRY_DATE + "_" + userId, date).apply();
         }
-    }
-
-    public String getPremiumPlan() {
-        String userId = getUserId();
-        return prefs.getString(PrefKeys.PREMIUM_PLAN_TYPE + "_" + userId, "none");
-    }
-
-    public void setPremiumPlan(String plan) {
-        String userId = getUserId();
-        if (!userId.equals("-1")) {
-            prefs.edit().putString(PrefKeys.PREMIUM_PLAN_TYPE + "_" + userId, plan).apply();
-        }
-    }
-
-    public String getPurchaseDate() {
-        String userId = getUserId();
-        return prefs.getString(PrefKeys.PURCHASE_DATE + "_" + userId, "");
-    }
-
-    public void setPurchaseDate(String date) {
-        String userId = getUserId();
-        if (!userId.equals("-1")) {
-            prefs.edit().putString(PrefKeys.PURCHASE_DATE + "_" + userId, date).apply();
-        }
-    }
-
-    public String getPurchaseToken() { return prefs.getString(PrefKeys.PURCHASE_TOKEN, ""); }
-    public void setPurchaseToken(String token) { putString(PrefKeys.PURCHASE_TOKEN, token); }
-
-    public String getOrderId() { return prefs.getString(PrefKeys.ORDER_ID, ""); }
-    public void setOrderId(String orderId) { putString(PrefKeys.ORDER_ID, orderId); }
-
-    public void savePurchaseDetails(boolean isPremium, String planType, String purchaseToken, String orderId) {
-        String userId = getUserId();
-        if (!userId.equals("-1")) {
-            prefs.edit()
-                    .putBoolean(PrefKeys.IS_PREMIUM + "_" + userId, isPremium)
-                    .putString(PrefKeys.PLAN_TYPE + "_" + userId, planType)
-                    .putString(PrefKeys.PURCHASE_TOKEN, purchaseToken)
-                    .putString(PrefKeys.ORDER_ID, orderId)
-                    .apply();
-        }
-        notifyPremiumChanged();
     }
 
     public void resetPremium() {
@@ -275,13 +224,7 @@ public class AppPreferences {
     public boolean isSystemTheme() { return prefs.getBoolean(PrefKeys.SYSTEM_THEME, false); }
     public void setSystemTheme(boolean enabled) { putBoolean(PrefKeys.SYSTEM_THEME, enabled); }
 
-    public boolean isOnboardingCompleted() { return prefs.getBoolean(PrefKeys.IS_ONBOARDING_COMPLETED, false); }
     public void setOnboardingCompleted(boolean value) { putBoolean(PrefKeys.IS_ONBOARDING_COMPLETED, value); }
-
-    public String getNotesLayout() { return prefs.getString(PrefKeys.KEY_NOTES_LAYOUT, "Grid"); }
-    public String getKeyNoteLayout() { return getNotesLayout(); }
-    public void setNotesLayout(String layout) { putString(PrefKeys.KEY_NOTES_LAYOUT, layout); }
-    public void setKeyNoteLayout(String layout) { setNotesLayout(layout); }
 
     // ----------- Drafts -----------
     public boolean hasValidDraft() {
@@ -320,26 +263,18 @@ public class AppPreferences {
         putBoolean("CATEGORY_SEED_DONE_" + userId, done);
     }
 
-    public boolean isCategorySeedDone() {
-        return prefs.getBoolean("CATEGORY_SEED_DONE", false);
-    }
-
-    public void setCategorySeedDone(boolean done) {
-        putBoolean("CATEGORY_SEED_DONE", done);
-    }
-
     // ----------- Widget Helpers -----------
-    public void saveWidgetNoteId(Context context, int appWidgetId, int noteId) {
+    public void saveWidgetNoteId(Context context, int appWidgetId, String noteId) {
         if (context == null) return;
         SharedPreferences widgetPrefs = context.getApplicationContext().getSharedPreferences("note_widgets", Context.MODE_PRIVATE);
         widgetPrefs.edit()
-                .putInt("widget_note_" + appWidgetId, noteId)
+                .putString("widget_note_" + appWidgetId, noteId)
                 .apply();
     }
 
-    public int getWidgetNoteId(Context context, int appWidgetId) {
-        if (context == null) return -1;
+    public String getWidgetNoteId(Context context, int appWidgetId) {
+        if (context == null) return null;
         SharedPreferences widgetPrefs = context.getApplicationContext().getSharedPreferences("note_widgets", Context.MODE_PRIVATE);
-        return widgetPrefs.getInt("widget_note_" + appWidgetId, -1);
+        return widgetPrefs.getString("widget_note_" + appWidgetId, null);
     }
 }

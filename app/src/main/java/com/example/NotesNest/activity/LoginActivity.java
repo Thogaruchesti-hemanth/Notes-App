@@ -199,7 +199,7 @@ public class LoginActivity extends AppCompatActivity {
         GetGoogleIdOption.Builder googleIdOptionBuilder = new GetGoogleIdOption.Builder()
                 .setFilterByAuthorizedAccounts(false)
                 .setServerClientId(getString(R.string.default_web_client_id))
-                .setAutoSelectEnabled(false); // Changed to false to force picker if no default
+                .setAutoSelectEnabled(false); // Changed too false to force picker if no default
 
         if (hashedNonce != null) {
             googleIdOptionBuilder.setNonce(hashedNonce);
@@ -231,10 +231,12 @@ public class LoginActivity extends AppCompatActivity {
                             googleBorder.stopLoading();
                             binding.googleSignInButton.setTextColor(ThemeManager.getThemeColor(LoginActivity.this, R.color.white, R.color.black));
                             binding.googleSignInButton.setBackgroundColor(ThemeManager.getThemeColor(LoginActivity.this, R.color.black, R.color.white));
-                            
-                            if (e.getMessage() != null && e.getMessage().contains("No credentials available")) {
-                                Log.e(TAG, "❌ No Google accounts found or SHA-1 mismatch.");
-                                showError("No Google accounts found. Please ensure you are signed in to your device.");
+
+                            if (e instanceof androidx.credentials.exceptions.NoCredentialException) {
+                                Log.e(TAG, "❌ No Google accounts found on device.");
+                                showError("No Google accounts found. Please sign in to an account in device settings.");
+                            } else if (e instanceof androidx.credentials.exceptions.GetCredentialCancellationException) {
+                                Log.d(TAG, "Sign-in cancelled by user.");
                             } else {
                                 Log.e(TAG, "❌ Credential Manager Error: " + e.getMessage());
                                 Toast.makeText(LoginActivity.this, "Google Sign-In failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();

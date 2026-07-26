@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:ads="http://schemas.android.com/apk/res-auto"
     android:id="@+id/settings_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorSecondary"
     android:orientation="vertical">
 
     <com.google.android.material.appbar.MaterialToolbar
@@ -76,8 +74,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/margin_20"
                 android:layout_marginBottom="@dimen/margin_10"
-                android:text="@string/text_backup_sync"
-                android:textAllCaps="true"
+                android:text="@string/text_caps_backup_sync"
                 android:textColor="@color/tabSelectedTextColorLight"
                 android:textSize="@dimen/text_16"
                 android:textStyle="bold" />
@@ -192,41 +189,19 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
-                    <LinearLayout
-                        android:id="@+id/app_version_layout"
+                    <TextView
+                        android:id="@+id/tvVersion"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:paddingHorizontal="@dimen/padding_10"
+                        android:paddingVertical="@dimen/padding_20"
                         android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:padding="@dimen/padding_10">
-
-                        <ImageView
-                            android:id="@+id/ivIcon"
-                            android:layout_width="@dimen/size_24"
-                            android:layout_height="@dimen/size_24"
-                            android:contentDescription="@string/text_about_app_icon"
-                            android:src="@drawable/ic_about_app"
-                            app:tint="?attr/colorPrimary" />
-
-                        <TextView
-                            android:id="@+id/tvText"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_margin="@dimen/margin_12"
-                            android:layout_weight="1"
-                            android:text="@string/text_app_version"
-                            android:textColor="?attr/colorPrimary"
-                            android:textSize="@dimen/text_16" />
-
-
-                        <TextView
-                            android:id="@+id/tvVersion"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_margin="@dimen/margin_12"
-                            android:textColor="?attr/colorPrimary"
-                            android:textSize="@dimen/text_12" />
-                    </LinearLayout>
+                        android:text="@string/text_app_version"
+                        android:textColor="?attr/colorPrimary"
+                        android:textSize="@dimen/text_16"
+                        app:drawableStartCompat="@drawable/ic_about_app"
+                        app:drawableTint="?attr/colorPrimary"
+                        android:drawablePadding="@dimen/margin_12" />
 
 
                 </LinearLayout>

@@ -29,7 +29,7 @@ public class NoteDiffCallback extends DiffUtil.Callback {
     @Override
     public boolean areItemsTheSame(int oldPos, int newPos) {
         // Use unique ID to check if it's the same note
-        return oldList.get(oldPos).id == newList.get(newPos).id;
+        return java.util.Objects.equals(oldList.get(oldPos).id, newList.get(newPos).id);
     }
 
     @Override

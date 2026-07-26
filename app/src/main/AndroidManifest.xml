@@ -5,6 +5,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -98,6 +101,15 @@
             android:exported="false" />
 
         <activity
+            android:name="com.example.NotesNest.activity.ReminderAlarmActivity"
+            android:exported="false"
+            android:launchMode="singleInstance"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.Notes" />
+
+        <activity
             android:name="com.example.NotesNest.activity.NoteWidgetConfigureActivity"
             android:exported="true">
             <intent-filter>
@@ -139,13 +151,19 @@
         </receiver>
 
         <receiver
-            android:name="com.example.NotesNest.notifications.receivers.ReminderReceiver"
-            android:exported="true" />
+            android:name="com.example.NotesNest.notifications.receivers.AlarmDismissReceiver"
+            android:exported="false" />
 
-        <service
-            android:name="com.example.NotesNest.notifications.services.AlarmSoundService"
-            android:exported="false"
-            android:foregroundServiceType="mediaPlayback" />
+        <receiver
+            android:name="com.example.NotesNest.notifications.receivers.BootReceiver"
+            android:exported="true"
+            android:directBootAware="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
 
     </application>
 

@@ -46,21 +46,21 @@ public class NotificationWorker extends Worker {
         Context context = getApplicationContext();
         NotificationHelper.createChannels(context);
 
-        int reminderId = getInputData().getInt(KEY_REMINDER_ID, -1);
+        String reminderId = getInputData().getString(KEY_REMINDER_ID);
         String channel = getInputData().getString(KEY_CHANNEL);
         int notificationId = getInputData().getInt(
                 KEY_NOTIFICATION_ID,
                 (int) System.currentTimeMillis()
         );
 
-        if (reminderId == -1) {
+        if (reminderId == null) {
             Log.e(TAG, "No reminder id in input");
             return Result.failure();
         }
 
         ReminderRepository repo = new ReminderRepository((Application) context.getApplicationContext());
         String userId = AppPreferences.getInstance().getUserId();
-        ReminderEntity entity = repo.getReminderById(userId,reminderId);
+        ReminderEntity entity = repo.getReminderByIdSync(userId, reminderId);
 
         if (entity == null) {
             Log.w(TAG, "Entity not found for id: " + reminderId);
@@ -80,6 +80,14 @@ public class NotificationWorker extends Worker {
 
         // ------------ Post Notification ----------------
         try {
+            // Add extra info to bundle for full-screen UI
+            android.os.Bundle extras = new android.os.Bundle();
+            extras.putString("type", entity.type);
+            extras.putLong("notificationTime", entity.notificationTime);
+            extras.putString("repeatType", entity.repeatType);
+            extras.putInt("gradientStart", entity.gradientStartColor);
+            extras.putInt("gradientEnd", entity.gradientEndColor);
+
             NotificationHelper.postNotification(
                     context,
                     notificationId,
@@ -88,8 +96,9 @@ public class NotificationWorker extends Worker {
                     message,
                     0,
                     0,
+                    reminderId.hashCode(),
                     reminderId,
-                    reminderId
+                    extras
             );
         } catch (Exception ex) {
             Log.e(TAG, "postNotification failed for id=" + reminderId, ex);
@@ -141,7 +150,7 @@ public class NotificationWorker extends Worker {
 
                     Log.d(TAG, String.format(
                             Locale.US,
-                            "Rescheduled id=%d repeatType=%s next=%d",
+                            "Rescheduled id=%s repeatType=%s next=%d",
                             entity.id,
                             repeatType,
                             nextTrigger

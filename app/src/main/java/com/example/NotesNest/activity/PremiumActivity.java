@@ -113,7 +113,7 @@ public class PremiumActivity extends AppCompatActivity {
                 hideLoading();
                 if (state.planType != null && !"none".equals(state.planType)) {
                     if (state.isNewPurchase) {
-                        syncPurchaseToFirebase(state.planType, state.purchaseToken);
+                        syncPurchaseToFirebase(state.planType);
                     } else {
                         // It was a restored purchase, update UI state but don't auto-sync/finish
                         currentPlan = state.planType;
@@ -166,7 +166,7 @@ public class PremiumActivity extends AppCompatActivity {
         }
     }
 
-    private void syncPurchaseToFirebase(String planType, String token) {
+    private void syncPurchaseToFirebase(String planType) {
         showLoading("Syncing premium status...");
         // Bypassing Cloud Function as it's not setup. 
         // Using direct update with local security verification (handled in BillingManager)

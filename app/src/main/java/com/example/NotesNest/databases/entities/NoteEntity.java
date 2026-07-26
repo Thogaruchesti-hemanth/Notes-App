@@ -1,12 +1,14 @@
 package com.example.NotesNest.databases.entities;
 
 
+import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
 import java.util.Objects;
+import java.util.UUID;
 
 @Entity(
         tableName = "notes",
@@ -23,11 +25,12 @@ import java.util.Objects;
 )
 public class NoteEntity {
 
-    @PrimaryKey(autoGenerate = true)
-    public int id;
+    @PrimaryKey
+    @NonNull
+    public String id;
 
     public String userId;              // 👈 separate notes for multiple users
-    public Integer categoryId;      // nullable
+    public String categoryId;      // nullable
 
     public String title;
     public String content;          // better name for message
@@ -39,14 +42,16 @@ public class NoteEntity {
     public boolean isDeleted;       // soft deletion flag
     public boolean isPinned;        // pinned note flag
 
-    public NoteEntity() {}
+    public NoteEntity() {
+        this.id = UUID.randomUUID().toString();
+    }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         NoteEntity that = (NoteEntity) o;
-        return id == that.id &&
+        return Objects.equals(id, that.id) &&
                 createdAt == that.createdAt &&
                 updatedAt == that.updatedAt &&
                 isSynced == that.isSynced &&
