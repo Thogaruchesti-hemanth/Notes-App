@@ -33,7 +33,6 @@ import com.example.NotesNest.activity.HelpAndSupportActivity;
 import com.example.NotesNest.activity.PremiumActivity;
 import com.example.NotesNest.activity.SettingsActivity;
 import com.example.NotesNest.adapter.MainPagerAdapter;
-import com.example.NotesNest.utils.AppPreferences;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 
@@ -203,9 +202,7 @@ public class DrawerHelper {
         if (editCount >= 3) {
             CommonDialogs.showConfirmDialog(activity, "Profile Edit Limit",
                     "You've reached your free profile edit limit (3 per month). To edit again, please watch a video ad.",
-                    "Watch Ad", "Upgrade", () -> {
-                        AdManager.showRewardedAd(activity, this::openEditDialog);
-                    }, () -> {
+                    "Watch Ad", "Upgrade", () -> AdManager.showRewardedAd(activity, this::openEditDialog), () -> {
                         activity.startActivity(new Intent(activity, PremiumActivity.class));
                         drawerLayout.closeDrawer(GravityCompat.START);
                     });

@@ -7,9 +7,6 @@ import android.net.Uri;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -126,63 +123,6 @@ public final class CryptoUtils {
     public static void clearPassword(char[] password) {
         if (password == null) return;
         Arrays.fill(password, '\0');
-    }
-
-    public static void encryptFileToUri(Context context, File inputFile, Uri destUri, char[] password) throws GeneralSecurityException, IOException {
-        ContentResolver resolver = context.getContentResolver();
-
-        try (FileInputStream fis = new FileInputStream(inputFile);
-             OutputStream out = resolver.openOutputStream(destUri)) {
-
-            if (out == null) throw new IOException("Unable to open destination URI");
-
-            // Reuse existing encryptStream method
-            encryptStream(fis, out, password);
-        }
-
-    }
-
-    public static void encryptFileToFile(File inputFile, File outputFile, char[] password) throws Exception {
-        // Generate salt and IV
-        byte[] salt = generateSalt();
-        byte[] iv = generateIv();
-
-        // Derive key from password
-        SecretKey key = deriveKey(password, salt);
-
-        // Initialize cipher
-        Cipher cipher = Cipher.getInstance(CIPHER_ALGO);
-        GCMParameterSpec spec = new GCMParameterSpec(128, iv);
-        cipher.init(Cipher.ENCRYPT_MODE, key, spec);
-
-        // Perform encryption
-        try (FileInputStream fis = new FileInputStream(inputFile);
-             FileOutputStream fos = new FileOutputStream(outputFile)) {
-
-            // Write header: salt + IV
-            fos.write(salt);
-            fos.write(iv);
-
-            try (CipherOutputStream cos = new CipherOutputStream(fos, cipher)) {
-                byte[] buffer = new byte[8192];
-                int len;
-                while ((len = fis.read(buffer)) != -1) {
-                    cos.write(buffer, 0, len);
-                }
-                cos.flush();
-            }
-        }
-    }
-
-    public static void decryptUriToFile(Context context, Uri srcUri, File outFile, char[] password) throws Exception {
-        try (InputStream rawIn = context.getContentResolver().openInputStream(srcUri)) {
-            if (rawIn == null) throw new IllegalStateException("Cannot open source stream");
-            try (BufferedInputStream in = new BufferedInputStream(rawIn);
-                 FileOutputStream fos = new FileOutputStream(outFile)) {
-                // pass InputStream and OutputStream to decryptStream
-                decryptStream(in, fos, password);
-            }
-        }
     }
 
     public static void encryptBytesToUri(Context context, byte[] data, Uri destUri, char[] password) throws GeneralSecurityException, IOException {

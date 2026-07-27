@@ -7,6 +7,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.NotesNest.R;
@@ -43,16 +44,46 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
         holder.tvCategoryName.setText(category.name);
 
         holder.itemView.setOnClickListener(v -> {
-            if (editListener != null) {
-                editListener.onAction(category, position);
+            int currentPos = holder.getBindingAdapterPosition();
+            if (editListener != null && currentPos != RecyclerView.NO_POSITION) {
+                editListener.onAction(categories.get(currentPos), currentPos);
             }
         });
 
         holder.ivDelete.setOnClickListener(v -> {
-            if (deleteListener != null) {
-                deleteListener.onAction(category, position);
+            int currentPos = holder.getBindingAdapterPosition();
+            if (deleteListener != null && currentPos != RecyclerView.NO_POSITION) {
+                deleteListener.onAction(categories.get(currentPos), currentPos);
             }
         });
+    }
+
+    public void updateList(List<CategoryEntity> newList) {
+        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new DiffUtil.Callback() {
+            @Override
+            public int getOldListSize() {
+                return categories.size();
+            }
+
+            @Override
+            public int getNewListSize() {
+                return newList.size();
+            }
+
+            @Override
+            public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+                return categories.get(oldItemPosition).id.equals(newList.get(newItemPosition).id);
+            }
+
+            @Override
+            public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+                return categories.get(oldItemPosition).equals(newList.get(newItemPosition));
+            }
+        });
+
+        categories.clear();
+        categories.addAll(newList);
+        diffResult.dispatchUpdatesTo(this);
     }
 
     @Override

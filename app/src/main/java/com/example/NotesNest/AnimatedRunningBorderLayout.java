@@ -19,6 +19,10 @@ public class AnimatedRunningBorderLayout extends FrameLayout {
     private ValueAnimator animator;
     private boolean isLoading = false;
 
+    private int[] gradientColors;
+    private float[] gradientPositions;
+    private SweepGradient sweepGradient;
+
     private final float strokeWidth = 10f;
 
     public AnimatedRunningBorderLayout(Context context, @Nullable AttributeSet attrs) {
@@ -36,6 +40,17 @@ public class AnimatedRunningBorderLayout extends FrameLayout {
         borderPaint.setStrokeWidth(strokeWidth);
         borderPaint.setStrokeCap(Paint.Cap.ROUND);
 
+        // Pre-calculate colors and positions
+        int blue = Color.parseColor("#4285F4");
+        int green = Color.parseColor("#34A853");
+        int yellow = Color.parseColor("#FBBC05");
+        int red = Color.parseColor("#EA4335");
+
+        gradientColors = new int[]{
+                blue, green, yellow, red, Color.TRANSPARENT, Color.TRANSPARENT
+        };
+        gradientPositions = new float[]{0f, 0.1f, 0.2f, 0.3f, 0.35f, 1f};
+
         animator = ValueAnimator.ofFloat(0, 360);
         animator.setDuration(1500); // 2 seconds for a full loop
         animator.setRepeatCount(ValueAnimator.INFINITE);
@@ -47,36 +62,27 @@ public class AnimatedRunningBorderLayout extends FrameLayout {
     }
 
     @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+        float inset = strokeWidth / 2f;
+        rect.set(inset, inset, w - inset, h - inset);
+
+        // Recreate gradient based on new dimensions
+        sweepGradient = new SweepGradient(w / 2f, h / 2f, gradientColors, gradientPositions);
+        borderPaint.setShader(sweepGradient);
+    }
+
+    @Override
     protected void onDraw(@NonNull Canvas canvas) {
         super.onDraw(canvas);
-        if (!isLoading) return;
+        if (!isLoading || sweepGradient == null) return;
 
-        float inset = strokeWidth / 2f;
-        rect.set(inset, inset, getWidth() - inset, getHeight() - inset);
-
-        // Google Colors
-        int blue = Color.parseColor("#4285F4");
-        int green = Color.parseColor("#34A853");
-        int yellow = Color.parseColor("#FBBC05");
-        int red = Color.parseColor("#EA4335");
-
-        // The "Short Glow" Logic:
-        // Colors are packed between 0.0 and 0.4 for a shorter tail.
-        // The rest of the 360 circle (0.4 to 1.0) is transparent.
-        int[] colors = new int[]{
-                blue, green, yellow, red, Color.TRANSPARENT, Color.TRANSPARENT
-        };
-
-        // This mapping controls the length. 0.0 to 0.35 is the visible part.
-        float[] positions = new float[]{0f, 0.1f, 0.2f, 0.3f, 0.35f, 1f};
-
-        // Create or update gradient based on current center
-        SweepGradient sweepGradient = new SweepGradient(getWidth() / 2f, getHeight() / 2f, colors, positions);
-        borderPaint.setShader(sweepGradient);
-
-        // Rotate the matrix
+        // Rotate the matrix around the center
         matrix.setRotate(rotation, getWidth() / 2f, getHeight() / 2f);
         sweepGradient.setLocalMatrix(matrix);
+
+        // Some Android versions require resetting the shader if the matrix changes internally
+        borderPaint.setShader(sweepGradient);
 
         // Draw the rounded rectangle border
         float cornerRadius = 50f;

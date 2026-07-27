@@ -7,22 +7,26 @@ import com.example.NotesNest.databases.entities.CategoryEntity;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Executors;
+import java.util.concurrent.CompletableFuture;
 
 public class DBSeedUtil {
 
-    private static Context context;
+    private DBSeedUtil() {
+        // Prevent instantiation
+    }
 
     public static void seedDefaultCategories(Context context, String userId) {
         if (userId == null || userId.isEmpty()) return;
-        
-        DBSeedUtil.context = context;
+
+        Context appContext = context.getApplicationContext();
         AppPreferences pref = AppPreferences.getInstance();
-        if (pref.isCategorySeedDoneForUser(userId)) return;   // ✅ Already seeded for this user → skip
+        if (pref.isCategorySeedDoneForUser(userId)) return;
 
-        AppDatabase db = AppDatabase.getInstance(context);
+        AppDatabase db = AppDatabase.getInstance(appContext);
 
-        Executors.newSingleThreadExecutor().execute(() -> {
+        // Use CompletableFuture for a one-off background task
+        // This avoids manual ExecutorService management and related warnings
+        CompletableFuture.runAsync(() -> {
             List<CategoryEntity> defaultCategories = Arrays.asList(
                     new CategoryEntity("All", 1, userId),
                     new CategoryEntity("Work", 2, userId),
@@ -31,15 +35,7 @@ public class DBSeedUtil {
             );
 
             db.categoryDao().insertAll(defaultCategories);
-            pref.setCategorySeedDoneForUser(userId, true);  // ✅ Save flag per user
+            pref.setCategorySeedDoneForUser(userId, true);
         });
-    }
-
-    public static Context getContext() {
-        return context;
-    }
-
-    public static void setContext(Context context) {
-        DBSeedUtil.context = context;
     }
 }

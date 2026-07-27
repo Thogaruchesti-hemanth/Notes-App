@@ -79,14 +79,14 @@ public class AdManager {
     /**
      * Check if ad was loaded recently (less than 4 hours ago).
      */
-    private static boolean wasLoadTimeLessThanNHoursAgo(long numHours) {
+    private static boolean wasLoadTimeLessThanNHoursAgo() {
         long dateDifference = System.currentTimeMillis() - loadTime;
         long numMilliSecondsPerHour = 3600000;
-        return (dateDifference < (numMilliSecondsPerHour * numHours));
+        return (dateDifference < (numMilliSecondsPerHour * (long) 4));
     }
 
     private static boolean isAppOpenAdAvailable() {
-        return mAppOpenAd != null && wasLoadTimeLessThanNHoursAgo(4);
+        return mAppOpenAd != null && wasLoadTimeLessThanNHoursAgo();
     }
 
     /**

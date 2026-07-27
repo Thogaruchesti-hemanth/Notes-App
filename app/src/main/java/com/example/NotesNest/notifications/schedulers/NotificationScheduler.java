@@ -17,7 +17,6 @@ import com.example.NotesNest.notifications.helper.NotificationHelper;
 import com.example.NotesNest.notifications.receivers.ExactAlarmBroadcastReceiver;
 import com.example.NotesNest.notifications.workers.NotificationWorker;
 
-import java.util.Calendar;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
@@ -50,16 +49,13 @@ public final class NotificationScheduler {
             boolean isRepeat
     ) {
         if (reminderId == null) {
-            Log.w(TAG, "scheduleOneTime: invalid reminderId=" + reminderId);
+            Log.w(TAG, "scheduleOneTime: invalid reminderId (null)");
             return;
         }
 
         long now = System.currentTimeMillis();
-        if (timeInMillis <= now) {
-            timeInMillis = now + MIN_DELAY_MS;
-        }
-
-        long delay = Math.max(MIN_DELAY_MS, timeInMillis - now);
+        long triggerTime = Math.max(now + MIN_DELAY_MS, timeInMillis);
+        long delay = triggerTime - now;
 
         int notificationId = reminderId.hashCode();
 
@@ -67,7 +63,7 @@ public final class NotificationScheduler {
                 .putString(NotificationWorker.KEY_REMINDER_ID, reminderId)
                 .putString(NotificationWorker.KEY_CHANNEL, NotificationHelper.CHANNEL_ID_REMINDERS)
                 .putInt(NotificationWorker.KEY_NOTIFICATION_ID, notificationId)
-                .putString(NotificationWorker.KEY_REPEAT_TYPE, type != null ? type : "")
+                .putString(NotificationWorker.KEY_REPEAT_TYPE, java.util.Objects.requireNonNullElse(type, ""))
                 .putBoolean(NotificationWorker.KEY_IS_REPEAT_FLAG, isRepeat)
                 .build();
 
@@ -88,97 +84,9 @@ public final class NotificationScheduler {
         Log.d(TAG,
                 String.format(Locale.US,
                         "Scheduled one-time work (id=%s) at %d (delay=%d ms) repeat=%s isRepeat=%b",
-                        reminderId, timeInMillis, delay, type, isRepeat));
+                        reminderId, triggerTime, delay, type, isRepeat));
     }
-
-    /**
-     * Worker calls this to schedule the next repeat occurrence
-     */
-    public static long scheduleNextOccurrence(
-            @NonNull Context context,
-            String reminderId,
-            long lastTriggerMillis,
-            String repeatType
-    ) {
-        if (reminderId == null) {
-            Log.w(TAG, "scheduleNextOccurrence: invalid reminderId=" + reminderId);
-            return -1;
-        }
-
-        if (repeatType == null
-                || repeatType.trim().isEmpty()
-                || repeatType.equalsIgnoreCase("Does not repeat")) {
-
-            Log.d(TAG,
-                    "scheduleNextOccurrence: not repeating for id=" + reminderId);
-            return -1;
-        }
-
-        long next = computeNextTrigger(lastTriggerMillis, repeatType);
-        if (next <= 0) {
-            Log.w(TAG,
-                    "scheduleNextOccurrence: computed next <= 0 for id=" + reminderId);
-            return -1;
-        }
-
-        scheduleOneTime(context, reminderId, next, repeatType, true);
-        Log.d(TAG,
-                "scheduleNextOccurrence: next scheduled @ " + next + " for id=" + reminderId);
-
-        return next;
-    }
-
-    /**
-     * Calculates next repeat timestamp
-     */
-    public static long computeNextTrigger(long lastTriggerMillis, @NonNull String repeatType) {
-        try {
-            Calendar cal = Calendar.getInstance();
-            cal.setTimeInMillis(lastTriggerMillis);
-
-            String type = repeatType.trim().toLowerCase(Locale.ROOT);
-
-            switch (type) {
-                case "daily":
-                    cal.add(Calendar.DAY_OF_YEAR, 1);
-                    break;
-                case "weekly":
-                    cal.add(Calendar.WEEK_OF_YEAR, 1);
-                    break;
-                case "monthly":
-                    cal.add(Calendar.MONTH, 1);
-                    break;
-                case "yearly":
-                    cal.add(Calendar.YEAR, 1);
-                    break;
-                default:
-                    return -1;
-            }
-
-            if (cal.getTimeInMillis() <= System.currentTimeMillis()) {
-                switch (type) {
-                    case "daily":
-                        cal.add(Calendar.DAY_OF_YEAR, 1);
-                        break;
-                    case "weekly":
-                        cal.add(Calendar.WEEK_OF_YEAR, 1);
-                        break;
-                    case "monthly":
-                        cal.add(Calendar.MONTH, 1);
-                        break;
-                    case "yearly":
-                        cal.add(Calendar.YEAR, 1);
-                        break;
-                }
-            }
-
-            return cal.getTimeInMillis();
-        } catch (Exception ex) {
-            Log.e(TAG, "computeNextTrigger failed: " + ex.getMessage(), ex);
-            return -1;
-        }
-    }
-
+    
     /**
      * Cancels pending work + alarms
      */
@@ -203,6 +111,8 @@ public final class NotificationScheduler {
             String reminderId,
             long timeInMillis
     ) {
+        if (reminderId == null) return;
+
         AlarmManager am =
                 (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (am == null) return;

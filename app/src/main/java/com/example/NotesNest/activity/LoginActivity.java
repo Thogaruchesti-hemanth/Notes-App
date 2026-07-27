@@ -94,25 +94,21 @@ public class LoginActivity extends AppCompatActivity {
     private void setupRealtimeValidation() {
         binding.loginEmail.addTextChangedListener(new ValidationTextWatcher(
                 binding.loginEmailLayout,
-                binding.loginEmail,
-                binding.errorTextView,
-                ValidationTextWatcher.FieldType.EMAIL));
+                ValidationTextWatcher.FieldType.EMAIL,
+                binding.errorTextView));
 
         binding.userNameEditText.addTextChangedListener(new ValidationTextWatcher(
                 binding.editTextUserNameLayout,
-                binding.userNameEditText,
-                binding.errorTextView,
-                ValidationTextWatcher.FieldType.USERNAME));
+                ValidationTextWatcher.FieldType.USERNAME,
+                binding.errorTextView));
 
         binding.loginPassword.addTextChangedListener(new ValidationTextWatcher(
                 binding.loginPasswordLayout,
-                binding.loginPassword,
-                binding.errorTextView,
-                ValidationTextWatcher.FieldType.PASSWORD));
+                ValidationTextWatcher.FieldType.PASSWORD,
+                binding.errorTextView));
 
         binding.confirmPassword.addTextChangedListener(new ValidationTextWatcher(
                 binding.confirmPasswordLayout,
-                binding.confirmPassword,
                 ValidationTextWatcher.FieldType.CONFIRM_PASSWORD,
                 binding.errorTextView,
                 binding.loginPassword));
@@ -330,13 +326,13 @@ public class LoginActivity extends AppCompatActivity {
         // Start the loading animation
         startLoadingAnimation();
 
-        if (!ValidationUtils.isValidEmail(email)) {
+        if (ValidationUtils.isValidEmail(email)) {
             showError("Invalid email");
             stopLoadingAnimation();
             return;
         }
 
-        if (!ValidationUtils.isValidPassword(password)) {
+        if (ValidationUtils.isValidPassword(password)) {
             showError("Enter your password");
             stopLoadingAnimation();
             return;
@@ -350,7 +346,7 @@ public class LoginActivity extends AppCompatActivity {
         }
 
         // Firebase login
-        firebaseHelper.loginUser(email, password, this, new FirebaseHelper.LoginCallback() {
+        firebaseHelper.loginUser(email, password, new FirebaseHelper.LoginCallback() {
             @Override
             public void onLoginSuccess() {
                 stopLoadingAnimation();
@@ -390,19 +386,19 @@ public class LoginActivity extends AppCompatActivity {
 
         startLoadingAnimation();
 
-        if (!ValidationUtils.isValidUsername(username)) {
+        if (ValidationUtils.isValidUsername(username)) {
             showError("Username must be 3–15 characters long and contain only letters, numbers, or underscores");
             stopLoadingAnimation();
             return;
         }
 
-        if (!ValidationUtils.isValidEmail(email)) {
+        if (ValidationUtils.isValidEmail(email)) {
             showError("Invalid email");
             stopLoadingAnimation();
             return;
         }
 
-        if (!ValidationUtils.isValidPassword(password)) {
+        if (ValidationUtils.isValidPassword(password)) {
             showError("Password must be 8+ chars, contain upper & lower case letters, a number, and a symbol");
             stopLoadingAnimation();
             return;
@@ -416,7 +412,7 @@ public class LoginActivity extends AppCompatActivity {
 
         // disable button to prevent duplicate taps
         binding.loginButton.setEnabled(false);
-        firebaseHelper.signupUser(username, email, password, selectedImageBase64, this, new FirebaseHelper.SignupCallback() {
+        firebaseHelper.signupUser(username, email, password, selectedImageBase64, new FirebaseHelper.SignupCallback() {
             @Override
             public void onSignupSuccess(String userName, String email) {
                 binding.loginButton.setEnabled(true);
@@ -473,7 +469,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private void forgotPassword() {
         final String email = binding.loginEmail.getText() == null ? "" : binding.loginEmail.getText().toString().trim();
-        if (email.isEmpty() || !ValidationUtils.isValidEmail(email)) {
+        if (email.isEmpty() || ValidationUtils.isValidEmail(email)) {
             showError("Please enter a valid email to reset your password");
             return;
         }

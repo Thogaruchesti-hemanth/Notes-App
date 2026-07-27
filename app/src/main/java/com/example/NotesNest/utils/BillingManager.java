@@ -53,7 +53,6 @@ public class BillingManager implements PurchasesUpdatedListener {
 
     private static BillingManager instance;
     private final BillingClient billingClient;
-    private final Context context;
     private final AppPreferences pref;
 
     private final MutableLiveData<PurchaseState> purchaseState = new MutableLiveData<>(new PurchaseState());
@@ -79,10 +78,10 @@ public class BillingManager implements PurchasesUpdatedListener {
     }
 
     private BillingManager(Context context) {
-        this.context = context.getApplicationContext();
+        Context context1 = context.getApplicationContext();
         this.pref = AppPreferences.getInstance();
 
-        this.billingClient = BillingClient.newBuilder(this.context)
+        this.billingClient = BillingClient.newBuilder(context1)
                 .setListener(this)
                 .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
                 .build();
@@ -171,7 +170,7 @@ public class BillingManager implements PurchasesUpdatedListener {
                 if (!hasPremiumFound[0]) {
                     // Only auto-revoke if we definitely found NO purchases on the device
                     Log.d(TAG, "Revoking local premium state as no valid Play Store purchase exists on this device.");
-                    updatePremiumStatus(FirebaseHelper.PLAN_NONE);
+                    updatePremiumStatus();
                 }
 
                 purchaseState.postValue(new PurchaseState(false, foundPlan[0], false, foundToken[0]));
@@ -248,14 +247,9 @@ public class BillingManager implements PurchasesUpdatedListener {
                     for (ProductDetails details : detailsList) {
                         String pid = details.getProductId();
                         productDetailsMap.put(pid, details);
-                        
-                        String price = "";
-                        if (details.getProductType().equals(BillingClient.ProductType.SUBS) && details.getSubscriptionOfferDetails() != null && !details.getSubscriptionOfferDetails().isEmpty()) {
-                            price = details.getSubscriptionOfferDetails().get(0).getPricingPhases().getPricingPhaseList().get(0).getFormattedPrice();
-                        } else if (details.getOneTimePurchaseOfferDetails() != null) {
-                            price = details.getOneTimePurchaseOfferDetails().getFormattedPrice();
-                        }
-                        
+
+                        String price = getPrice(details);
+
                         if (!price.isEmpty()) {
                             Log.d(TAG, "💰 Loaded Price for " + pid + ": " + price);
                             currentPrices.put(pid, price);
@@ -269,6 +263,17 @@ public class BillingManager implements PurchasesUpdatedListener {
                 Log.e(TAG, "❌ Fetch Details Failed. Code: " + responseCode + " - " + billingResult.getDebugMessage());
             }
         });
+    }
+
+    @NonNull
+    private static String getPrice(ProductDetails details) {
+        String price = "";
+        if (details.getProductType().equals(BillingClient.ProductType.SUBS) && details.getSubscriptionOfferDetails() != null && !details.getSubscriptionOfferDetails().isEmpty()) {
+            price = details.getSubscriptionOfferDetails().get(0).getPricingPhases().getPricingPhaseList().get(0).getFormattedPrice();
+        } else if (details.getOneTimePurchaseOfferDetails() != null) {
+            price = details.getOneTimePurchaseOfferDetails().getFormattedPrice();
+        }
+        return price;
     }
 
     public void launchPurchaseFlow(Activity activity, String productId) {
@@ -356,13 +361,13 @@ public class BillingManager implements PurchasesUpdatedListener {
         return false;
     }
 
-    private void updatePremiumStatus(String planType) {
+    private void updatePremiumStatus() {
         String userId = pref.getUserId();
         Log.i(TAG, "👤 Syncing Premium Status to LOCAL STORAGE ONLY | User: " + userId + " | Premium: " + false);
         
         // This is primarily for queryPurchases (restoring local device state)
         pref.setIsPremium(false);
-        pref.setPlanType(planType);
+        pref.setPlanType(FirebaseHelper.PLAN_NONE);
     }
 
     private String mapProductIdToPlan(String productId) {

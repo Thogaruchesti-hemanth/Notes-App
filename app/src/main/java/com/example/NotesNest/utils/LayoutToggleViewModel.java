@@ -12,12 +12,6 @@ public class LayoutToggleViewModel extends ViewModel {
         return isGridLayout;
     }
 
-    public void toggleLayout() {
-        Boolean current = isGridLayout.getValue();
-        isGridLayout.setValue(current == null || !current);
-    }
-
-
     public void setLayout(boolean isGrid) {
         isGridLayout.setValue(isGrid);
     }
