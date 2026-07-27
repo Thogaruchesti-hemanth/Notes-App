@@ -16,7 +16,7 @@ public class SyncOverlayActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        ThemeManager.applyTheme(this);
+        ThemeManager.applyTheme();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sync_overlay);
 

@@ -224,4 +224,9 @@
     <string name="text_checked_icon">checked Icon</string>
     <string name="text_read_more_icon">Read More Icon</string>
     <string name="text_choose_note_color">Choose Note Color</string>
+
+    <!-- Unsupported Version Dialog -->
+    <string name="unsupported_version_title">Unsupported Android Version</string>
+    <string name="unsupported_version_message">This app is not supported on this Android version. Please upgrade your device to Android 11 or higher to use NotesNest.</string>
+    <string name="unsupported_version_exit">Exit App</string>
 </resources>

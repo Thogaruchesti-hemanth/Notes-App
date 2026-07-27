@@ -179,7 +179,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void showThemeDialog() {
         String[] options = {"System", "Light", "Dark"};
-        String saved = ThemeManager.getCurrentThemeMode(this);
+        String saved = ThemeManager.getCurrentThemeMode();
         int checkedItem;
         if ("light".equals(saved)) checkedItem = 1;
         else if ("dark".equals(saved)) checkedItem = 2;
@@ -190,8 +190,8 @@ public class SettingsActivity extends AppCompatActivity {
             if (which == 1) selected = "light";
             else if (which == 2) selected = "dark";
 
-            if (!selected.equals(ThemeManager.getCurrentThemeMode(this))) {
-                ThemeManager.updateTheme(this, selected);
+            if (!selected.equals(ThemeManager.getCurrentThemeMode())) {
+                ThemeManager.updateTheme(selected);
                 Intent intent = new Intent(this, SettingsActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 finish();
@@ -318,7 +318,7 @@ public class SettingsActivity extends AppCompatActivity {
     private void setupOptions() {
         AppPreferences appPreferences = AppPreferences.getInstance();
         boolean isGrid = appPreferences.getBoolean(PrefKeys.KEY_NOTES_LAYOUT, true);
-        String currentTheme = ThemeManager.getCurrentThemeMode(this);
+        String currentTheme = ThemeManager.getCurrentThemeMode();
         String themeText = currentTheme.substring(0, 1).toUpperCase(Locale.ROOT) + currentTheme.substring(1);
 
         setupOptionsData(binding.layoutLocalBackup, R.drawable.ic_local_backup, "Local Backup");

@@ -10,6 +10,7 @@ import android.os.Looper;
 import android.widget.ImageView;
 
 import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.splashscreen.SplashScreen;
 
@@ -27,6 +28,7 @@ import com.example.NotesNest.utils.constants.PrefKeys;
 public class SplashScreenActivity extends AppCompatActivity {
 
     private static final int SPLASH_DELAY_MS = 1500;
+    private static final int MIN_REQUIRED_SDK = Build.VERSION_CODES.R; // Android 11 (API 30)
     private AppPreferences prefs;
     private PremiumManager premiumManager;
 
@@ -37,12 +39,19 @@ public class SplashScreenActivity extends AppCompatActivity {
         SplashScreen.installSplashScreen(this);
 
         super.onCreate(savedInstanceState);
+
+        // Check if the Android version is supported
+        if (Build.VERSION.SDK_INT < MIN_REQUIRED_SDK) {
+            showUnsupportedVersionDialog();
+            return;
+        }
+
         setContentView(R.layout.activity_splash_screen);
 
         prefs = AppPreferences.getInstance();
         premiumManager = new PremiumManager(this);
 
-        ThemeManager.applyTheme(this);
+        ThemeManager.applyTheme();
         updateLogo();
         
         if (prefs.getLogin()) {
@@ -76,6 +85,15 @@ public class SplashScreenActivity extends AppCompatActivity {
         AdManager.loadRewardedAd(this);
 
         new Handler(Looper.getMainLooper()).postDelayed(this::handleStartFlow, SPLASH_DELAY_MS);
+    }
+
+    private void showUnsupportedVersionDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.unsupported_version_title)
+                .setMessage(R.string.unsupported_version_message)
+                .setCancelable(false)
+                .setPositiveButton(R.string.unsupported_version_exit, (dialog, which) -> finish())
+                .show();
     }
 
     private void updateLogo() {
