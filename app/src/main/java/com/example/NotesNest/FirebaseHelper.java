@@ -1,6 +1,5 @@
 package com.example.NotesNest;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -10,7 +9,6 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.credentials.ClearCredentialStateRequest;
 import androidx.credentials.CredentialManager;
 import androidx.credentials.exceptions.ClearCredentialException;
@@ -32,8 +30,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.functions.FirebaseFunctions;
-import com.google.firebase.functions.FirebaseFunctionsException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -45,7 +41,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.Executors;
+import java.util.concurrent.CompletableFuture;
 
 public class FirebaseHelper {
 
@@ -85,14 +81,14 @@ public class FirebaseHelper {
         mAuth.signInWithCredential(credential).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 FirebaseUser firebaseUser = mAuth.getCurrentUser();
-                if (firebaseUser != null) saveGoogleUserToDatabase(firebaseUser, context, callback);
+                if (firebaseUser != null) saveGoogleUserToDatabase(firebaseUser, callback);
             } else {
                 Toast.makeText(context, "Authentication Failed", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    private void saveGoogleUserToDatabase(FirebaseUser firebaseUser, Context context, GoogleLoginCallback callback) {
+    private void saveGoogleUserToDatabase(FirebaseUser firebaseUser, GoogleLoginCallback callback) {
         String email = firebaseUser.getEmail();
         String userName = firebaseUser.getDisplayName();
         String photoUrl = firebaseUser.getPhotoUrl() != null ? firebaseUser.getPhotoUrl().toString() : "";
@@ -117,7 +113,7 @@ public class FirebaseHelper {
                     if (purchaseDate == null) purchaseDate = "";
                     if (planType == null) planType = PLAN_NONE;
 
-                    saveToLocal(context, existingName, email, existingImage, uid,
+                    saveToLocal(existingName, email, existingImage, uid,
                             isPremium, premiumPlan, premiumExpiry, purchaseDate, planType);
                     callback.onGoogleLoginSuccess(existingName, email);
                 } else {
@@ -137,7 +133,7 @@ public class FirebaseHelper {
 
                     databaseReference.child(uid).setValue(userData).addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
-                            saveToLocal(context, userName, email, base64Image, uid,
+                            saveToLocal(userName, email, base64Image, uid,
                                     false, PLAN_NONE, "", "", PLAN_NONE);
                             callback.onGoogleLoginSuccess(userName, email);
                         }
@@ -147,14 +143,15 @@ public class FirebaseHelper {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(context, "Database error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                // Log the error
+                Log.e(TAG, "Database error: " + error.getMessage());
             }
         }));
     }
 
     // ==================== EMAIL & PASSWORD AUTHENTICATION ====================
 
-    public void loginUser(String email, String password, Context context, LoginCallback callback) {
+    public void loginUser(String email, String password, LoginCallback callback) {
         // Professional Reset: Clear local premium data before login to avoid "Ghost Premium" from previous sessions
         AppPreferences.getInstance().resetPremium();
 
@@ -181,11 +178,11 @@ public class FirebaseHelper {
                             if (purchaseDate == null) purchaseDate = "";
                             if (planType == null) planType = PLAN_NONE;
 
-                            saveToLocal(context, userName, userEmail, userImage, uid,
+                            saveToLocal(userName, userEmail, userImage, uid,
                                     isPremium, premiumPlan, premiumExpiry, purchaseDate, planType);
                             callback.onLoginSuccess();
                         } else {
-                            createUserDataAfterLogin(uid, email, context, callback);
+                            createUserDataAfterLogin(uid, email, callback);
                         }
                     }
 
@@ -201,7 +198,7 @@ public class FirebaseHelper {
         });
     }
 
-    private void createUserDataAfterLogin(String uid, String email, Context context, LoginCallback callback) {
+    private void createUserDataAfterLogin(String uid, String email, LoginCallback callback) {
         FirebaseUser user = mAuth.getCurrentUser();
         if (user != null) {
             Map<String, Object> userData = new HashMap<>();
@@ -219,7 +216,7 @@ public class FirebaseHelper {
 
             databaseReference.child(uid).setValue(userData).addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
-                    saveToLocal(context, user.getDisplayName(), email, "", uid,
+                    saveToLocal(user.getDisplayName(), email, "", uid,
                             false, PLAN_NONE, "", "", PLAN_NONE);
                     callback.onLoginSuccess();
                 } else {
@@ -246,7 +243,7 @@ public class FirebaseHelper {
 
     // ==================== USER SIGNUP ====================
 
-    public void signupUser(String username, String email, String password, String base64Image, Context context, SignupCallback callback) {
+    public void signupUser(String username, String email, String password, String base64Image, SignupCallback callback) {
         // Professional Reset: Clear local premium data before signup
         AppPreferences.getInstance().resetPremium();
 
@@ -268,7 +265,7 @@ public class FirebaseHelper {
 
                 databaseReference.child(uid).setValue(userData).addOnCompleteListener(dbTask -> {
                     if (dbTask.isSuccessful()) {
-                        saveToLocal(context, username, email, base64Image, uid,
+                        saveToLocal(username, email, base64Image, uid,
                                 false, PLAN_NONE, "", "", PLAN_NONE);
                         callback.onSignupSuccess(username, email);
                     } else {
@@ -306,7 +303,7 @@ public class FirebaseHelper {
         });
     }
 
-    public void changePassword(String currentPassword, String newPassword, Context context, ChangePasswordCallback callback) {
+    public void changePassword(String currentPassword, String newPassword, ChangePasswordCallback callback) {
         FirebaseUser user = mAuth.getCurrentUser();
         if (user != null && user.getEmail() != null) {
             AuthCredential credential = EmailAuthProvider.getCredential(user.getEmail(), currentPassword);
@@ -351,7 +348,7 @@ public class FirebaseHelper {
         });
     }
 
-    public void updatePremiumPlan(Context context, String planType, PremiumUpdateCallback callback) {
+    public void updatePremiumPlan(String planType, PremiumUpdateCallback callback) {
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser == null) {
             callback.onPremiumUpdateFailure("User not logged in");
@@ -400,7 +397,7 @@ public class FirebaseHelper {
 
     // ==================== ACCOUNT DELETION ====================
 
-    public void deleteUserAccount(Activity activity, DeletionCallback callback) {
+    public void deleteUserAccount(DeletionCallback callback) {
         FirebaseUser user = mAuth.getCurrentUser();
         if (user == null) {
             callback.onDeletionFailure("No user signed in");
@@ -408,10 +405,10 @@ public class FirebaseHelper {
         }
 
         callback.onDeletionStarted();
-        performDeletion(activity, user, callback);
+        performDeletion(user, callback);
     }
 
-    public void reauthenticateUser(String password, ReauthCallback callback) {
+    public void reauthenticateUser(String password, ReAuthCallback callback) {
         FirebaseUser user = mAuth.getCurrentUser();
         if (user == null || user.getEmail() == null) {
             callback.onFailure("User session invalid");
@@ -430,18 +427,7 @@ public class FirebaseHelper {
         });
     }
 
-    public void retryDeletionAfterReauth(Activity activity, DeletionCallback callback) {
-        FirebaseUser user = mAuth.getCurrentUser();
-        if (user == null) {
-            callback.onDeletionFailure("User session invalid");
-            return;
-        }
-        // Since we just re-authenticated, we don't need to call onDeletionStarted again 
-        // as it's already showing from the ManageAccountActivity side (or will be soon)
-        performDeletion(activity, user, callback);
-    }
-
-    private void performDeletion(Activity activity, FirebaseUser user, DeletionCallback callback) {
+    private void performDeletion(FirebaseUser user, DeletionCallback callback) {
         String uid = user.getUid();
         Log.d(TAG, "Starting account deletion for UID: " + uid);
         
@@ -492,7 +478,7 @@ public class FirebaseHelper {
         sp.clearUserData();
 
         try {
-            CredentialManager.create(context).clearCredentialStateAsync(new ClearCredentialStateRequest(), null, Runnable::run, new androidx.credentials.CredentialManagerCallback<Void, ClearCredentialException>() {
+            CredentialManager.create(context).clearCredentialStateAsync(new ClearCredentialStateRequest(), null, Runnable::run, new androidx.credentials.CredentialManagerCallback<>() {
                 @Override public void onResult(Void result) {}
                 @Override public void onError(@NonNull ClearCredentialException e) {}
             });
@@ -517,7 +503,7 @@ public class FirebaseHelper {
             return;
         }
 
-        Executors.newSingleThreadExecutor().execute(() -> {
+        CompletableFuture.runAsync(() -> {
             String base64 = "";
             try {
                 URL url = new URL(imageUrl);
@@ -540,19 +526,19 @@ public class FirebaseHelper {
     private String calculateExpiryDate(String planType) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
         long now = System.currentTimeMillis();
-        switch (planType) {
-            case PLAN_MONTHLY: return sdf.format(new Date(now + (30L * 24 * 60 * 60 * 1000)));
-            case PLAN_YEARLY: return sdf.format(new Date(now + (365L * 24 * 60 * 60 * 1000)));
-            case PLAN_LIFETIME: return sdf.format(new Date(now + (50L * 365 * 24 * 60 * 60 * 1000)));
-            default: return "";
-        }
+        return switch (planType) {
+            case PLAN_MONTHLY -> sdf.format(new Date(now + (30L * 24 * 60 * 60 * 1000)));
+            case PLAN_YEARLY -> sdf.format(new Date(now + (365L * 24 * 60 * 60 * 1000)));
+            case PLAN_LIFETIME -> sdf.format(new Date(now + (50L * 365 * 24 * 60 * 60 * 1000)));
+            default -> "";
+        };
     }
 
     private String getCurrentDateTime() {
         return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
     }
 
-    private void saveToLocal(Context context, String name, String email, String image, String uid,
+    private void saveToLocal(String name, String email, String image, String uid,
                              boolean isPremium, String premiumPlan, String premiumExpiry,
                              String purchaseDate, String planType) {
         AppPreferences sp = AppPreferences.getInstance();
@@ -569,7 +555,8 @@ public class FirebaseHelper {
     public interface UpdateCallback { void onUpdateSuccess(); }
     public interface PremiumUpdateCallback { void onPremiumUpdateSuccess(String planType, String expiryDate); void onPremiumUpdateFailure(String error); }
     public interface PremiumCheckCallback { void onPremiumCheck(boolean isPremium, String planType, String expiryDate); }
-    public interface DeletionCallback { void onDeletionStarted(); void onDeletionSuccess(); void onDeletionFailure(String errorMessage); void onReauthenticationRequired(); void onReauthenticationSuccess(); }
-    public interface ReauthCallback { void onSuccess(); void onFailure(String error); }
+    public interface DeletionCallback { void onDeletionStarted(); void onDeletionSuccess(); void onDeletionFailure(String errorMessage); void onReauthenticationRequired();
+    }
+    public interface ReAuthCallback { void onSuccess(); void onFailure(String error); }
     public interface ChangePasswordCallback { void onChangePasswordSuccess(); void onChangePasswordFailure(String error); }
 }

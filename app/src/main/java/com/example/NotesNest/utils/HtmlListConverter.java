@@ -1,20 +1,23 @@
 package com.example.NotesNest.utils;
 
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
+
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class HtmlListConverter {
 
+    @RequiresApi(api = Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     public static String convertHtmlLists(String htmlContent) {
         if (htmlContent == null || htmlContent.trim().isEmpty()) {
             return htmlContent;
         }
 
-        String result = htmlContent;
-
         // Convert <input type="checkbox"> → Unicode checkboxes
-        result = convertInputCheckboxes(result);
+        String result = convertInputCheckboxes(htmlContent);
 
         // Convert <ul> with checkbox class → checkboxes
         result = convertChecklists(result);
@@ -34,17 +37,19 @@ public class HtmlListConverter {
     // ------------------------------------------------------------------
     //               INPUT CHECKBOXES ( <input type="checkbox"> )
     // ------------------------------------------------------------------
+    @RequiresApi(api = Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     private static String convertInputCheckboxes(String content) {
         // Regex to find <input type="checkbox"> with optional checked attribute
         Pattern checkboxPattern = Pattern.compile("<input[^>]*type=\"checkbox\"[^>]*>", Pattern.CASE_INSENSITIVE);
         Matcher matcher = checkboxPattern.matcher(content);
-        StringBuffer sb = new StringBuffer();
+        //noinspection StringBufferReplaceableByStringBuilder
+        StringBuilder sb = new StringBuilder();
 
         while (matcher.find()) {
             String tag = matcher.group();
-            String replacement = "\u2610 "; // Unicode Ballot Box
+            String replacement = "☐ "; // Unicode Ballot Box
             if (tag.toLowerCase(Locale.ROOT).contains("checked")) {
-                replacement = "\u2611 "; // Unicode Ballot Box with Check
+                replacement = "☑ "; // Unicode Ballot Box with Check
             }
             matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
         }
@@ -55,11 +60,13 @@ public class HtmlListConverter {
     // ------------------------------------------------------------------
     //               CHECKLISTS ( ☐ or ☑ )
     // ------------------------------------------------------------------
+    @RequiresApi(api = Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     private static String convertChecklists(String content) {
         // Look for <ul> with a class that indicates it's a checklist
         Pattern checklistPattern = Pattern.compile("(?i)<ul[^>]*class=\"[^\"]*todo-list[^\"]*\"[^>]*>(.*?)</ul>", Pattern.DOTALL);
         Matcher matcher = checklistPattern.matcher(content);
-        StringBuffer sb = new StringBuffer();
+        //noinspection StringBufferReplaceableByStringBuilder
+        StringBuilder sb = new StringBuilder();
 
         boolean found = false;
         while (matcher.find()) {
@@ -88,9 +95,9 @@ public class HtmlListConverter {
             String fullLi = matcher.group(0);
             String itemText = cleanFormatting(matcher.group(1));
             
-            String checkbox = "\u2610 ";
-            if (fullLi.contains("checked") || fullLi.contains("data-checked=\"true\"")) {
-                checkbox = "\u2611 ";
+            String checkbox = "☐ ";
+            if (fullLi != null && (fullLi.contains("checked") || fullLi.contains("data-checked=\"true\""))) {
+                checkbox = "☑ ";
             }
             
             sb.append(checkbox).append(itemText).append("<br>");
@@ -98,17 +105,20 @@ public class HtmlListConverter {
         return sb.toString();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     private static String convertLiWithDataChecked(String content) {
         // Some editors use <li data-checked="true"> inside a normal <ul>
         Pattern liPattern = Pattern.compile("(?i)<li[^>]*data-checked=\"(true|false)\"[^>]*>(.*?)</li>", Pattern.DOTALL);
         Matcher matcher = liPattern.matcher(content);
-        StringBuffer sb = new StringBuffer();
+        //noinspection StringBufferReplaceableByStringBuilder
+        StringBuilder sb = new StringBuilder();
 
         while (matcher.find()) {
             String isChecked = matcher.group(1);
             String itemText = cleanFormatting(matcher.group(2));
-            String checkbox = "true".equals(isChecked) ? "\u2611 " : "\u2610 ";
-            matcher.appendReplacement(sb, Matcher.quoteReplacement(checkbox + itemText + "<br>"));
+            String checkbox = "true".equals(isChecked) ? "☑ " : "☐ ";
+            matcher.
+                    appendReplacement(sb, Matcher.quoteReplacement(checkbox + itemText + "<br>"));
         }
         matcher.appendTail(sb);
         return sb.toString();
@@ -117,10 +127,12 @@ public class HtmlListConverter {
     // ------------------------------------------------------------------
     //               UL → BULLETS (•)
     // ------------------------------------------------------------------
+    @RequiresApi(api = Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     private static String convertUnorderedLists(String content) {
         Pattern ulPattern = Pattern.compile("(?i)<ul[^>]*>(.*?)</ul>", Pattern.DOTALL);
         Matcher matcher = ulPattern.matcher(content);
-        StringBuffer sb = new StringBuffer();
+        //noinspection StringBufferReplaceableByStringBuilder
+        StringBuilder sb = new StringBuilder();
 
         while (matcher.find()) {
             String block = matcher.group(1);
@@ -148,10 +160,11 @@ public class HtmlListConverter {
     // ------------------------------------------------------------------
     //               OL → NUMBERED (1. , 2. , 3.)
     // ------------------------------------------------------------------
+    @RequiresApi(api = Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     private static String convertOrderedLists(String content) {
         Pattern olPattern = Pattern.compile("(?i)<ol[^>]*>(.*?)</ol>", Pattern.DOTALL);
         Matcher matcher = olPattern.matcher(content);
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
 
         while (matcher.find()) {
             String block = matcher.group(1);

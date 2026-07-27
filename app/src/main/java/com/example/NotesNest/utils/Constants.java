@@ -6,11 +6,6 @@ public class Constants {
     public static final String TYPE_BIRTHDAY = "birthday";
     public static final String KEY_SELECTED_NOTE_ID = "selected_note_id";
 
-
-    // Premium Plans
-    public static final String PLAN_LIFETIME = "lifetime";
-
-
     public static final String[] DEFAULT_COLORS = {
             "#F5F5DC", // Beige
             "#FFE5B4", // Light Apricot

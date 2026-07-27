@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
 import android.text.Html;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
@@ -27,13 +28,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.NotesNest.R;
 import com.example.NotesNest.activity.PremiumActivity;
-import com.example.NotesNest.databases.ViewModels.CategoryViewModel;
 import com.example.NotesNest.databases.entities.NoteEntity;
 import com.example.NotesNest.databases.entities.ReminderEntity;
 import com.example.NotesNest.databinding.BottomSheetGradientPickerBinding;
@@ -66,14 +67,18 @@ public class CommonDialogs {
         Button btnUpgrade = dialogView.findViewById(R.id.btnUpgrade);
         Button btnCancel = dialogView.findViewById(R.id.btnCancel);
 
-        tvMessage.setText(message);
+        if (tvMessage != null) tvMessage.setText(message);
 
-        btnUpgrade.setOnClickListener(v -> {
-            context.startActivity(new Intent(context, PremiumActivity.class));
-            dialog.dismiss();
-        });
+        if (btnUpgrade != null) {
+            btnUpgrade.setOnClickListener(v -> {
+                context.startActivity(new Intent(context, PremiumActivity.class));
+                dialog.dismiss();
+            });
+        }
 
-        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        if (btnCancel != null) {
+            btnCancel.setOnClickListener(v -> dialog.dismiss());
+        }
 
         dialog.show();
     }
@@ -95,14 +100,14 @@ public class CommonDialogs {
 
         if (btnOk == null) {
             builder.setPositiveButton("OK", (d, w) -> {
-                String pass = passwordEdit.getText().toString();
+                String pass = Objects.requireNonNull(passwordEdit.getText()).toString();
                 if (!pass.isEmpty()) callback.onPasswordEntered(pass);
             });
             builder.setNegativeButton("Cancel", null);
             builder.show();
         } else {
             btnOk.setOnClickListener(v -> {
-                String pass = passwordEdit.getText().toString();
+                String pass = Objects.requireNonNull(passwordEdit.getText()).toString();
                 if (pass.isEmpty()) {
                     Toast.makeText(context, "Password cannot be empty", Toast.LENGTH_SHORT).show();
                 } else {
@@ -126,35 +131,43 @@ public class CommonDialogs {
         if (input != null) input.setHint(hint);
 
         MaterialButton btnAdd = view.findViewById(R.id.btnAdd);
+        if (btnAdd != null) btnAdd.setText(posBtn);
+
         MaterialButton btnCancel = view.findViewById(R.id.btnCancel);
         TextInputLayout tilName = view.findViewById(R.id.tilName);
 
-
         AlertDialog dialog = builder.create();
+        
+        if (btnCancel != null) {
+            btnCancel.setText(negBtn);
+            btnCancel.setOnClickListener(v -> dialog.dismiss());
+        }
+
         dialog.show();
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }
 
-        btnAdd.setOnClickListener(v -> {
-            String text = (input != null && input.getText() != null)
-                    ? input.getText().toString().trim()
-                    : "";
+        if (btnAdd != null) {
+            btnAdd.setText(posBtn);
+            btnAdd.setOnClickListener(v -> {
+                String text = (input != null && input.getText() != null)
+                        ? input.getText().toString().trim()
+                        : "";
 
-            if (text.isEmpty()) {
-                if (tilName != null) {
-                    tilName.setError("Please enter a value");
+                if (text.isEmpty()) {
+                    if (tilName != null) {
+                        tilName.setError("Please enter a value");
+                    }
+                    return; // ❗ stop here, don’t close dialog
                 }
-                return; // ❗ stop here, don’t close dialog
-            }
 
-            if (tilName != null) tilName.setError(null); // clear error
+                if (tilName != null) tilName.setError(null); // clear error
 
-            callback.onInput(text);
-            dialog.dismiss();
-        });
-
-        btnCancel.setOnClickListener(v -> dialog.dismiss());
+                callback.onInput(text);
+                dialog.dismiss();
+            });
+        }
     }
 
     public static void showConfirmDialog(Context context, String title, String message, String posBtn, String negBtn, Runnable onConfirm) {
@@ -253,13 +266,11 @@ public class CommonDialogs {
 
         // Rounded corners and background color
         View root = binding.bottomGradientPickerRoot;
-        if (root != null) {
-            GradientDrawable background = new GradientDrawable();
-            background.setColor(Color.parseColor(selectedColor));
-            float radius = 24 * context.getResources().getDisplayMetrics().density;
-            background.setCornerRadii(new float[]{radius, radius, radius, radius, 0, 0, 0, 0});
-            root.setBackground(background);
-        }
+        GradientDrawable background = new GradientDrawable();
+        background.setColor(Color.parseColor(selectedColor));
+        float radius = 24 * context.getResources().getDisplayMetrics().density;
+        background.setCornerRadii(new float[]{radius, radius, radius, radius, 0, 0, 0, 0});
+        root.setBackground(background);
 
         // Set height to wrap_content only
         bottomSheetDialog.getBehavior().setPeekHeight(com.google.android.material.bottomsheet.BottomSheetBehavior.PEEK_HEIGHT_AUTO);
@@ -335,7 +346,8 @@ public class CommonDialogs {
                 .show();
     }
 
-    public static void showNoteContentDialog(Context context, NoteEntity note, CategoryViewModel viewModel, NoteDialogCallback callback) {
+    @RequiresApi(api = Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    public static void showNoteContentDialog(Context context, NoteEntity note, NoteDialogCallback callback) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.CustomAlertDialog);
         View view = LayoutInflater.from(context).inflate(R.layout.dialog_note_full_content, null);
         builder.setView(view);
@@ -376,13 +388,14 @@ public class CommonDialogs {
         dialog.show();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     private static void setupResponsiveCheckboxes(Context context, TextView tv, NoteEntity note, NoteDialogCallback callback) {
         String converted = HtmlListConverter.convertHtmlLists(note.content);
         SpannableStringBuilder builder = new SpannableStringBuilder(Html.fromHtml(converted, Html.FROM_HTML_MODE_LEGACY));
 
         // Find all checkbox characters (☐ and ☑)
         String text = builder.toString();
-        Pattern pattern = Pattern.compile("[\u2610\u2611]");
+        Pattern pattern = Pattern.compile("[☐☑]");
         Matcher matcher = pattern.matcher(text);
 
         while (matcher.find()) {
@@ -394,9 +407,10 @@ public class CommonDialogs {
             builder.setSpan(new AbsoluteSizeSpan(22, true), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
             builder.setSpan(new ClickableSpan() {
+                @RequiresApi(api = Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
                 @Override
                 public void onClick(@NonNull View widget) {
-                    toggleNoteCheckbox(context, note, start, icon == '\u2610', callback, tv);
+                    toggleNoteCheckbox(context, note, start, icon == '☐', callback, tv);
                 }
 
                 @Override
@@ -411,6 +425,7 @@ public class CommonDialogs {
         tv.setMovementMethod(LinkMovementMethod.getInstance());
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     private static void toggleNoteCheckbox(Context context, NoteEntity note, int charPos, boolean shouldCheck, NoteDialogCallback callback, TextView tv) {
         String html = note.content;
         Pattern pattern = Pattern.compile("<input[^>]*type=\"checkbox\"[^>]*>", Pattern.CASE_INSENSITIVE);
@@ -420,10 +435,10 @@ public class CommonDialogs {
         String convertedText = tv.getText().toString();
         for (int i = 0; i < charPos; i++) {
             char c = convertedText.charAt(i);
-            if (c == '\u2610' || c == '\u2611') clickedIndex++;
+            if (c == '☐' || c == '☑') clickedIndex++;
         }
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         int currentIndex = 0;
         while (matcher.find()) {
             if (currentIndex == clickedIndex) {
@@ -620,40 +635,44 @@ public class CommonDialogs {
         Button btnUpdate = view.findViewById(R.id.btnUpdate);
         Button btnCancel = view.findViewById(R.id.btnCancel);
 
-        btnUpdate.setOnClickListener(v -> {
-            String currentPass = Objects.requireNonNull(currentPassword.getText()).toString().trim();
-            String newPass = Objects.requireNonNull(newPassword.getText()).toString().trim();
-            String confirmPass = Objects.requireNonNull(confirmPassword.getText()).toString().trim();
+        if (btnUpdate != null) {
+            btnUpdate.setOnClickListener(v -> {
+                String currentPass = Objects.requireNonNull(currentPassword.getText()).toString().trim();
+                String newPass = Objects.requireNonNull(newPassword.getText()).toString().trim();
+                String confirmPass = Objects.requireNonNull(confirmPassword.getText()).toString().trim();
 
-            if (currentPass.isEmpty() || newPass.isEmpty() || confirmPass.isEmpty()) {
-                Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            
-            if (newPass.length() < 6) {
-                tilNew.setError("Password must be at least 6 characters");
-                return;
-            } else {
-                tilNew.setError(null);
-            }
+                if (currentPass.isEmpty() || newPass.isEmpty() || confirmPass.isEmpty()) {
+                    Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
-            if (!newPass.equals(confirmPass)) {
-                tilConfirm.setError("Passwords do not match");
-                return;
-            } else {
-                tilConfirm.setError(null);
-            }
+                if (newPass.length() < 6) {
+                    if (tilNew != null) tilNew.setError("Password must be at least 6 characters");
+                    return;
+                } else {
+                    if (tilNew != null) tilNew.setError(null);
+                }
 
-            callback.onUpdate(currentPass, newPass);
-            dialog.dismiss();
-        });
+                if (!newPass.equals(confirmPass)) {
+                    if (tilConfirm != null) tilConfirm.setError("Passwords do not match");
+                    return;
+                } else {
+                    if (tilConfirm != null) tilConfirm.setError(null);
+                }
 
-        btnCancel.setOnClickListener(v -> dialog.dismiss());
+                callback.onUpdate(currentPass, newPass);
+                dialog.dismiss();
+            });
+        }
+
+        if (btnCancel != null) {
+            btnCancel.setOnClickListener(v -> dialog.dismiss());
+        }
         
         dialog.show();
     }
 
-    public static void showReauthenticationDialog(Context context, ReauthCallback callback) {
+    public static void showReauthenticationDialog(Context context, ReAuthCallback callback) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.CustomAlertDialog);
         View view = LayoutInflater.from(context).inflate(R.layout.dialog_reauthenticate, null);
         builder.setView(view);
@@ -694,10 +713,9 @@ public class CommonDialogs {
     public interface InputCallback { void onInput(String text); }
     public interface GradientCallback { void onGradientSelected(int startColor, int endColor); }
     public interface ColorCallback { void onColorSelected(String color); }
-    public interface ProfessionalGradientCallback { void onGradientSelected(int startColor, int endColor); }
     public interface CategoryCallback { void onCategorySelected(String category, int position); }
     public interface ChangePasswordCallback { void onUpdate(String currentPass, String newPass); }
-    public interface ReauthCallback { void onConfirm(String password); }
+    public interface ReAuthCallback { void onConfirm(String password); }
 
     public interface NoteDialogCallback {
         void setDateTime(long timeStamp, TextView dateView, TextView timeView);

@@ -118,10 +118,6 @@ public class ManageAccountActivity extends AppCompatActivity {
                     }
                 }
 
-                @Override
-                public void onReauthenticationSuccess() {
-                    // need to think what to do here
-                }
             };
 
     private void setupOptionsData(ItemSettingsOptionBinding binding, int icon, String title) {
@@ -202,12 +198,12 @@ public class ManageAccountActivity extends AppCompatActivity {
     }
 
     private void deleteAccount() {
-        firebaseHelper.deleteUserAccount(this, deletionCallback);
+        firebaseHelper.deleteUserAccount(deletionCallback);
     }
 
     private void changePassword(String currentPassword, String newPassword) {
         showProgress("Updating password...");
-        firebaseHelper.changePassword(currentPassword, newPassword, this,
+        firebaseHelper.changePassword(currentPassword, newPassword,
                 new FirebaseHelper.ChangePasswordCallback() {
                     @Override
                     public void onChangePasswordSuccess() {
@@ -225,12 +221,11 @@ public class ManageAccountActivity extends AppCompatActivity {
 
     private void reauthenticateUser(String password) {
         showProgress("Verifying identity...");
-        firebaseHelper.reauthenticateUser(password, new FirebaseHelper.ReauthCallback() {
+        firebaseHelper.reauthenticateUser(password, new FirebaseHelper.ReAuthCallback() {
             @Override
             public void onSuccess() {
                 // Identity verified, now start the actual deletion process
                 showProgress("Deleting your account...");
-                firebaseHelper.retryDeletionAfterReauth(ManageAccountActivity.this, deletionCallback);
             }
 
             @Override

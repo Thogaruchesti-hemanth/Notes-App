@@ -202,8 +202,7 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
                 requireContext(),
                 categoryViewModel,
                 noteViewModel,
-                currentUserId,
-                () -> runSearch(searchEditText.getText().toString().trim())
+                currentUserId
         );
 
         categoryManager.show(getParentFragmentManager(), "CategoryManager");

@@ -33,21 +33,17 @@ public class CategoryManager extends BottomSheetDialogFragment {
     private final CategoryViewModel categoryViewModel;
     private final NoteViewModel noteViewModel;
     private final String currentUserId;
-    private final OnCategoryUpdateListener listener;
     private final List<CategoryEntity> categories = new ArrayList<>();
     private final PremiumManager premiumManager;
-    private LinearLayout layoutAddCategory;
     private CategoryAdapter adapter;
 
     public CategoryManager(Context context,
                            CategoryViewModel categoryViewModel,
                            NoteViewModel noteViewModel,
-                           String currentUserId,
-                           OnCategoryUpdateListener listener) {
+                           String currentUserId) {
         this.categoryViewModel = categoryViewModel;
         this.noteViewModel = noteViewModel;
         this.currentUserId = currentUserId;
-        this.listener = listener;
         this.premiumManager = new PremiumManager(context);
     }
 
@@ -61,7 +57,7 @@ public class CategoryManager extends BottomSheetDialogFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.bottom_sheet_manage_categories, container, false);
 
-        layoutAddCategory = view.findViewById(R.id.layoutAddCategory);
+        LinearLayout layoutAddCategory = view.findViewById(R.id.layoutAddCategory);
         RecyclerView recyclerView = view.findViewById(R.id.recyclerViewCategories);
         TextView tvDone = view.findViewById(R.id.tvDone);
 
@@ -89,12 +85,11 @@ public class CategoryManager extends BottomSheetDialogFragment {
         setupItemTouchHelper(recyclerView);
 
         categoryViewModel.getAllCategories(currentUserId).observe(getViewLifecycleOwner(), list -> {
-            categories.clear();
             if (list != null) {
-                categories.addAll(list);
-                Collections.sort(categories, Comparator.comparingInt(c -> c.order));
+                List<CategoryEntity> sortedList = new ArrayList<>(list);
+                sortedList.sort(Comparator.comparingInt(c -> c.order));
+                adapter.updateList(sortedList);
             }
-            adapter.notifyDataSetChanged();
         });
 
         if (layoutAddCategory != null) {
@@ -108,8 +103,8 @@ public class CategoryManager extends BottomSheetDialogFragment {
         ItemTouchHelper helper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0) {
             @Override
             public boolean onMove(@NonNull RecyclerView rv, @NonNull RecyclerView.ViewHolder vh, @NonNull RecyclerView.ViewHolder target) {
-                int from = vh.getAdapterPosition();
-                int to = target.getAdapterPosition();
+                int from = vh.getBindingAdapterPosition();
+                int to = target.getBindingAdapterPosition();
                 if (from == RecyclerView.NO_POSITION || to == RecyclerView.NO_POSITION) return false;
 
                 Collections.swap(categories, from, to);
@@ -163,9 +158,5 @@ public class CategoryManager extends BottomSheetDialogFragment {
             c.order = i;
             categoryViewModel.updateCategory(c);
         }
-    }
-
-    public interface OnCategoryUpdateListener {
-        void onUpdate();
     }
 }

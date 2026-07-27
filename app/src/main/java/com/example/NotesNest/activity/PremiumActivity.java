@@ -170,7 +170,7 @@ public class PremiumActivity extends AppCompatActivity {
         showLoading("Syncing premium status...");
         // Bypassing Cloud Function as it's not setup. 
         // Using direct update with local security verification (handled in BillingManager)
-        firebaseHelper.updatePremiumPlan(PremiumActivity.this, planType, new FirebaseHelper.PremiumUpdateCallback() {
+        firebaseHelper.updatePremiumPlan(planType, new FirebaseHelper.PremiumUpdateCallback() {
             @Override
             public void onPremiumUpdateSuccess(String updatedPlanType, String expiryDate) {
                 handleSuccess(updatedPlanType, expiryDate);

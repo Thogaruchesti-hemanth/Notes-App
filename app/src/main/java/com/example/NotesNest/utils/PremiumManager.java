@@ -11,7 +11,6 @@ public class PremiumManager {
 
     // Subscription Limits
     public static final int MAX_FREE_NOTES = 30;
-    public static final int MAX_FREE_CATEGORIES = 3;
     
     private final AppPreferences prefs;
     private final Context context;
@@ -40,17 +39,6 @@ public class PremiumManager {
     }
 
     /**
-     * Checks if the user can create a new category.
-     * @param currentCategoryCount Current number of categories.
-     * @return true if allowed, false if limit reached.
-     */
-    public boolean canCreateCategory(int currentCategoryCount) {
-        if (isPremium()) return true;
-        // Count excluding the "All" or default category if it's in the list
-        return currentCategoryCount < MAX_FREE_CATEGORIES;
-    }
-
-    /**
      * Checks if the user has access to Cloud Backup.
      * @return true if allowed.
      */
@@ -65,20 +53,5 @@ public class PremiumManager {
         Intent intent = new Intent(context, PremiumActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
-    }
-    
-    /**
-     * Returns the name of the current plan.
-     */
-    public String getPlanName() {
-        if (!isPremium()) return "Free Plan";
-        
-        String type = prefs.getPlanType();
-        switch (type) {
-            case AppPreferences.PLAN_MONTHLY: return "Premium Monthly";
-            case AppPreferences.PLAN_YEARLY: return "Premium Yearly";
-            case AppPreferences.PLAN_LIFETIME: return "Premium Lifetime";
-            default: return "Premium User";
-        }
     }
 }

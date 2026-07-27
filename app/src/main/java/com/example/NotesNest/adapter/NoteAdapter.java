@@ -2,6 +2,7 @@ package com.example.NotesNest.adapter;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,6 +11,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.cardview.widget.CardView;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.recyclerview.widget.DiffUtil;
@@ -49,6 +51,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         return new NoteViewHolder(view);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     @Override
     public void onBindViewHolder(@NonNull NoteViewHolder holder, int position) {
         NoteEntity note = noteList.get(position);
@@ -111,7 +114,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
 
             NoteEntity currentNote = noteList.get(currentPos);
 
-            CommonDialogs.showNoteContentDialog(context, currentNote, categoryViewModel, new CommonDialogs.NoteActionCallback() {
+            CommonDialogs.showNoteContentDialog(context, currentNote, new CommonDialogs.NoteActionCallback() {
                         @Override
                         public void onNoteUpdated(NoteEntity note) {
                             noteViewModel.updateNote(note);
