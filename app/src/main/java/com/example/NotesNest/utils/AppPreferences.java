@@ -141,9 +141,13 @@ public class AppPreferences {
     public boolean getLogin() { return isLoggedIn(); }
     // ----------- Premium -----------
     public boolean isUserPremium() {
+        // Force premium for all users until 10k downloads
+        return true;
+        /*
         if (!isLoggedIn()) return false;
         String userId = getUserId();
         return prefs.getBoolean(PrefKeys.IS_PREMIUM + "_" + userId, false);
+        */
     }
 
     public void setIsPremium(boolean isPremium) {
@@ -195,6 +199,9 @@ public class AppPreferences {
     }
 
     public boolean isPremiumActive() {
+        // Force premium for all users until 10k downloads
+        return true;
+        /*
         if (!isUserPremium()) return false;
         
         String planType = getPlanType();
@@ -210,6 +217,7 @@ public class AppPreferences {
         } catch (Exception e) {
             return false;
         }
+        */
     }
 
     private void notifyPremiumChanged() {

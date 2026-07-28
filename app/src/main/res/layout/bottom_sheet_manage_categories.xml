@@ -84,14 +84,14 @@
                 android:backgroundTint="@android:color/transparent"
                 android:contentDescription="@string/text_add_category"
                 android:src="@drawable/ic_add"
-                app:tint="@color/black" />
+                app:tint="?attr/colorPrimary" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:text="@string/text_add_new_category"
-                android:textColor="@color/black"
+                android:textColor="?attr/colorPrimary"
                 android:textSize="@dimen/text_18"
                 android:textStyle="bold" />
         </LinearLayout>

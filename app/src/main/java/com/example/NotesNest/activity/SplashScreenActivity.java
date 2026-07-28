@@ -14,7 +14,6 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.splashscreen.SplashScreen;
 
-import com.example.NotesNest.FirebaseHelper;
 import com.example.NotesNest.R;
 import com.example.NotesNest.utils.AdManager;
 import com.example.NotesNest.utils.AnalyticsHelper;
@@ -58,6 +57,7 @@ public class SplashScreenActivity extends AppCompatActivity {
             String userId = prefs.getUserId();
             DBSeedUtil.seedDefaultCategories(this, userId);
             
+            /* Firebase Premium check bypassed until 10k downloads
             // Critical industry-standard fix: Fetch real premium status from DB on startup
             // to ensure multi-account device safety and handle expirations.
             FirebaseHelper firebaseHelper = new FirebaseHelper();
@@ -78,11 +78,8 @@ public class SplashScreenActivity extends AppCompatActivity {
                 prefs.setPremiumExpiryDate(isActive ? expiryDate : "");
                 android.util.Log.i("SplashScreen", "Verified Premium Status from Cloud for: " + userId + " | Active: " + isActive);
             });
+            */
         }
-        
-        // Load Ads (Init is handled in NotesApplication)
-        AdManager.loadInterstitial(this);
-        AdManager.loadRewardedAd(this);
 
         new Handler(Looper.getMainLooper()).postDelayed(this::handleStartFlow, SPLASH_DELAY_MS);
     }
@@ -98,7 +95,7 @@ public class SplashScreenActivity extends AppCompatActivity {
 
     private void updateLogo() {
         ImageView logo = findViewById(R.id.ivLogo);
-        boolean isDark = "dark".equalsIgnoreCase(prefs.getTheme());
+        boolean isDark = ThemeManager.isDarkTheme(this);
 
         logo.setImageResource(isDark
                 ? R.drawable.splash_logo_dark
@@ -130,16 +127,6 @@ public class SplashScreenActivity extends AppCompatActivity {
             overrideActivityTransition(Activity.OVERRIDE_TRANSITION_OPEN, R.anim.zoom_in, R.anim.zoom_out);
         }
         finish();
-    }
-
-    private boolean isDateExpired(String dateStr) {
-        try {
-            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US);
-            java.util.Date expiry = sdf.parse(dateStr);
-            return expiry != null && System.currentTimeMillis() > expiry.getTime();
-        } catch (Exception e) {
-            return true; // If format is wrong, safer to assume expired for security
-        }
     }
 
     @Override

@@ -52,6 +52,7 @@ public class AdManager {
      * Load an App Open Ad to be ready for the next startup.
      */
     public static void loadAppOpenAd(Context context) {
+        /* Ads disabled until 10k downloads
         if (mAppOpenAd != null || isAdLoading) return;
 
         isAdLoading = true;
@@ -74,6 +75,7 @@ public class AdManager {
                         Log.e(TAG, "App Open Ad Load Failed: " + loadAdError.getMessage());
                     }
                 });
+        */
     }
 
     /**
@@ -93,6 +95,7 @@ public class AdManager {
      * Load an Interstitial Ad if the user is not premium.
      */
     public static void loadInterstitial(Context context) {
+        /* Ads disabled until 10k downloads
         PremiumManager premiumManager = new PremiumManager(context);
         if (premiumManager.isPremium()) return;
 
@@ -113,12 +116,14 @@ public class AdManager {
                         Log.e(TAG, "Interstitial Failed: " + loadAdError.getMessage());
                     }
                 });
+        */
     }
 
     /**
      * Load a Rewarded Ad if the user is not premium.
      */
     public static void loadRewardedAd(Context context) {
+        /* Ads disabled until 10k downloads
         PremiumManager premiumManager = new PremiumManager(context);
         if (premiumManager.isPremium()) return;
 
@@ -138,12 +143,16 @@ public class AdManager {
                 Log.i(TAG, "Rewarded Ad Loaded");
             }
         });
+        */
     }
 
     /**
      * Show Interstitial Ad at a natural break.
      */
     public static void showInterstitial(Activity activity, AdDismissListener listener) {
+        // Ads disabled until 10k downloads - bypass directly to listener
+        if (listener != null) listener.onDismissed();
+        /*
         PremiumManager premiumManager = new PremiumManager(activity);
         if (premiumManager.isPremium() || mInterstitialAd == null) {
             Log.i(TAG, "Skipping Interstitial: Premium=" + premiumManager.isPremium() + ", AdLoaded=" + (mInterstitialAd != null));
@@ -167,12 +176,16 @@ public class AdManager {
         });
 
         mInterstitialAd.show(activity);
+        */
     }
 
     /**
      * Show Rewarded Ad and execute action only if reward earned.
      */
     public static void showRewardedAd(Activity activity, AdDismissListener listener) {
+        // Ads disabled until 10k downloads - bypass directly to listener
+        if (listener != null) listener.onDismissed();
+        /*
         PremiumManager premiumManager = new PremiumManager(activity);
         if (premiumManager.isPremium() || mRewardedAd == null) {
             if (listener != null) listener.onDismissed();
@@ -197,6 +210,7 @@ public class AdManager {
         mRewardedAd.show(activity, rewardItem -> {
             // Reward earned
         });
+        */
     }
 
     /**
@@ -204,6 +218,9 @@ public class AdManager {
      * This avoids the disruptive "pop-up" effect of loading it on demand.
      */
     public static void showAppOpenAd(Activity activity, AdDismissListener listener) {
+        // Ads disabled until 10k downloads - bypass directly to listener
+        if (listener != null) listener.onDismissed();
+        /*
         PremiumManager premiumManager = new PremiumManager(activity);
         if (premiumManager.isPremium() || !isAppOpenAdAvailable()) {
             if (listener != null) listener.onDismissed();
@@ -229,6 +246,7 @@ public class AdManager {
         });
 
         mAppOpenAd.show(activity);
+        */
     }
 
     public interface AdDismissListener {
