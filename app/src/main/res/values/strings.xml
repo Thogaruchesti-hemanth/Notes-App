@@ -49,6 +49,11 @@
     <string name="text_close">close</string>
     <string name="text_search_icon">Search icon</string>
     <string name="text_search_your_notes">Search your notes</string>
+    <string name="hint_search_general">Search your brilliant thoughts&#8230;</string>
+    <string name="hint_search_ideas">Looking for a specific idea?</string>
+    <string name="hint_search_tasks">Find your tasks and goals&#8230;</string>
+    <string name="hint_search_memories">Recall your saved memories&#8230;</string>
+    <string name="hint_search_category">Search in %1$s&#8230;</string>
     <string name="text_add">add</string>
     <string name="text_create">create</string>
     <string name="text_timelines">Timelines</string>

@@ -255,10 +255,17 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
 
     private void openCreateItem() {
         Intent intent = new Intent(context, EditNoteActivity.class);
+        if (!"All".equalsIgnoreCase(selectedCategory)) {
+            String catId = getCategoryIdByName(selectedCategory);
+            if (catId != null) {
+                intent.putExtra("selectedCategoryId", catId);
+            }
+        }
         addEditNoteLauncher.launch(intent);
     }
 
     private void setupSearch() {
+        updateSearchHint();
         searchEditText.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void afterTextChanged(Editable s) {}
@@ -278,8 +285,26 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
             searchEditText.clearFocus();
             InputMethodManager imm = (InputMethodManager) searchEditText.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
             if (imm != null) imm.hideSoftInputFromWindow(searchEditText.getWindowToken(), 0);
+            updateSearchHint();
             runSearch("");
         });
+    }
+
+    private void updateSearchHint() {
+        if (!isAdded()) return;
+
+        if ("All".equalsIgnoreCase(selectedCategory)) {
+            int[] hints = {
+                    R.string.hint_search_general,
+                    R.string.hint_search_ideas,
+                    R.string.hint_search_tasks,
+                    R.string.hint_search_memories
+            };
+            int randomIndex = (int) (Math.random() * hints.length);
+            searchEditText.setHint(getString(hints[randomIndex]));
+        } else {
+            searchEditText.setHint(getString(R.string.hint_search_category, selectedCategory));
+        }
     }
 
     private void observeCategories() {
@@ -356,6 +381,7 @@ public class NotesFragment extends Fragment implements ThemeManager.ThemeChangeL
                 if (name != null) {
                     selectedCategory = name;
                     titleTextView.setText(selectedCategory);
+                    updateSearchHint();
                     runSearch(searchEditText.getText().toString().trim());
                 }
             }

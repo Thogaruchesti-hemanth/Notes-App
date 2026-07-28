@@ -57,6 +57,7 @@ public class EditNoteActivity extends AppCompatActivity {
     private long originalCreatedAt = -1;
     private boolean isPinned = false;
     private boolean isNoteSaved = false;
+    private String lastAddedCategoryName = null;
     private ActivityEditNoteBinding binding;
 
     @Override
@@ -264,10 +265,18 @@ public class EditNoteActivity extends AppCompatActivity {
         binding.categoryChipGroup.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(this);
         for (CategoryEntity category : categories) {
+            if ("all".equalsIgnoreCase(category.id)) continue;
             Chip chip = (Chip) inflater.inflate(R.layout.item_category_chip, binding.categoryChipGroup, false);
             chip.setText(category.name.toUpperCase(Locale.ROOT));
             chip.setTag(category.id);
-            chip.setId(View.generateViewId()); // Ensure unique ID for ChipGroup single selection
+            chip.setId(View.generateViewId());
+
+            // Auto-select if this was just added
+            if (lastAddedCategoryName != null && lastAddedCategoryName.equalsIgnoreCase(category.name)) {
+                selectedCategoryId = category.id;
+                lastAddedCategoryName = null;
+            }
+
             chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 if (isChecked) {
                     selectedCategoryId = (String) chip.getTag();
@@ -278,16 +287,52 @@ public class EditNoteActivity extends AppCompatActivity {
             });
             binding.categoryChipGroup.addView(chip);
         }
+
+        // Add "Add Category" Chip
+        Chip addChip = (Chip) inflater.inflate(R.layout.item_category_chip, binding.categoryChipGroup, false);
+        addChip.setText(" + ");
+        addChip.setChipIcon(ContextCompat.getDrawable(this, R.drawable.ic_add_small));
+        addChip.setCheckable(false);
+        addChip.setOnClickListener(v -> showQuickAddCategoryDialog());
+        binding.categoryChipGroup.addView(addChip);
+
         updateSelectedChip();
         updateChipColors();
     }
 
+    private void showQuickAddCategoryDialog() {
+        CommonDialogs.showInputDialog(this, "Enter category name", "Add", "Cancel", name -> {
+            if (name == null || name.trim().isEmpty()) {
+                Toast.makeText(this, "Name cannot be empty", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            String trimmedName = name.trim();
+            CategoryEntity entity = new CategoryEntity();
+            entity.name = trimmedName;
+            entity.order = categories.size();
+            entity.userId = preferences.getUserId();
+            
+            lastAddedCategoryName = trimmedName;
+            categoryViewModel.insertCategory(entity);
+            Toast.makeText(this, "Category added", Toast.LENGTH_SHORT).show();
+        });
+    }
+
     private void updateSelectedChip() {
-        if (selectedCategoryId == null) return;
+        if (selectedCategoryId == null) {
+            binding.categoryChipGroup.clearCheck();
+            return;
+        }
         for (int i = 0; i < binding.categoryChipGroup.getChildCount(); i++) {
             Chip chip = (Chip) binding.categoryChipGroup.getChildAt(i);
             if (chip.getTag() != null && chip.getTag().equals(selectedCategoryId)) {
                 chip.setChecked(true);
+                // Scroll to the selected chip
+                final int index = i;
+                binding.categoryScrollView.post(() -> {
+                    int scrollX = chip.getLeft() - (binding.categoryScrollView.getWidth() / 2) + (chip.getWidth() / 2);
+                    binding.categoryScrollView.smoothScrollTo(Math.max(0, scrollX), 0);
+                });
                 break;
             }
         }
@@ -317,9 +362,14 @@ public class EditNoteActivity extends AppCompatActivity {
 
     private void handleIncomingIntent() {
         Intent intent = getIntent();
-        if (intent != null && intent.hasExtra(EXTRA_ITEM_ID)) {
-            noteId = intent.getStringExtra(EXTRA_ITEM_ID);
-            isEditing = noteId != null;
+        if (intent != null) {
+            if (intent.hasExtra(EXTRA_ITEM_ID)) {
+                noteId = intent.getStringExtra(EXTRA_ITEM_ID);
+                isEditing = noteId != null;
+            }
+            if (!isEditing && intent.hasExtra("selectedCategoryId")) {
+                selectedCategoryId = intent.getStringExtra("selectedCategoryId");
+            }
         }
     }
 

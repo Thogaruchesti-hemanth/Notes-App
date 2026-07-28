@@ -25,7 +25,11 @@ public class PremiumManager {
      * Checks if the user is premium and if the subscription is still active.
      */
     public boolean isPremium() {
+        // Force premium for all users until 10k downloads
+        return true;
+        /*
         return prefs.isPremiumActive();
+        */
     }
 
     /**

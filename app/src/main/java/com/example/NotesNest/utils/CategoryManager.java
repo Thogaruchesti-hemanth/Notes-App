@@ -47,10 +47,9 @@ public class CategoryManager extends BottomSheetDialogFragment {
         this.premiumManager = new PremiumManager(context);
     }
 
-    @NonNull
     @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-        return new BottomSheetDialog(requireContext(), R.style.BottomSheetDialogTheme);
+    public int getTheme() {
+        return R.style.BottomSheetDialogTheme;
     }
 
     @Override

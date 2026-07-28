@@ -1,47 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?attr/colorSecondary"
-    android:orientation="vertical">
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+    android:orientation="horizontal"
+    android:paddingVertical="@dimen/padding_12">
 
-    <LinearLayout
-        android:layout_width="match_parent"
+    <ImageView
+        android:id="@+id/ivDragHandle"
+        android:layout_width="@dimen/size_48"
+        android:layout_height="@dimen/size_48"
+        android:layout_gravity="center_vertical"
+        android:contentDescription="@string/text_reorder_categories_icon"
+        android:padding="@dimen/padding_8"
+        android:src="@drawable/ic_drag"
+        app:tint="?attr/colorPrimary" />
+
+    <TextView
+        android:id="@+id/tvCategoryName"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingVertical="@dimen/padding_8">
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="@dimen/margin_10"
+        android:layout_weight="1"
+        android:textSize="@dimen/text_18" />
 
-        <ImageView
-            android:id="@+id/ivDragHandle"
-            android:layout_width="@dimen/size_48"
-            android:layout_height="@dimen/size_48"
-            android:layout_gravity="center_vertical"
-            android:contentDescription="@string/text_reorder_categories_icon"
-            android:padding="@dimen/padding_8"
-            android:src="@drawable/ic_drag" />
-
-        <TextView
-            android:id="@+id/tvCategoryName"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_marginStart="@dimen/margin_10"
-            android:layout_weight="1"
-            android:textSize="@dimen/text_18" />
-
-        <ImageView
-            android:id="@+id/ivDelete"
-            android:layout_width="@dimen/size_48"
-            android:layout_height="@dimen/size_48"
-            android:contentDescription="@string/text_delete_category_icon"
-            android:padding="@dimen/padding_12"
-            android:src="@drawable/ic_delete" />
-    </LinearLayout>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/size_1"
-        android:layout_marginHorizontal="@dimen/margin_20"
-        android:background="@color/grey_100" />
+    <ImageView
+        android:id="@+id/ivDelete"
+        android:layout_width="@dimen/size_48"
+        android:layout_height="@dimen/size_48"
+        android:contentDescription="@string/text_delete_category_icon"
+        android:padding="@dimen/padding_12"
+        android:src="@drawable/ic_delete"
+        app:tint="?attr/colorPrimary" />
 
 </LinearLayout>

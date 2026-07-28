@@ -41,7 +41,14 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         CategoryEntity category = categories.get(position);
-        holder.tvCategoryName.setText(category.name);
+
+        if ("All".equalsIgnoreCase(category.name)) {
+            holder.tvCategoryName.setText(String.format("%s (default)", category.name));
+            holder.ivDelete.setVisibility(View.GONE);
+        } else {
+            holder.tvCategoryName.setText(category.name);
+            holder.ivDelete.setVisibility(View.VISIBLE);
+        }
 
         holder.itemView.setOnClickListener(v -> {
             int currentPos = holder.getBindingAdapterPosition();
