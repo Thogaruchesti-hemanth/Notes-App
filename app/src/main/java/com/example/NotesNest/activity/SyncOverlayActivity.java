@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.NotesNest.R;
@@ -16,6 +17,7 @@ public class SyncOverlayActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        EdgeToEdge.enable(this);
         ThemeManager.applyTheme();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sync_overlay);
