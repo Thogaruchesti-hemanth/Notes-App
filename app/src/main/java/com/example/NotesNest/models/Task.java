@@ -8,6 +8,7 @@ public class Task {
 
     private final int startColor;
     private final int endColor;
+    private boolean isDone; // 👈 new field
 
     public Task(String title, String type, long startTime, String id, int startColor, int endColor) {
         this.title = title;
@@ -55,5 +56,13 @@ public class Task {
 
     public int getEndColor() {
         return endColor;
+    }
+
+    public boolean isDone() {
+        return isDone;
+    }
+
+    public void setDone(boolean done) {
+        isDone = done;
     }
 }

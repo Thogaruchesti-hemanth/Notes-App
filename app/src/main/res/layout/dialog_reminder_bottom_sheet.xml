@@ -29,7 +29,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:text="10:00 AM, Today"
-        android:textColor="@color/grey_600"
+        android:textColor="@color/textColor"
         android:textSize="14sp" />
 
     <View
@@ -58,7 +58,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_check"
-                app:tint="@color/green_500" />
+                app:tint="@color/google_green" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -106,7 +106,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_edit"
-                app:tint="@color/blue_500" />
+                app:tint="@color/google_blue" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -130,7 +130,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_delete"
-                app:tint="@color/red_500" />
+                app:tint="@color/google_red" />
 
             <TextView
                 android:layout_width="wrap_content"

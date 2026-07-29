@@ -15,18 +15,12 @@
         android:textColor="?colorPrimary"
         android:textSize="14sp" />
 
-    <!-- Scrollable minute container -->
-    <HorizontalScrollView
+    <!-- Minute container (Flexible, no horizontal scroll) -->
+    <LinearLayout
+        android:id="@+id/tasksContainer"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:scrollbars="none">
-
-        <LinearLayout
-            android:id="@+id/tasksContainer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal" />
-    </HorizontalScrollView>
+        android:gravity="center_vertical"
+        android:orientation="horizontal" />
 </LinearLayout>

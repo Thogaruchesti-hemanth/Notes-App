@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.NotesNest.R;
 import com.example.NotesNest.databases.ViewModels.ReminderViewModel;
 import com.example.NotesNest.databases.entities.ReminderEntity;
+import com.example.NotesNest.notifications.schedulers.NotificationScheduler;
 import com.example.NotesNest.utils.DateTimeUtils;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
@@ -55,11 +56,12 @@ public class ReminderOptionsBottomSheet extends BottomSheetDialogFragment {
         View snoozeOptions = view.findViewById(R.id.snoozeOptions);
 
         tvTitle.setText(reminder.title != null ? reminder.title : reminder.message);
-        tvTime.setText(DateTimeUtils.formatDateTime(reminder.notificationTime));
+        tvTime.setText(DateTimeUtils.getReadableDate(reminder.notificationTime) + ", " + DateTimeUtils.getReadableTime(reminder.notificationTime));
 
         btnDone.setOnClickListener(v -> {
             reminder.isDone = true;
             viewModel.updateReminder(reminder);
+            NotificationScheduler.cancel(requireContext(), reminder.id);
             dismiss();
         });
 
@@ -88,8 +90,15 @@ public class ReminderOptionsBottomSheet extends BottomSheetDialogFragment {
         reminder.notificationTime = cal.getTimeInMillis();
         reminder.isDone = false; // Reset done state if snoozed
         viewModel.updateReminder(reminder);
-        // Note: In a real app, we'd also re-schedule the alarm here. 
-        // Our ViewModel/Repository should handle that or we call NotificationScheduler.
+        
+        NotificationScheduler.cancel(requireContext(), reminder.id);
+        NotificationScheduler.scheduleOneTime(
+                requireContext(),
+                reminder.id,
+                reminder.notificationTime,
+                reminder.repeatType,
+                reminder.isRepeated
+        );
         dismiss();
     }
 }

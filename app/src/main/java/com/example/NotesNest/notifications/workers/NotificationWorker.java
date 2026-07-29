@@ -137,6 +137,7 @@ public class NotificationWorker extends Worker {
 
                     // Update DB
                     entity.notificationTime = nextTrigger;
+                    entity.isDone = false; // Reset for next occurrence
                     repo.update(entity);
 
                     // Schedule next

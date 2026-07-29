@@ -81,21 +81,20 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Holder
 
             FrameLayout minuteFrame = createMinuteFrame();
             int stackOffset = 0;
+            int totalInMinute = taskList.size();
 
             for (Task task : taskList) {
                 View taskView = inflater.inflate(R.layout.item_reminder_task, minuteFrame, false);
-                bindTaskView(taskView, task, stackOffset);
+                bindTaskView(taskView, task, stackOffset, totalInMinute);
 
                 taskView.setOnClickListener(v -> {
                     if (listener != null) listener.onTaskClick(task);
                 });
 
                 minuteFrame.addView(taskView);
-                stackOffset += 60; // Offset for stacked effect
+                stackOffset += (totalInMinute > 1) ? 40 : 0; // Reduced offset for better fit
             }
 
-            // Adjust frame width for overlaps
-            minuteFrame.setMinimumWidth(stackOffset + 400);
             holder.minuteContainer.addView(minuteFrame);
         }
     }
@@ -121,7 +120,7 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Holder
         return frame;
     }
 
-    private void bindTaskView(View view, Task task, int offset) {
+    private void bindTaskView(View view, Task task, int offset, int totalTasks) {
         TextView tvTime = view.findViewById(R.id.tvTime);
         TextView tvTitle = view.findViewById(R.id.tvTitle);
         TextView tvType = view.findViewById(R.id.tvType);
@@ -143,9 +142,22 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Holder
         gradient.setCornerRadius(50f);
         taskContainer.setBackground(gradient);
 
-        // Apply visual stacking
-        view.setTranslationX(offset);
-        view.setTranslationY(offset / 6f);
+        // Completion state UI
+        if (task.isDone()) {
+            taskContainer.setAlpha(0.4f);
+            tvTitle.setPaintFlags(tvTitle.getPaintFlags() | android.graphics.Paint.STRIKE_THRU_TEXT_FLAG);
+        } else {
+            taskContainer.setAlpha(1.0f);
+            tvTitle.setPaintFlags(tvTitle.getPaintFlags() & (~android.graphics.Paint.STRIKE_THRU_TEXT_FLAG));
+        }
+
+        // Apply visual stacking - adaptive to count
+        float translationX = offset;
+        if (totalTasks > 2) {
+            translationX = offset * (1.0f - (totalTasks * 0.05f)); 
+        }
+        view.setTranslationX(translationX);
+        view.setTranslationY(offset / 8f);
     }
 
     @Override
