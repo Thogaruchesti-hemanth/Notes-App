@@ -131,7 +131,7 @@ public class HelpAndSupportActivity extends AppCompatActivity {
         }));
 
         binding.layoutWhatsNew.getRoot().setOnClickListener(view -> AdManager.showInterstitial(this, () -> {
-            String updateMessage = "• Added Ad support for free users.\n• Implemented professional subscription management.\n• Improved Cloud Backup security and feature locking.\n• Fixed memory leaks in settings management.\n• General performance improvements.";
+            String updateMessage = "• Smart Recurring Reminders: Daily, Weekly, Monthly visibility.\n• Adaptive Timeline: Optimized layout with auto-scroll and dynamic stacking.\n• Reminder Quick Actions: Mark as Done and Snooze support.\n• Updated Google Play Billing Library to v9.1.0.\n• Improved Edge-to-Edge display compliance.\n• General performance and stability improvements.";
             showWhatsNewDialog(this, updateMessage);
         }));
     }
