@@ -144,10 +144,10 @@ public final class NotificationScheduler {
                             : PendingIntent.getBroadcast(context, notificationId, intent,
                             PendingIntent.FLAG_UPDATE_CURRENT);
 
-            am.setExact(AlarmManager.RTC_WAKEUP, timeInMillis, pi);
+            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, timeInMillis, pi);
 
             Log.d(TAG,
-                    "scheduleExactIfNeeded: alarm set for id=" + reminderId);
+                    "scheduleExactIfNeeded: alarm set (AllowWhileIdle) for id=" + reminderId);
 
         } catch (SecurityException ex) {
             Log.e(TAG, "scheduleExactIfNeeded: SecurityException, falling back to inexact", ex);

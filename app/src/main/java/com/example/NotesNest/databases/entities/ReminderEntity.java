@@ -41,6 +41,7 @@ public class ReminderEntity {
     public int gradientEndColor;
     // Offline-first sync fields
     public boolean isDeleted;          // soft-deleted
+    public boolean isDone;             // 👈 new field for completion state
 
     public ReminderEntity() {
         this.id = UUID.randomUUID().toString();

@@ -171,35 +171,92 @@ public class RemindersFragment extends Fragment {
         hourRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         hourRecyclerView.setNestedScrollingEnabled(true);
         hourRecyclerView.setAdapter(adapter);
+        
+        scrollToActiveHour();
+    }
+
+    private void scrollToActiveHour() {
+        if (hourRecyclerView == null) return;
+
+        int targetHour = -1;
+
+        // Priority 1: Current hour if today is selected
+        if (selectedDate.equals(LocalDate.now())) {
+            targetHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+        } else if (!currentReminders.isEmpty()) {
+            // Priority 2: First task hour of the day
+            Calendar cal = Calendar.getInstance();
+            cal.setTimeInMillis(currentReminders.get(0).notificationTime);
+            targetHour = cal.get(Calendar.HOUR_OF_DAY);
+        }
+
+        if (targetHour != -1) {
+            int finalTargetHour = targetHour;
+            hourRecyclerView.post(() -> {
+                LinearLayoutManager lm = (LinearLayoutManager) hourRecyclerView.getLayoutManager();
+                if (lm != null) {
+                    lm.scrollToPositionWithOffset(finalTargetHour, 0);
+                }
+            });
+        }
     }
 
     private void filterRemindersForSelectedDate() {
-        Calendar cal = Calendar.getInstance();
-        cal.set(selectedDate.getYear(), selectedDate.getMonthValue() - 1, selectedDate.getDayOfMonth(), 0, 0, 0);
-        long start = cal.getTimeInMillis();
-
-        cal.set(Calendar.HOUR_OF_DAY, 23);
-        cal.set(Calendar.MINUTE, 59);
-        cal.set(Calendar.SECOND, 59);
-        long end = cal.getTimeInMillis();
-
         currentReminders = new ArrayList<>();
         for (ReminderEntity reminder : allRemindersList) {
-            if (reminder.notificationTime >= start && reminder.notificationTime <= end) {
+            if (isReminderVisibleOnDate(reminder, selectedDate)) {
                 currentReminders.add(reminder);
             }
         }
+        
+        // Sort currentReminders by time
+        currentReminders.sort((o1, o2) -> Long.compare(o1.notificationTime, o2.notificationTime));
+        
         updateUIWithReminders();
+    }
+
+    private boolean isReminderVisibleOnDate(ReminderEntity reminder, LocalDate date) {
+        if (reminder.notificationTime == 0 || reminder.isDeleted) return false;
+
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(reminder.notificationTime);
+        LocalDate startDate = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
+
+        // If it's a future reminder (not yet started), only show on its start date or later if repeated
+        if (startDate.isAfter(date)) return false;
+
+        // If it's the exact same day
+        if (startDate.equals(date)) return true;
+
+        // If it's in the past and not repeated, don't show
+        if (!reminder.isRepeated || reminder.repeatType == null) return false;
+
+        String rt = reminder.repeatType.trim().toLowerCase();
+
+        return switch (rt) {
+            case "daily" -> true;
+            case "weekly" -> startDate.getDayOfWeek() == date.getDayOfWeek();
+            case "monthly" -> startDate.getDayOfMonth() == date.getDayOfMonth();
+            case "yearly" ->
+                    startDate.getMonth() == date.getMonth() && startDate.getDayOfMonth() == date.getDayOfMonth();
+            default -> false;
+        };
     }
 
     private void updateCalendarDots() {
         if (calendarAdapter == null) return;
 
         List<LocalDate> eventDates = new ArrayList<>();
-        for (ReminderEntity reminder : allRemindersList) {
-            Calendar cal = Calendar.getInstance();
-            cal.setTimeInMillis(reminder.notificationTime);
-            eventDates.add(LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH)));
+        LocalDate start = LocalDate.now().minusDays(10); 
+        LocalDate end = start.plusDays(100); 
+
+        for (LocalDate d = start; d.isBefore(end); d = d.plusDays(1)) {
+            for (ReminderEntity reminder : allRemindersList) {
+                if (isReminderVisibleOnDate(reminder, d)) {
+                    eventDates.add(d);
+                    break; 
+                }
+            }
         }
         calendarAdapter.setEventDates(eventDates);
     }
@@ -211,8 +268,6 @@ public class RemindersFragment extends Fragment {
             String title = r.title;
             if (title == null || title.isEmpty()) title = r.message;
 
-            long endTime = r.notificationTime + 60 * 60 * 1000;
-
             Task t = new Task(
                     title,
                     r.type,
@@ -221,6 +276,7 @@ public class RemindersFragment extends Fragment {
                     r.gradientStartColor,
                     r.gradientEndColor
             );
+            t.setDone(r.isDone); // 👈 We need to update Task model too
 
             tasks.add(t);
         }
@@ -251,12 +307,20 @@ public class RemindersFragment extends Fragment {
 
         if (reminder == null) return;
 
-        CommonDialogs.showCustomDialog(requireContext(), reminder, "Edit", "Delete", () -> {
-                    Intent i = new Intent(requireContext(), EditReminderActivity.class);
-                    i.putExtra(EXTRA_REMINDER_ID, reminder.id);
-                    startActivity(i);
-                },
-                () -> deleteReminder(reminder));
+        ReminderOptionsBottomSheet bottomSheet = new ReminderOptionsBottomSheet(reminder, new ReminderOptionsBottomSheet.ActionListener() {
+            @Override
+            public void onEdit(ReminderEntity reminder) {
+                Intent i = new Intent(requireContext(), EditReminderActivity.class);
+                i.putExtra(EXTRA_REMINDER_ID, reminder.id);
+                startActivity(i);
+            }
+
+            @Override
+            public void onDelete(ReminderEntity reminder) {
+                deleteReminder(reminder);
+            }
+        });
+        bottomSheet.show(getChildFragmentManager(), "ReminderOptions");
     }
 
     private void deleteReminder(ReminderEntity reminder) {

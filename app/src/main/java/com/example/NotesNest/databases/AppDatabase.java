@@ -24,11 +24,18 @@ import com.example.NotesNest.databases.entities.ReminderEntity;
                 NoteFTSEntity.class,
                 ReminderEntity.class
         },
-        version = 6
+        version = 7
 )
 public abstract class AppDatabase extends RoomDatabase {
 
     private static volatile AppDatabase INSTANCE;
+
+    private static final Migration MIGRATION_6_7 = new Migration(6, 7) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE reminders ADD COLUMN isDone INTEGER NOT NULL DEFAULT 0");
+        }
+    };
 
     private static final Migration MIGRATION_5_6 = new Migration(5, 6) {
         @Override
@@ -106,7 +113,8 @@ public abstract class AppDatabase extends RoomDatabase {
                                     AppDatabase.class,
                                     "notesnest.db"
                             )
-                            .addMigrations(MIGRATION_5_6)
+                            .addMigrations(MIGRATION_5_6, MIGRATION_6_7)
+                            .fallbackToDestructiveMigrationOnDowngrade()
                             .build();
                 }
             }
