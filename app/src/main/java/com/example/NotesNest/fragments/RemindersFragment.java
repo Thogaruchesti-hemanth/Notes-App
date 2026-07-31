@@ -4,7 +4,6 @@ import static com.example.NotesNest.utils.Constants.EXTRA_REMINDER_ID;
 
 import android.app.DatePickerDialog;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
@@ -15,7 +14,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -44,7 +42,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-@RequiresApi(api = Build.VERSION_CODES.O)
 public class RemindersFragment extends Fragment {
 
     private final List<CalendarItem> calendarItemList = new ArrayList<>();
@@ -231,7 +228,7 @@ public class RemindersFragment extends Fragment {
         // If it's in the past and not repeated, don't show
         if (!reminder.isRepeated || reminder.repeatType == null) return false;
 
-        String rt = reminder.repeatType.trim().toLowerCase();
+        String rt = reminder.repeatType.trim().toLowerCase(Locale.ROOT);
 
         return switch (rt) {
             case "daily" -> true;

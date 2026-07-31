@@ -3,7 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/bg_bottom_sheet"
     android:orientation="vertical"
     android:padding="24dp">
 
@@ -18,8 +17,7 @@
         android:id="@+id/tvReminderTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Reminder Title"
-        android:textColor="?attr/colorPrimary"
+        android:textColor="?attr/colorSecondary"
         android:textSize="20sp"
         android:textStyle="bold" />
 
@@ -28,7 +26,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:text="10:00 AM, Today"
         android:textColor="@color/textColor"
         android:textSize="14sp" />
 
@@ -58,13 +55,14 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_check"
+                android:contentDescription="@string/text_completion_icon"
                 app:tint="@color/google_green" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Done"
+                android:text="@string/text_done"
                 android:textSize="12sp" />
         </LinearLayout>
 
@@ -82,13 +80,14 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_clock"
+                android:contentDescription="@string/text_snooze_icon"
                 app:tint="@color/tabSelectedTextColor" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Snooze"
+                android:text="@string/text_snooze"
                 android:textSize="12sp" />
         </LinearLayout>
 
@@ -106,13 +105,14 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_edit"
+                android:contentDescription="@string/text_edit_icon"
                 app:tint="@color/google_blue" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Edit"
+                android:text="@string/text_edit"
                 android:textSize="12sp" />
         </LinearLayout>
 
@@ -130,13 +130,14 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_delete"
+                android:contentDescription="@string/text_delete_icon"
                 app:tint="@color/google_red" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Delete"
+                android:text="@string/text_delete"
                 android:textSize="12sp" />
         </LinearLayout>
     </LinearLayout>
@@ -155,20 +156,20 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
-            android:text="+15 min" />
+            android:text="@string/text_15_min" />
 
         <com.google.android.material.chip.Chip
             android:id="@+id/chip1h"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
-            android:text="+1 hour" />
+            android:text="@string/text_1_hr" />
 
         <com.google.android.material.chip.Chip
             android:id="@+id/chipTomorrow"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Tomorrow" />
+            android:text="@string/text_tomorrow" />
     </LinearLayout>
 
 </LinearLayout>

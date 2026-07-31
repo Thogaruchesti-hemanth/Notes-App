@@ -56,7 +56,12 @@ public class ReminderOptionsBottomSheet extends BottomSheetDialogFragment {
         View snoozeOptions = view.findViewById(R.id.snoozeOptions);
 
         tvTitle.setText(reminder.title != null ? reminder.title : reminder.message);
-        tvTime.setText(DateTimeUtils.getReadableDate(reminder.notificationTime) + ", " + DateTimeUtils.getReadableTime(reminder.notificationTime));
+        String formattedDateTime = getString(
+                R.string.date_time_format,
+                DateTimeUtils.getReadableDate(reminder.notificationTime),
+                DateTimeUtils.getReadableTime(reminder.notificationTime)
+        );
+        tvTime.setText(formattedDateTime);
 
         btnDone.setOnClickListener(v -> {
             reminder.isDone = true;
