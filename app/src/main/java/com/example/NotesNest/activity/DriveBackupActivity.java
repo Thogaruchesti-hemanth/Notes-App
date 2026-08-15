@@ -106,8 +106,8 @@ public class DriveBackupActivity extends AppCompatActivity {
 
         premiumManager = new PremiumManager(this);
         appPreferences = AppPreferences.getInstance();
-        credentialManager = CredentialManager.create(this);
         SpannableString s = new SpannableString(getString(R.string.text_drive_backup));
+        credentialManager = CredentialManager.create(this);
         s.setSpan(new StyleSpan(Typeface.BOLD), 0, s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         binding.toolbar.setTitle(s);
         binding.toolbar.setNavigationOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());

@@ -84,7 +84,6 @@
     <string name="text_notes_icon">notes icon</string>
     <string name="text_settings">Settings</string>
     <string name="text_help_support"><![CDATA[Help & Support]]></string>
-    <string name="text_help_and_support_icon">help and support icon</string>
     <string name="text_settings_icon">settings icon</string>
     <string name="text_email_support">Email Support</string>
     <string name="text_get_in_touch">Get in Touch</string>
@@ -92,7 +91,6 @@
     <string name="text_about">About</string>
     <string name="text_enter_password">Enter password</string>
     <string name="text_premium_access">Premium Access</string>
-    <string name="text_backup_sync"><![CDATA[Backup & Sync]]></string>
     <string name="text_caps_backup_sync">BACKUP &amp; SYNC</string>
     <string name="text_not_connected_to_drive">Not connected to Drive</string>
     <string name="text_cancel">Cancel</string>
@@ -107,7 +105,6 @@
     <string name="price_format_lifetime">Lifetime - %s / one-time</string>
     <string name="text_premium_required">Premium required</string>
     <string name="text_forward_arrow">Forward arrow</string>
-    <string name="text_about_app_icon">about app icon</string>
     <string name="text_no_note_selected">No note selected</string>
     <string name="text_tap_to_configure_widget_and_select_a_note">Tap to configure widget and select a note</string>
     <string name="text_premium_badge">Premium Badge</string>
@@ -183,10 +180,6 @@
     <string name="text_pin">Pin</string>
     <string name="text_unpin">Unpin</string>
 
-    <!-- AdMob Unit IDs (Replace with real IDs for release) -->
-    <string name="interstitial_ad_unit_id">ca-app-pub-3940256099942544/1033173712</string>
-    <string name="app_open_ad_unit_id">ca-app-pub-3940256099942544/3419835294</string>
-    <string name="rewarded_ad_unit_id">ca-app-pub-3940256099942544/5224354917</string>
     <string name="text_1_hr">+1 Hr</string>
     <string name="text_3_hr">+3 Hr</string>
     <string name="text_tomorrow">Tomorrow</string>
@@ -234,4 +227,9 @@
     <string name="unsupported_version_title">Unsupported Android Version</string>
     <string name="unsupported_version_message">This app is not supported on this Android version. Please upgrade your device to Android 11 or higher to use NotesNest.</string>
     <string name="unsupported_version_exit">Exit App</string>
+    <string name="text_snooze">Snooze</string>
+    <string name="text_15_min">+15 min</string>
+    <string name="text_snooze_icon">Snooze Icon</string>
+    <string name="text_completion_icon">Completion Icon</string>
+    <string name="date_time_format">%1$s, %2$s</string>
 </resources>

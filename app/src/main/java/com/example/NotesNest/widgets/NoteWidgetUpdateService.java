@@ -39,7 +39,6 @@ public class NoteWidgetUpdateService extends Worker {
        PUBLIC API – CALLED FROM PURCHASE / APP
        ----------------------------------------- */
 
-    @RequiresApi(api = Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     public static void updateAllWidgets(Context context) {
         AppWidgetManager appWidgetManager =
                 AppWidgetManager.getInstance(context);
@@ -57,7 +56,6 @@ public class NoteWidgetUpdateService extends Worker {
        CORE WIDGET UPDATE LOGIC
        ----------------------------------------- */
 
-    @RequiresApi(api = Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     public static void updateWidget(
             Context context,
             AppWidgetManager appWidgetManager,
@@ -211,9 +209,7 @@ public class NoteWidgetUpdateService extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            updateAllWidgets(getApplicationContext());
-        }
+        updateAllWidgets(getApplicationContext());
         return Result.success();
     }
 }
