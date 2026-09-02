@@ -1,7 +1,0 @@
-- [/] Implement Elegant Full-Screen Reminder UI
-    - [ ] Update `Constants.java` with premium gradients
-    - [ ] Update `NotificationWorker.java` to pass entity data
-    - [ ] Update `NotificationHelper.java` to pass data to Activity
-    - [ ] Redesign `activity_reminder_alarm.xml`
-    - [ ] Update `ReminderAlarmActivity.java` logic for data binding and background
-- [ ] Verify UI and functionality

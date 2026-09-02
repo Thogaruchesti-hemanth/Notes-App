@@ -1,4 +1,0 @@
-- [ ] Fix `File.delete()` result ignored in `DriveBackupWorker.java`
-- [ ] Remove redundant `fileName` parameter in `findFileInFolder`
-- [ ] Verify build and functionality
-- [ ] Create walkthrough

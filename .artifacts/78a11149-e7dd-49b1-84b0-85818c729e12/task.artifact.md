@@ -1,3 +1,0 @@
-- `[x]` Fix Lint errors in `app/src/main/res/values/themes.xml`
-- `[x]` Fix Lint errors in `app/src/main/res/values-night/themes.xml`
-- `[x]` Verify fix by running lint
